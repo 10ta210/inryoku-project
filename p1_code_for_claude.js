@@ -54,24 +54,45 @@ function renderPhase1() {
     currentPhase = 1;
     const root = document.getElementById('root');
     root.className = 'phase-1';
-    root.innerHTML = `<div style="
-  background:#aaaaaa;
+    root.innerHTML = `<div id="p0-wrapper" style="
+  background:#808080;
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
   font-family:'Press Start 2P', monospace;
+  cursor:default;
+  animation:p0Flicker 7s step-end infinite;
 ">
+
+  <!-- CRT スキャンライン（全画面） -->
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,
+      rgba(0,0,0,0.11) 2px,rgba(0,0,0,0.11) 4px);"></div>
+
+  <!-- CRT ビネット（周辺減光） -->
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:9998;
+    background:radial-gradient(ellipse at 50% 50%,transparent 52%,rgba(0,0,0,0.42) 100%);
+  "></div>
+
   <style>
     @keyframes cursorBlink {
       0%,49%{opacity:1;}
       50%,100%{opacity:0;}
+    }
+    @keyframes p0Flicker {
+      0%,93%,100%{opacity:1;}
+      94%{opacity:0.97;}
+      96%{opacity:1;}
+      97%{opacity:0.95;}
+      98%{opacity:0.99;}
     }
     * {
       -webkit-font-smoothing: none;
       font-smooth: never;
       image-rendering: pixelated;
     }
+    /* System 7 ベベルボタン */
     #evolve-btn {
       font-family:'Press Start 2P', monospace;
       font-size:11px;
@@ -79,14 +100,18 @@ function renderPhase1() {
       padding:7px 40px;
       background:#ffffff;
       border:2px solid #000000;
+      box-shadow:inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
       cursor:pointer;
       color:#000000;
       border-radius:0;
       min-width:168px;
     }
-    #evolve-btn:hover, #evolve-btn:active {
-      background:#000000;
-      color:#ffffff;
+    #evolve-btn:hover {
+      background:#f4f4f4;
+    }
+    #evolve-btn:active {
+      box-shadow:inset 1px 1px 0 #808080, inset -1px -1px 0 #ffffff;
+      background:#e8e8e8;
     }
     .mac-divider {
       width:100%;
@@ -96,17 +121,17 @@ function renderPhase1() {
     }
   </style>
 
-  <!-- Macダイアログ本体 -->
+  <!-- Macダイアログ本体（System 7 ウィンドウ枠） -->
   <div style="
     background:#ffffff;
     border:1px solid #000000;
     width:clamp(476px,54vw,580px);
-    box-shadow:2px 2px 0 #000000;
+    box-shadow:inset 1px 1px 0 #ffffff, inset -1px -1px 0 #000000;
     border-radius:0;
     overflow:hidden;
   ">
 
-    <!-- タイトルバー -->
+    <!-- タイトルバー（System 7: 縦縞1px交互） -->
     <div style="
       background:repeating-linear-gradient(
         90deg,
@@ -120,14 +145,15 @@ function renderPhase1() {
       border-bottom:1px solid #000000;
       position:relative;
     ">
-      <!-- クローズボックス（左上） -->
+      <!-- クローズボックス（左上, System 7 12×12） -->
       <div style="
         position:absolute;left:10px;top:50%;transform:translateY(-50%);
         width:13px;height:13px;
         border:1px solid #000000;
         background:#ffffff;
+        box-shadow:inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
       "></div>
-      <!-- タイトルテキスト -->
+      <!-- タイトルテキスト（白背景帯） -->
       <span style="
         background:#ffffff;
         padding:1px 8px;
@@ -220,6 +246,33 @@ function renderPhase1() {
       })();
     })();
 
+    // ── P0 Mac起動チャイム（Web Audio API） ──
+    // C major 和音: C4・E4・G4（正弦波、2秒減衰）
+    // autoplay制限対応: 初回クリック時に再生
+    function playMacStartupSound() {
+        if (!audioContext) {
+            try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
+            catch(e) { return; }
+        }
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const notes = [261.63, 329.63, 392.00]; // C4, E4, G4
+        const now = audioContext.currentTime;
+        notes.forEach(freq => {
+            const osc  = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain); gain.connect(audioContext.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.12 / notes.length, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+            osc.start(now); osc.stop(now + 1.8);
+        });
+    }
+    document.body.addEventListener('click', function p0SoundInit() {
+        document.body.removeEventListener('click', p0SoundInit);
+        playMacStartupSound();
+    }, { once: true });
+
     document.getElementById('evolve-btn').addEventListener('click', () => {
         document.querySelectorAll('.selection-title,.phase1-ui,.welcome-title,.evolve-btn-wrap').forEach(e => e.remove());
         const root = document.getElementById('root');
@@ -281,10 +334,12 @@ function renderPhase1() {
         });
 
         // 合成シェーダー: rtSquare.texture をsq-border領域に貼り付け
+        // + CRT P0エフェクト（スキャンライン・ノイズ）
         // squareRect = (left, bottom, width, height) in 0-1 screen UV
         const compositeUniforms = {
             tSquare:    { value: rtSquare.texture },
-            squareRect: { value: new THREE.Vector4(0, 0, 1, 1) }
+            squareRect: { value: new THREE.Vector4(0, 0, 1, 1) },
+            u_time:     { value: 0.0 }
         };
         const compositeMat = new THREE.ShaderMaterial({
             uniforms: compositeUniforms,
@@ -293,11 +348,26 @@ function renderPhase1() {
                 'precision highp float;',
                 'uniform sampler2D tSquare;',
                 'uniform vec4 squareRect;',
+                'uniform float u_time;',
                 'varying vec2 vUv;',
+                '',
+                'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+                '',
                 'void main(){',
                 '  vec2 sq=(vUv-squareRect.xy)/squareRect.zw;',
                 '  if(sq.x<0.0||sq.x>1.0||sq.y<0.0||sq.y>1.0) discard;',
-                '  gl_FragColor=texture2D(tSquare,sq);',
+                '',
+                '  vec3 col=texture2D(tSquare,sq).rgb;',
+                '',
+                '  // CRT スキャンライン（水平2px間隔、輝度88-100%）',
+                '  float scanline=0.88+0.12*fract(sq.y*256.0);',
+                '  col*=scanline;',
+                '',
+                '  // CRT ノイズ（アナログ信号ざらつき ±1.5%）',
+                '  float noise=(hash(sq*400.0+u_time*0.5)-0.5)*0.03;',
+                '  col=clamp(col+vec3(noise),0.0,1.0);',
+                '',
+                '  gl_FragColor=vec4(col,1.0);',
                 '}'
             ].join('\n'),
             transparent: true,
@@ -1082,6 +1152,8 @@ function renderPhase1() {
             if (yyPlane.visible) yyMat.uniforms.u_time.value = globalTime;
             if (tunnelPlane.visible) tunnelMat.uniforms.u_time.value = globalTime;
             if (scPlane.visible) scMat.uniforms.u_time.value = globalTime;
+            // CRT合成シェーダーのtime更新
+            compositeUniforms.u_time.value = globalTime;
             if (bDot.visible && bDot.material.uniforms && bDot.material.uniforms.u_time) {
                 bDot.material.uniforms.u_time.value = globalTime;
             }
