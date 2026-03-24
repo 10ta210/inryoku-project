@@ -258,23 +258,65 @@ function renderPhase1() {
         const unit = sqWorld / 10; // 1 old-unit = this many world-units
 
         // ══════════════════════════════════════════════════════
-        //  POST-PROCESSING: Bloom only (masking via scissor)
+        //  SPLIT-RENDER PIPELINE (Step 1)
+        //  スクエア内/外を分離レンダーし最終段で合成する
+        //  P0: ポストプロセスなし
+        //  P1: 16色ディザ (Step 4で追加予定)
+        //  CRT: 最終合成後に適用予定 (Step 2/3で追加)
         // ══════════════════════════════════════════════════════
+
+        // スクエア内描画用 RenderTarget
+        let rtSquare = new THREE.WebGLRenderTarget(sqPx, sqPx, {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.NearestFilter,
+            format: THREE.RGBAFormat,
+            depthBuffer: true,
+            stencilBuffer: false
+        });
+        // スクエア外GLSL背景用 RenderTarget (P1壁紙等で使用予定)
+        const rtOuter = new THREE.WebGLRenderTarget(W, H, {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.NearestFilter,
+            format: THREE.RGBAFormat
+        });
+
+        // 合成シェーダー: rtSquare.texture をsq-border領域に貼り付け
+        // squareRect = (left, bottom, width, height) in 0-1 screen UV
+        const compositeUniforms = {
+            tSquare:    { value: rtSquare.texture },
+            squareRect: { value: new THREE.Vector4(0, 0, 1, 1) }
+        };
+        const compositeMat = new THREE.ShaderMaterial({
+            uniforms: compositeUniforms,
+            vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+            fragmentShader: [
+                'precision highp float;',
+                'uniform sampler2D tSquare;',
+                'uniform vec4 squareRect;',
+                'varying vec2 vUv;',
+                'void main(){',
+                '  vec2 sq=(vUv-squareRect.xy)/squareRect.zw;',
+                '  if(sq.x<0.0||sq.x>1.0||sq.y<0.0||sq.y>1.0) discard;',
+                '  gl_FragColor=texture2D(tSquare,sq);',
+                '}'
+            ].join('\n'),
+            transparent: true,
+            depthWrite: false
+        });
+        const compScene = new THREE.Scene();
+        const compCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const compQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), compositeMat);
+        compScene.add(compQuad);
+
+        // bloom/composerはStep 2/3で再実装（Phase別ポストプロセスとして）
         let composer = null, bloom = null;
-        // Scissor rect for square clipping (GL coords: origin at bottom-left)
+
+        // Scissor rect (GL座標: 原点=左下) — フルスクリーン切替フラグとして継続使用
         const scissor = {
-            x: 0,
-            y: 0,
-            w: sqPx,
-            h: sqPx,
+            x: 0, y: 0,
+            w: sqPx, h: sqPx,
             enabled: true
         };
-        try {
-            composer = new THREE.EffectComposer(renderer);
-            composer.addPass(new THREE.RenderPass(scene, camera));
-            bloom = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.0, 0.4, 0.1);
-            composer.addPass(bloom);
-        } catch (e) { }
 
         // ══════════════════════════════════════════════════════
         //  UI OVERLAY (HTML/CSS)
@@ -450,7 +492,7 @@ function renderPhase1() {
 `;
         document.body.appendChild(wrap);
 
-        // sq-borderのDOMRectからscissorを計算（GL座標系: 原点が左下）
+        // sq-borderのDOMRectからscissor + compositeUniforms を更新
         function updateScissorFromDOM() {
             const sqEl = document.getElementById('sq-border');
             if (sqEl) {
@@ -459,9 +501,23 @@ function renderPhase1() {
                 scissor.y = Math.round(H - rect.bottom); // GLのyは下から
                 scissor.w = Math.round(rect.width);
                 scissor.h = Math.round(rect.height);
-                // カメラのfrustumをコンテンツサイズに合わせる
-                // sqWorldがコンテンツの「高さ」なので、それを基準にズーム
-                const contentH = sqWorld / 2; // コンテンツの半分の高さ
+
+                // rtSquare サイズをsq-borderのサイズに同期
+                if (scissor.w > 0 && scissor.h > 0 &&
+                    (rtSquare.width !== scissor.w || rtSquare.height !== scissor.h)) {
+                    rtSquare.setSize(scissor.w, scissor.h);
+                    compositeUniforms.tSquare.value = rtSquare.texture;
+                }
+                // 合成シェーダーの squareRect 更新（正規化スクリーン座標 0-1）
+                compositeUniforms.squareRect.value.set(
+                    scissor.x / W,   // left
+                    scissor.y / H,   // bottom (GL座標)
+                    scissor.w / W,   // width
+                    scissor.h / H    // height
+                );
+
+                // カメラのfrustumをsq-borderのアスペクト比に合わせる
+                const contentH = sqWorld / 2;
                 const newAspect = rect.width / rect.height;
                 const contentW = contentH * newAspect;
                 camera.left = -contentW;
@@ -1487,6 +1543,9 @@ function renderPhase1() {
                     // ── クリーンアップ: 全3Dリソース解放 ──
                     scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.dispose) o.material.dispose(); } });
                     if (composer) { composer.passes.forEach(p => { if (p.dispose) p.dispose(); }); }
+                    // 分離レンダーパイプラインリソース解放
+                    rtSquare.dispose(); rtOuter.dispose();
+                    compositeMat.dispose(); compQuad.geometry.dispose();
                     renderer.dispose(); renderer.domElement.remove();
                     whiteOv.remove(); wrap.remove(); ldCSS.remove();
                     // ── P1完了: カスタムイベント発火 ──
@@ -1503,20 +1562,36 @@ function renderPhase1() {
         // scissorはsq-borderのDOMRectから動的に計算
 
         // ══════════════════════════════════════════════════════
-        //  RENDER LOOP
+        //  RENDER LOOP — 分離レンダーパイプライン
         // ══════════════════════════════════════════════════════
         (function renderLoop() {
             if (!alive) return;
             tick();
-            updateScissorFromDOM(); // scissorをsq-borderにDOM同期
+            updateScissorFromDOM(); // scissor + squareRect をDOM同期
+
             if (scissor.enabled) {
-                renderer.setScissorTest(true);
-                renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
-                renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
-            } else {
+                // ── Pass 1: シーン → rtSquare ──
+                // (Phase別ポストプロセスはStep 2/4で追加)
+                renderer.setRenderTarget(rtSquare);
                 renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, rtSquare.width, rtSquare.height);
+                renderer.clear();
+                renderer.render(scene, camera);
+                renderer.setRenderTarget(null);
+
+                // ── Pass 2: rtSquare → スクリーン（合成）──
+                // CRTエフェクトはStep 2/3で合成シェーダーに統合予定
+                renderer.setViewport(0, 0, W, H);
+                renderer.setScissorTest(false);
+                renderer.render(compScene, compCamera);
+            } else {
+                // フルスクリーンレンダー (CONSUME後半 / EVENT_COLLAPSE)
+                renderer.setRenderTarget(null);
+                renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, W, H);
+                renderer.render(scene, camera);
             }
-            if (composer) composer.render(); else renderer.render(scene, camera);
+
             requestAnimationFrame(renderLoop);
         })();
     });
