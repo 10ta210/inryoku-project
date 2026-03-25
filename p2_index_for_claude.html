@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>inryokü - Phase 2</title>
+  <meta name="description" content="GUIが死んだ後に残るのはコード。50% or 101%.">
+
+  <!-- Three.js 0.160.0 CDN (UMD) -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Courier New', monospace;
+    }
+    #root { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="p2_code_for_claude.js"></script>
+
+  <script>
+    // P2 スタンドアロン起動
+    renderPhase2();
+
+    // P2完了イベントリスナー（P3遷移用）
+    window.addEventListener('inryoku:p2complete', () => {
+      console.log('✅ P2 complete — ready for P3 transition');
+      // renderPhase3();
+    });
+  </script>
+</body>
+</html>

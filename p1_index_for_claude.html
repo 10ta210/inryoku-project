@@ -38,16 +38,25 @@
 
   <!-- P1コード -->
   <script src="p1_code_for_claude.js"></script>
+  <!-- P2コード（P1完了後に起動） -->
+  <script src="p2_code_for_claude.js"></script>
+  <!-- P3コード（P2完了後に起動） -->
+  <script src="p3_code_for_claude.js"></script>
 
   <script>
     // P1開始
     renderPhase1();
 
-    // P1完了イベントリスナー
+    // P1完了 → P2起動
     window.addEventListener('inryoku:p1complete', () => {
-      console.log('✅ P1 complete — ready for P2 transition');
-      // ここでP2の初期化を呼ぶ
-      // renderPhase2();
+      console.log('✅ P1 complete — starting P2');
+      renderPhase2();
+    });
+
+    // P2完了 → P3起動
+    window.addEventListener('inryoku:p2complete', () => {
+      console.log('✅ P2 complete — starting P3');
+      renderPhase3();
     });
   </script>
 </body>

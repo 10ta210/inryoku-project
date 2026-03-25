@@ -353,11 +353,16 @@ function renderPhase1() {
         // ══════════════════════════════════════════════════════
         //  THREE.JS FULLSCREEN INIT
         // ══════════════════════════════════════════════════════
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(0.5); // 低解像度レンダリング（Win95風）
         renderer.setSize(W, H);
-        renderer.setClearColor(0x1a1a1a, 1);
+        renderer.setClearColor(0x000000, 0); // 透明クリア（alpha:true用）
         renderer.domElement.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;';
+
+        // teal デスクトップ背景 (alpha:trueのcanvasの代わりにCSS背景で提供)
+        const tealBg = document.createElement('div');
+        tealBg.style.cssText = 'position:fixed;inset:0;background:#008080;z-index:0;pointer-events:none;';
+        document.body.appendChild(tealBg);
         document.body.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -791,6 +796,7 @@ function renderPhase1() {
 
         // sq-borderのDOMRectからscissor + compositeUniforms を更新
         function updateScissorFromDOM() {
+            if (lockSquareRect) return; // CONSUME突破中は手動制御
             const sqEl = document.getElementById('sq-border');
             if (sqEl) {
                 const rect = sqEl.getBoundingClientRect();
@@ -874,6 +880,14 @@ function renderPhase1() {
                 ].includes(phase);
 
                 if (inEvent) {
+                    tick();
+                    return;
+                }
+
+                // CONSUMEフェーズは自動進行（ユーザーの操作不要・現実を飲み込む）
+                if (phase === PH.CONSUME) {
+                    prog = Math.min(101, prog + 0.18);
+                    showProg(prog);
                     tick();
                     return;
                 }
@@ -1363,6 +1377,9 @@ function renderPhase1() {
         const clk = new THREE.Clock();
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
         let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false;
+        // CONSUME突破演出: squareRectのDOM同期をロックして手動制御
+        let lockSquareRect = false;
+        let consumeSqX = 0, consumeSqY = 0, consumeSqW = 1, consumeSqH = 1;
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -1734,22 +1751,61 @@ function renderPhase1() {
                 if (bloom) bloom.strength = 3.5;
                 if (et >= 3.0) { phase = PH.CONSUME; progPaused = false; sqBorder.style.borderColor = 'transparent'; }
 
-                // ═══ PHASE 6: CONSUME (75→101%) — 引力の増大 ═══
+                // ═══ PHASE 6: CONSUME (75→101%) — トンネルがWin95現実を飲み込む ═══
             } else if (phase === PH.CONSUME) {
                 updateWin95Status('Consuming reality... do not turn off your computer');
-                // Step 5 バグ修正: 75→101 = 26pt の範囲を正しく0→1にクランプ
+                // 75→101 = 26pt
                 const at = Math.min(1.0, (prog - 75) / 26);
-                tunnelMat.uniforms.u_radius.value = 0.6 + at * 0.35;
-                tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;
+
+                // トンネル成長
+                tunnelMat.uniforms.u_radius.value = 0.6 + at * 0.45;   // 0.6→1.05
+                tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;  // 0.5→1.0
                 tunnelMat.uniforms.u_alpha.value = 1.0;
-                const g = 40 + at * 40;
-                sqBorder.style.boxShadow = '0 0 ' + g + 'px 15px rgba(255,100,255,0.2),0 0 ' + (g * 1.5) + 'px 30px rgba(100,255,255,0.15)';
+                tunnelMat.uniforms.u_warpSpeed.value = 1.0 + at * 3.0;
                 if (bloom) bloom.strength = 3.5 + at * 3;
-                // 残像エフェクト
-                if (logoEl) {
-                    logoEl.style.filter = `drop-shadow(0 0 ${8 + at * 20}px #00ff44) drop-shadow(${at * -8}px 0 ${at * 12}px rgba(0,255,68,0.4))`;
+
+                // sq-border グロー (at 0→0.15 まで)
+                if (at < 0.15) {
+                    const g = 40 + at * 400;
+                    sqBorder.style.boxShadow = '0 0 ' + g + 'px 20px rgba(255,100,255,0.45),0 0 ' + (g * 2) + 'px 60px rgba(100,255,255,0.25)';
                 }
-                if (prog >= 101) { phase = PH.EVENT_COLLAPSE; eventTimer = 0; prog = 101; showProg(101); progPaused = true; }
+
+                // CONSUME開始: canvasをHTML層(z-index:10)の上に浮上させる
+                // alpha:true canvasなのでsquareRect外は透明 → Win95 HTMLが透けて見える
+                if (at >= 0 && renderer.domElement.style.zIndex !== '15') {
+                    renderer.domElement.style.zIndex = '15';
+                }
+
+                // at=0.1→1.0: squareRectをsq-border→フルスクリーンへ拡張
+                // トンネルがWin95 UIを中央から外側へ飲み込む演出
+                if (at >= 0.1) {
+                    if (!lockSquareRect) {
+                        // 初回: 現在のsquareRect値をキャプチャ
+                        const v = compositeUniforms.squareRect.value;
+                        consumeSqX = v.x; consumeSqY = v.y;
+                        consumeSqW = v.z; consumeSqH = v.w;
+                        lockSquareRect = true;
+                    }
+                    const t2 = Math.min(1.0, (at - 0.1) / 0.9);
+                    // smoothstep easing
+                    const e = t2 * t2 * (3.0 - 2.0 * t2);
+                    // sq-border位置→(0,0,1,1)へ補間
+                    const newX = consumeSqX * (1.0 - e);
+                    const newY = consumeSqY * (1.0 - e);
+                    const newW = consumeSqW + e * (1.0 - consumeSqW);
+                    const newH = consumeSqH + e * (1.0 - consumeSqH);
+                    compositeUniforms.squareRect.value.set(newX, newY, newW, newH);
+                }
+
+                if (at >= 0.95) {
+                    // フルスクリーン完全展開
+                    compositeUniforms.squareRect.value.set(0, 0, 1, 1);
+                }
+
+                if (prog >= 101) {
+                    phase = PH.EVENT_COLLAPSE; eventTimer = 0; prog = 101; showProg(101); progPaused = true;
+                    compositeUniforms.squareRect.value.set(0, 0, 1, 1);
+                }
 
                 // ═══ PHASE 7: EVENT_COLLAPSE — トンネルが溢れ出す ═══
             } else if (phase === PH.EVENT_COLLAPSE) {
@@ -1762,8 +1818,8 @@ function renderPhase1() {
                     bsod.id = 'bsod';
                     bsod.style.cssText = `
                         position:fixed;
-                        left:${sqLeft}px;top:${sqTop}px;
-                        width:${sqPx}px;height:${sqPx}px;
+                        left:0;top:0;
+                        width:100%;height:100%;
                         background:#0000aa;
                         color:#ffffff;
                         font-family:'Courier New',monospace;
@@ -1802,10 +1858,33 @@ function renderPhase1() {
                         const bar = document.getElementById('bsod-bar');
                         if (bar) { bar.style.transition = 'width 3s linear'; bar.style.width = '100%'; }
                     }, 100);
+                    // ── P1→P2 遷移: "Press any key" で暗転→P2起動 ──
+                    const _p1toP2 = () => {
+                        document.removeEventListener('keydown', _p1toP2);
+                        document.removeEventListener('click',   _p1toP2);
+                        const blackOv = document.createElement('div');
+                        blackOv.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;z-index:9999;transition:opacity 0.5s;pointer-events:none;';
+                        document.body.appendChild(blackOv);
+                        requestAnimationFrame(() => { blackOv.style.opacity = '1'; });
+                        setTimeout(() => {
+                            // P1クリーンアップはinryoku:p1completeイベントで行う
+                            // ここでは強制完了させる
+                            phase = PH.DONE; alive = false;
+                            scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material?.dispose) o.material.dispose(); });
+                            rtSquare.dispose(); rtOuter.dispose();
+                            compositeMat.dispose(); compQuad.geometry.dispose();
+                            renderer.dispose(); renderer.domElement.remove();
+                            tealBg.remove(); whiteOv.remove(); wrap.remove(); ldCSS.remove();
+                            const bsodEl = document.getElementById('bsod');
+                            if (bsodEl) bsodEl.remove();
+                            blackOv.remove();
+                            window.dispatchEvent(new CustomEvent('inryoku:p1complete'));
+                        }, 500);
+                    };
                     setTimeout(() => {
-                        const el = document.getElementById('bsod');
-                        if (el) el.remove();
-                    }, 4000);
+                        document.addEventListener('keydown', _p1toP2, { once: true });
+                        document.addEventListener('click',   _p1toP2, { once: true });
+                    }, 300); // BSOD表示直後の誤クリックを防ぐ
                 }
                 tunnelMat.uniforms.u_radius.value = 0.95 + Math.min(et, 2.0) * 2.0; // expand beyond square
                 tunnelMat.uniforms.u_progress.value = 1.0;
@@ -1831,24 +1910,12 @@ function renderPhase1() {
                     rgbP.forEach(p => p.visible = false);
                 }
 
-                // Step 2 (0.5-2.5s): Square border fades + mask expands → TUNNEL OVERFLOWS
-                if (et >= 0.5 && et < 2.5) {
-                    const t2 = (et - 0.5) / 2.0, eased = t2 * t2 * t2;
-                    sqBorder.style.opacity = String(Math.max(0, 1 - eased * 3));
-                    // Expand scissor from square to full screen
-                    const curW = sqPx + (W - sqPx) * eased;
-                    const curH = sqPx + (H - sqPx) * eased;
-                    scissor.x = Math.round(W / 2 - curW / 2);
-                    scissor.y = Math.round(H / 2 - curH / 2);
-                    scissor.w = Math.round(curW);
-                    scissor.h = Math.round(curH);
-                    tunnelMat.uniforms.u_warpSpeed.value = 1.0 + eased * 3.0;
-                    if (bloom) bloom.strength = 1.5 + eased * 3.0;
-                }
+                // BACKUP: Step 2 (0.5-2.5s) scissor拡張 — CONSUMEフェーズで既に実装済みのため削除
+                // CONSUME突破後はsquareRect=(0,0,1,1)でフルスクリーン状態になっている
 
-                // Step 3 (2.5-5.0s): Camera warp into the light
-                if (et >= 2.5 && et < 5.0) {
-                    const t2 = (et - 2.5) / 2.5, eased = t2 * t2;
+                // Step 3 (0.5-3.0s): Camera warp into the light
+                if (et >= 0.5 && et < 3.0) {
+                    const t2 = (et - 0.5) / 2.5, eased = t2 * t2;
                     sqBorder.style.display = 'none';
                     scissor.enabled = false; // Full screen — no clip
                     camera.position.z = 50 - eased * 40;
@@ -1858,29 +1925,30 @@ function renderPhase1() {
                     tunnelMat.uniforms.u_progress.value = 1.0 + eased;
                 }
 
-                // Step 4 (5.0-5.8s): Whiteout
-                if (et >= 5.0 && et < 5.8) {
-                    const t2 = (et - 5.0) / 0.8;
+                // Step 4 (3.0-3.8s): Whiteout
+                if (et >= 3.0 && et < 3.8) {
+                    const t2 = (et - 3.0) / 0.8;
                     whiteOv.style.opacity = String(t2);
                     if (bloom) bloom.strength = 8.5;
                 }
 
-                // Step 5 (5.8-6.6s): Solar cross (GLSL)
-                if (et >= 5.8 && et < 6.6) {
+                // Step 5 (3.8-4.6s): Solar cross (GLSL)
+                if (et >= 3.8 && et < 4.6) {
                     whiteOv.style.opacity = '1';
                     tunnelPlane.visible = false;
                     bgPlane.visible = false;
                     scPlane.visible = true;
                     scissor.enabled = false;
                     renderer.setClearColor(0xffffff, 1);
-                    const scPhase = et - 5.8;
+                    const scPhase = et - 3.8;
                     const scA = scPhase < 0.3 ? (scPhase / 0.3) * (scPhase / 0.3) : (scPhase > 0.6 ? Math.max(0, 1 - ((scPhase - 0.6) / 0.2) * ((scPhase - 0.6) / 0.2)) : 1.0);
                     scMat.uniforms.u_alpha.value = scA;
                 }
 
-                // Step 6 (6.6s): Transition to P3
-                if (et >= 6.6 && phase !== PH.DONE) {
+                // Step 6 (4.6s): Transition to P3
+                if (et >= 4.6 && phase !== PH.DONE) {
                     phase = PH.DONE; alive = false;
+                    renderer.domElement.style.zIndex = ''; // z-index リセット
                     // ── クリーンアップ: 全3Dリソース解放 ──
                     scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.dispose) o.material.dispose(); } });
                     if (composer) { composer.passes.forEach(p => { if (p.dispose) p.dispose(); }); }
@@ -1889,6 +1957,7 @@ function renderPhase1() {
                     compositeMat.dispose(); compQuad.geometry.dispose();
                     // wallpaperMat/Quad削除済み
                     renderer.dispose(); renderer.domElement.remove();
+                    tealBg.remove();
                     whiteOv.remove(); wrap.remove(); ldCSS.remove();
                     // ── P1完了: カスタムイベント発火 ──
                     window.dispatchEvent(new CustomEvent('inryoku:p1complete'));
@@ -1913,17 +1982,13 @@ function renderPhase1() {
 
             if (scissor.enabled) {
                 // ── Pass 0: Win95デスクトップ背景 #008080 ──
-                // tick()が設定したシーン背景色を保存してから上書き
-                const _sceneBg = new THREE.Color();
-                renderer.getClearColor(_sceneBg);
-                const _sceneBgA = renderer.getClearAlpha();
+                // ── Pass 0: canvasを透明クリア (teal背景はtealBg CSSで提供) ──
+                // BACKUP: renderer.setClearColor(0x008080, 1.0) — alpha:trueでは不要
                 renderer.setRenderTarget(null);
                 renderer.setScissorTest(false);
                 renderer.setViewport(0, 0, W, H);
-                renderer.setClearColor(0x008080, 1.0);
+                renderer.setClearColor(0x000000, 0); // 透明
                 renderer.clear();
-                // Pass 1のためシーン背景色を復元
-                renderer.setClearColor(_sceneBg, _sceneBgA);
 
                 // ── Pass 1: シーン → rtSquare ──
                 // setRenderTarget()が内部でviewportを正しく設定する（pixelRatio未適用）

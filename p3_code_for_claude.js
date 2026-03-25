@@ -1,0 +1,669 @@
+// ═══════════════════════════════════════════════════════════════
+//  inryokü — Phase 6 コード一式（Claude引き継ぎ用）
+//
+//  このファイルはp5p6.jsからPhase 6に関連する部分を抽出したものです。
+//  実際のプロジェクト: /Users/10ta210/.gemini/antigravity/scratch/antigravity/
+//  起動: python3 -m http.server 8765 → http://localhost:8765/
+//
+//  Phase 6 概要:
+//    - 粒子宇宙（Three.js Points 15000個 + 星座ネットワーク）
+//    - inryokü ロゴ（各文字RGBCMY色）
+//    - 商品カード（ENTER HOODIE, INFORMATION LOGO HOODIE）
+//    - philosophy.txt フローティングウィンドウ（物理バウンス+ドラッグ）
+//    - BGM: Holst - Jupiter
+//    - ボレロプレーヤー（Web Audio API合成）
+//    - Stripe Checkout準備済み
+//
+//  哲学: 「RGB（デジタル）で黒。CMY（アナログ）で白。現実はグレー。50%に気づいたら虹色。」
+// ═══════════════════════════════════════════════════════════════
+
+// ═══ P3 グローバル変数 ═══
+let currentPhase = 0;
+let audioContext = null;
+
+// ═══ PRODUCT DATA ═══
+const PRODUCTS = [
+    {
+        id: 'enter-hoodie',
+        name: 'ENTER HOODIE',
+        price: '¥14,800',
+        priceNum: 14800,
+        image: 'enter_hoodie.png',
+        description: 'EXIT is just the beginning. ENTER the next dimension.',
+        details: 'Oversized fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'info-logo-hoodie',
+        name: 'INFORMATION LOGO HOODIE',
+        price: '¥14,800',
+        priceNum: 14800,
+        image: 'info_logo_hoodie.png',
+        description: 'The information symbol reimagined. 101% identity.',
+        details: 'Oversized fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    }
+];
+
+// ═══ PHASE 6 メインエントリー ═══
+function renderPhase3() {
+    currentPhase = 3;
+    localStorage.setItem('inryoku_visited', '1');
+
+    // ── P2→P3 遷移オーバーレイを引き継ぐ ──────────────────────
+    // P2のホワイトアウト (#p2-fade-ov) が残っていれば:
+    //   白 → 黒 (500ms) → 透明 (800ms) でフェードしてP3を露出
+    const p2ov = document.getElementById('p2-fade-ov');
+    if (p2ov) {
+        p2ov.style.pointerEvents = 'none';
+        // 即座に黒に変える（白→黒は視覚的に "次の世界へ" の暗転）
+        p2ov.style.transition = 'background 0.5s ease, opacity 0.8s ease';
+        p2ov.style.background = '#000000';
+        p2ov.style.opacity    = '1';
+        // 500ms後: 黒を透明にフェード → P3が現れる
+        setTimeout(() => {
+            p2ov.style.opacity = '0';
+        }, 500);
+        // 1300ms後: 完全に削除
+        setTimeout(() => { p2ov.remove(); }, 1400);
+    }
+
+    // ── 残留DOM完全除去 ─────────────────────────────────────────
+    document.querySelectorAll('body > canvas').forEach(el => el.remove());
+    ['#sun-cross-overlay', '#door-overlay'].forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) el.remove();
+    });
+    document.querySelectorAll('body > div[style]').forEach(el => {
+        const z = parseInt(el.style.zIndex || 0);
+        if (z >= 9000) el.remove();
+    });
+    document.body.style.background = '#000';
+    document.body.style.overflow = 'hidden';
+
+    // ── BGM: Holst - Jupiter (The Bringer of Jollity) ──
+    // Public domain recording from Wikimedia Commons
+    let p6bgm = null;
+    try {
+        p6bgm = new Audio('https://upload.wikimedia.org/wikipedia/commons/a/a0/Holst_The_Planets_Jupiter.ogg');
+        p6bgm.loop = true;
+        p6bgm.volume = 0;
+        p6bgm.crossOrigin = 'anonymous';
+        const playPromise = p6bgm.play();
+        if (playPromise) {
+            playPromise.catch(() => {
+                // Autoplay blocked — play on first interaction
+                const resumeBGM = () => {
+                    p6bgm.play().catch(() => { });
+                    document.removeEventListener('click', resumeBGM);
+                    document.removeEventListener('touchstart', resumeBGM);
+                };
+                document.addEventListener('click', resumeBGM, { once: true });
+                document.addEventListener('touchstart', resumeBGM, { once: true });
+            });
+        }
+        // Fade in over 3 seconds
+        let fadeVol = 0;
+        const fadeIn = setInterval(() => {
+            fadeVol += 0.01;
+            if (fadeVol >= 0.7) { fadeVol = 0.7; clearInterval(fadeIn); }
+            if (p6bgm) p6bgm.volume = fadeVol;
+        }, 30);
+    } catch (e) { console.warn('BGM load failed:', e); }
+    // Store reference for cleanup
+    window._p6bgm = p6bgm;
+
+    const root = document.getElementById('root');
+    root.className = 'phase-3';
+    root.style.cssText = 'position:relative;z-index:1;background:transparent;pointer-events:none;';
+
+    const productCardsHTML = PRODUCTS.map((p, i) => `
+        <div class="item-card glass-card" onclick="showProductModal(${i})" id="product-${p.id}">
+          <div class="item-thumb">
+            <img src="${p.image}" alt="${p.name}" class="item-thumb-img">
+          </div>
+          <div class="item-info">
+            <div class="item-name">${p.name}</div>
+            <div class="item-price">${p.price}</div>
+          </div>
+        </div>`).join('');
+
+    root.innerHTML = `
+        <canvas id="pu-cv" style="display:none;"></canvas>
+    <div class="singularity-content" style="position:relative;z-index:5;pointer-events:auto;">
+        <div class="hologram-logo">
+            <div class="brand-name p6-logo-text">
+                <span class="brand-char" style="color:#808080">i</span><span class="brand-char" style="color:#FF0000">n</span><span class="brand-char" style="color:#00FF00">r</span><span class="brand-char" style="color:#0044FF">y</span><span class="brand-char" style="color:#00FFFF">o</span><span class="brand-char" style="color:#FF00FF">k</span><span class="brand-char" style="color:#FFFF00">ü</span>
+            </div>
+            <img src="inryoku_logo_icon.png" alt="inryokü" class="logo-icon">
+                <div class="brand-truth">101% TRUTH — The Source</div>
+                <div class="prism-line"></div>
+        </div>
+
+        <div class="item-grid">
+            ${productCardsHTML}
+        </div>
+
+        <div class="binary-footer"><p>101010₂ = 42₁₀ = The Angle of Prism = The Answer</p></div>
+    </div>`;
+
+    // ── Philosophy フローティングウィンドウ ──
+    const philWin = document.createElement('div');
+    philWin.id = 'phil-win';
+    philWin.className = 'philosophy-window';
+    philWin.style.cssText = 'position:fixed;left:60%;top:30%;z-index:100;width:clamp(260px,38vw,400px);';
+    philWin.innerHTML = `
+        <div class="window-titlebar">
+            <span class="window-title">philosophy.txt</span>
+            <div class="window-controls">
+                <button onclick="document.getElementById('phil-win').style.display='none'">✕</button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="sutra-text">色不異空，空不異色。色即是空，空即是色。</div>
+            <div class="sutra-translation">Form is emptiness, emptiness is form.</div>
+            <br>
+            <p style="color:#888;font-size:12px;line-height:1.7;">
+                RGB = Black. CMY = White.<br>
+                0 and 1 are the same thing observed differently.<br>
+                50% = Grey = All colors = 101%.<br>
+                You are the prism. Reality is the rainbow.
+            </p>
+            <br>
+            <p style="color:#444;font-size:11px;">101010₂ = 42 = The Answer</p>
+        </div>`;
+    document.body.appendChild(philWin);
+
+    // ── Bolero プレーヤー ──
+    const boleroEl = document.createElement('div');
+    boleroEl.id = 'bolero-player';
+    boleroEl.innerHTML = `
+        <button id="bolero-btn">▶</button>
+        <span id="bolero-label">BOLERO (Ravel)</span>`;
+    document.body.appendChild(boleroEl);
+
+    console.log('[Phase 3] DOM setup complete, initializing particle universe...');
+    requestAnimationFrame(() => {
+        initParticleUniverse();
+        initFloatingWindow3();
+        initBoleroPlayer();
+    });
+}
+
+// ═══ THREE.JS 粒子宇宙 ═══
+function initParticleUniverse() {
+    if (typeof THREE === 'undefined') { console.error('[P3] Three.js required'); return; }
+
+    const W = window.innerWidth, H = window.innerHeight;
+    document.querySelectorAll('body > canvas:not(#p6-canvas)').forEach(c => c.remove());
+    const existing = document.getElementById('p6-canvas');
+    if (existing) existing.remove();
+
+    // ── Renderer ──
+    const renderer6 = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+    renderer6.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer6.setSize(W, H);
+    renderer6.setClearColor(0x000000, 1);
+    renderer6.domElement.id = 'p6-canvas';
+    renderer6.domElement.style.cssText =
+        'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;' +
+        'pointer-events:none;display:block;';
+    document.body.insertBefore(renderer6.domElement, document.body.firstChild);
+
+    // ── Scene / Camera ──
+    const scene6 = new THREE.Scene();
+    const camera6 = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
+    camera6.position.set(0, 0, 200);
+    camera6.lookAt(0, 0, 0);
+
+    // ═══════════════════════════════════════════════════════════════
+    //  15000 RGBCMY+White 星 — 呼吸する宇宙
+    // ═══════════════════════════════════════════════════════════════
+    const isMobile = W < 768;
+    const N = isMobile ? 6000 : 15000;
+
+    const positions = new Float32Array(N * 3);
+    const colors = new Float32Array(N * 3);
+    const aSizes = new Float32Array(N);
+    const aPhases = new Float32Array(N);
+
+    const PALETTE = [
+        [1, 0, 0], [0, 1, 0], [0, 0, 1],
+        [0, 1, 1], [1, 0, 1], [1, 1, 0],
+        [1, 1, 1]
+    ];
+
+    for (let i = 0; i < N; i++) {
+        // 球状に均等分布
+        const r = 80 + Math.random() * 400;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+
+        // RGBCMY+White
+        const c = PALETTE[Math.floor(Math.random() * 7)];
+        colors[i * 3] = c[0];
+        colors[i * 3 + 1] = c[1];
+        colors[i * 3 + 2] = c[2];
+
+        // サイズバラつき（よりランダムに、大きいのも混ぜる）
+        const sR = Math.random();
+        if (sR < 0.03) aSizes[i] = 12.0 + Math.random() * 8.0;       // 3%: 巨大な光球
+        else if (sR < 0.10) aSizes[i] = 6.0 + Math.random() * 6.0;  // 7%: 大きい
+        else if (sR < 0.30) aSizes[i] = 3.0 + Math.random() * 3.0;  // 20%: 中大
+        else if (sR < 0.55) aSizes[i] = 1.5 + Math.random() * 2.0;  // 25%: 中
+        else aSizes[i] = 0.3 + Math.random() * 1.5;                  // 45%: 小さい星
+
+        // 呼吸フェーズ
+        aPhases[i] = Math.random() * Math.PI * 2;
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('aSize', new THREE.BufferAttribute(aSizes, 1));
+    geometry.setAttribute('aPhase', new THREE.BufferAttribute(aPhases, 1));
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ShaderMaterial — 呼吸する丸い光の粒
+    // ═══════════════════════════════════════════════════════════════
+    const material = new THREE.ShaderMaterial({
+        uniforms: { uTime: { value: 0.0 } },
+        vertexShader: `
+            attribute float aSize;
+            attribute float aPhase;
+            varying vec3 vColor;
+            varying float vBreathe;
+            uniform float uTime;
+
+void main() {
+    vColor = color;
+
+                // 呼吸: 各粒子が独自のリズムで明滅
+                float breatheSpeed = 0.34 + aPhase * 0.13;
+                float spatialWave = length(position) * 0.02;
+    vBreathe = sin(uTime * breatheSpeed + aPhase + spatialWave) * 0.5 + 0.5;
+
+                // 呼吸に連動してサイズも変化
+                float sizeBreath = 1.0 + vBreathe * 0.3;
+
+                vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = aSize * sizeBreath * (250.0 / -mvPos.z);
+    gl_PointSize = max(gl_PointSize, 0.5);
+    gl_Position = projectionMatrix * mvPos;
+}
+`,
+        fragmentShader: `
+            varying vec3 vColor;
+            varying float vBreathe;
+
+void main() {
+                float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+
+                // ガウシアン風の丸い光
+                float alpha = 1.0 - smoothstep(0.0, 0.5, d);
+    alpha = pow(alpha, 1.5);
+
+                // 呼吸: 明るさが0.3〜1.0の間で変化
+                float breathe = 0.3 + 0.7 * vBreathe;
+
+    gl_FragColor = vec4(vColor * breathe, alpha * breathe);
+}
+`,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        vertexColors: true
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    scene6.add(particles);
+
+    // ═══════════════════════════════════════════════════════════════
+    //  星座ネットワーク (Constellation Lines)
+    // ═══════════════════════════════════════════════════════════════
+    const MAX_LINES = 5000;
+    const linePositions = new Float32Array(MAX_LINES * 6);
+    const lineColors = new Float32Array(MAX_LINES * 6);
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+    lineGeo.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
+    const lineMat = new THREE.LineBasicMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const linesMesh = new THREE.LineSegments(lineGeo, lineMat);
+    scene6.add(linesMesh);
+
+    function updateConstellations() {
+        const posArr = geometry.attributes.position.array;
+        const colArr = geometry.attributes.color.array;
+        const camZ = camera6.position.z;
+
+        const nearby = [];
+        for (let i = 0; i < N; i++) {
+            const z = posArr[i * 3 + 2];
+            const dz = z - camZ;
+            if (dz > -100 && dz < 30) {
+                nearby.push(i);
+            }
+            if (nearby.length >= 800) break;
+        }
+
+        let lineIdx = 0;
+        const CONNECT_DIST = 40;
+
+        for (let a = 0; a < nearby.length && lineIdx < MAX_LINES; a++) {
+            const ia = nearby[a];
+            const ax = posArr[ia * 3], ay = posArr[ia * 3 + 1], az = posArr[ia * 3 + 2];
+
+            for (let b = a + 1; b < nearby.length && lineIdx < MAX_LINES; b++) {
+                const ib = nearby[b];
+                const bx = posArr[ib * 3], by = posArr[ib * 3 + 1], bz = posArr[ib * 3 + 2];
+
+                const dx = ax - bx, dy = ay - by, dz2 = az - bz;
+                const dist = Math.sqrt(dx * dx + dy * dy + dz2 * dz2);
+
+                if (dist < CONNECT_DIST) {
+                    const fade = 1.0 - dist / CONNECT_DIST;
+                    const li = lineIdx * 6;
+
+                    linePositions[li] = ax; linePositions[li + 1] = ay; linePositions[li + 2] = az;
+                    linePositions[li + 3] = bx; linePositions[li + 4] = by; linePositions[li + 5] = bz;
+
+                    lineColors[li] = (colArr[ia * 3] + colArr[ib * 3]) * 0.5 * fade;
+                    lineColors[li + 1] = (colArr[ia * 3 + 1] + colArr[ib * 3 + 1]) * 0.5 * fade;
+                    lineColors[li + 2] = (colArr[ia * 3 + 2] + colArr[ib * 3 + 2]) * 0.5 * fade;
+                    lineColors[li + 3] = lineColors[li];
+                    lineColors[li + 4] = lineColors[li + 1];
+                    lineColors[li + 5] = lineColors[li + 2];
+
+                    lineIdx++;
+                }
+            }
+        }
+
+        for (let i = lineIdx * 6; i < MAX_LINES * 6; i++) {
+            linePositions[i] = 0;
+            lineColors[i] = 0;
+        }
+
+        lineGeo.attributes.position.needsUpdate = true;
+        lineGeo.attributes.color.needsUpdate = true;
+        lineGeo.setDrawRange(0, lineIdx * 2);
+    }
+
+    // ── Bloom ──
+    let composer6 = null;
+    if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
+        composer6 = new THREE.EffectComposer(renderer6);
+        composer6.addPass(new THREE.RenderPass(scene6, camera6));
+        composer6.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.2, 0.6, 0.3));
+    }
+
+    // ── リサイズ ──
+    const onR6 = () => {
+        const nw = window.innerWidth, nh = window.innerHeight;
+        renderer6.setSize(nw, nh);
+        camera6.aspect = nw / nh;
+        camera6.updateProjectionMatrix();
+        if (composer6) composer6.setSize(nw, nh);
+    };
+    window.addEventListener('resize', onR6);
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ORGANIC DRIFT — 滑らかに漂う光のプランクトン
+    // ═══════════════════════════════════════════════════════════════
+    const driftSpeedZ = new Float32Array(N);   // Z軸の前進速度
+    const driftFreqX = new Float32Array(N);    // X揺らぎの周波数
+    const driftFreqY = new Float32Array(N);    // Y揺らぎの周波数
+    const driftAmpX = new Float32Array(N);     // X揺らぎの振幅
+    const driftAmpY = new Float32Array(N);     // Y揺らぎの振幅
+    const driftPhaseX = new Float32Array(N);   // X揺らぎの位相オフセット
+    const driftPhaseY = new Float32Array(N);   // Y揺らぎの位相オフセット
+
+    for (let i = 0; i < N; i++) {
+        // Z速度: ゆるやかなバラつき
+        // 約20%の粒子は逆方向（手前から奥へ）に流れる
+        const isReverse = Math.random() < 0.2;
+        const speed = 0.07 + Math.random() * 0.36;
+        driftSpeedZ[i] = isReverse ? -speed * 0.6 : speed;
+
+        // X/Y揺らぎ: 各粒子が固有のリズムで柔らかく揺れる
+        driftFreqX[i] = 0.13 + Math.random() * 0.34;
+        driftFreqY[i] = 0.10 + Math.random() * 0.30;
+        driftAmpX[i] = 0.017 + Math.random() * 0.10;
+        driftAmpY[i] = 0.017 + Math.random() * 0.085;
+        driftPhaseX[i] = Math.random() * Math.PI * 2;
+        driftPhaseY[i] = Math.random() * Math.PI * 2;
+    }
+
+    const posArr = geometry.attributes.position.array;
+    let uTime = 0;
+
+    function loop6() {
+        if (currentPhase !== 3) {
+            scene6.traverse(obj => {
+                if (obj.isPoints || obj.isMesh || obj.isLine) {
+                    if (obj.geometry) obj.geometry.dispose();
+                    if (obj.material) obj.material.dispose();
+                }
+            });
+            window.removeEventListener('resize', onR6);
+            if (renderer6.domElement.parentNode) renderer6.domElement.remove();
+            try { renderer6.dispose(); } catch (e) { }
+            return;
+        }
+
+        uTime += 0.016;
+        material.uniforms.uTime.value = uTime;
+
+        // 微かなカメラ揺らぎ
+        camera6.position.x = Math.sin(uTime * 0.17) * 0.43;
+        camera6.position.y = Math.cos(uTime * 0.13) * 0.26;
+        camera6.lookAt(0, 0, 0);
+
+        // ═══════════════════════════════════════════════════════════
+        //  ORGANIC DRIFT — ホタルのように滑らかに漂う
+        // ═══════════════════════════════════════════════════════════
+        for (let i = 0; i < N; i++) {
+            // Z軸: 一定の滑らかな速度で手前に前進
+            posArr[i * 3 + 2] += driftSpeedZ[i];
+
+            // X/Y軸: sin/cosで柔らかく揺らぐ（深海のプランクトンのように）
+            posArr[i * 3] += Math.sin(uTime * driftFreqX[i] + driftPhaseX[i]) * driftAmpX[i];
+            posArr[i * 3 + 1] += Math.cos(uTime * driftFreqY[i] + driftPhaseY[i]) * driftAmpY[i];
+
+            // 双方向リサイクル
+            const z = posArr[i * 3 + 2];
+            if (z > 250 || z < -500) {
+                // 正方向の粒子が通過→奥に、逆方向の粒子が奥に消えた→手前に
+                if (driftSpeedZ[i] >= 0) {
+                    posArr[i * 3 + 2] = -300 - Math.random() * 200;
+                } else {
+                    posArr[i * 3 + 2] = 200 + Math.random() * 50;
+                }
+                const r = 20 + Math.random() * 180;
+                const angle = Math.random() * Math.PI * 2;
+                posArr[i * 3] = Math.cos(angle) * r;
+                posArr[i * 3 + 1] = Math.sin(angle) * r;
+            }
+        }
+        geometry.attributes.position.needsUpdate = true;
+
+        // 星座ネットワーク更新
+        updateConstellations();
+
+        if (composer6) composer6.render(); else renderer6.render(scene6, camera6);
+        requestAnimationFrame(loop6);
+    }
+
+    setTimeout(() => {
+        if (currentPhase === 3) requestAnimationFrame(loop6);
+    }, 150);
+}
+
+
+// initParticleUniverseCanvas() — Canvas 2D使用のため削除 (inryokü技術制約違反)
+
+
+// ═══ フローティングウィンドウ（philosophy.txt）═══
+function initFloatingWindow3() {
+    const win = document.getElementById('phil-win'); if (!win) return;
+    let x = window.innerWidth * .6, y = window.innerHeight * .3, vx = .5, vy = .3, isDrag = false, ox = 0, oy = 0, tvx = 0, tvy = 0;
+    win.style.position = 'fixed'; win.style.left = x + 'px'; win.style.top = y + 'px'; win.style.cursor = 'grab'; win.style.zIndex = '100';
+
+    function gp(e) { if (e.touches) return { x: e.touches[0].clientX, y: e.touches[0].clientY }; return { x: e.clientX, y: e.clientY }; }
+    win.addEventListener('mousedown', e => { isDrag = true; ox = e.clientX - x; oy = e.clientY - y; win.style.cursor = 'grabbing'; });
+    win.addEventListener('touchstart', e => { isDrag = true; const p = gp(e); ox = p.x - x; oy = p.y - y; }, { passive: true });
+    document.addEventListener('mousemove', e => { if (isDrag) { const nx = e.clientX - ox, ny = e.clientY - oy; tvx = (nx - x) * .3; tvy = (ny - y) * .3; x = nx; y = ny; } });
+    document.addEventListener('touchmove', e => { if (isDrag && e.touches) { const p = gp(e); const nx = p.x - ox, ny = p.y - oy; tvx = (nx - x) * .3; tvy = (ny - y) * .3; x = nx; y = ny; } }, { passive: true });
+    document.addEventListener('mouseup', () => { if (isDrag) { isDrag = false; win.style.cursor = 'grab'; vx = tvx; vy = tvy; } });
+    document.addEventListener('touchend', () => { if (isDrag) { isDrag = false; vx = tvx; vy = tvy; } });
+    function anim() {
+        if (currentPhase !== 3) return;
+        if (!isDrag) {
+            x += vx; y += vy; vx *= .995; vy *= .995;
+            const w2 = win.offsetWidth, h2 = win.offsetHeight;
+            if (x < 0) { x = 0; vx = Math.abs(vx) * .8; } if (x + w2 > window.innerWidth) { x = window.innerWidth - w2; vx = -Math.abs(vx) * .8; }
+            if (y < 0) { y = 0; vy = Math.abs(vy) * .8; } if (y + h2 > window.innerHeight) { y = window.innerHeight - h2; vy = -Math.abs(vy) * .8; }
+            if (Math.abs(vx) < .12 && Math.abs(vy) < .12) { vx += (Math.random() - .5) * .22; vy += (Math.random() - .5) * .22; }
+        }
+        win.style.left = x + 'px'; win.style.top = y + 'px'; requestAnimationFrame(anim);
+    }
+    anim();
+}
+
+// ═══ 商品モーダル ═══
+function showProductModal(idx) {
+    const p = PRODUCTS[idx];
+    if (!p) return;
+    const m = document.createElement('div');
+    m.className = 'product-modal';
+    m.innerHTML = `
+    <div class="modal-overlay" id="pm-overlay"></div>
+        <div class="product-detail glass-card">
+            <button class="product-close-btn" id="pm-close">✕</button>
+            <div class="product-detail-inner">
+                <div class="product-image-wrap">
+                    <img src="${p.image}" alt="${p.name}" class="product-detail-img">
+                </div>
+                <div class="product-info-wrap">
+                    <h2 class="product-title">${p.name}</h2>
+                    <div class="product-price-tag">${p.price}</div>
+                    <p class="product-desc">${p.description}</p>
+                    <p class="product-specs">${p.details}</p>
+                    <div class="product-color">Color: ${p.color}</div>
+                    <div class="size-selector">
+                        <div class="size-label">SIZE</div>
+                        <div class="size-options">
+                            ${p.sizes.map((s, i) => `<button class="size-btn${i === 1 ? ' selected' : ''}" data-size="${s}">${s}</button>`).join('')}
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" id="pm-cart">
+                        <span class="cart-btn-text">ADD TO CART</span>
+                        <span class="cart-btn-price">${p.price}</span>
+                    </button>
+                    <div class="stripe-badge">Powered by <strong>Stripe</strong> · Secure Checkout</div>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(m);
+
+    // サイズ選択
+    let selectedSize = p.sizes.length > 1 ? p.sizes[1] : p.sizes[0];
+    m.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            m.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedSize = btn.dataset.size;
+        });
+    });
+
+    // カートボタン → Stripe Checkout (MVP: alertで代替、後でStripe URL差し替え)
+    document.getElementById('pm-cart').addEventListener('click', () => {
+        const msg = `${p.name} (${selectedSize}) — ${p.price} \n\nStripe Checkout に遷移します。\n(Stripe APIキー設定後に有効化)`;
+        alert(msg);
+        // TODO: 実際のStripe Checkout Session URL
+        // window.location.href = `YOUR_STRIPE_CHECKOUT_URL ? product = ${ p.id }&size=${ selectedSize } `;
+    });
+
+    // 閉じる
+    const cl = () => {
+        m.classList.remove('modal-visible');
+        setTimeout(() => m.remove(), 300);
+    };
+    document.getElementById('pm-close').addEventListener('click', cl);
+    document.getElementById('pm-overlay').addEventListener('click', cl);
+    setTimeout(() => m.classList.add('modal-visible'), 10);
+}
+
+// 後方互換: 古いonclick="showComingSoonModal()" が残っている場合
+function showComingSoonModal() { showProductModal(0); }
+
+// ═══ AUDIO ═══
+function iac() { try { if (!audioContext && (window.AudioContext || window.webkitAudioContext)) audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } return audioContext; }
+function playDialupSound() { if (!iac()) return; const n = audioContext.currentTime;[697, 770, 852, 941, 1209, 1336].forEach((f, i) => { const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = f; o.type = 'sine'; const t = n + i * .15; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.09, t + .01); g.gain.linearRampToValueAtTime(0, t + .1); o.start(t); o.stop(t + .15); }); }
+function playUnlockSound() { if (!iac()) return; const n = audioContext.currentTime; const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = 880; o.type = 'sine'; g.gain.setValueAtTime(.14, n); g.gain.exponentialRampToValueAtTime(.01, n + .3); o.start(n); o.stop(n + .3); }
+function playDivineSound() { if (!iac()) return; const n = audioContext.currentTime;[261.63, 329.63, 392, 493.88].forEach((f, i) => { const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = f; o.type = 'sine'; const t = n + i * .1; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.11, t + .3); g.gain.linearRampToValueAtTime(0, t + 3); o.start(t); o.stop(t + 3); }); }
+function playWaterSplashSound() { if (!iac()) return; const n = audioContext.currentTime; const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = 280; o.type = 'sine'; g.gain.setValueAtTime(.13, n); g.gain.exponentialRampToValueAtTime(.01, n + .28); o.start(n); o.stop(n + .28); }
+function playGlitchSound() { if (!iac()) return; const n = audioContext.currentTime; const bs = audioContext.sampleRate * .5, nb = audioContext.createBuffer(1, bs, audioContext.sampleRate), out = nb.getChannelData(0); for (let i = 0; i < bs; i++)out[i] = Math.random() * 2 - 1; const s = audioContext.createBufferSource(); s.buffer = nb; const g = audioContext.createGain(), f = audioContext.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3000; f.Q.value = 10; s.connect(f); f.connect(g); g.connect(audioContext.destination); g.gain.setValueAtTime(.18, n); g.gain.exponentialRampToValueAtTime(.01, n + .5); s.start(n); }
+
+// ═══ BOLERO (Ravel) ═══
+let boleroPlaying = false, boleroNodes = [], boleroInterval = null;
+function initBoleroPlayer() {
+    const btn = document.getElementById('bolero-btn'), lbl = document.getElementById('bolero-label'); if (!btn) return;
+    btn.addEventListener('click', () => { if (!boleroPlaying) { startBolero(); btn.textContent = '⏸'; } else { stopBolero(); btn.textContent = '▶'; } boleroPlaying = !boleroPlaying; });
+}
+function startBolero() {
+    if (!iac()) return;
+    const themeA = [[261.63, .5], [261.63, .25], [293.66, .25], [261.63, .25], [233.08, .25], [261.63, .5], [261.63, .25], [293.66, .25], [261.63, .25], [311.13, .5], [293.66, .5], [261.63, .25], [293.66, .25], [349.23, .25], [329.63, .25], [293.66, .5], [261.63, .5], [220.00, .25], [246.94, .25], [261.63, 1.0]];
+    const themeB = [[392.00, .5], [349.23, .25], [329.63, .25], [293.66, .5], [261.63, .5], [293.66, .25], [329.63, .25], [349.23, .25], [392.00, .25], [440.00, .5], [392.00, .5], [349.23, .5], [329.63, .25], [293.66, .75], [261.63, .5], [293.66, .25], [329.63, .25], [261.63, .25], [293.66, .25], [261.63, 1.0]];
+    const snare = [0, 1.5, 2, 3, 4, 4.5, 5, 6, 7, 7.5];
+    const bpm = 76, bl = 60 / bpm; let mt = audioContext.currentTime + .1, mc = 0;
+    function pm() {
+        if (!boleroPlaying) return;
+        const theme = mc % 4 < 2 ? themeA : themeB, vol = .04 + Math.min(.18, mc * .006);
+        let tOff = mt;
+        theme.forEach(([freq, dur]) => {
+            const o = audioContext.createOscillator(), g2 = audioContext.createGain(), filt = audioContext.createBiquadFilter();
+            filt.type = 'bandpass'; filt.frequency.value = freq * 2; filt.Q.value = 2;
+            o.type = mc < 8 ? 'sine' : mc < 16 ? 'triangle' : 'sawtooth'; o.frequency.value = freq;
+            g2.gain.setValueAtTime(0, tOff); g2.gain.linearRampToValueAtTime(vol, tOff + .02); g2.gain.linearRampToValueAtTime(vol * .7, tOff + dur * bl - .05); g2.gain.linearRampToValueAtTime(0, tOff + dur * bl);
+            o.connect(filt); filt.connect(g2); g2.connect(audioContext.destination); o.start(tOff); o.stop(tOff + dur * bl + .01);
+            boleroNodes.push(o); tOff += dur * bl;
+        });
+        const md = 8 * bl;
+        snare.forEach(beat => {
+            const st = mt + beat * bl;
+            const buf = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * .08), audioContext.sampleRate);
+            const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * .3));
+            const src = audioContext.createBufferSource(); src.buffer = buf;
+            const sg = audioContext.createGain(); sg.gain.setValueAtTime(.08 + Math.min(.25, mc * .008), st); sg.gain.exponentialRampToValueAtTime(.001, st + .08);
+            src.connect(sg); sg.connect(audioContext.destination); src.start(st); boleroNodes.push(src);
+        });
+        mt += md; mc++; boleroInterval = setTimeout(pm, (md - .2) * 1000);
+    }
+    pm();
+}
+function stopBolero() { if (boleroInterval) clearTimeout(boleroInterval); boleroNodes.forEach(n => { try { n.stop(); } catch (e) { } }); boleroNodes = []; }
+
+// ═══ SKIP TO SHOP ═══
+function skipToShop() {
+    localStorage.setItem('inryoku_visited', '1');
+    location.hash = 'shop';
+    renderPhase3();
+}
+
+// ═══ vibrate helper ═══
+function vibrate(pattern) {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
+}
