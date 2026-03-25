@@ -177,13 +177,53 @@ function renderPhase1() {
       <!-- iアイコン + 軌道 -->
       <div>
         <svg id="orbit-svg" width="200" height="200" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- 発光フィルター: モノクロUIの中で浮かぶ「異質な窓」 -->
+            <filter id="orb-glow-c"  x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#00FFFF" flood-opacity="0.85" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="orb-glow-g"  x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#00FF00" flood-opacity="0.85" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="orb-glow-b"  x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#0000FF" flood-opacity="0.85" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="orb-glow-m"  x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#FF00FF" flood-opacity="0.85" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="orb-glow-r"  x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#FF0000" flood-opacity="0.85" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="orb-glow-y"  x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood flood-color="#FFFF00" flood-opacity="0.85" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
           <circle cx="80" cy="80" r="58" fill="none" stroke="#000000" stroke-width="0.5" stroke-dasharray="3 4"/>
-          <circle id="px0" r="5" fill="#000000"/>
-          <circle id="px1" r="5" fill="#000000"/>
-          <circle id="px2" r="5" fill="#000000"/>
-          <circle id="px3" r="5" fill="#000000"/>
-          <circle id="px4" r="5" fill="#000000"/>
-          <circle id="px5" r="5" fill="#000000"/>
+          <!-- 上から時計回り: Cyan Green Blue Magenta Red Yellow (CMY+RGB交互) -->
+          <circle id="px0" r="5.5" fill="#00FFFF" filter="url(#orb-glow-c)"/>
+          <circle id="px1" r="5.5" fill="#00FF00" filter="url(#orb-glow-g)"/>
+          <circle id="px2" r="5.5" fill="#0000FF" filter="url(#orb-glow-b)"/>
+          <circle id="px3" r="5.5" fill="#FF00FF" filter="url(#orb-glow-m)"/>
+          <circle id="px4" r="5.5" fill="#FF0000" filter="url(#orb-glow-r)"/>
+          <circle id="px5" r="5.5" fill="#FFFF00" filter="url(#orb-glow-y)"/>
           <!-- iアイコン: 黒枠・白背景の円 -->
           <circle cx="80" cy="80" r="36" fill="#ffffff" stroke="#000000" stroke-width="2"/>
           <!-- i の点 -->
@@ -233,7 +273,7 @@ function renderPhase1() {
     (function(){
       const els=[0,1,2,3,4,5].map(i=>document.getElementById('px'+i));
       const R=58,cx=80,cy=80;
-      let a=0;
+      let a=-Math.PI/2; // px0(Cyan)が12時(上)からスタート
       (function loop(){
         els.forEach((el,i)=>{
           if(!el)return;
@@ -245,6 +285,33 @@ function renderPhase1() {
         requestAnimationFrame(loop);
       })();
     })();
+
+    // ── Win95 起動音（Web Audio API） Step 3 ──
+    // G4→C5→E5→G5 4音メロディ（triangle波・FM合成風）
+    function playWin95StartupSound() {
+        if (!audioContext) {
+            try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
+            catch(e) { return; }
+        }
+        if (audioContext.state === 'suspended') audioContext.resume();
+        const notes = [392.00, 523.25, 659.25, 783.99]; // G4 C5 E5 G5
+        const now = audioContext.currentTime;
+        notes.forEach((freq, i) => {
+            const t = now + i * 0.22;
+            const osc  = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain); gain.connect(audioContext.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, t);
+            // FM風: 軽いビブラート
+            osc.frequency.setValueAtTime(freq * 1.004, t + 0.05);
+            osc.frequency.setValueAtTime(freq, t + 0.1);
+            gain.gain.setValueAtTime(0.0, t);
+            gain.gain.linearRampToValueAtTime(0.10, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
+            osc.start(t); osc.stop(t + 0.4);
+        });
+    }
 
     // ── P0 Mac起動チャイム（Web Audio API） ──
     // C major 和音: C4・E4・G4（正弦波、2秒減衰）
@@ -275,6 +342,8 @@ function renderPhase1() {
 
     document.getElementById('evolve-btn').addEventListener('click', () => {
         document.querySelectorAll('.selection-title,.phase1-ui,.welcome-title,.evolve-btn-wrap').forEach(e => e.remove());
+        // Win95起動音を再生
+        playWin95StartupSound();
         const root = document.getElementById('root');
         root.innerHTML = ''; root.style.display = 'none';
         document.body.style.background = '#000';
@@ -292,7 +361,7 @@ function renderPhase1() {
         document.body.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000);
+        // BACKUP: scene.background = new THREE.Color(0x000000); — clearColor(フェーズ別)を上書きするため削除
 
         // ── Lights ──
         const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -339,7 +408,8 @@ function renderPhase1() {
         const compositeUniforms = {
             tSquare:    { value: rtSquare.texture },
             squareRect: { value: new THREE.Vector4(0, 0, 1, 1) },
-            u_time:     { value: 0.0 }
+            u_time:     { value: 0.0 },
+            u_progress: { value: 0.0 }  // Step 4: 0=開始 1=101%
         };
         const compositeMat = new THREE.ShaderMaterial({
             uniforms: compositeUniforms,
@@ -349,15 +419,54 @@ function renderPhase1() {
                 'uniform sampler2D tSquare;',
                 'uniform vec4 squareRect;',
                 'uniform float u_time;',
+                'uniform float u_progress;',
                 'varying vec2 vUv;',
                 '',
                 'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+                '',
+                '// ── Bayer 4×4 ディザマトリクス ──',
+                'float bayer4x4(vec2 pos){',
+                '  int x=int(mod(pos.x,4.0));int y=int(mod(pos.y,4.0));int idx=y*4+x;',
+                '  float m[16];',
+                '  m[0]=0.0;m[1]=8.0;m[2]=2.0;m[3]=10.0;',
+                '  m[4]=12.0;m[5]=4.0;m[6]=14.0;m[7]=6.0;',
+                '  m[8]=3.0;m[9]=11.0;m[10]=1.0;m[11]=9.0;',
+                '  m[12]=15.0;m[13]=7.0;m[14]=13.0;m[15]=5.0;',
+                '  return m[idx]/16.0-0.5;',
+                '}',
+                '',
+                '// ── Win95 16色パレット量子化 ──',
+                'vec3 quantize16(vec3 c){',
+                '  vec3 p[16];',
+                '  p[0]=vec3(0.0,0.0,0.0);p[1]=vec3(0.5,0.0,0.0);',
+                '  p[2]=vec3(0.0,0.5,0.0);p[3]=vec3(0.5,0.5,0.0);',
+                '  p[4]=vec3(0.0,0.0,0.5);p[5]=vec3(0.5,0.0,0.5);',
+                '  p[6]=vec3(0.0,0.5,0.5);p[7]=vec3(0.75,0.75,0.75);',
+                '  p[8]=vec3(0.5,0.5,0.5);p[9]=vec3(1.0,0.0,0.0);',
+                '  p[10]=vec3(0.0,1.0,0.0);p[11]=vec3(1.0,1.0,0.0);',
+                '  p[12]=vec3(0.0,0.0,1.0);p[13]=vec3(1.0,0.0,1.0);',
+                '  p[14]=vec3(0.0,1.0,1.0);p[15]=vec3(1.0,1.0,1.0);',
+                '  float md=9999.0;vec3 best=p[0];',
+                '  for(int i=0;i<16;i++){float d=distance(c,p[i]);if(d<md){md=d;best=p[i];}}',
+                '  return best;',
+                '}',
                 '',
                 'void main(){',
                 '  vec2 sq=(vUv-squareRect.xy)/squareRect.zw;',
                 '  if(sq.x<0.0||sq.x>1.0||sq.y<0.0||sq.y>1.0) discard;',
                 '',
-                '  vec3 col=texture2D(tSquare,sq).rgb;',
+                '  // ── Step 4: 進行度に応じたピクセルブロックサイズ ──',
+                '  float blk = u_progress<0.5 ? 8.0 : u_progress<0.75 ? 4.0 : u_progress<0.9 ? 2.0 : 1.0;',
+                '  vec2 pixSq = blk>1.0 ? floor(sq*(512.0/blk))/(512.0/blk) : sq;',
+                '  vec3 col=texture2D(tSquare,pixSq).rgb;',
+                '',
+                '  // ── Step 4: Bayerディザ + 16色量子化（低progress時） ──',
+                '  float ditherStr = max(0.0, 1.0 - u_progress * 1.3);',
+                '  if(ditherStr > 0.01){',
+                '    vec2 fp = sq * (512.0/blk);',
+                '    float d = bayer4x4(floor(fp)) * 0.20 * ditherStr;',
+                '    col = quantize16(col + vec3(d));',
+                '  }',
                 '',
                 '  // CRT スキャンライン（水平2px間隔、輝度88-100%）',
                 '  float scanline=0.88+0.12*fract(sq.y*256.0);',
@@ -430,27 +539,55 @@ function renderPhase1() {
   border-bottom:2px solid #555;
   display:flex;align-items:center;
   padding:0 4px;gap:4px;z-index:20;">
-  <div style="background:#c0c0c0;border:2px solid #fff;border-right-color:#555;border-bottom-color:#555;
-    padding:2px 8px;font-size:11px;font-family:monospace;font-weight:bold;color:#000;">
-    ▶ Start
+  <div id="win95-start-btn" style="background:#c0c0c0;
+    border-top:2px solid #fff;border-left:2px solid #fff;
+    border-right:2px solid #555;border-bottom:2px solid #555;
+    padding:2px 6px;font-size:11px;font-family:'MS Sans Serif',Arial,sans-serif;
+    font-weight:bold;color:#000;display:flex;align-items:center;gap:3px;cursor:pointer;">
+    <svg width="14" height="14" viewBox="0 0 14 14" style="image-rendering:pixelated;flex-shrink:0;">
+      <rect x="1" y="1" width="5" height="5" fill="#ff0000"/>
+      <rect x="8" y="1" width="5" height="5" fill="#00aa00"/>
+      <rect x="1" y="8" width="5" height="5" fill="#ffff00"/>
+      <rect x="8" y="8" width="5" height="5" fill="#0000ff"/>
+    </svg>
+    <b>Start</b>
   </div>
   <div style="width:1px;height:20px;background:#888;margin:0 2px;"></div>
-  <div style="background:#888;border:1px solid #555;padding:2px 8px;
-    font-size:10px;font-family:monospace;color:#fff;">
+  <div style="background:#888;
+    border-top:1px solid #555;border-left:1px solid #555;
+    border-right:1px solid #ddd;border-bottom:1px solid #ddd;
+    padding:2px 8px;font-size:10px;font-family:'MS Sans Serif',Arial,sans-serif;color:#fff;">
     inryokü - Phase 1
   </div>
-  <!-- win-clock 削除: 黒パネル右下に見えていたため -->
+  <!-- システムトレイ: セパレーター + スピーカー + 時計 -->
+  <div style="margin-left:auto;display:flex;align-items:center;
+    border-top:1px solid #808080;border-left:1px solid #808080;
+    border-right:1px solid #fff;border-bottom:1px solid #fff;
+    background:#c0c0c0;padding:0 4px;gap:4px;">
+    <!-- スピーカーアイコン (12×12 pixel art SVG) -->
+    <svg width="12" height="12" viewBox="0 0 12 12" style="image-rendering:pixelated;flex-shrink:0;cursor:default;" title="Volume">
+      <rect x="1" y="4" width="3" height="4" fill="#000"/>
+      <polygon points="4,2 4,10 8,8 8,4" fill="#000"/>
+      <line x1="9" y1="4" x2="11" y2="3" stroke="#000" stroke-width="1"/>
+      <line x1="9" y1="6" x2="11" y2="6" stroke="#000" stroke-width="1"/>
+      <line x1="9" y1="8" x2="11" y2="9" stroke="#000" stroke-width="1"/>
+    </svg>
+    <div id="win-clock" style="font-size:11px;font-family:'MS Sans Serif',Arial,sans-serif;
+      color:#000;white-space:nowrap;">00:00</div>
+  </div>
 </div>
 
-<div id="win95-main" style="position:absolute;left:${winLeft}px;top:${winTop}px;width:${winWidth}px;height:${winHeight}px;z-index:10;animation:p1In 0.5s ease-out both;outline:1px solid #000000;border-top:2px solid #ffffff;border-left:2px solid #ffffff;border-right:2px solid #808080;border-bottom:2px solid #808080;display:flex;flex-direction:column;overflow:hidden;">
+<div id="win95-main" style="position:absolute;left:${winLeft}px;top:${winTop}px;width:${winWidth}px;height:${winHeight}px;z-index:10;animation:p1In 0.5s ease-out both;box-shadow:0 0 0 1px #c0c0c0,0 0 0 2px #000000;border-top:2px solid #ffffff;border-left:2px solid #ffffff;border-right:2px solid #808080;border-bottom:2px solid #808080;display:flex;flex-direction:column;overflow:hidden;">
 
   <!-- タイトルバー -->
-  <div style="
-    /* BACKUP: height:28px; linear-gradient(to right,#0a246a,#a6b8e8) */
+  <div id="win95-titlebar" style="
+    /* BACKUP: height:28px; background:#000080 */
     height:20px;min-height:20px;
-    background:#000080;
+    background:linear-gradient(to right,#000080,#1084d0);
     padding:0 3px;
     display:flex;align-items:center;justify-content:space-between;
+    cursor:move;
+    pointer-events:auto;
   ">
     <div style="display:flex;align-items:center;gap:4px;">
       <div style="width:16px;height:16px;background:#008080;border:1px solid #005050;
@@ -525,7 +662,7 @@ function renderPhase1() {
   ">
     <div id="p1-lb" style="
       width:0%;height:100%;
-      background:#0000aa;
+      background:repeating-linear-gradient(90deg,#0000aa 0,#0000aa 7px,#0000cc 7px,#0000cc 8px);
       pointer-events:none;
     "></div>
     <div id="drag-handle" style="
@@ -561,6 +698,96 @@ function renderPhase1() {
 </div>
 `;
         document.body.appendChild(wrap);
+
+        // ── ドラッグ可能ウィンドウ (Step 3) ──
+        (function setupDrag() {
+            const winEl = document.getElementById('win95-main');
+            const titleBar = document.getElementById('win95-titlebar');
+            if (!winEl || !titleBar) return;
+            let dragging = false, dragOffX = 0, dragOffY = 0;
+            titleBar.addEventListener('mousedown', (e) => {
+                dragging = true;
+                const rect = winEl.getBoundingClientRect();
+                dragOffX = e.clientX - rect.left;
+                dragOffY = e.clientY - rect.top;
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const nx = e.clientX - dragOffX;
+                const ny = e.clientY - dragOffY;
+                winEl.style.left = nx + 'px';
+                winEl.style.top  = ny + 'px';
+                // sq-border位置変化 → scissor更新
+                updateScissorFromDOM();
+            });
+            document.addEventListener('mouseup', () => { dragging = false; });
+        })();
+
+        // ── 右クリックコンテキストメニュー (Step 3) ──
+        (function setupContextMenu() {
+            let ctxMenu = null;
+            function removeCtxMenu() {
+                if (ctxMenu) { ctxMenu.remove(); ctxMenu = null; }
+            }
+            document.addEventListener('contextmenu', (e) => {
+                // win95-mainの上では無効
+                if (e.target.closest && e.target.closest('#win95-main')) return;
+                e.preventDefault();
+                removeCtxMenu();
+                const m = document.createElement('div');
+                m.style.cssText = [
+                    'position:fixed;z-index:9000;',
+                    'left:' + e.clientX + 'px;top:' + e.clientY + 'px;',
+                    'background:#c0c0c0;',
+                    'border-top:2px solid #fff;border-left:2px solid #fff;',
+                    'border-right:2px solid #808080;border-bottom:2px solid #808080;',
+                    'outline:1px solid #000;',
+                    'font-family:"MS Sans Serif",Arial,sans-serif;font-size:11px;',
+                    'min-width:160px;padding:2px;',
+                    'pointer-events:auto;',
+                    'user-select:none;'
+                ].join('');
+                const items = [
+                    { label: 'Arrange Icons', disabled: true },
+                    { sep: true },
+                    { label: 'New &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9658;', disabled: true },
+                    { sep: true },
+                    { label: 'Properties', disabled: false }
+                ];
+                items.forEach(it => {
+                    if (it.sep) {
+                        const s = document.createElement('div');
+                        s.style.cssText = 'height:1px;background:#808080;margin:2px 1px;border-bottom:1px solid #fff;';
+                        m.appendChild(s);
+                    } else {
+                        const row = document.createElement('div');
+                        row.innerHTML = it.label;
+                        row.style.cssText = [
+                            'padding:3px 20px 3px 24px;cursor:default;',
+                            it.disabled ? 'color:#808080;' : 'color:#000;'
+                        ].join('');
+                        if (!it.disabled) {
+                            row.addEventListener('mouseenter', () => {
+                                row.style.background = '#000080';
+                                row.style.color = '#fff';
+                            });
+                            row.addEventListener('mouseleave', () => {
+                                row.style.background = '';
+                                row.style.color = '#000';
+                            });
+                        }
+                        m.appendChild(row);
+                    }
+                });
+                document.body.appendChild(m);
+                ctxMenu = m;
+            });
+            document.addEventListener('mousedown', (e) => {
+                if (ctxMenu && !ctxMenu.contains(e.target)) removeCtxMenu();
+            });
+            document.addEventListener('click', removeCtxMenu);
+        })();
 
         // sq-borderのDOMRectからscissor + compositeUniforms を更新
         function updateScissorFromDOM() {
@@ -622,13 +849,17 @@ function renderPhase1() {
 
             barTrack.addEventListener('mousedown', (e) => {
                 holding = true;
+                document.body.style.cursor = 'wait'; // 砂時計カーソル
                 e.preventDefault();
             });
             barTrack.addEventListener('touchstart', (e) => {
                 holding = true;
                 e.preventDefault();
             }, { passive: false });
-            window.addEventListener('mouseup', () => { holding = false; });
+            window.addEventListener('mouseup', () => {
+                if (holding) { document.body.style.cursor = ''; }
+                holding = false;
+            });
             window.addEventListener('touchend', () => { holding = false; });
 
             // メインループ
@@ -763,6 +994,10 @@ function renderPhase1() {
         const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 6, sqWorld), bgMat);
         bgPlane.position.z = -1; scene.add(bgPlane);
 
+        // ── Win95デスクトップ背景: #008080 単色 (壁紙GLSLを削除) ──
+        // BACKUP: GLSL壁紙(空+雲+丘)は削除。Win95デフォルトデスクトップ色を使用。
+        // Pass 0でrenderer.setClearColor(0x008080)してclearするだけ。
+
         // ── 境界線: CMY/RGB静止虹色グラデーション ──
         const newtonRingMat = new THREE.ShaderMaterial({
             vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
@@ -786,6 +1021,7 @@ function renderPhase1() {
             newtonRingMat
         );
         newtonLine.position.set(0, 0, 0.2);
+        newtonLine.visible = false; // BACKUP: scene.add(newtonLine); — 常時表示は意図しないバグ(中央縦色線)
         scene.add(newtonLine);
 
         // ── Magnetic field ──
@@ -1130,15 +1366,40 @@ function renderPhase1() {
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
-            const fillPct = Math.min(100, pv);
+            // Step 5 バグ修正: fillPctを101%まで解放（以前は100でcap）
+            // 101% = 別次元への扉 → バーがオーバーフロー演出
+            const fillPct = pv;
 
             const barFill = document.getElementById('p1-lb');
             const handle = document.getElementById('drag-handle');
-            if (barFill) barFill.style.width = fillPct + '%';
-            if (handle) handle.style.left = fillPct + '%';
+            const barTrackEl = document.getElementById('bar-wrap');
+            if (barFill) {
+                barFill.style.width = Math.min(100, fillPct) + '%';
+                if (pv >= 101) {
+                    // 101%: バーが白く光ってオーバーフロー
+                    barFill.style.background = '#ffffff';
+                    barFill.style.boxShadow = '0 0 12px 4px rgba(255,255,255,0.8)';
+                    if (barTrackEl) {
+                        barTrackEl.style.overflow = 'visible';
+                        barTrackEl.style.boxShadow = '0 0 20px 8px rgba(255,255,255,0.5)';
+                    }
+                }
+            }
+            if (handle) handle.style.left = Math.min(100, fillPct) + '%';
 
             const pctEl = document.getElementById('p1-lpct');
-            if (pctEl) pctEl.textContent = 'Loading reality... ' + pv + '%';
+            if (pctEl) {
+                if (pv >= 101) {
+                    pctEl.textContent = '⚠ OVERFLOW: 101% — REALITY.EXE TERMINATED';
+                    pctEl.style.color = '#ff0000';
+                } else {
+                    pctEl.textContent = 'Loading reality... ' + pv + '%';
+                    pctEl.style.color = '';
+                }
+            }
+
+            // Step 4: 進行度を合成シェーダーに反映（Bayer強度制御）
+            compositeUniforms.u_progress.value = pv / 101;
         }
 
         // ── MAIN TICK ──
@@ -1152,8 +1413,9 @@ function renderPhase1() {
             if (yyPlane.visible) yyMat.uniforms.u_time.value = globalTime;
             if (tunnelPlane.visible) tunnelMat.uniforms.u_time.value = globalTime;
             if (scPlane.visible) scMat.uniforms.u_time.value = globalTime;
-            // CRT合成シェーダーのtime更新
+            // CRT合成シェーダー + 壁紙のtime更新
             compositeUniforms.u_time.value = globalTime;
+            // wallpaperUniforms削除済み
             if (bDot.visible && bDot.material.uniforms && bDot.material.uniforms.u_time) {
                 bDot.material.uniforms.u_time.value = globalTime;
             }
@@ -1201,7 +1463,9 @@ function renderPhase1() {
 
             // ═══ PHASE 0: ATTRACT (0→30%) ═══
             if (phase === PH.ATTRACT) {
-                updateWin95Status('Initializing reality engine...');
+                const statusIdx = Math.floor(prog / 10);
+                const attractMsgs = ['Initializing reality engine...','Loading CMY matrices...','Binding physical laws...','Attracting matter...'];
+                updateWin95Status(attractMsgs[Math.min(statusIdx, attractMsgs.length-1)]);
                 const t = prog / 30;
                 // CMY: 粘性のある動き（物質）
                 cmyP.forEach((p, i) => {
@@ -1253,7 +1517,8 @@ function renderPhase1() {
 
                 // ═══ PHASE 2: DUALITY (30→50%) ═══
             } else if (phase === PH.DUALITY) {
-                updateWin95Status('Resolving duality conflict...');
+                const dualPct = Math.floor((prog - 30) / 2);
+                updateWin95Status('Resolving duality conflict... ' + dualPct + '%');
                 renderer.setClearColor(0x808080, 1.0); // 透明背景防止
                 const t = (prog - 30) / 20;
                 // Black and white dots accelerate toward center
@@ -1269,6 +1534,8 @@ function renderPhase1() {
                 wDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
                 // Background blends toward grey
                 bgMat.uniforms.u_grey.value = t * 0.8;
+                // DUALITY後半: pixelSizeを下げてブロックノイズを抑制
+                bgMat.uniforms.u_pixelSize.value = t < 0.5 ? 8.0 : 8.0 - (t - 0.5) * 2.0 * 6.0;
                 if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; }
 
                 // ═══ PHASE 3: EVENT_SING (50% — 3.5s) — Simple Physics Collision ═══
@@ -1392,7 +1659,8 @@ function renderPhase1() {
 
                 // ═══ PHASE 4: WARP_GROW (50→75%) ═══
             } else if (phase === PH.WARP_GROW) {
-                updateWin95Status('Loading warp tunnel...');
+                const warpPct = Math.floor((prog - 50) * 4);
+                updateWin95Status('Loading warp tunnel... ' + warpPct + '%');
                 const wt = (prog - 50) / 25;
                 const tR = 0.2 + wt * 0.35;
                 tunnelMat.uniforms.u_radius.value = tR;
@@ -1468,8 +1736,9 @@ function renderPhase1() {
 
                 // ═══ PHASE 6: CONSUME (75→101%) — 引力の増大 ═══
             } else if (phase === PH.CONSUME) {
-                updateWin95Status('Consuming reality... do not turn off');
-                const at = (prog - 75) / 25;
+                updateWin95Status('Consuming reality... do not turn off your computer');
+                // Step 5 バグ修正: 75→101 = 26pt の範囲を正しく0→1にクランプ
+                const at = Math.min(1.0, (prog - 75) / 26);
                 tunnelMat.uniforms.u_radius.value = 0.6 + at * 0.35;
                 tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;
                 tunnelMat.uniforms.u_alpha.value = 1.0;
@@ -1618,6 +1887,7 @@ function renderPhase1() {
                     // 分離レンダーパイプラインリソース解放
                     rtSquare.dispose(); rtOuter.dispose();
                     compositeMat.dispose(); compQuad.geometry.dispose();
+                    // wallpaperMat/Quad削除済み
                     renderer.dispose(); renderer.domElement.remove();
                     whiteOv.remove(); wrap.remove(); ldCSS.remove();
                     // ── P1完了: カスタムイベント発火 ──
@@ -1642,20 +1912,34 @@ function renderPhase1() {
             updateScissorFromDOM(); // scissor + squareRect をDOM同期
 
             if (scissor.enabled) {
+                // ── Pass 0: Win95デスクトップ背景 #008080 ──
+                // tick()が設定したシーン背景色を保存してから上書き
+                const _sceneBg = new THREE.Color();
+                renderer.getClearColor(_sceneBg);
+                const _sceneBgA = renderer.getClearAlpha();
+                renderer.setRenderTarget(null);
+                renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, W, H);
+                renderer.setClearColor(0x008080, 1.0);
+                renderer.clear();
+                // Pass 1のためシーン背景色を復元
+                renderer.setClearColor(_sceneBg, _sceneBgA);
+
                 // ── Pass 1: シーン → rtSquare ──
-                // (Phase別ポストプロセスはStep 2/4で追加)
+                // setRenderTarget()が内部でviewportを正しく設定する（pixelRatio未適用）
+                // 明示的なsetViewport()はpixelRatio=0.5で半分になるため削除（バグ修正）
                 renderer.setRenderTarget(rtSquare);
                 renderer.setScissorTest(false);
-                renderer.setViewport(0, 0, rtSquare.width, rtSquare.height);
                 renderer.clear();
                 renderer.render(scene, camera);
                 renderer.setRenderTarget(null);
 
-                // ── Pass 2: rtSquare → スクリーン（合成）──
-                // CRTエフェクトはStep 2/3で合成シェーダーに統合予定
+                // ── Pass 2: rtSquare → スクリーン（合成）── 壁紙を保持しながら上書き
+                renderer.autoClear = false;
                 renderer.setViewport(0, 0, W, H);
                 renderer.setScissorTest(false);
                 renderer.render(compScene, compCamera);
+                renderer.autoClear = true;
             } else {
                 // フルスクリーンレンダー (CONSUME後半 / EVENT_COLLAPSE)
                 renderer.setRenderTarget(null);
