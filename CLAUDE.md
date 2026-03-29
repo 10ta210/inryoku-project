@@ -95,6 +95,25 @@
 - P2: コードワールド（量子交換）
 - P3: パーティクルユニバース + ECショップ
 
-## 🔄 P1フェーズ順序
-ATTRACT → EVENT_FUSE → DUALITY → EVENT_SING → WARP_GROW → EVENT_BREACH → CONSUME → EVENT_COLLAPSE
+## 🔄 P1フェーズ順序（2026-03 リビルド済み）
+ATTRACT → EVENT_FUSE → DUALITY → EVENT_SING → WARP_GROW → CONSUME → DONE
 進捗: 0% → 101%（101%で別次元へ）
+- 自動進行（HOLD-TO-LOADは廃止済み・復活禁止）
+- 各フェーズは AUTO_RATE[phase] でprog/秒を制御
+
+## 🔗 フェーズ間イベント仕様
+- P1→P2: `window.dispatchEvent(new CustomEvent('inryoku:p1complete'))`
+- P2→P3: `window.dispatchEvent(new CustomEvent('inryoku:p2complete'))`
+- 各フェーズは独立した `renderPhase*()` 関数として定義
+
+## 💥 過去のやらかし（同じ失敗を繰り返さない）
+- ShaderMaterialのfragmentShaderをruntime書き換え（.needsUpdate）は不安定→禁止
+- OrthographicCamera + 複雑なscissor分割レンダーはデバッグが困難→シンプルなPerspectiveCameraを優先
+- setInterval内でphase変数を参照すると古い値が残るバグあり→requestAnimationFrameを使う
+- HOLD-TO-LOAD(mousedown長押し)はUX上もバグ上も問題多発→廃止済み
+
+## 📏 コミット粒度ルール
+- 1フェーズの実装 = 1コミット
+- 動作確認なしのコミット禁止
+- コミット前に必ず `node --check ファイル名` で構文確認
+- コミットメッセージ: `P1 ATTRACT phase: [内容の要約]`
