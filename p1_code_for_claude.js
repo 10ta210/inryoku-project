@@ -711,7 +711,7 @@ function renderPhase1() {
         //  UI OVERLAY (HTML/CSS)
         // ══════════════════════════════════════════════════════
         const ldCSS = document.createElement('style');
-        ldCSS.textContent = '@keyframes p1In{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes p1Breathe{0%,100%{opacity:.85;filter:drop-shadow(0 0 12px rgba(255,255,255,.12))}50%{opacity:1;filter:drop-shadow(0 0 24px rgba(255,255,255,.25))}}@keyframes p1BarGlow{0%,100%{box-shadow:0 0 6px rgba(255,255,255,.06)}50%{box-shadow:0 0 14px rgba(255,255,255,.14)}}@keyframes p1Slide{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes p1Sq{0%,100%{border-color:rgba(255,255,255,.1);box-shadow:0 0 12px rgba(255,255,255,.03)}50%{border-color:rgba(255,255,255,.22);box-shadow:0 0 24px rgba(255,255,255,.07)}}.p1-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.03;pointer-events:none}@keyframes runBob{0%,100%{transform:translateY(0px) rotate(-1.5deg)}25%{transform:translateY(-5px) rotate(0deg)}50%{transform:translateY(-1px) rotate(1.5deg)}75%{transform:translateY(-5px) rotate(0deg)}}@keyframes bsodIn{from{opacity:0}to{opacity:1}}@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}';
+        ldCSS.textContent = '@keyframes p1In{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes p1Breathe{0%,100%{opacity:.85;filter:drop-shadow(0 0 12px rgba(255,255,255,.12))}50%{opacity:1;filter:drop-shadow(0 0 24px rgba(255,255,255,.25))}}@keyframes p1BarGlow{0%,100%{box-shadow:0 0 6px rgba(255,255,255,.06)}50%{box-shadow:0 0 14px rgba(255,255,255,.14)}}@keyframes p1Slide{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes p1Sq{0%,100%{border-color:rgba(255,255,255,.1);box-shadow:0 0 12px rgba(255,255,255,.03)}50%{border-color:rgba(255,255,255,.22);box-shadow:0 0 24px rgba(255,255,255,.07)}}.p1-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.03;pointer-events:none}@keyframes runBob{0%,100%{transform:translateY(0px) rotate(-1.5deg)}25%{transform:translateY(-5px) rotate(0deg)}50%{transform:translateY(-1px) rotate(1.5deg)}75%{transform:translateY(-5px) rotate(0deg)}}@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}';
         document.head.appendChild(ldCSS);
 
         // UI container: square at center, other elements above
@@ -1086,12 +1086,6 @@ function renderPhase1() {
             ].join('\n'),
             depthWrite: false
         });
-        const newtonLine = new THREE.Mesh(
-            new THREE.PlaneGeometry(sqWorld * 0.008, sqWorld * 2),
-            newtonRingMat
-        );
-        newtonLine.position.set(0, 0, 0.2);
-        scene.add(newtonLine);
 
         // ── Magnetic field ──
         const fieldMat = new THREE.ShaderMaterial({
@@ -1706,47 +1700,9 @@ function renderPhase1() {
 
                 // ═══ PHASE 5: EVENT_BREACH (75% — 3s fixed) ═══
             } else if (phase === PH.EVENT_BREACH) {
-                updateWin95Status('ERROR: Reality boundary exceeded');
+                updateWin95Status('Breaching reality boundary...');
                 eventTimer += dt;
                 const et = eventTimer;
-                // ── Win95エラーダイアログ演出 ──
-                if (et < 0.1 && !document.getElementById('breach-dialog')) {
-                    const dialog = document.createElement('div');
-                    dialog.id = 'breach-dialog';
-                    dialog.style.cssText = `
-                        position:fixed;
-                        left:50%;top:50%;
-                        transform:translate(-50%,-50%);
-                        background:#c0c0c0;
-                        border:2px solid #fff;
-                        border-right-color:#555;
-                        border-bottom-color:#555;
-                        width:280px;
-                        z-index:60;
-                        font-family:'Courier New',monospace;
-                        font-size:11px;
-                        box-shadow:4px 4px 0 #333;
-                    `;
-                    dialog.innerHTML = `
-                        <div style="background:#000080;color:white;padding:3px 6px;font-weight:bold;font-size:11px;display:flex;justify-content:space-between;">
-                            <span>⚠ System Warning</span>
-                            <span style="cursor:pointer;">✕</span>
-                        </div>
-                        <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
-                            <p style="margin:0;">Reality boundary exceeded.<br>Current progress: <b>75%</b></p>
-                            <p style="margin:0;color:#cc0000;">ERROR: Cannot contain dimension overflow</p>
-                            <div style="display:flex;justify-content:center;gap:8px;">
-                                <button style="font-family:'Courier New',monospace;font-size:11px;padding:3px 20px;background:#c0c0c0;border:2px solid #fff;border-right-color:#555;border-bottom-color:#555;cursor:pointer;">OK</button>
-                                <button style="font-family:'Courier New',monospace;font-size:11px;padding:3px 20px;background:#c0c0c0;border:2px solid #fff;border-right-color:#555;border-bottom-color:#555;cursor:pointer;">Cancel</button>
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(dialog);
-                    setTimeout(() => {
-                        const el = document.getElementById('breach-dialog');
-                        if (el) el.remove();
-                    }, 2500);
-                }
                 if (et < 1.0) {
                     const t2 = et;
                     sqBorder.style.borderColor = 'rgba(255,255,255,' + (0.1 + t2 * 0.3) + ')';
@@ -1790,57 +1746,6 @@ function renderPhase1() {
                 eventTimer += dt;
                 const et = eventTimer;
                 updateWin95Status('Shutting down current dimension...');
-                // ── BSOD演出 ──
-                if (et < 0.1 && !document.getElementById('bsod')) {
-                    const bsod = document.createElement('div');
-                    bsod.id = 'bsod';
-                    bsod.style.cssText = `
-                        position:fixed;
-                        left:${sqLeft}px;top:${sqTop}px;
-                        width:${sqPx}px;height:${sqPx}px;
-                        background:#0000aa;
-                        color:#ffffff;
-                        font-family:'Courier New',monospace;
-                        font-size:11px;
-                        padding:24px;
-                        z-index:200;
-                        display:flex;
-                        flex-direction:column;
-                        gap:10px;
-                        line-height:1.6;
-                    `;
-                    bsod.innerHTML = `
-                        <div style="background:#aaaaaa;color:#0000aa;padding:2px 8px;font-weight:bold;font-size:12px;margin-bottom:8px;">
-                            Windows
-                        </div>
-                        <p>A fatal exception 101% has occurred at<br>
-                        0028:C047B5A2 in REALITY(01) + 00048E2F.<br>
-                        The current dimension will be terminated.</p>
-                        <p>* Press any key to terminate the current<br>
-                        &nbsp;&nbsp;reality session.</p>
-                        <p>* Press CTRL+ALT+DEL again to restart<br>
-                        &nbsp;&nbsp;the universe. You will lose any unsaved<br>
-                        &nbsp;&nbsp;data in all dimensions.</p>
-                        <p style="margin-top:8px;">Press any key to continue <span style="animation:blink 0.5s step-end infinite">_</span></p>
-                        <div style="margin-top:16px;">
-                            <p>REALITY_OVERFLOW</p>
-                            <p>Progress exceeded: 101%</p>
-                            <div style="width:100%;height:12px;border:1px solid #4444aa;margin-top:4px;">
-                                <div id="bsod-bar" style="height:100%;width:0%;background:#4444ff;"></div>
-                            </div>
-                            <p style="margin-top:4px;font-size:9px;">Initializing inryokü v2.0...</p>
-                        </div>
-                    `;
-                    document.body.appendChild(bsod);
-                    setTimeout(() => {
-                        const bar = document.getElementById('bsod-bar');
-                        if (bar) { bar.style.transition = 'width 3s linear'; bar.style.width = '100%'; }
-                    }, 100);
-                    setTimeout(() => {
-                        const el = document.getElementById('bsod');
-                        if (el) el.remove();
-                    }, 4000);
-                }
                 tunnelMat.uniforms.u_radius.value = 0.95 + Math.min(et, 2.0) * 2.0; // expand beyond square
                 tunnelMat.uniforms.u_progress.value = 1.0;
                 tunnelMat.uniforms.u_alpha.value = 1.0;
