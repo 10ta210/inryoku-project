@@ -1406,7 +1406,7 @@ function renderPhase1() {
         let alive = true, globalTime = 0;
         const clk = new THREE.Clock();
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
-        let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false;
+        let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false;
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -1547,7 +1547,7 @@ function renderPhase1() {
                 wDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
                 // Background blends toward grey
                 bgMat.uniforms.u_grey.value = t * 0.8;
-                if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; }
+                if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; singDimSwitched = false; }
 
                 // ═══ PHASE 3: EVENT_SING (50% — 5s) — 次元転換 ═══
             } else if (phase === PH.EVENT_SING) {
@@ -1580,8 +1580,9 @@ function renderPhase1() {
                     updateWin95Status('⚠ REALITY.SYS CORRUPTED');
                 }
 
-                // Step 3 (0.8-0.85s): pixelRatio切り替え + フォント変更 (一回だけ)
-                if (et >= 0.8 && et < 0.85) {
+                // Step 3 (0.8s〜): pixelRatio切り替え + フォント変更 (一回だけ)
+                if (et >= 0.8 && !singDimSwitched) {
+                    singDimSwitched = true;
                     renderer.setPixelRatio(window.devicePixelRatio);
                     renderer.setSize(window.innerWidth, window.innerHeight);
                     bgMat.uniforms.u_pixelSize.value = 1.0;
