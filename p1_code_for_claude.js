@@ -1803,7 +1803,7 @@ function renderPhase1() {
                     if (wrap) {
                         const allDivs = wrap.querySelectorAll('div');
                         allDivs.forEach(el => {
-                            if (el.style.position === 'absolute' && el.style.bottom === '0px') {
+                            if (el.style.position === 'absolute' && (el.style.bottom === '0px' || el.style.bottom === '0')) {
                                 el.style.transition = 'opacity 0.6s ease-out';
                                 el.style.opacity = '0';
                                 setTimeout(() => { if (el) el.style.display = 'none'; }, 700);
@@ -1900,10 +1900,20 @@ function renderPhase1() {
                     if (barWrap) { barWrap.style.transition = 'none'; barWrap.style.transform = 'translateY(' + (ease * 40) + 'px) scale(' + Math.max(0.01, 1 - ease) + ')'; barWrap.style.opacity = String(1 - ease * 2); barWrap.style.filter = 'blur(' + (ease * 12) + 'px)'; }
                     pct.style.transform = 'scale(' + Math.max(0.01, 1 - ease) + ')'; pct.style.opacity = String(1 - ease * 2);
                     if (logoEl) { const le = Math.max(0, (et - 0.15) / 0.35); if (le > 0) { logoEl.style.transform = 'scale(' + Math.max(0.01, 1 - le * le) + ') rotate(' + (le * le * 120) + 'deg)'; logoEl.style.opacity = String(1 - le * le * 1.5); logoEl.style.filter = 'blur(' + (le * le * 10) + 'px)'; } }
+                    // Phase C progress bar 吸収
+                    const pcBarWrap = document.getElementById('phase-c-bar-wrap');
+                    if (pcBarWrap) {
+                        const ease = t2 * t2 * t2;
+                        pcBarWrap.style.transition = 'none';
+                        pcBarWrap.style.transform = `translateX(-50%) translateY(${ease * 60}px) scale(${Math.max(0.01, 1 - ease)})`;
+                        pcBarWrap.style.opacity = String(Math.max(0, 1 - ease * 2));
+                    }
                 }
                 if (et >= 0.5 && et < 0.55) {
                     if (barWrap) barWrap.style.display = 'none'; pct.style.display = 'none';
                     if (logoEl) logoEl.style.display = 'none';
+                    const pcBarWrap2 = document.getElementById('phase-c-bar-wrap');
+                    if (pcBarWrap2) pcBarWrap2.style.display = 'none';
                     wrap.querySelectorAll('.p1-orb').forEach(o => o.style.display = 'none');
                     // Hide all non-tunnel 3D objects
                     bgPlane.visible = false;
