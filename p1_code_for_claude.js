@@ -1663,8 +1663,6 @@ function renderPhase1() {
                 // Step 3 (0.8s〜): pixelRatio切り替え + フォント変更 (一回だけ)
                 if (et >= 0.8 && !singDimSwitched) {
                     singDimSwitched = true;
-                    renderer.setPixelRatio(window.devicePixelRatio);
-                    renderer.setSize(window.innerWidth, window.innerHeight);
                     bgMat.uniforms.u_pixelSize.value = 1.0;
                     if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
 
@@ -2012,6 +2010,7 @@ function renderPhase1() {
                 renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
             } else {
                 renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, W, H);
             }
             if (composer) composer.render(); else renderer.render(scene, camera);
             requestAnimationFrame(renderLoop);
