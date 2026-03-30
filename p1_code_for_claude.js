@@ -1826,6 +1826,7 @@ function renderPhase1() {
                     newtonRingPlane.visible = true;
                     newtonRingMat.uniforms.u_alpha.value = 0.0;
                     newtonRingMat.uniforms.u_scale.value = 1.5;
+                    scissor.enabled = false; // sq-border が display:none になるので scissor を無効化
                 }
 
                 // Newton Ring alpha をprogに応じてフェードイン
