@@ -119,10 +119,19 @@ function renderPhase1() {
       border-top:1px solid #000000;
       margin:6px 0;
     }
+    .p0-wave-ball {
+      position:fixed;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:9990;
+      opacity:0;
+      transform:translate(-50%,-50%);
+      will-change:left,top,width,height,opacity,filter;
+    }
   </style>
 
   <!-- Macダイアログ本体（System 7 ウィンドウ枠） -->
-  <div style="
+  <div id="mac-dialog" style="
     background:#ffffff;
     border:1px solid #000000;
     width:clamp(476px,54vw,580px);
@@ -215,15 +224,21 @@ function renderPhase1() {
               <feComposite in="color" in2="blur" operator="in" result="glow"/>
               <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
+            <filter id="wave-glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feFlood flood-color="#ffffff" flood-opacity="0.9" result="color"/>
+              <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
           </defs>
           <circle cx="80" cy="80" r="58" fill="none" stroke="#000000" stroke-width="0.5" stroke-dasharray="3 4"/>
           <!-- 上から時計回り: Cyan Green Blue Magenta Red Yellow (CMY+RGB交互) -->
-          <circle id="px0" r="5.5" fill="#00FFFF" filter="url(#orb-glow-c)"/>
-          <circle id="px1" r="5.5" fill="#00FF00" filter="url(#orb-glow-g)"/>
-          <circle id="px2" r="5.5" fill="#0000FF" filter="url(#orb-glow-b)"/>
-          <circle id="px3" r="5.5" fill="#FF00FF" filter="url(#orb-glow-m)"/>
-          <circle id="px4" r="5.5" fill="#FF0000" filter="url(#orb-glow-r)"/>
-          <circle id="px5" r="5.5" fill="#FFFF00" filter="url(#orb-glow-y)"/>
+          <circle id="px0" r="4" fill="#00FFFF" filter="url(#orb-glow-c)"/>
+          <circle id="px1" r="4" fill="#00FF00" filter="url(#orb-glow-g)"/>
+          <circle id="px2" r="4" fill="#0000FF" filter="url(#orb-glow-b)"/>
+          <circle id="px3" r="4" fill="#FF00FF" filter="url(#orb-glow-m)"/>
+          <circle id="px4" r="4" fill="#FF0000" filter="url(#orb-glow-r)"/>
+          <circle id="px5" r="4" fill="#FFFF00" filter="url(#orb-glow-y)"/>
           <!-- iアイコン: 黒枠・白背景の円 -->
           <circle cx="80" cy="80" r="36" fill="#ffffff" stroke="#000000" stroke-width="2"/>
           <!-- i の点 -->
@@ -237,7 +252,7 @@ function renderPhase1() {
 
       <!-- visitor counter -->
       <p style="font-size:9px;color:#000000;margin:0;font-family:'Press Start 2P', monospace;text-align:center;">
-        You are visitor number: <b id="vc">101010</b><span style="animation:cursorBlink 1s step-end infinite;font-weight:normal;">&#9646;</span>
+        Hello.<span style="animation:cursorBlink 1s step-end infinite;font-weight:normal;">&#9646;</span>
       </p>
 
       <hr class="mac-divider"/>
@@ -249,8 +264,8 @@ function renderPhase1() {
         font-family:'Press Start 2P', monospace;
         max-width:460px;
       ">
-        "If I have seen further,<br>it is by standing on<br>the shoulders of giants."<br>
-        <span style="font-size:6px;letter-spacing:2px;">— I. NEWTON, 1675</span>
+        "Cogitamus, ergo sumus."<br>
+        <span style="font-size:6px;letter-spacing:2px;">— R. DESCARTES, 1637 (reimagined)</span>
       </p>
 
       <hr class="mac-divider"/>
@@ -269,22 +284,317 @@ function renderPhase1() {
   </div>
 </div>`;
 
-    // ── P0 ピクセル軌道アニメーション ──
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  P0 起動シーケンス
+    //  FLYING   = 波動状態 div、画面端→ダイアログ枠（easeOut）
+    //  FLASH    = ダイアログ枠フラッシュ → フラット円に結晶化
+    //  GLIDING  = ダイアログ内をゆっくり i-dot へ
+    //  WAITING  = i-dotに静止（次の球の吸収待ち）
+    //  ABSORBING= i-dotに吸い込まれる（C→M→Y→R→G→B順）
+    //  EXPLODING= SVG circle が i-dot から軌道へ弾け飛ぶ
+    //  ORBITING = SVG circle が軌道周回
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     (function(){
-      const els=[0,1,2,3,4,5].map(i=>document.getElementById('px'+i));
-      const R=58,cx=80,cy=80;
-      let a=-Math.PI/2; // px0(Cyan)が12時(上)からスタート
-      (function loop(){
-        els.forEach((el,i)=>{
-          if(!el)return;
-          const angle=a+(i*Math.PI*2/6);
-          el.setAttribute('cx', cx + R * Math.cos(angle));
-          el.setAttribute('cy', cy + R * Math.sin(angle));
+        const SVG_CX=80, SVG_CY=80, ORBIT_R=58;
+        const I_DOT_X=80, I_DOT_Y=65;
+        const orbitSvg=document.getElementById('orbit-svg');
+        const els=[0,1,2,3,4,5].map(i=>document.getElementById('px'+i));
+
+        const FLY_ORDER  =[0,3,5,4,1,2]; // C→M→Y→R→G→B
+        const LAUNCH_INTV=0.80;
+        const FLIGHT_DUR =1.80;
+        const FLASH_DUR  =0.30;
+        const GLIDE_DUR  =1.80;
+        const ABSORB_DUR =0.35;
+        const ABSORB_INTV=0.40;
+        const EXPLODE_DUR=0.45;
+
+        const CFG=[
+            {edge:'left',        bx:0.0,by:0.5,ctrl: 1,rgb:[0,255,255],  noteHz:220.00,noteType:'triangle',filterId:'orb-glow-c'},
+            {edge:'right',       bx:1.0,by:0.5,ctrl:-1,rgb:[0,255,0],    noteHz:554.37,noteType:'sine',    filterId:'orb-glow-g'},
+            {edge:'top-right',   bx:0.8,by:0.0,ctrl: 1,rgb:[0,0,255],    noteHz:659.25,noteType:'sine',    filterId:'orb-glow-b'},
+            {edge:'top-left',    bx:0.2,by:0.0,ctrl:-1,rgb:[255,0,255],  noteHz:261.63,noteType:'triangle',filterId:'orb-glow-m'},
+            {edge:'bottom-left', bx:0.2,by:1.0,ctrl:-1,rgb:[255,0,0],    noteHz:440.00,noteType:'sine',    filterId:'orb-glow-r'},
+            {edge:'bottom-right',bx:0.8,by:1.0,ctrl: 1,rgb:[255,255,0],  noteHz:329.63,noteType:'triangle',filterId:'orb-glow-y'},
+        ];
+        CFG.forEach(c=>{
+            c.phase='idle'; c.phaseStartAt=null;
+            c.p0x=0;c.p0y=0;c.p1x=0;c.p1y=0;c.p2x=0;c.p2y=0;
+            c.glideFromX=0;c.glideFromY=0;c.glideToX=0;c.glideToY=0;
         });
-        a+=0.008;
-        requestAnimationFrame(loop);
-      })();
+
+        const waveDivs=CFG.map(()=>{
+            const d=document.createElement('div');
+            d.className='p0-wave-ball';
+            document.body.appendChild(d);
+            return d;
+        });
+
+        let orbitAngle=-Math.PI/2;
+        let seqStartMs=null, seqStep=0;
+        let absorbStep=0, absorbWaitUntil=0, allWaiting=false;
+        let chordDone=false;
+        let idotScrX=0, idotScrY=0;
+
+        els.forEach(el=>{if(el){el.setAttribute('r','0');el.setAttribute('opacity','0');}});
+
+        function lerp(a,b,t){return a+(b-a)*t;}
+        function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+        function easeOut3(t){return 1-Math.pow(1-t,3);}
+        function easeIn3(t){return Math.pow(t,3);}
+        function bezier2(t,ax,ay,bx,by,cx,cy){
+            const u=1-t;
+            return[u*u*ax+2*u*t*bx+t*t*cx, u*u*ay+2*u*t*by+t*t*cy];
+        }
+
+        // ── リバーブ＋コンプレッサー（遅延初期化）──
+        let _reverb=null, _comp=null;
+        function getAudioChain(){
+            if(_reverb) return {reverb:_reverb};
+            const sr=audioContext.sampleRate;
+            const buf=audioContext.createBuffer(2,sr*2.5,sr);
+            for(let ch=0;ch<2;ch++){
+                const d=buf.getChannelData(ch);
+                for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.8);
+            }
+            _reverb=audioContext.createConvolver(); _reverb.buffer=buf;
+            _comp=audioContext.createDynamicsCompressor();
+            _comp.threshold.value=-14; _comp.knee.value=6;
+            _comp.ratio.value=3; _comp.attack.value=0.004; _comp.release.value=0.15;
+            _reverb.connect(_comp); _comp.connect(audioContext.destination);
+            return {reverb:_reverb};
+        }
+
+        function playNote(cfg){
+            if(!audioContext||audioContext.state!=='running') return;
+            try{
+                const {reverb}=getAudioChain();
+                const t=audioContext.currentTime;
+                const osc=audioContext.createOscillator(), g=audioContext.createGain();
+                osc.connect(g); g.connect(audioContext.destination); g.connect(reverb);
+                osc.type=cfg.noteType; osc.frequency.value=cfg.noteHz;
+                g.gain.setValueAtTime(0.30,t);
+                g.gain.exponentialRampToValueAtTime(0.0001,t+2.2);
+                osc.start(t); osc.stop(t+2.2);
+                const osc2=audioContext.createOscillator(), g2=audioContext.createGain();
+                osc2.connect(g2); g2.connect(reverb);
+                osc2.type='sine'; osc2.frequency.value=cfg.noteHz*2;
+                g2.gain.setValueAtTime(0.10,t);
+                g2.gain.exponentialRampToValueAtTime(0.0001,t+1.5);
+                osc2.start(t); osc2.stop(t+1.5);
+            }catch(e){}
+        }
+
+        function playGreyChord(){
+            if(!audioContext||audioContext.state!=='running') return;
+            try{
+                const {reverb}=getAudioChain();
+                [220.00,261.63,329.63,440.00,554.37,659.25].forEach(freq=>{
+                    const osc=audioContext.createOscillator(), g=audioContext.createGain();
+                    osc.connect(g); g.connect(audioContext.destination); g.connect(reverb);
+                    osc.type='sine'; osc.frequency.value=freq;
+                    const t=audioContext.currentTime;
+                    g.gain.setValueAtTime(0.14,t);
+                    g.gain.exponentialRampToValueAtTime(0.0001,t+2.5);
+                    osc.start(t); osc.stop(t+2.5);
+                });
+            }catch(e){}
+        }
+
+        function tick(){
+            orbitAngle+=0.008;
+            const nowMs=performance.now();
+            if(seqStartMs===null){requestAnimationFrame(tick);return;}
+            const elapsed=(nowMs-seqStartMs)/1000;
+
+            // 順次発射
+            if(seqStep<6 && elapsed>=seqStep*LAUNCH_INTV){
+                const bi=FLY_ORDER[seqStep];
+                if(CFG[bi].phase==='idle'){CFG[bi].phase='flying';CFG[bi].phaseStartAt=elapsed;seqStep++;}
+            }
+            // 全球waiting後に順次吸収
+            if(!allWaiting && CFG.every(c=>c.phase==='waiting'||c.phase==='absorbing'||c.phase==='exploding'||c.phase==='orbiting')){
+                allWaiting=true; absorbWaitUntil=elapsed;
+            }
+            if(allWaiting && absorbStep<6){
+                const bi=FLY_ORDER[absorbStep];
+                if(CFG[bi].phase==='waiting' && elapsed>=absorbWaitUntil){
+                    CFG[bi].phase='absorbing'; CFG[bi].phaseStartAt=elapsed;
+                    playNote(CFG[bi]); absorbStep++;
+                    absorbWaitUntil=elapsed+ABSORB_DUR+ABSORB_INTV;
+                }
+            }
+            // グレーコード
+            if(!chordDone && CFG.every(c=>c.phase==='orbiting')){chordDone=true;playGreyChord();}
+
+            CFG.forEach((cfg,i)=>{
+                const el=els[i], div=waveDivs[i];
+                if(!el) return;
+                const [r,g,b]=cfg.rgb;
+                const cs=`rgb(${r},${g},${b})`;
+                const orbitA=orbitAngle+(i*Math.PI*2/6);
+                const orbitX=SVG_CX+ORBIT_R*Math.cos(orbitA);
+                const orbitY=SVG_CY+ORBIT_R*Math.sin(orbitA);
+
+                if(cfg.phase==='idle'){div.style.opacity='0';return;}
+                const t=cfg.phaseStartAt!==null?elapsed-cfg.phaseStartAt:0;
+
+                if(cfg.phase==='flying'){
+                    const tN=clamp(t/FLIGHT_DUR,0,1);
+                    const te=easeOut3(tN);
+                    const [bx,by]=bezier2(te,cfg.p0x,cfg.p0y,cfg.p1x,cfg.p1y,cfg.p2x,cfg.p2y);
+                    const pulse=0.5+0.5*Math.sin(nowMs*0.004+i*1.1);
+                    const radius=22+pulse*14;
+                    div.style.left=bx+'px';div.style.top=by+'px';
+                    div.style.width=(radius*2)+'px';div.style.height=(radius*2)+'px';
+                    div.style.background=`radial-gradient(circle,rgba(${r},${g},${b},0.82) 0%,rgba(${r},${g},${b},0.22) 52%,transparent 75%)`;
+                    div.style.filter='blur(9px)';
+                    div.style.opacity=clamp(t/0.25,0,1).toString();
+                    el.setAttribute('r','0');el.setAttribute('opacity','0');
+                    if(tN>=1.0){cfg.phase='flash';cfg.phaseStartAt=elapsed;}
+
+                }else if(cfg.phase==='flash'){
+                    const fp=clamp(t/FLASH_DUR,0,1);
+                    if(fp<0.28){
+                        const ex=fp/0.28;
+                        div.style.left=cfg.p2x+'px';div.style.top=cfg.p2y+'px';
+                        div.style.width=(60+ex*60)+'px';div.style.height=(60+ex*60)+'px';
+                        div.style.background=`radial-gradient(circle,rgba(255,255,255,0.96) 0%,rgba(255,255,255,0.35) 55%,transparent 78%)`;
+                        div.style.filter='blur(5px)';div.style.opacity='1';
+                    }else{
+                        const sp=easeOut3((fp-0.28)/0.72);
+                        const cr=lerp(60,5,sp);
+                        div.style.left=cfg.p2x+'px';div.style.top=cfg.p2y+'px';
+                        div.style.width=(cr*2)+'px';div.style.height=(cr*2)+'px';
+                        div.style.background=cs;
+                        div.style.filter=`blur(${lerp(3,0,sp)}px) drop-shadow(0 0 ${lerp(4,10,sp)}px ${cs})`;
+                        div.style.opacity='1';
+                    }
+                    el.setAttribute('r','0');el.setAttribute('opacity','0');
+                    if(fp>=1.0){cfg.phase='gliding';cfg.glideFromX=cfg.p2x;cfg.glideFromY=cfg.p2y;cfg.phaseStartAt=elapsed;}
+
+                }else if(cfg.phase==='gliding'){
+                    const gp=clamp(t/GLIDE_DUR,0,1);
+                    const ge=easeOut3(gp);
+                    div.style.left=lerp(cfg.glideFromX,cfg.glideToX,ge)+'px';
+                    div.style.top =lerp(cfg.glideFromY,cfg.glideToY,ge)+'px';
+                    div.style.width='10px';div.style.height='10px';
+                    div.style.background=cs;
+                    div.style.filter=`drop-shadow(0 0 8px ${cs})`;
+                    div.style.opacity='1';
+                    el.setAttribute('r','0');el.setAttribute('opacity','0');
+                    if(gp>=1.0){cfg.phase='waiting';cfg.phaseStartAt=elapsed;}
+
+                }else if(cfg.phase==='waiting'){
+                    const isNext=FLY_ORDER[absorbStep]===i;
+                    div.style.left=idotScrX+'px';div.style.top=idotScrY+'px';
+                    div.style.width='10px';div.style.height='10px';
+                    div.style.background=cs;
+                    div.style.filter=`drop-shadow(0 0 6px ${cs})`;
+                    div.style.opacity=isNext?'0.9':'0';
+                    el.setAttribute('r','0');el.setAttribute('opacity','0');
+
+                }else if(cfg.phase==='absorbing'){
+                    const ap=clamp(t/ABSORB_DUR,0,1);
+                    let sz,opacity,glow;
+                    if(ap<0.20){
+                        const bulge=ap/0.20;
+                        sz=lerp(10,15,bulge);opacity=0.9;glow=lerp(6,10,bulge);
+                    }else{
+                        const pull=easeIn3((ap-0.20)/0.80);
+                        sz=lerp(15,0,pull);opacity=lerp(0.9,0,pull);glow=lerp(10,20,pull);
+                    }
+                    div.style.left=idotScrX+'px';div.style.top=idotScrY+'px';
+                    div.style.width=sz+'px';div.style.height=sz+'px';
+                    div.style.background=cs;
+                    div.style.filter=`drop-shadow(0 0 ${glow}px ${cs})`;
+                    div.style.opacity=opacity.toString();
+                    el.setAttribute('r','0');el.setAttribute('opacity','0');
+                    if(ap>=1.0){
+                        cfg.phase='exploding';cfg.phaseStartAt=elapsed;
+                        div.style.opacity='0';
+                        el.setAttribute('cx',I_DOT_X.toString());el.setAttribute('cy',I_DOT_Y.toString());
+                        el.setAttribute('r','0');el.setAttribute('opacity','0');
+                    }
+
+                }else if(cfg.phase==='exploding'){
+                    const ep=clamp(t/EXPLODE_DUR,0,1);
+                    div.style.opacity='0';
+                    if(ep<0.10){
+                        el.setAttribute('r',lerp(3,22,ep/0.10).toString());
+                        el.setAttribute('fill','#ffffff');
+                        el.setAttribute('filter','url(#wave-glow)');
+                        el.setAttribute('cx',I_DOT_X.toString());el.setAttribute('cy',I_DOT_Y.toString());
+                        el.setAttribute('opacity','1');
+                    }else{
+                        const fp2=easeOut3((ep-0.10)/0.90);
+                        el.setAttribute('cx',lerp(I_DOT_X,orbitX,fp2).toString());
+                        el.setAttribute('cy',lerp(I_DOT_Y,orbitY,fp2).toString());
+                        el.setAttribute('r',lerp(22,4,fp2).toString());
+                        el.setAttribute('fill',cs);
+                        el.setAttribute('filter',`url(#${cfg.filterId})`);
+                        el.setAttribute('opacity','1');
+                    }
+                    if(ep>=1.0){cfg.phase='orbiting';}
+
+                }else if(cfg.phase==='orbiting'){
+                    el.setAttribute('cx',orbitX.toString());el.setAttribute('cy',orbitY.toString());
+                    el.setAttribute('r','4');el.setAttribute('fill',cs);
+                    el.setAttribute('filter',`url(#${cfg.filterId})`);el.setAttribute('opacity','1');
+                    div.style.opacity='0';
+                }
+            });
+            requestAnimationFrame(tick);
+        }
+
+        window._p0StartFlyIn=function(){
+            const dialogEl=document.getElementById('mac-dialog');
+            const svgRect=orbitSvg.getBoundingClientRect();
+            const dialogRect=dialogEl?dialogEl.getBoundingClientRect():svgRect;
+            const vw=window.innerWidth, vh=window.innerHeight;
+            idotScrX=svgRect.left+(I_DOT_X/160)*svgRect.width;
+            idotScrY=svgRect.top +(I_DOT_Y/160)*svgRect.height;
+            function edgePt(edge){
+                switch(edge){
+                    case 'left':        return{x:0,     y:dialogRect.top+dialogRect.height*0.45};
+                    case 'right':       return{x:vw,    y:dialogRect.top+dialogRect.height*0.45};
+                    case 'top-left':    return{x:vw*0.15,y:0};
+                    case 'top-right':   return{x:vw*0.85,y:0};
+                    case 'bottom-left': return{x:vw*0.15,y:vh};
+                    case 'bottom-right':return{x:vw*0.85,y:vh};
+                    default:            return{x:vw/2,  y:0};
+                }
+            }
+            CFG.forEach((cfg,i)=>{
+                const ep=edgePt(cfg.edge);
+                cfg.p2x=dialogRect.left+cfg.bx*dialogRect.width;
+                cfg.p2y=dialogRect.top +cfg.by*dialogRect.height;
+                cfg.p0x=ep.x;cfg.p0y=ep.y;
+                const midX=(ep.x+cfg.p2x)/2, midY=(ep.y+cfg.p2y)/2;
+                const dx=cfg.p2x-ep.x, dy=cfg.p2y-ep.y;
+                const len=Math.sqrt(dx*dx+dy*dy)||1;
+                const off=130+i*22;
+                cfg.p1x=midX+(-dy/len)*off*cfg.ctrl;
+                cfg.p1y=midY+(dx/len) *off*cfg.ctrl;
+                cfg.glideToX=idotScrX;cfg.glideToY=idotScrY;
+                cfg.phase='idle';cfg.phaseStartAt=null;
+                waveDivs[i].style.opacity='0';
+                const el=els[i];if(el){el.setAttribute('r','0');el.setAttribute('opacity','0');}
+            });
+            chordDone=false;seqStep=0;allWaiting=false;absorbStep=0;absorbWaitUntil=0;
+            seqStartMs=performance.now();
+        };
+
+        document.addEventListener('click',function onEnterCleanup(e){
+            if(e.target&&e.target.id==='evolve-btn'){
+                waveDivs.forEach(d=>{if(d.parentNode)d.parentNode.removeChild(d);});
+                document.removeEventListener('click',onEnterCleanup);
+            }
+        });
+
+        requestAnimationFrame(tick);
     })();
+    setTimeout(()=>{if(window._p0StartFlyIn)window._p0StartFlyIn();},150);
 
     // ── Win95 起動音（Web Audio API） Step 3 ──
     // G4→C5→E5→G5 4音メロディ（triangle波・FM合成風）
