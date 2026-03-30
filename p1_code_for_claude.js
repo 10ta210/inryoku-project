@@ -878,6 +878,42 @@ function renderPhase1() {
   </div>
 
 </div>
+
+<!-- Phase C プログレスバー (モダン、初期非表示) -->
+<div id="phase-c-bar-wrap" style="
+  display:none;
+  position:fixed;
+  bottom:36px;
+  left:50%;
+  transform:translateX(-50%);
+  width:420px;
+  z-index:100;
+  pointer-events:none;
+">
+  <div style="
+    font-size:10px;
+    font-family:'Courier New',monospace;
+    color:rgba(255,255,255,0.5);
+    text-align:center;
+    margin-bottom:6px;
+    letter-spacing:0.1em;
+  " id="phase-c-pct">LOADING REALITY... 50%</div>
+  <div style="
+    height:4px;
+    background:rgba(255,255,255,0.08);
+    border-radius:2px;
+    overflow:hidden;
+  ">
+    <div id="phase-c-lb" style="
+      width:50%;
+      height:100%;
+      background:linear-gradient(90deg,#00FFFF,#FF00FF,#FFFF00,#FF0000,#00FF00,#0000FF);
+      background-size:400% 100%;
+      animation:p1Slide 3s linear infinite;
+      border-radius:2px;
+    "></div>
+  </div>
+</div>
 `;
         document.body.appendChild(wrap);
 
@@ -1049,24 +1085,61 @@ function renderPhase1() {
         const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 6, sqWorld), bgMat);
         bgPlane.position.z = -1; scene.add(bgPlane);
 
-        // ── 境界線: CMY/RGB静止虹色グラデーション ──
+        // ── Newton Rings (Phase C 背景 — RGBCMY動的干渉縞) ──
         const newtonRingMat = new THREE.ShaderMaterial({
+            uniforms: {
+                u_time: { value: 0 },
+                u_alpha: { value: 0 },
+                u_scale: { value: 1.0 }
+            },
             vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
             fragmentShader: [
-                'precision highp float;varying vec2 vUv;',
+                'precision highp float;',
+                'varying vec2 vUv;',
+                'uniform float u_time, u_alpha, u_scale;',
+                '',
                 'void main(){',
-                '  float t=1.0-vUv.y;float f=fract(t*5.0);int i=int(floor(t*5.0));',
-                '  vec3 c0=vec3(0.0,1.0,1.0),c1=vec3(1.0,0.0,1.0),c2=vec3(1.0,1.0,0.0);',
-                '  vec3 c3=vec3(1.0,0.0,0.0),c4=vec3(0.0,1.0,0.0),c5=vec3(0.0,0.0,1.0);',
-                '  vec3 col;',
-                '  if(i==0)col=mix(c0,c1,f);else if(i==1)col=mix(c1,c2,f);',
-                '  else if(i==2)col=mix(c2,c3,f);else if(i==3)col=mix(c3,c4,f);',
-                '  else col=mix(c4,c5,f);',
-                '  gl_FragColor=vec4(col,1.0);',
+                '  vec2 p = (vUv - 0.5) * 2.0 * u_scale;',
+                '  float dist = length(p);',
+                '',
+                '  float wl[6];',
+                '  wl[0]=0.700; wl[1]=0.600; wl[2]=0.550;',
+                '  wl[3]=0.510; wl[4]=0.470; wl[5]=0.430;',
+                '',
+                '  vec3 wc[6];',
+                '  wc[0]=vec3(1.0, 0.05, 0.05);',
+                '  wc[1]=vec3(0.0,  1.0,  1.0);',
+                '  wc[2]=vec3(1.0,  0.0,  1.0);',
+                '  wc[3]=vec3(0.05, 1.0, 0.05);',
+                '  wc[4]=vec3(0.05,0.05,  1.0);',
+                '  wc[5]=vec3(1.0,  1.0,  0.0);',
+                '',
+                '  vec3 col = vec3(0.0);',
+                '  float speed = u_time * 0.3;',
+                '',
+                '  for(int i=0; i<6; i++){',
+                '    float n = (dist * dist) / (wl[i] * 0.4);',
+                '    float ph = n * 6.28318 - speed * (1.0 + float(i) * 0.05);',
+                '    float bright = pow(cos(ph * 0.5), 2.0);',
+                '    col += wc[i] * bright;',
+                '  }',
+                '  col /= 6.0;',
+                '',
+                '  float falloff = exp(-dist * dist * 0.8);',
+                '  col *= (0.15 + falloff * 1.2);',
+                '',
+                '  gl_FragColor = vec4(col, u_alpha);',
                 '}'
             ].join('\n'),
-            depthWrite: false
+            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
         });
+        const newtonRingPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(sqWorld * 6, sqWorld * 6),
+            newtonRingMat
+        );
+        newtonRingPlane.position.z = -0.5;
+        newtonRingPlane.visible = false;
+        scene.add(newtonRingPlane);
 
         // ── Magnetic field ──
         const fieldMat = new THREE.ShaderMaterial({
@@ -1419,6 +1492,12 @@ function renderPhase1() {
 
             const pctEl = document.getElementById('p1-lpct');
             if (pctEl) pctEl.textContent = 'Loading reality... ' + pv + '%';
+
+            // Phase C バー同期
+            const pcLb = document.getElementById('phase-c-lb');
+            const pcPct = document.getElementById('phase-c-pct');
+            if (pcLb) pcLb.style.width = fillPct + '%';
+            if (pcPct) pcPct.textContent = 'LOADING REALITY... ' + pv + '%';
         }
 
         // ── MAIN TICK ──
@@ -1428,7 +1507,7 @@ function renderPhase1() {
             globalTime += dt;
             bgMat.uniforms.u_time.value = globalTime;
             fieldMat.uniforms.u_time.value = globalTime;
-            // newtonRingMat は MeshBasicMaterial のため u_time 不要
+            if (newtonRingPlane.visible) newtonRingMat.uniforms.u_time.value = globalTime;
             if (yyPlane.visible) yyMat.uniforms.u_time.value = globalTime;
             if (tunnelPlane.visible) tunnelMat.uniforms.u_time.value = globalTime;
             if (scPlane.visible) scMat.uniforms.u_time.value = globalTime;
@@ -1707,6 +1786,53 @@ function renderPhase1() {
 
                 // ═══ PHASE 4: WARP_GROW (50→75%) ═══
             } else if (phase === PH.WARP_GROW) {
+                // Phase C初期化 (一回だけ実行)
+                if (!phaseCInited) {
+                    phaseCInited = true;
+
+                    // Win95 UIをフェードアウト
+                    const win95 = document.getElementById('win95-main');
+                    if (win95) {
+                        win95.style.transition = 'opacity 0.6s ease-out';
+                        win95.style.opacity = '0';
+                        setTimeout(() => {
+                            if (win95) win95.style.display = 'none';
+                        }, 700);
+                    }
+                    // タスクバーもフェードアウト
+                    if (wrap) {
+                        const allDivs = wrap.querySelectorAll('div');
+                        allDivs.forEach(el => {
+                            if (el.style.position === 'absolute' && el.style.bottom === '0px') {
+                                el.style.transition = 'opacity 0.6s ease-out';
+                                el.style.opacity = '0';
+                                setTimeout(() => { if (el) el.style.display = 'none'; }, 700);
+                            }
+                        });
+                    }
+
+                    // Phase C プログレスバーを表示
+                    const pcBar = document.getElementById('phase-c-bar-wrap');
+                    if (pcBar) {
+                        pcBar.style.display = 'block';
+                        pcBar.style.opacity = '0';
+                        pcBar.style.transition = 'opacity 0.8s ease-in';
+                        setTimeout(() => { if (pcBar) pcBar.style.opacity = '1'; }, 100);
+                    }
+
+                    // bgPlaneを非表示にしてnewtonRingPlaneに切り替え
+                    bgPlane.visible = false;
+                    renderer.setClearColor(0x000000, 1);
+                    newtonRingPlane.visible = true;
+                    newtonRingMat.uniforms.u_alpha.value = 0.0;
+                    newtonRingMat.uniforms.u_scale.value = 1.5;
+                }
+
+                // Newton Ring alpha をprogに応じてフェードイン
+                const nrAlpha = Math.min(1.0, (prog - 50) / 15);
+                newtonRingMat.uniforms.u_alpha.value = nrAlpha;
+                newtonRingMat.uniforms.u_scale.value = 1.5 - (prog - 50) / 25 * 0.5;
+
                 updateWin95Status('Loading warp tunnel...');
                 const wt = (prog - 50) / 25;
                 const tR = 0.2 + wt * 0.35;
