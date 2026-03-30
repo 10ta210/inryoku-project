@@ -922,6 +922,7 @@ function renderPhase1() {
             const sqEl = document.getElementById('sq-border');
             if (sqEl) {
                 const rect = sqEl.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return; // display:none時はスキップ
                 scissor.x = Math.round(rect.left);
                 scissor.y = Math.round(H - rect.bottom); // GLのyは下から
                 scissor.w = Math.round(rect.width);
@@ -1827,6 +1828,11 @@ function renderPhase1() {
                     newtonRingMat.uniforms.u_alpha.value = 0.0;
                     newtonRingMat.uniforms.u_scale.value = 1.5;
                     scissor.enabled = false; // sq-border が display:none になるので scissor を無効化
+                    renderer.setScissorTest(false);
+                    renderer.setViewport(0, 0, W, H);
+                    camera.left = -camW; camera.right = camW;
+                    camera.top = camH; camera.bottom = -camH;
+                    camera.updateProjectionMatrix();
                 }
 
                 // Newton Ring alpha をprogに応じてフェードイン
