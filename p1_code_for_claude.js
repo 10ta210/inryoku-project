@@ -1549,15 +1549,14 @@ function renderPhase1() {
                 bgMat.uniforms.u_grey.value = t * 0.8;
                 if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; }
 
-                // ═══ PHASE 3: EVENT_SING (50% — 3.5s) — Simple Physics Collision ═══
+                // ═══ PHASE 3: EVENT_SING (50% — 5s) — 次元転換 ═══
             } else if (phase === PH.EVENT_SING) {
-                updateWin95Status('Processing dimension collapse...');
-                renderer.setClearColor(0x1a1a1a, 1.0); // 背景色を復元
                 eventTimer += dt;
                 const et = eventTimer;
 
-                // Step 1 (0-0.3s): Collision flash
+                // Step 1 (0-0.3s): 衝突フラッシュ
                 if (et < 0.3) {
+                    updateWin95Status('⚠ DIMENSION SHIFT DETECTED');
                     const t2 = et / 0.3;
                     bDot.position.x += (0 - bDot.position.x) * 0.3;
                     wDot.position.x += (0 - wDot.position.x) * 0.3;
@@ -1565,29 +1564,70 @@ function renderPhase1() {
                     if (bloom) bloom.strength = 1.0 + t2 * 4.0;
                 }
 
-                // Step 2 (0.3-0.5s): Flash peak + dots disappear → grey sphere
-                if (et >= 0.3 && et < 0.5) {
+                // Step 2 (0.3-0.8s): グリッチ — win95-mainジッター + flash点滅
+                if (et >= 0.3 && et < 0.8) {
+                    const t2 = (et - 0.3) / 0.5;
                     bDot.visible = false; wDot.visible = false;
-                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - (et - 0.3) / 0.2 * 3);
-                    bgMat.uniforms.u_grey.value = 1.0; // full grey background
-                    // Show grey sphere (reuse bDot as grey)
-                    bDot.visible = true; bDot.position.set(0, 0, 0.5);
-                    bDot.material.fragmentShader = 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.5),1.0);}';
-                    bDot.material.needsUpdate = true;
-                    bDot.scale.set(1, 1, 1);
-                    wDot.visible = false;
+                    bgMat.uniforms.u_flash.value = Math.abs(Math.sin(et * 25)) * 0.6 * (1 - t2);
+
+                    const win95 = document.getElementById('win95-main');
+                    if (win95) {
+                        const jx = (Math.random() - 0.5) * 14 * (1 - t2);
+                        const jy = (Math.random() - 0.5) * 6 * (1 - t2);
+                        win95.style.transform = `translate(${jx}px, ${jy}px)`;
+                    }
+                    if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 30)) * 1.5;
+                    updateWin95Status('⚠ REALITY.SYS CORRUPTED');
                 }
 
-                // Step 3 (0.5-1.2s): Grey sphere pulses → yin-yang fade-in
-                if (et >= 0.5 && et < 1.2) {
-                    const t2 = (et - 0.5) / 0.7;
+                // Step 3 (0.8-0.85s): pixelRatio切り替え + フォント変更 (一回だけ)
+                if (et >= 0.8 && et < 0.85) {
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                    bgMat.uniforms.u_pixelSize.value = 1.0;
+                    if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
+
+                    const win95 = document.getElementById('win95-main');
+                    if (win95) {
+                        win95.style.transform = 'translate(0px, 0px)';
+                        win95.querySelectorAll('*').forEach(el => {
+                            const ff = el.style.fontFamily;
+                            if (ff && (ff.includes('MS Sans Serif') || ff.includes('Tahoma'))) {
+                                el.style.fontFamily = "'Courier New', monospace";
+                                el.style.letterSpacing = '0.04em';
+                            }
+                        });
+                    }
+                    updateWin95Status('RELOADING DIMENSION...');
+                }
+
+                // Step 4 (0.85-1.5s): UIフリッカー → 安定
+                if (et >= 0.85 && et < 1.5) {
+                    const t2 = (et - 0.85) / 0.65;
+                    bgMat.uniforms.u_flash.value = Math.abs(Math.sin(et * 18)) * 0.25 * (1 - t2);
+                    if (bloom) bloom.strength = 1.5 - t2 * 0.5;
+                }
+
+                // Step 5 (1.5-1.7s): Flash peak + grey sphere出現
+                if (et >= 1.5 && et < 1.7) {
+                    bDot.visible = false; wDot.visible = false;
+                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - (et - 1.5) / 0.2);
+                    bgMat.uniforms.u_grey.value = 1.0;
+                    bDot.visible = true; bDot.position.set(0, 0, 0.5);
+                    bDot.scale.setScalar(1.0);
+                }
+
+                // Step 6 (1.5-2.2s): grey sphere脈動
+                if (et >= 1.5 && et < 2.2) {
+                    const t2 = (et - 1.5) / 0.7;
                     bDot.visible = true;
                     bDot.scale.setScalar(1.0 + Math.sin(t2 * Math.PI * 3) * 0.2 * (1 - t2));
                     if (bloom) bloom.strength = 1.0 + Math.abs(Math.sin(t2 * Math.PI * 3)) * 1.5 * (1 - t2);
                 }
-                // Yin-Yang fade-in (0.8s~)
-                if (et >= 0.8 && et < 1.8) {
-                    const t2 = (et - 0.8) / 1.0;
+
+                // Step 7 (2.0-3.0s): Yin-Yang fade-in
+                if (et >= 2.0 && et < 3.0) {
+                    const t2 = (et - 2.0) / 1.0;
                     bDot.visible = false;
                     yyPlane.visible = true;
                     yyMat.uniforms.u_alpha.value = Math.min(1.0, t2 * 1.5);
@@ -1595,17 +1635,14 @@ function renderPhase1() {
                     yyMat.uniforms.u_grey.value = 0.0;
                     if (bloom) bloom.strength = 1.5;
                 }
-                // Step 4 (1.8-2.3s): Yin-Yang → grey sphere morphing
-                if (et >= 1.8 && et < 2.3) {
-                    const t2 = (et - 1.8) / 0.5;
-                    
-                    // 陰陽をグレー化しながら縮小
+
+                // Step 8 (3.0-3.5s): Yin-Yang → grey morphing
+                if (et >= 3.0 && et < 3.5) {
+                    const t2 = (et - 3.0) / 0.5;
                     yyPlane.visible = true;
                     yyMat.uniforms.u_grey.value = t2;
                     yyMat.uniforms.u_rot.value = globalTime * (1.5 + t2 * 8.0);
                     yyMat.uniforms.u_alpha.value = 1.0 - t2 * 0.8;
-                    
-                    // 陰陽が消えるタイミングでグレー球体をフェードイン
                     if (t2 > 0.4) {
                         const gt = (t2 - 0.4) / 0.6;
                         bDot.visible = true;
@@ -1636,29 +1673,28 @@ function renderPhase1() {
                         bDot.scale.setScalar(gt * 1.0);
                         if (bloom) bloom.strength = 1.0 + gt * 0.5;
                     }
-                    
                     const shake = Math.sin(et * 30) * 0.015 * (1 - t2);
                     if (yyPlane.visible) yyPlane.position.x = shake;
-                    
                     if (bloom) bloom.strength = 1.5 + t2 * 2.0;
                 }
-                // Step 5 (2.3-2.5s): Yin-Yang vanish → tunnel born
-                if (et >= 2.3 && et < 2.5) {
+
+                // Step 9 (3.5-4.0s): Yin-Yang消去 → tunnel born
+                if (et >= 3.5 && et < 4.0) {
                     yyPlane.visible = false;
                     yyPlane.position.x = 0;
                     bDot.userData.greySet = false;
-                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - (et - 2.3) / 0.2);
+                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - (et - 3.5) / 0.5);
                     tunnelPlane.visible = true;
-                    const t2 = (et - 2.3) / 0.2;
+                    const t2 = (et - 3.5) / 0.5;
                     tunnelMat.uniforms.u_radius.value = 0.05 + t2 * 0.15;
                     tunnelMat.uniforms.u_alpha.value = t2;
                     tunnelMat.uniforms.u_progress.value = t2 * 0.2;
                     if (bloom) bloom.strength = 4.0 * (1 - t2) + 1.5;
                 }
 
-                // Step 6 (2.5-3.5s): Tunnel grows + stabilizes
-                if (et >= 2.5) {
-                    const t2 = (et - 2.5) / 1.0;
+                // Step 10 (4.0-5.0s): Tunnel安定成長
+                if (et >= 4.0) {
+                    const t2 = Math.min((et - 4.0) / 1.0, 1.0);
                     const pulse = 1 + Math.sin(et * 6) * 0.04;
                     tunnelMat.uniforms.u_radius.value = (0.2 + t2 * 0.05) * pulse;
                     tunnelMat.uniforms.u_alpha.value = 1.0;
@@ -1666,7 +1702,7 @@ function renderPhase1() {
                     if (bloom) bloom.strength = 1.5;
                 }
 
-                if (et >= 3.5) { phase = PH.WARP_GROW; progPaused = false; }
+                if (et >= 5.0) { phase = PH.WARP_GROW; progPaused = false; }
 
                 // ═══ PHASE 4: WARP_GROW (50→75%) ═══
             } else if (phase === PH.WARP_GROW) {
