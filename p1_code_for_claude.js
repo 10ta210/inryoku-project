@@ -916,49 +916,30 @@ function renderPhase1() {
         const barWrap = document.getElementById('bar-wrap');
         const sqBorder = document.getElementById('sq-border');
 
-        // ── HOLD-TO-LOAD + AUTO-TICK ──
+        // ── AUTO-TICK (自動進行) ──
         setTimeout(() => {
-            const barTrack = document.getElementById('bar-wrap');
-            const barFill = document.getElementById('p1-lb');
-            const handle = document.getElementById('drag-handle');
-            if (!barTrack) { console.error('bar-wrap not found'); return; }
+            if (!document.getElementById('bar-wrap')) { console.error('bar-wrap not found'); return; }
 
-            let holding = false;
+            // フェーズごとの自動進行速度 (prog / 秒)
+            // 62.5 fps 想定: rate/62.5 = prog/tick
+            const AUTO_RATE = {};
+            AUTO_RATE[PH.ATTRACT]   = 8.5;  // 0→30%  ≈ 3.5s
+            AUTO_RATE[PH.DUALITY]   = 6.5;  // 30→50% ≈ 3.1s
+            AUTO_RATE[PH.WARP_GROW] = 6.0;  // 50→75% ≈ 4.2s
+            AUTO_RATE[PH.CONSUME]   = 5.0;  // 75→101% ≈ 5.2s
 
-            barTrack.addEventListener('mousedown', (e) => {
-                holding = true;
-                e.preventDefault();
-            });
-            barTrack.addEventListener('touchstart', (e) => {
-                holding = true;
-                e.preventDefault();
-            }, { passive: false });
-            window.addEventListener('mouseup', () => { holding = false; });
-            window.addEventListener('touchend', () => { holding = false; });
+            const EVENT_PHASES = [
+                PH.EVENT_FUSE, PH.EVENT_SING,
+                PH.EVENT_BREACH, PH.EVENT_COLLAPSE
+            ];
 
-            // メインループ
             setInterval(() => {
                 if (phase === PH.DONE) return;
-
-                const inEvent = [
-                    PH.EVENT_FUSE,
-                    PH.EVENT_SING,
-                    PH.EVENT_BREACH,
-                    PH.EVENT_COLLAPSE
-                ].includes(phase);
-
-                if (inEvent) {
-                    tick();
-                    return;
-                }
-
-                if (holding) {
-                    prog = Math.min(101, prog + 0.35);
-                    showProg(prog);
-                    tick();
-                }
+                if (EVENT_PHASES.includes(phase)) return;
+                const rate = AUTO_RATE[phase] !== undefined ? AUTO_RATE[phase] : 5.0;
+                prog = Math.min(101, prog + rate / 62.5);
+                showProg(prog);
             }, 16);
-
         }, 100);
 
         // Windows95風時計更新
