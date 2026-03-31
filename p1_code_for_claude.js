@@ -1560,6 +1560,7 @@ function renderPhase1() {
             // ═══ PHASE 0: ATTRACT (0→30%) ═══
             if (phase === PH.ATTRACT) {
                 updateWin95Status('Initializing reality engine...');
+                if (bloom) bloom.strength = 0; // フラットな円 — エフェクトなし
                 const t = prog / 30;
                 // CMY: 粘性のある動き（物質）
                 cmyP.forEach((p, i) => {
@@ -1612,6 +1613,7 @@ function renderPhase1() {
                 // ═══ PHASE 2: DUALITY (30→50%) ═══
             } else if (phase === PH.DUALITY) {
                 updateWin95Status('Resolving duality conflict...');
+                if (bloom) bloom.strength = 0;
                 renderer.setClearColor(0x808080, 1.0); // 透明背景防止
                 const t = (prog - 30) / 20;
                 // Black and white dots accelerate toward center
