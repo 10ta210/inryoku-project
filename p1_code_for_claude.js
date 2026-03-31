@@ -55,7 +55,7 @@ function renderPhase1() {
     const root = document.getElementById('root');
     root.className = 'phase-1';
     root.innerHTML = `<div id="p0-wrapper" style="
-  background:#808080;
+  background:repeating-conic-gradient(#000 0deg 90deg,#fff 90deg 180deg) 0/2px 2px;
   min-height:100vh;
   display:flex;
   align-items:center;
@@ -76,6 +76,26 @@ function renderPhase1() {
   "></div>
 
   <style>
+    /* 1-bit dither: 50% grey (Mac System 1 style) */
+    .dither50 {
+      background-color: transparent !important;
+      background-image: linear-gradient(45deg,#000 25%,transparent 25%),
+        linear-gradient(-45deg,#000 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#000 75%),
+        linear-gradient(-45deg,transparent 75%,#000 75%) !important;
+      background-size: 2px 2px !important;
+      background-position: 0 0, 0 1px, 1px -1px, -1px 0px !important;
+    }
+    /* 25% dither (lighter grey) */
+    .dither25 {
+      background-color: transparent !important;
+      background-image: linear-gradient(45deg,#000 25%,transparent 25%),
+        linear-gradient(-45deg,transparent 75%,transparent 75%),
+        linear-gradient(45deg,transparent 75%,transparent 75%),
+        linear-gradient(-45deg,transparent 75%,transparent 75%) !important;
+      background-size: 4px 4px !important;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0px !important;
+    }
     @keyframes cursorBlink {
       0%,49%{opacity:1;}
       50%,100%{opacity:0;}
