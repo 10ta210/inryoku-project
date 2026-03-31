@@ -1652,8 +1652,8 @@ function renderPhase1() {
                 //   t=0.75~1: ターゲットが急収縮 → 球との距離(dx,dy)が突然大きくなる → バンッとスナップ
                 const contractStart = 0.75;
                 const contractT = t < contractStart ? 0 : Math.min(1, (t - contractStart) / 0.25);
-                // easeInExpo: t=0.75で0.018 → t=1.0で1.0
-                const snapFactor = contractT < 0.01 ? 0.003 : Math.pow(2, 10 * contractT - 10) * 0.55;
+                // easeInExpo: t=0.75時点では0に近く → t=1.0で0.9（磁石スナップ）
+                const snapFactor = contractT < 0.01 ? 0.002 : Math.pow(2, 10 * contractT - 10) * 0.9;
 
                 // CMY: 引力スナップ
                 cmyP.forEach((p, i) => {
@@ -1661,14 +1661,16 @@ function renderPhase1() {
                     const tx = cmyCtr.x + cmyTriPos[i][0] * (1 - contractT * 0.92);
                     const ty = cmyCtr.y + cmyTriPos[i][1] * (1 - contractT * 0.92);
                     const dx = tx - p.position.x, dy = ty - p.position.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
                     p.position.x += dx * snapFactor;
                     p.position.y += dy * snapFactor;
                     // 進行方向に引き伸ばし（表面張力の歪み）
-                    const dist = Math.sqrt(dx*dx + dy*dy);
                     const stretch = 1.0 + dist * 0.05;
                     p.scale.set(1.0 / stretch, stretch, 1.0 / stretch);
-                    if (i === 0 && Math.round(globalTime * 10) % 18 === 0) {
-                        console.log('[ATTRACT CMY0] t='+t.toFixed(2)+' contractT='+contractT.toFixed(2)+' snapFactor='+snapFactor.toFixed(4)+' dx='+dx.toFixed(4)+' pos.x='+p.position.x.toFixed(3));
+                    // 加速度証明ログ (prog>20の期間のみ・CMY[0]のみ)
+                    if (i === 0 && prog > 20) {
+                        const spd = (dist * snapFactor * 180).toFixed(1);
+                        console.log('[ATTRACT] prog='+prog.toFixed(0)+'% speed='+spd);
                     }
                 });
                 // RGB: 振動しながら引力スナップ（精神）
