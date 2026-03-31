@@ -1509,7 +1509,8 @@ function renderPhase1() {
         let alive = true, globalTime = 0;
         const clk = new THREE.Clock();
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
-        let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false;
+        let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false
+        , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0;
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -1584,6 +1585,22 @@ function renderPhase1() {
                             prog < 75  ? '0.20s' :
                                          '0.11s';
                 logoEl2.style.animationDuration = spd;
+            }
+
+            // 数字暴走表示
+            if (numberRampageActive) {
+                const rampageElapsed = globalTime - numberRampageStartTime;
+                if (rampageElapsed < 0.5) {
+                    // 0.5秒で 101 → 99999 へ指数的に増加
+                    const t = rampageElapsed / 0.5;
+                    numberRampageVal = Math.floor(101 + Math.pow(t, 2) * 99898);
+                    const pcPct = document.getElementById('phase-c-pct');
+                    if (pcPct) pcPct.textContent = 'LOADING REALITY... ' + numberRampageVal + '%';
+                } else {
+                    // 0.5秒後: ∞ 表示
+                    const pcPct = document.getElementById('phase-c-pct');
+                    if (pcPct) pcPct.textContent = 'LOADING REALITY... ∞';
+                }
             }
 
             // ═══ PHASE 0: ATTRACT (0→30%) ═══
@@ -1926,6 +1943,12 @@ function renderPhase1() {
 
                 // ═══ PHASE 7: EVENT_COLLAPSE — トンネルが溢れ出す ═══
             } else if (phase === PH.EVENT_COLLAPSE) {
+                // 数字暴走初期化 (一回だけ)
+                if (!numberRampageActive) {
+                    numberRampageActive = true;
+                    numberRampageVal = 101;
+                    numberRampageStartTime = globalTime;
+                }
                 eventTimer += dt;
                 const et = eventTimer;
                 updateWin95Status('Shutting down current dimension...');
