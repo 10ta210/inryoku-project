@@ -1970,12 +1970,28 @@ function renderPhase1() {
                         pcBarWrap.style.transform = `translateX(-50%) translateY(${ease * 60}px) scale(${Math.max(0.01, 1 - ease)})`;
                         pcBarWrap.style.opacity = String(Math.max(0, 1 - ease * 2));
                     }
+                    // UIスパゲッティ: win95-mainを引き伸ばして渦吸い込み
+                    const win95s = document.getElementById('win95-main');
+                    if (win95s && win95s.style.display !== 'none' && win95s.style.opacity !== '0') {
+                        const ease3 = t2 * t2 * t2;
+                        const stretchX = 1.0 - ease3 * 0.85; // 横に縮む
+                        const stretchY = 1.0 + ease3 * 3.0;  // 縦に伸びる
+                        const rotate = ease3 * 180;           // 180°まで回転
+                        const translateX = ease3 * (Math.random() - 0.5) * 40;
+                        const translateY = ease3 * 80;        // 下方向に引き寄せ
+                        win95s.style.transform = `perspective(400px) translate(${translateX}px, ${translateY}px) rotate(${rotate}deg) scaleX(${stretchX}) scaleY(${stretchY})`;
+                        win95s.style.opacity = String(Math.max(0, 1 - ease3 * 1.5));
+                        win95s.style.filter = `blur(${ease3 * 3}px) brightness(${1 + ease3 * 2})`;
+                        win95s.style.transformOrigin = '50% 100%'; // 底辺を中心に
+                    }
                 }
                 if (et >= 0.5 && et < 0.55) {
                     if (barWrap) barWrap.style.display = 'none'; pct.style.display = 'none';
                     if (logoEl) logoEl.style.display = 'none';
                     const pcBarWrap2 = document.getElementById('phase-c-bar-wrap');
                     if (pcBarWrap2) pcBarWrap2.style.display = 'none';
+                    const win95hide = document.getElementById('win95-main');
+                    if (win95hide) win95hide.style.display = 'none';
                     wrap.querySelectorAll('.p1-orb').forEach(o => o.style.display = 'none');
                     // Hide all non-tunnel 3D objects
                     bgPlane.visible = false;
