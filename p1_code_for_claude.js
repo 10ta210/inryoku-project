@@ -1520,7 +1520,7 @@ function renderPhase1() {
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
         let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false
         , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0
-        , silenceTriggered = false;
+        , silenceTriggered = false, warpGrowStartTime = -1;
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -1877,14 +1877,12 @@ function renderPhase1() {
                 if (!phaseCInited) {
                     phaseCInited = true;
 
-                    // Win95 UIをフェードアウト
+                    // Win95 UIスパゲッティ化開始（遷移なし — 毎フレームJSでtransform制御）
+                    warpGrowStartTime = globalTime;
                     const win95 = document.getElementById('win95-main');
                     if (win95) {
-                        win95.style.transition = 'opacity 0.6s ease-out';
-                        win95.style.opacity = '0';
-                        setTimeout(() => {
-                            if (win95) win95.style.display = 'none';
-                        }, 700);
+                        win95.style.transition = 'none'; // CSSトランジションを無効化
+                        win95.style.transformOrigin = '50% 50%';
                     }
                     // タスクバーもフェードアウト
                     if (wrap) {
@@ -1935,6 +1933,31 @@ function renderPhase1() {
                 tunnelMat.uniforms.u_progress.value = 0.2 + wt * 0.3;
                 tunnelMat.uniforms.u_alpha.value = 0.8 + wt * 0.2;
                 if (bloom) bloom.strength = 1.5 + wt * 1.5;
+
+                // Win95 UIスパゲッティ化: WARP_GROW開始から0.8秒間で実行
+                if (warpGrowStartTime >= 0) {
+                    const spaghElapsed = globalTime - warpGrowStartTime;
+                    const spaghDur = 0.8;
+                    const win95s = document.getElementById('win95-main');
+                    if (win95s && win95s.style.display !== 'none') {
+                        if (spaghElapsed < spaghDur) {
+                            const st = spaghElapsed / spaghDur;
+                            const ease3 = st * st * st;
+                            const stretchX = 1.0 - ease3 * 0.9;
+                            const stretchY = 1.0 + ease3 * 5.0;
+                            const rot = ease3 * 90;
+                            const ty2 = ease3 * 120;
+                            win95s.style.transform = `translateY(${ty2}px) rotate(${rot}deg) scaleX(${stretchX}) scaleY(${stretchY})`;
+                            win95s.style.opacity = String(Math.max(0, 1 - ease3 * 1.8));
+                            win95s.style.filter = `blur(${ease3 * 5}px) brightness(${1 + ease3 * 3})`;
+                            console.log('[SPAGHETTI] st='+st.toFixed(2)+' scaleX='+stretchX.toFixed(2)+' scaleY='+stretchY.toFixed(2)+' rot='+rot.toFixed(0)+'deg opacity='+win95s.style.opacity);
+                        } else {
+                            win95s.style.display = 'none';
+                            warpGrowStartTime = -1; // 処理完了フラグ
+                        }
+                    }
+                }
+
                 if (prog >= 75) { phase = PH.EVENT_BREACH; eventTimer = 0; prog = 75; showProg(75); progPaused = true; }
 
                 // ═══ PHASE 5: EVENT_BREACH (75% — 3s fixed) ═══
