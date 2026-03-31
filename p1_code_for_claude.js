@@ -1145,69 +1145,90 @@ function renderPhase1() {
         bgPlane.position.z = -1; scene.add(bgPlane);
 
         // ── Newton Rings (Phase C 背景 — RGBCMY動的干渉縞) ──
-        const newtonRingMat = new THREE.ShaderMaterial({
+        // ── Warp Tunnel Rings (WARP_GROW/CONSUME用: 9リング同心円・透視射影シミュレーション) ──
+        const warpTunnelMat = new THREE.ShaderMaterial({
             uniforms: {
-                u_time: { value: 0 },
-                u_alpha: { value: 0 },
-                u_scale: { value: 1.0 },
-                u_speed_dir: { value: 1.0 },  // 1.0=外向き(WARP_GROW), -1.0=内向き(CONSUME)
-                u_swirl: { value: 0.0 }        // 渦の角度オフセット（CONSUME時に増大）
+                u_time:      { value: 0 },
+                u_alpha:     { value: 0 },
+                u_direction: { value: 1.0 },  // 1=外向き(WARP_GROW), -1=内向き(CONSUME)
+                u_speed:     { value: 0.06 }, // リングスクロール速度 (シェーダー内で加速)
+                u_progress:  { value: 0.0 },  // フェーズ内進捗 0-1
             },
             vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
             fragmentShader: [
                 'precision highp float;',
                 'varying vec2 vUv;',
-                'uniform float u_time, u_alpha, u_scale, u_speed_dir, u_swirl;',
+                'uniform float u_time, u_alpha, u_direction, u_speed, u_progress;',
                 '',
                 'void main(){',
-                '  // falloffは非スケール座標で計算（u_scaleが大きくなっても輝度を維持）',
-                '  vec2 p0 = (vUv - 0.5) * 2.0;',
-                '  float falloff = exp(-dot(p0,p0) * 0.8);',
-                '',
-                '  // リングパターンはスケール済み座標で計算',
-                '  vec2 p = p0 * u_scale;',
+                '  vec2 p = (vUv - 0.5) * 2.0;',
                 '  float r = length(p);',
-                '  float ang = atan(p.y, p.x) + u_swirl * r;',
-                '  p = vec2(r * cos(ang), r * sin(ang));',
-                '  float dist = length(p);',
                 '',
-                '  float wl[6];',
-                '  wl[0]=0.700; wl[1]=0.600; wl[2]=0.550;',
-                '  wl[3]=0.510; wl[4]=0.470; wl[5]=0.430;',
-                '',
+                '  // RGBCMY 6色',
                 '  vec3 wc[6];',
-                '  wc[0]=vec3(1.0, 0.05, 0.05);',
-                '  wc[1]=vec3(0.0,  1.0,  1.0);',
-                '  wc[2]=vec3(1.0,  0.0,  1.0);',
-                '  wc[3]=vec3(0.05, 1.0, 0.05);',
-                '  wc[4]=vec3(0.05,0.05,  1.0);',
-                '  wc[5]=vec3(1.0,  1.0,  0.0);',
+                '  wc[0]=vec3(1.0,0.05,0.05); wc[1]=vec3(0.05,1.0,0.05); wc[2]=vec3(0.05,0.05,1.0);',
+                '  wc[3]=vec3(0.0,1.0,1.0);   wc[4]=vec3(1.0,0.0,1.0);   wc[5]=vec3(1.0,1.0,0.0);',
+                '',
+                '  // 引力加速: progress^2 で終盤ほど速くなる',
+                '  float spd = u_speed * (1.0 + u_progress * u_progress * 4.0);',
                 '',
                 '  vec3 col = vec3(0.0);',
-                '  float speed = u_time * 0.3 * u_speed_dir;',
                 '',
-                '  for(int i=0; i<6; i++){',
-                '    float n = (dist * dist) / (wl[i] * 0.4);',
-                '    float ph = n * 6.28318 - speed * (1.0 + float(i) * 0.05);',
-                '    float bright = pow(cos(ph * 0.5), 2.0);',
-                '    col += wc[i] * bright;',
+                '  for(int i = 0; i < 9; i++){',
+                '    float fi = float(i);',
+                '    // 9リングを均等位相配置',
+                '    float basePhase = fi / 9.0;',
+                '    // phase: 0=奥(小)/1=手前(大)、directionで流れる方向を変える',
+                '    float phase = fract(basePhase + u_time * spd * u_direction + 2.0);',
+                '',
+                '    // 透視射影シミュレーション: 手前ほど大きく',
+                '    float depth = 1.0 - phase;',
+                '    float ringRadius = 0.055 / (depth + 0.055);',
+                '',
+                '    // 画面外のリングはスキップ',
+                '    if(ringRadius < 1.3){',
+                '      // 太さ: 手前ほど太く',
+                '      float thick = 0.004 + phase * 0.02;',
+                '      float dist = abs(r - ringRadius);',
+                '      float ringVal = max(0.0, 1.0 - dist / max(thick, 0.001));',
+                '',
+                '      // 輝度: 手前ほど明るく (phase^2)',
+                '      float brightness = phase * phase * 2.2;',
+                '',
+                '      // 色: i%6 でRGBCMYを順に割り当て',
+                '      vec3 ringColor;',
+                '      int ci = int(mod(fi, 6.0));',
+                '      if(ci==0) ringColor=wc[0];',
+                '      else if(ci==1) ringColor=wc[1];',
+                '      else if(ci==2) ringColor=wc[2];',
+                '      else if(ci==3) ringColor=wc[3];',
+                '      else if(ci==4) ringColor=wc[4];',
+                '      else ringColor=wc[5];',
+                '',
+                '      col += ringColor * ringVal * brightness;',
+                '    }',
                 '  }',
-                '  col /= 6.0;',
                 '',
-                '  col *= (0.15 + falloff * 1.2);',
+                '  // 奥行きグロー (トンネル中心の光)',
+                '  float centerGlow = exp(-r * r * 4.0) * u_progress * 0.5;',
+                '  col += vec3(centerGlow);',
                 '',
-                '  gl_FragColor = vec4(col, u_alpha);',
+                '  // 画面端フェード',
+                '  col *= smoothstep(1.2, 0.7, r);',
+                '',
+                '  float a = u_alpha * min(1.0, length(col) + centerGlow * 0.5);',
+                '  gl_FragColor = vec4(col, a);',
                 '}'
             ].join('\n'),
             transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
         });
-        const newtonRingPlane = new THREE.Mesh(
+        const warpTunnelPlane = new THREE.Mesh(
             new THREE.PlaneGeometry(sqWorld * 6, sqWorld * 6),
-            newtonRingMat
+            warpTunnelMat
         );
-        newtonRingPlane.position.z = -0.5;
-        newtonRingPlane.visible = false;
-        scene.add(newtonRingPlane);
+        warpTunnelPlane.position.z = -0.5;
+        warpTunnelPlane.visible = false;
+        scene.add(warpTunnelPlane);
 
         // ── Magnetic field ──
         const fieldMat = new THREE.ShaderMaterial({
@@ -1577,7 +1598,7 @@ function renderPhase1() {
             globalTime += dt;
             bgMat.uniforms.u_time.value = globalTime;
             fieldMat.uniforms.u_time.value = globalTime;
-            if (newtonRingPlane.visible) newtonRingMat.uniforms.u_time.value = globalTime;
+            if (warpTunnelPlane.visible) { warpTunnelMat.uniforms.u_time.value = globalTime; }
             if (yyPlane.visible) yyMat.uniforms.u_time.value = globalTime;
             if (tunnelPlane.visible) tunnelMat.uniforms.u_time.value = globalTime;
             if (scPlane.visible) scMat.uniforms.u_time.value = globalTime;
@@ -1936,14 +1957,14 @@ function renderPhase1() {
                         setTimeout(() => { if (pcBar) pcBar.style.opacity = '1'; }, 100);
                     }
 
-                    // bgPlaneを非表示にしてnewtonRingPlaneに切り替え
+                    // bgPlaneを非表示にしてwarpTunnelPlaneに切り替え
                     bgPlane.visible = false;
                     renderer.setClearColor(0x000000, 1);
-                    newtonRingPlane.visible = true;
-                    newtonRingMat.uniforms.u_alpha.value = 0.0;
-                    newtonRingMat.uniforms.u_scale.value = 1.5;
-                    newtonRingMat.uniforms.u_speed_dir.value = 1.0;  // WARP_GROW: 外向き
-                    newtonRingMat.uniforms.u_swirl.value = 0.0;
+                    warpTunnelPlane.visible = true;
+                    warpTunnelMat.uniforms.u_alpha.value = 0.0;
+                    warpTunnelMat.uniforms.u_direction.value = 1.0;  // WARP_GROW: 外向き
+                    warpTunnelMat.uniforms.u_speed.value = 0.06;
+                    warpTunnelMat.uniforms.u_progress.value = 0.0;
                     scissor.enabled = false; // sq-border が display:none になるので scissor を無効化
                     renderer.setScissorTest(false);
                     renderer.setViewport(0, 0, W, H);
@@ -1952,10 +1973,12 @@ function renderPhase1() {
                     camera.updateProjectionMatrix();
                 }
 
-                // Newton Ring alpha をprogに応じてフェードイン
+                // ワープトンネル alpha/progress をprogに応じてフェードイン
                 const nrAlpha = Math.min(1.0, (prog - 50) / 15);
-                newtonRingMat.uniforms.u_alpha.value = nrAlpha;
-                newtonRingMat.uniforms.u_scale.value = 1.5 - (prog - 50) / 25 * 0.5;
+                const warpProg = (prog - 50) / 25;
+                warpTunnelMat.uniforms.u_alpha.value = nrAlpha;
+                warpTunnelMat.uniforms.u_progress.value = warpProg;
+                console.log('[WARP] ringCount=9 direction=outward prog='+prog.toFixed(0)+'%');
 
                 updateWin95Status('Loading warp tunnel...');
                 const wt = (prog - 50) / 25;
@@ -2030,14 +2053,11 @@ function renderPhase1() {
                 tunnelMat.uniforms.u_radius.value = 0.6 + at * 0.35;
                 tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;
                 tunnelMat.uniforms.u_alpha.value = 1.0;
-                // ニュートンリング: 方向反転 + スケール増大 + 渦（全て内向きに吸い込まれる）
-                newtonRingMat.uniforms.u_speed_dir.value = -1.0;         // 内向きに反転
-                newtonRingMat.uniforms.u_scale.value = 1.0 + at * 1.5;  // 1.0→2.5（falloffを維持しつつ圧縮）
-                newtonRingMat.uniforms.u_swirl.value = at * Math.PI * 4; // 渦: 0→4π（２回転）
-                newtonRingMat.uniforms.u_alpha.value = 1.0;
-                if (Math.round(globalTime * 2) % 60 === 0) {
-                    console.log('[CONSUME] at='+at.toFixed(2)+' scale='+newtonRingMat.uniforms.u_scale.value.toFixed(2)+' swirl='+newtonRingMat.uniforms.u_swirl.value.toFixed(2)+' dir='+newtonRingMat.uniforms.u_speed_dir.value);
-                }
+                // ワープトンネル: 方向反転（内向き）+ 加速（全て内向きに吸い込まれる）
+                warpTunnelMat.uniforms.u_direction.value = -1.0;  // 内向きに反転
+                warpTunnelMat.uniforms.u_progress.value = at;     // 0→1で加速
+                warpTunnelMat.uniforms.u_alpha.value = 1.0;
+                console.log('[WARP] ringCount=9 direction=inward prog='+prog.toFixed(0)+'%');
                 const g = 40 + at * 40;
                 sqBorder.style.boxShadow = '0 0 ' + g + 'px 15px rgba(255,100,255,0.2),0 0 ' + (g * 1.5) + 'px 30px rgba(100,255,255,0.15)';
                 if (bloom) bloom.strength = 3.5 + at * 3;
@@ -2104,6 +2124,7 @@ function renderPhase1() {
                     fieldPlane.visible = false;
                     bDot.visible = false; wDot.visible = false;
                     yyPlane.visible = false;
+                    warpTunnelPlane.visible = false;
                     cmyP.forEach(p => p.visible = false);
                     rgbP.forEach(p => p.visible = false);
                 }
