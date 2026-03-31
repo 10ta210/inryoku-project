@@ -1123,16 +1123,22 @@ function renderPhase1() {
             uniforms: {
                 u_time: { value: 0 },
                 u_alpha: { value: 0 },
-                u_scale: { value: 1.0 }
+                u_scale: { value: 1.0 },
+                u_speed_dir: { value: 1.0 },  // 1.0=外向き(WARP_GROW), -1.0=内向き(CONSUME)
+                u_swirl: { value: 0.0 }        // 渦の角度オフセット（CONSUME時に増大）
             },
             vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
             fragmentShader: [
                 'precision highp float;',
                 'varying vec2 vUv;',
-                'uniform float u_time, u_alpha, u_scale;',
+                'uniform float u_time, u_alpha, u_scale, u_speed_dir, u_swirl;',
                 '',
                 'void main(){',
                 '  vec2 p = (vUv - 0.5) * 2.0 * u_scale;',
+                '  // 渦: 半径に比例した角度ねじれ（CONSUME時に渦巻き内向き）',
+                '  float r = length(p);',
+                '  float ang = atan(p.y, p.x) + u_swirl * r;',
+                '  p = vec2(r * cos(ang), r * sin(ang));',
                 '  float dist = length(p);',
                 '',
                 '  float wl[6];',
@@ -1148,7 +1154,7 @@ function renderPhase1() {
                 '  wc[5]=vec3(1.0,  1.0,  0.0);',
                 '',
                 '  vec3 col = vec3(0.0);',
-                '  float speed = u_time * 0.3;',
+                '  float speed = u_time * 0.3 * u_speed_dir;',
                 '',
                 '  for(int i=0; i<6; i++){',
                 '    float n = (dist * dist) / (wl[i] * 0.4);',
@@ -1904,6 +1910,8 @@ function renderPhase1() {
                     newtonRingPlane.visible = true;
                     newtonRingMat.uniforms.u_alpha.value = 0.0;
                     newtonRingMat.uniforms.u_scale.value = 1.5;
+                    newtonRingMat.uniforms.u_speed_dir.value = 1.0;  // WARP_GROW: 外向き
+                    newtonRingMat.uniforms.u_swirl.value = 0.0;
                     scissor.enabled = false; // sq-border が display:none になるので scissor を無効化
                     renderer.setScissorTest(false);
                     renderer.setViewport(0, 0, W, H);
@@ -1953,13 +1961,18 @@ function renderPhase1() {
                 if (bloom) bloom.strength = 3.5;
                 if (et >= 3.0) { phase = PH.CONSUME; progPaused = false; sqBorder.style.borderColor = 'transparent'; }
 
-                // ═══ PHASE 6: CONSUME (75→101%) — 引力の増大 ═══
+                // ═══ PHASE 6: CONSUME (75→101%) — ビッグクランチ: 全て内向きに収縮 ═══
             } else if (phase === PH.CONSUME) {
                 updateWin95Status('Consuming reality... do not turn off');
-                const at = (prog - 75) / 25;
+                const at = (prog - 75) / 26;
                 tunnelMat.uniforms.u_radius.value = 0.6 + at * 0.35;
                 tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;
                 tunnelMat.uniforms.u_alpha.value = 1.0;
+                // ニュートンリング: 方向反転 + スケール増大 + 渦（全て内向きに吸い込まれる）
+                newtonRingMat.uniforms.u_speed_dir.value = -1.0;   // 内向きに反転
+                newtonRingMat.uniforms.u_scale.value = 1.0 + at * 4.0;   // 1.0→5.0（圧縮→中心へ吸い込み）
+                newtonRingMat.uniforms.u_swirl.value = at * Math.PI * 4; // 渦: 0→4π（２回転）
+                newtonRingMat.uniforms.u_alpha.value = 1.0 - at * 0.3;
                 const g = 40 + at * 40;
                 sqBorder.style.boxShadow = '0 0 ' + g + 'px 15px rgba(255,100,255,0.2),0 0 ' + (g * 1.5) + 'px 30px rgba(100,255,255,0.15)';
                 if (bloom) bloom.strength = 3.5 + at * 3;
