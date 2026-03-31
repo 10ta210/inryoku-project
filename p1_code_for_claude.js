@@ -711,7 +711,7 @@ function renderPhase1() {
         // ══════════════════════════════════════════════════════
         //  POST-PROCESSING: Bloom only (masking via scissor)
         // ══════════════════════════════════════════════════════
-        let composer = null, bloom = null;
+        let composer = null, bloom = null, caPass = null;
         // Scissor rect for square clipping (GL coords: origin at bottom-left)
         const scissor = {
             x: 0,
@@ -725,6 +725,32 @@ function renderPhase1() {
             composer.addPass(new THREE.RenderPass(scene, camera));
             bloom = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.0, 0.4, 0.1);
             composer.addPass(bloom);
+            // Chromatic Aberration pass (RGB channel split — EVENT_SING衝突時に発火)
+            if (THREE.ShaderPass) {
+                caPass = new THREE.ShaderPass({
+                    uniforms: {
+                        tDiffuse: { value: null },
+                        u_ca: { value: 0.0 }  // 0=なし, 0.04=強烈な分離
+                    },
+                    vertexShader: [
+                        'varying vec2 vUv;',
+                        'void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }'
+                    ].join('\n'),
+                    fragmentShader: [
+                        'uniform sampler2D tDiffuse;',
+                        'uniform float u_ca;',
+                        'varying vec2 vUv;',
+                        'void main(){',
+                        '  float r = texture2D(tDiffuse, vUv + vec2(u_ca, 0.0)).r;',
+                        '  float g = texture2D(tDiffuse, vUv).g;',
+                        '  float b = texture2D(tDiffuse, vUv - vec2(u_ca, 0.0)).b;',
+                        '  gl_FragColor = vec4(r, g, b, 1.0);',
+                        '}'
+                    ].join('\n')
+                });
+                caPass.uniforms.u_ca.value = 0.0;
+                composer.addPass(caPass);
+            }
         } catch (e) { }
 
         // ══════════════════════════════════════════════════════
@@ -1714,28 +1740,26 @@ function renderPhase1() {
                     wDot.position.x += (0 - wDot.position.x) * 0.3;
                     bgMat.uniforms.u_flash.value = t2 * t2;
                     if (bloom) bloom.strength = 1.0 + t2 * 4.0;
-                    // カメラシェイク: camera.positionを直接ランダムオフセット
-                    // wrapのoverflow:hiddenを回避するためThree.jsシーン自体を揺らす
-                    const shakeAmt = 0.06 * (1 - t2 * t2);
-                    camera.position.x = (Math.random() - 0.5) * shakeAmt;
-                    camera.position.y = (Math.random() - 0.5) * shakeAmt;
-                    // Win95 UIも同時に揺らす（DOMレイヤー）
+                    // 真のカメラシェイク: frustumを直接ランダムオフセット
+                    // camera.position変更より確実。camH=5の10%=0.5 worldunit = 画面10%移動
+                    const shakeAmt = 0.5 * (1 - t2 * t2); // 最大0.5 worldunit
+                    const sx = (Math.random() - 0.5) * shakeAmt;
+                    const sy = (Math.random() - 0.5) * shakeAmt;
+                    camera.left = -camW + sx; camera.right = camW + sx;
+                    camera.top = camH + sy;   camera.bottom = -camH + sy;
+                    camera.updateProjectionMatrix();
+                    // Win95 UIも同時に揺らす
                     const win95shake = document.getElementById('win95-main');
                     if (win95shake) {
-                        const dPx = shakeAmt * (H / (camH * 2));
-                        win95shake.style.transform = `translate(${(Math.random()-0.5)*dPx*2}px,${(Math.random()-0.5)*dPx*2}px)`;
+                        const pxAmt = (shakeAmt / (camH * 2)) * H;
+                        win95shake.style.transform = `translate(${(Math.random()-0.5)*pxAmt*2}px,${(Math.random()-0.5)*pxAmt*2}px)`;
                     }
-                    // 色収差: 最初0.1秒はbgMatのflashにRGBオフセット効果
-                    // ↑ GLSLシェーダー側はu_flashで制御。DOM側の色収差はbarWrapのbox-shadowで擬似表現
-                    if (et < 0.1) {
-                        const ca = ((0.1 - et) / 0.1) * 8;
-                        if (barWrap) {
-                            barWrap.style.boxShadow = `${ca}px 0 0 rgba(255,0,0,0.5), -${ca}px 0 0 rgba(0,200,255,0.5)`;
-                        }
-                    } else {
-                        if (barWrap) barWrap.style.boxShadow = '';
+                    // 色収差: ShaderPassのu_caを最大0.04にジャンプ（画面幅4%のRGB分離）
+                    if (caPass) {
+                        const caStrength = (1 - t2 * t2) * 0.04;
+                        caPass.uniforms.u_ca.value = caStrength;
+                        console.log('[CA+SHAKE] et='+et.toFixed(3)+' frustumShift='+sx.toFixed(3)+' u_ca='+caStrength.toFixed(4));
                     }
-                    console.log('[SHAKE] et='+et.toFixed(3)+' cam.x='+camera.position.x.toFixed(4)+' cam.y='+camera.position.y.toFixed(4));
                 }
 
                 // Step 2 (0.3-0.8s): グリッチ — win95-mainジッター + flash点滅
@@ -1753,11 +1777,12 @@ function renderPhase1() {
                     if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 30)) * 1.5;
                     updateWin95Status('⚠ REALITY.SYS CORRUPTED');
                 }
-                // カメラ・シェイクリセット
+                // カメラfrustumリセット + CA解除
                 if (et >= 0.3 && et < 0.35) {
-                    camera.position.x = 0;
-                    camera.position.y = 0;
-                    if (barWrap) barWrap.style.boxShadow = '';
+                    camera.left = -camW; camera.right = camW;
+                    camera.top = camH;   camera.bottom = -camH;
+                    camera.updateProjectionMatrix();
+                    if (caPass) caPass.uniforms.u_ca.value = 0.0;
                 }
 
                 // Step 3 (0.8s〜): 物理パラメータ解放 (一回だけ)
