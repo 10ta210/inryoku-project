@@ -2124,9 +2124,23 @@ function renderPhase1() {
                     fieldPlane.visible = false;
                     bDot.visible = false; wDot.visible = false;
                     yyPlane.visible = false;
-                    warpTunnelPlane.visible = false;
                     cmyP.forEach(p => p.visible = false);
                     rgbP.forEach(p => p.visible = false);
+                    // ワープリング: CONSUME内向きから外向きに反転して加速開始
+                    warpTunnelPlane.visible = true;
+                    warpTunnelMat.uniforms.u_direction.value = 1.0; // 外向きに反転
+                    warpTunnelMat.uniforms.u_alpha.value = 1.0;
+                    warpTunnelMat.uniforms.u_progress.value = 0.0;
+                }
+
+                // ワープリング加速: et 0.5以降、外向きに膨張して画面を埋め尽くす
+                if (et >= 0.5) {
+                    const rt = Math.min(1.0, (et - 0.5) / 4.5); // 0.5→5.0sで0→1
+                    warpTunnelMat.uniforms.u_speed.value = 0.06 + rt * rt * rt * 3.0; // 0.06→3.06 急加速
+                    warpTunnelMat.uniforms.u_progress.value = Math.min(1.0, rt * 1.2);
+                    if (Math.floor(et * 4) !== Math.floor((et - dt) * 4)) {
+                        console.log('[COLLAPSE] rings filling et='+et.toFixed(2)+' speed='+warpTunnelMat.uniforms.u_speed.value.toFixed(3));
+                    }
                 }
 
                 // Step 2 (0.5-2.5s): Square border fades + mask expands → TUNNEL OVERFLOWS
@@ -2166,13 +2180,15 @@ function renderPhase1() {
                     tunnelMat.uniforms.u_progress.value = 1.0 + eased;
                 }
 
-                // Step 3.5 (4.5-5.0s): 完全無音 + 真っ黒（静寂）
+                // Step 3.5 (4.5-5.0s): リング最高速 → ホワイトアウト準備
                 if (et >= 4.5 && et < 5.0) {
-                    whiteOv.style.opacity = '0';
-                    if (bloom) bloom.strength = 0;
                     tunnelPlane.visible = false;
-                    renderer.setClearColor(0x000000, 1);
                     scissor.enabled = false;
+                    if (bloom) bloom.strength = 6.0;
+                    // ホワイトアウト先行フェード
+                    const pre = (et - 4.5) / 0.5;
+                    whiteOv.style.opacity = String(pre * pre * 0.6);
+                    renderer.setClearColor(0xffffff, 1);
                 }
 
                 // Step 4 (5.0-5.8s): Whiteout
