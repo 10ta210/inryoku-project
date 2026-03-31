@@ -1546,7 +1546,7 @@ function renderPhase1() {
         let alive = true, globalTime = 0;
         const clk = new THREE.Clock();
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
-        let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false
+        let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false, singShakeFrame = 0
         , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0
         , silenceTriggered = false, warpGrowStartTime = -1
         , win95VortexOriginX = 0, win95VortexOriginY = 0; // スパゲッティ開始時の中心座標（キャッシュ）
@@ -1730,7 +1730,7 @@ function renderPhase1() {
                 // u_grey=0のままなのでbayer/quantize16ディザリングは発火しない
                 bgMat.uniforms.u_grey.value = 0.0;
                 console.log('[DUALITY bg] u_grey='+bgMat.uniforms.u_grey.value+' → 純白/純黒, チェッカーなし prog='+prog.toFixed(1));
-                if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; singDimSwitched = false; }
+                if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; singDimSwitched = false; singShakeFrame = 0; }
 
                 // ═══ PHASE 3: EVENT_SING (50% — 5s) — 次元転換 ═══
             } else if (phase === PH.EVENT_SING) {
@@ -1745,25 +1745,17 @@ function renderPhase1() {
                     wDot.position.x += (0 - wDot.position.x) * 0.3;
                     bgMat.uniforms.u_flash.value = t2 * t2;
                     if (bloom) bloom.strength = 1.0 + t2 * 4.0;
-                    // 真のカメラシェイク: frustumを直接ランダムオフセット
-                    // camera.position変更より確実。camH=5の10%=0.5 worldunit = 画面10%移動
-                    const shakeAmt = 0.5 * (1 - t2 * t2); // 最大0.5 worldunit
-                    const sx = (Math.random() - 0.5) * shakeAmt;
-                    const sy = (Math.random() - 0.5) * shakeAmt;
-                    camera.left = -camW + sx; camera.right = camW + sx;
-                    camera.top = camH + sy;   camera.bottom = -camH + sy;
-                    camera.updateProjectionMatrix();
-                    // Win95 UIも同時に揺らす
-                    const win95shake = document.getElementById('win95-main');
-                    if (win95shake) {
-                        const pxAmt = (shakeAmt / (camH * 2)) * H;
-                        win95shake.style.transform = `translate(${(Math.random()-0.5)*pxAmt*2}px,${(Math.random()-0.5)*pxAmt*2}px)`;
-                    }
+                    // DOMシェイク: canvasのtransformを毎フレームランダムオフセット(±5px)
+                    const tx = Math.round((Math.random() - 0.5) * 10);
+                    const ty = Math.round((Math.random() - 0.5) * 10);
+                    renderer.domElement.style.transform = `translate(${tx}px,${ty}px)`;
+                    singShakeFrame++;
+                    console.log('[SHAKE] frame '+singShakeFrame+': tx='+tx+'px ty='+ty+'px');
                     // 色収差: ShaderPassのu_caを最大0.04にジャンプ（画面幅4%のRGB分離）
                     if (caPass) {
-                        const caStrength = (1 - t2 * t2) * 0.04;
+                        const t2ca = et / 0.3;
+                        const caStrength = (1 - t2ca * t2ca) * 0.04;
                         caPass.uniforms.u_ca.value = caStrength;
-                        console.log('[CA+SHAKE] et='+et.toFixed(3)+' frustumShift='+sx.toFixed(3)+' u_ca='+caStrength.toFixed(4));
                     }
                 }
 
@@ -1782,11 +1774,9 @@ function renderPhase1() {
                     if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 30)) * 1.5;
                     updateWin95Status('⚠ REALITY.SYS CORRUPTED');
                 }
-                // カメラfrustumリセット + CA解除
+                // シェイク終了: canvasをリセット + CA解除
                 if (et >= 0.3 && et < 0.35) {
-                    camera.left = -camW; camera.right = camW;
-                    camera.top = camH;   camera.bottom = -camH;
-                    camera.updateProjectionMatrix();
+                    renderer.domElement.style.transform = 'translate(0,0)';
                     if (caPass) caPass.uniforms.u_ca.value = 0.0;
                 }
 
