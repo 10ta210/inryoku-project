@@ -1134,8 +1134,12 @@ function renderPhase1() {
                 'uniform float u_time, u_alpha, u_scale, u_speed_dir, u_swirl;',
                 '',
                 'void main(){',
-                '  vec2 p = (vUv - 0.5) * 2.0 * u_scale;',
-                '  // 渦: 半径に比例した角度ねじれ（CONSUME時に渦巻き内向き）',
+                '  // falloffは非スケール座標で計算（u_scaleが大きくなっても輝度を維持）',
+                '  vec2 p0 = (vUv - 0.5) * 2.0;',
+                '  float falloff = exp(-dot(p0,p0) * 0.8);',
+                '',
+                '  // リングパターンはスケール済み座標で計算',
+                '  vec2 p = p0 * u_scale;',
                 '  float r = length(p);',
                 '  float ang = atan(p.y, p.x) + u_swirl * r;',
                 '  p = vec2(r * cos(ang), r * sin(ang));',
@@ -1164,7 +1168,6 @@ function renderPhase1() {
                 '  }',
                 '  col /= 6.0;',
                 '',
-                '  float falloff = exp(-dist * dist * 0.8);',
                 '  col *= (0.15 + falloff * 1.2);',
                 '',
                 '  gl_FragColor = vec4(col, u_alpha);',
@@ -1969,10 +1972,13 @@ function renderPhase1() {
                 tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;
                 tunnelMat.uniforms.u_alpha.value = 1.0;
                 // ニュートンリング: 方向反転 + スケール増大 + 渦（全て内向きに吸い込まれる）
-                newtonRingMat.uniforms.u_speed_dir.value = -1.0;   // 内向きに反転
-                newtonRingMat.uniforms.u_scale.value = 1.0 + at * 4.0;   // 1.0→5.0（圧縮→中心へ吸い込み）
+                newtonRingMat.uniforms.u_speed_dir.value = -1.0;         // 内向きに反転
+                newtonRingMat.uniforms.u_scale.value = 1.0 + at * 1.5;  // 1.0→2.5（falloffを維持しつつ圧縮）
                 newtonRingMat.uniforms.u_swirl.value = at * Math.PI * 4; // 渦: 0→4π（２回転）
-                newtonRingMat.uniforms.u_alpha.value = 1.0 - at * 0.3;
+                newtonRingMat.uniforms.u_alpha.value = 1.0;
+                if (Math.round(globalTime * 2) % 60 === 0) {
+                    console.log('[CONSUME] at='+at.toFixed(2)+' scale='+newtonRingMat.uniforms.u_scale.value.toFixed(2)+' swirl='+newtonRingMat.uniforms.u_swirl.value.toFixed(2)+' dir='+newtonRingMat.uniforms.u_speed_dir.value);
+                }
                 const g = 40 + at * 40;
                 sqBorder.style.boxShadow = '0 0 ' + g + 'px 15px rgba(255,100,255,0.2),0 0 ' + (g * 1.5) + 'px 30px rgba(100,255,255,0.15)';
                 if (bloom) bloom.strength = 3.5 + at * 3;
