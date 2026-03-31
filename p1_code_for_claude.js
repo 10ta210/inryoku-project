@@ -1298,7 +1298,7 @@ function renderPhase1() {
                 '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);',
                 '}'
             ].join('\n'),
-            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.502),1.0);}',
+            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(0.0,0.0,0.0,1.0);}',
             depthWrite: false, depthTest: false
         });
         const wDotMat = new THREE.ShaderMaterial({
@@ -1647,41 +1647,31 @@ function renderPhase1() {
                 updateWin95Status('Initializing reality engine...');
                 if (bloom) bloom.strength = 0; // フラットな円 — エフェクトなし
                 const t = prog / 30;
-                // 引力snap戦略:
-                //   t=0~0.75: ターゲットをほぼ静止させ球が「惰性」で留まる
-                //   t=0.75~1: ターゲットが急収縮 → 球との距離(dx,dy)が突然大きくなる → バンッとスナップ
-                const contractStart = 0.75;
-                const contractT = t < contractStart ? 0 : Math.min(1, (t - contractStart) / 0.25);
-                // easeInExpo: t=0.75時点では0に近く → t=1.0で0.9（磁石スナップ）
-                const snapFactor = contractT < 0.01 ? 0.002 : Math.pow(2, 10 * contractT - 10) * 0.9;
+                // t^4 ease-in quartic: 序盤ほぼ静止 → 終盤で加速スナップ
+                // 位置を毎フレーム直接指定（chaseではなくdirect lerp）
+                const easeT = Math.pow(t, 4);
 
-                // CMY: 引力スナップ
+                // CMY: 初期位置 → cmyCtr へ ease-in quartic で直接移動
                 cmyP.forEach((p, i) => {
-                    // ターゲット: 0~75%は初期位置に留まり、75~100%で急収縮
-                    const tx = cmyCtr.x + cmyTriPos[i][0] * (1 - contractT * 0.92);
-                    const ty = cmyCtr.y + cmyTriPos[i][1] * (1 - contractT * 0.92);
-                    const dx = tx - p.position.x, dy = ty - p.position.y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    p.position.x += dx * snapFactor;
-                    p.position.y += dy * snapFactor;
+                    p.position.x = cmyCtr.x + cmyTriPos[i][0] * (1 - easeT);
+                    p.position.y = cmyCtr.y + cmyTriPos[i][1] * (1 - easeT);
                     // 進行方向に引き伸ばし（表面張力の歪み）
+                    const dist = Math.sqrt(cmyTriPos[i][0]*cmyTriPos[i][0] + cmyTriPos[i][1]*cmyTriPos[i][1]) * (1 - easeT);
                     const stretch = 1.0 + dist * 0.05;
                     p.scale.set(1.0 / stretch, stretch, 1.0 / stretch);
-                    // 加速度証明ログ (prog>20の期間のみ・CMY[0]のみ)
-                    if (i === 0 && prog > 20) {
-                        const spd = (dist * snapFactor * 180).toFixed(1);
+                    // 加速度証明ログ（1秒ごと・CMY[0]のみ）
+                    if (i === 0 && Math.floor(globalTime) !== Math.floor(globalTime - dt)) {
+                        const spd = (4 * Math.pow(t, 3) * 2).toFixed(2);
                         console.log('[ATTRACT] prog='+prog.toFixed(0)+'% speed='+spd);
                     }
                 });
-                // RGB: 振動しながら引力スナップ（精神）
+                // RGB: 精神の振動 + ease-in quartic で中心へ
                 rgbP.forEach((p, i) => {
-                    const tx = rgbCtr.x + rgbTriPos[i][0] * (1 - contractT * 0.92);
-                    const ty = rgbCtr.y + rgbTriPos[i][1] * (1 - contractT * 0.92);
-                    const jx = Math.sin(globalTime * 7.3 + i) * 0.008;
-                    const jy = Math.cos(globalTime * 5.1 + i) * 0.008;
-                    const dx = tx + jx - p.position.x, dy = ty + jy - p.position.y;
-                    p.position.x += dx * snapFactor;
-                    p.position.y += dy * snapFactor;
+                    const jAmt = 0.008 * (1 - easeT * 0.9); // 終盤は振動を抑える
+                    const jx = Math.sin(globalTime * 7.3 + i) * jAmt;
+                    const jy = Math.cos(globalTime * 5.1 + i) * jAmt;
+                    p.position.x = rgbCtr.x + rgbTriPos[i][0] * (1 - easeT) + jx;
+                    p.position.y = rgbCtr.y + rgbTriPos[i][1] * (1 - easeT) + jy;
                 });
                 // 磁場線は0-30%では非表示
                 fieldPlane.visible = false;
