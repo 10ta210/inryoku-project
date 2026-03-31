@@ -1694,7 +1694,7 @@ function renderPhase1() {
                 eventTimer += dt;
                 const et = eventTimer;
 
-                // Step 1 (0-0.3s): 衝突フラッシュ
+                // Step 1 (0-0.3s): 衝突フラッシュ + カメラシェイク + 色収差
                 if (et < 0.3) {
                     updateWin95Status('⚠ DIMENSION SHIFT DETECTED');
                     const t2 = et / 0.3;
@@ -1702,6 +1702,17 @@ function renderPhase1() {
                     wDot.position.x += (0 - wDot.position.x) * 0.3;
                     bgMat.uniforms.u_flash.value = t2 * t2;
                     if (bloom) bloom.strength = 1.0 + t2 * 4.0;
+                    // カメラシェイク: 画面全体をランダムに振動
+                    const shakeAmt = 5 * (1 - t2 * t2);
+                    wrap.style.transform = `translate(${(Math.random()-0.5)*shakeAmt*2}px,${(Math.random()-0.5)*shakeAmt*2}px)`;
+                    // RGB色収差: 0.1秒間だけ
+                    if (et < 0.1) {
+                        const ca = ((0.1 - et) / 0.1) * 6;
+                        renderer.domElement.style.filter =
+                            `drop-shadow(${ca}px 0 0 rgba(255,0,0,0.6)) drop-shadow(-${ca}px 0 0 rgba(0,200,255,0.6))`;
+                    } else {
+                        renderer.domElement.style.filter = '';
+                    }
                 }
 
                 // Step 2 (0.3-0.8s): グリッチ — win95-mainジッター + flash点滅
@@ -1718,6 +1729,11 @@ function renderPhase1() {
                     }
                     if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 30)) * 1.5;
                     updateWin95Status('⚠ REALITY.SYS CORRUPTED');
+                }
+                // シェイク解除
+                if (et >= 0.3 && et < 0.35) {
+                    wrap.style.transform = '';
+                    renderer.domElement.style.filter = '';
                 }
 
                 // Step 3 (0.8s〜): 物理パラメータ解放 (一回だけ)
