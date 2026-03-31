@@ -1510,7 +1510,8 @@ function renderPhase1() {
         const clk = new THREE.Clock();
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
         let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false
-        , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0;
+        , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0
+        , silenceTriggered = false;
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -2019,6 +2020,16 @@ function renderPhase1() {
 
                 // Step 3 (2.5-5.0s): Camera warp into the light
                 if (et >= 2.5 && et < 5.0) {
+                    if (!silenceTriggered) {
+                        silenceTriggered = true;
+                        // Web Audioを停止
+                        try {
+                            if (typeof audioContext !== 'undefined' && audioContext) {
+                                // 全アクティブノードを停止してからsuspend
+                                audioContext.suspend();
+                            }
+                        } catch(e) {}
+                    }
                     const t2 = (et - 2.5) / 2.5, eased = t2 * t2;
                     sqBorder.style.display = 'none';
                     scissor.enabled = false; // Full screen — no clip
@@ -2027,6 +2038,15 @@ function renderPhase1() {
                     tunnelMat.uniforms.u_warpSpeed.value = 4.0 + eased * 6.0;
                     if (bloom) bloom.strength = 4.5 + eased * 4.0;
                     tunnelMat.uniforms.u_progress.value = 1.0 + eased;
+                }
+
+                // Step 3.5 (4.5-5.0s): 完全無音 + 真っ黒（静寂）
+                if (et >= 4.5 && et < 5.0) {
+                    whiteOv.style.opacity = '0';
+                    if (bloom) bloom.strength = 0;
+                    tunnelPlane.visible = false;
+                    renderer.setClearColor(0x000000, 1);
+                    scissor.enabled = false;
                 }
 
                 // Step 4 (5.0-5.8s): Whiteout
