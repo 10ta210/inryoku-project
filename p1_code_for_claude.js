@@ -1546,7 +1546,8 @@ function renderPhase1() {
         const PH = { ATTRACT: 0, EVENT_FUSE: 1, DUALITY: 2, EVENT_SING: 3, WARP_GROW: 4, EVENT_BREACH: 5, CONSUME: 6, EVENT_COLLAPSE: 7, DONE: 8 };
         let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false
         , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0
-        , silenceTriggered = false, warpGrowStartTime = -1;
+        , silenceTriggered = false, warpGrowStartTime = -1
+        , win95VortexOriginX = 0, win95VortexOriginY = 0; // スパゲッティ開始時の中心座標（キャッシュ）
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -1917,12 +1918,16 @@ function renderPhase1() {
                 if (!phaseCInited) {
                     phaseCInited = true;
 
-                    // Win95 UIスパゲッティ化開始（遷移なし — 毎フレームJSでtransform制御）
+                    // Win95 UI渦巻き吸い込み開始（TV縦線禁止 — 螺旋+縮小+中心移動）
                     warpGrowStartTime = globalTime;
                     const win95 = document.getElementById('win95-main');
                     if (win95) {
-                        win95.style.transition = 'none'; // CSSトランジションを無効化
+                        win95.style.transition = 'none';
                         win95.style.transformOrigin = '50% 50%';
+                        // 初期中心座標をキャッシュ（毎フレームBoundingClientRectが変わるため）
+                        const r0 = win95.getBoundingClientRect();
+                        win95VortexOriginX = r0.left + r0.width / 2;
+                        win95VortexOriginY = r0.top + r0.height / 2;
                     }
                     // タスクバーもフェードアウト
                     if (wrap) {
@@ -1974,26 +1979,31 @@ function renderPhase1() {
                 tunnelMat.uniforms.u_alpha.value = 0.8 + wt * 0.2;
                 if (bloom) bloom.strength = 1.5 + wt * 1.5;
 
-                // Win95 UIスパゲッティ化: WARP_GROW開始から0.8秒間で実行
+                // Win95 UI渦巻き吸い込み: WARP_GROW開始から1.0秒間
+                // scaleX/scaleY縦線禁止 — 螺旋（回転+縮小+中心へ移動）
                 if (warpGrowStartTime >= 0) {
-                    const spaghElapsed = globalTime - warpGrowStartTime;
-                    const spaghDur = 0.8;
-                    const win95s = document.getElementById('win95-main');
-                    if (win95s && win95s.style.display !== 'none') {
-                        if (spaghElapsed < spaghDur) {
-                            const st = spaghElapsed / spaghDur;
-                            const ease3 = st * st * st;
-                            const stretchX = 1.0 - ease3 * 0.9;
-                            const stretchY = 1.0 + ease3 * 5.0;
-                            const rot = ease3 * 90;
-                            const ty2 = ease3 * 120;
-                            win95s.style.transform = `translateY(${ty2}px) rotate(${rot}deg) scaleX(${stretchX}) scaleY(${stretchY})`;
-                            win95s.style.opacity = String(Math.max(0, 1 - ease3 * 1.8));
-                            win95s.style.filter = `blur(${ease3 * 5}px) brightness(${1 + ease3 * 3})`;
-                            console.log('[SPAGHETTI] st='+st.toFixed(2)+' scaleX='+stretchX.toFixed(2)+' scaleY='+stretchY.toFixed(2)+' rot='+rot.toFixed(0)+'deg opacity='+win95s.style.opacity);
+                    const vortElapsed = globalTime - warpGrowStartTime;
+                    const vortDur = 1.0;
+                    const win95v = document.getElementById('win95-main');
+                    if (win95v && win95v.style.display !== 'none') {
+                        if (vortElapsed < vortDur) {
+                            const vt = vortElapsed / vortDur;
+                            const ease3 = vt * vt * vt;
+                            // 画面中心への移動量
+                            const cx = W / 2, cy = H / 2;
+                            const movX = (cx - win95VortexOriginX) * ease3;
+                            const movY = (cy - win95VortexOriginY) * ease3;
+                            // 回転: 0 → 540° (1.5回転) — 渦巻き
+                            const rotDeg = ease3 * 540;
+                            // 均一縮小: 1→0 (縦線にならない)
+                            const scl = Math.max(0, 1 - ease3 * 1.05);
+                            win95v.style.transform = `translate(${movX}px, ${movY}px) rotate(${rotDeg}deg) scale(${scl})`;
+                            win95v.style.opacity = String(Math.max(0, 1 - ease3 * 1.4));
+                            win95v.style.filter = `blur(${ease3 * 4}px) brightness(${1 + ease3 * 2})`;
+                            console.log('[VORTEX] vt='+vt.toFixed(2)+' rot='+rotDeg.toFixed(0)+'deg scale='+scl.toFixed(3)+' movX='+movX.toFixed(0)+'px opacity='+win95v.style.opacity);
                         } else {
-                            win95s.style.display = 'none';
-                            warpGrowStartTime = -1; // 処理完了フラグ
+                            win95v.style.display = 'none';
+                            warpGrowStartTime = -1;
                         }
                     }
                 }
