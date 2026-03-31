@@ -1711,17 +1711,28 @@ function renderPhase1() {
                     wDot.position.x += (0 - wDot.position.x) * 0.3;
                     bgMat.uniforms.u_flash.value = t2 * t2;
                     if (bloom) bloom.strength = 1.0 + t2 * 4.0;
-                    // カメラシェイク: 画面全体をランダムに振動
-                    const shakeAmt = 5 * (1 - t2 * t2);
-                    wrap.style.transform = `translate(${(Math.random()-0.5)*shakeAmt*2}px,${(Math.random()-0.5)*shakeAmt*2}px)`;
-                    // RGB色収差: 0.1秒間だけ
-                    if (et < 0.1) {
-                        const ca = ((0.1 - et) / 0.1) * 6;
-                        renderer.domElement.style.filter =
-                            `drop-shadow(${ca}px 0 0 rgba(255,0,0,0.6)) drop-shadow(-${ca}px 0 0 rgba(0,200,255,0.6))`;
-                    } else {
-                        renderer.domElement.style.filter = '';
+                    // カメラシェイク: camera.positionを直接ランダムオフセット
+                    // wrapのoverflow:hiddenを回避するためThree.jsシーン自体を揺らす
+                    const shakeAmt = 0.06 * (1 - t2 * t2);
+                    camera.position.x = (Math.random() - 0.5) * shakeAmt;
+                    camera.position.y = (Math.random() - 0.5) * shakeAmt;
+                    // Win95 UIも同時に揺らす（DOMレイヤー）
+                    const win95shake = document.getElementById('win95-main');
+                    if (win95shake) {
+                        const dPx = shakeAmt * (H / (camH * 2));
+                        win95shake.style.transform = `translate(${(Math.random()-0.5)*dPx*2}px,${(Math.random()-0.5)*dPx*2}px)`;
                     }
+                    // 色収差: 最初0.1秒はbgMatのflashにRGBオフセット効果
+                    // ↑ GLSLシェーダー側はu_flashで制御。DOM側の色収差はbarWrapのbox-shadowで擬似表現
+                    if (et < 0.1) {
+                        const ca = ((0.1 - et) / 0.1) * 8;
+                        if (barWrap) {
+                            barWrap.style.boxShadow = `${ca}px 0 0 rgba(255,0,0,0.5), -${ca}px 0 0 rgba(0,200,255,0.5)`;
+                        }
+                    } else {
+                        if (barWrap) barWrap.style.boxShadow = '';
+                    }
+                    console.log('[SHAKE] et='+et.toFixed(3)+' cam.x='+camera.position.x.toFixed(4)+' cam.y='+camera.position.y.toFixed(4));
                 }
 
                 // Step 2 (0.3-0.8s): グリッチ — win95-mainジッター + flash点滅
@@ -1739,10 +1750,11 @@ function renderPhase1() {
                     if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 30)) * 1.5;
                     updateWin95Status('⚠ REALITY.SYS CORRUPTED');
                 }
-                // シェイク解除
+                // カメラ・シェイクリセット
                 if (et >= 0.3 && et < 0.35) {
-                    wrap.style.transform = '';
-                    renderer.domElement.style.filter = '';
+                    camera.position.x = 0;
+                    camera.position.y = 0;
+                    if (barWrap) barWrap.style.boxShadow = '';
                 }
 
                 // Step 3 (0.8s〜): 物理パラメータ解放 (一回だけ)
