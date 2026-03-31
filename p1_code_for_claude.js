@@ -1298,11 +1298,13 @@ function renderPhase1() {
                 '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);',
                 '}'
             ].join('\n'),
-            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.502),1.0);}'
+            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.502),1.0);}',
+            depthWrite: false, depthTest: false
         });
         const wDotMat = new THREE.ShaderMaterial({
             vertexShader: 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.98),1.0);}'
+            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.98),1.0);}',
+            depthWrite: false, depthTest: false
         });
         const bDot = new THREE.Mesh(dotGeo, bDotMat); bDot.visible = false; scene.add(bDot);
         const wDot = new THREE.Mesh(dotGeo, wDotMat); wDot.visible = false; scene.add(wDot);
