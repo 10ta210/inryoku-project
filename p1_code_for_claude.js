@@ -1609,25 +1609,36 @@ function renderPhase1() {
                 updateWin95Status('Initializing reality engine...');
                 if (bloom) bloom.strength = 0; // フラットな円 — エフェクトなし
                 const t = prog / 30;
-                // CMY: 粘性のある動き（物質）
+                // easeInExpo: 最初ゆっくり → 指数関数的加速 → 最後にバンッとスナップ
+                const easeInExpo = t < 0.01 ? 0.0 : Math.pow(2, 10 * t - 10);
+                // CMY: 引力で加速する動き（近づくほど速く）
                 cmyP.forEach((p, i) => {
                     const tx = cmyCtr.x + cmyTriPos[i][0] * (1 - t * 0.85);
                     const ty = cmyCtr.y + cmyTriPos[i][1] * (1 - t * 0.85);
-                    p.position.x += (tx - p.position.x) * 0.012;
-                    p.position.y += (ty - p.position.y) * 0.012;
-                    // 表面張力の歪み
-                    const distToTarget = Math.sqrt((tx - p.position.x) ** 2 + (ty - p.position.y) ** 2);
-                    const stretch = 1.0 + distToTarget * 0.05;
+                    // 最終目標（cmyCtr）までの距離で引力強度を計算
+                    const distFromFinal = Math.sqrt(
+                        (p.position.x - cmyCtr.x) ** 2 + (p.position.y - cmyCtr.y) ** 2
+                    ) + 0.001;
+                    const gravFactor = Math.min(0.6, 0.001 / (distFromFinal * distFromFinal + 0.004) + easeInExpo * 0.08);
+                    p.position.x += (tx - p.position.x) * gravFactor;
+                    p.position.y += (ty - p.position.y) * gravFactor;
+                    // 進行方向に引き伸ばし（表面張力の歪み）
+                    const dx = tx - p.position.x, dy = ty - p.position.y;
+                    const stretch = 1.0 + Math.sqrt(dx*dx + dy*dy) * 0.05;
                     p.scale.set(1.0 / stretch, stretch, 1.0 / stretch);
                 });
-                // RGB: 振動しながら引き寄せられる（精神）
+                // RGB: 振動しながら引力加速（精神）
                 rgbP.forEach((p, i) => {
                     const tx = rgbCtr.x + rgbTriPos[i][0] * (1 - t * 0.85);
                     const ty = rgbCtr.y + rgbTriPos[i][1] * (1 - t * 0.85);
+                    const distFromFinal = Math.sqrt(
+                        (p.position.x - rgbCtr.x) ** 2 + (p.position.y - rgbCtr.y) ** 2
+                    ) + 0.001;
+                    const gravFactor = Math.min(0.7, 0.0015 / (distFromFinal * distFromFinal + 0.004) + easeInExpo * 0.12);
                     const jx = Math.sin(globalTime * 7.3 + i) * 0.008;
                     const jy = Math.cos(globalTime * 5.1 + i) * 0.008;
-                    p.position.x += (tx + jx - p.position.x) * 0.025;
-                    p.position.y += (ty + jy - p.position.y) * 0.025;
+                    p.position.x += (tx + jx - p.position.x) * gravFactor;
+                    p.position.y += (ty + jy - p.position.y) * gravFactor;
                 });
                 // 磁場線は0-30%では非表示
                 fieldPlane.visible = false;
