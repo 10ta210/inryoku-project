@@ -1724,8 +1724,10 @@ function renderPhase1() {
                 const stretchFactor = 1.0 + Math.max(0, 1.0 - dist / (4 * unit)) * 0.3;
                 bDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
                 wDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
-                // Background blends toward grey
-                bgMat.uniforms.u_grey.value = t * 0.8;
+                // 背景は純白/純黒のまま（u_grey更新なし）
+                // u_grey=0のままなのでbayer/quantize16ディザリングは発火しない
+                bgMat.uniforms.u_grey.value = 0.0;
+                console.log('[DUALITY bg] u_grey='+bgMat.uniforms.u_grey.value+' → 純白/純黒, チェッカーなし prog='+prog.toFixed(1));
                 if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; singDimSwitched = false; }
 
                 // ═══ PHASE 3: EVENT_SING (50% — 5s) — 次元転換 ═══
