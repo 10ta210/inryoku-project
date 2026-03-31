@@ -1681,9 +1681,11 @@ function renderPhase1() {
                     updateWin95Status('⚠ REALITY.SYS CORRUPTED');
                 }
 
-                // Step 3 (0.8s〜): pixelRatio切り替え + フォント変更 (一回だけ)
+                // Step 3 (0.8s〜): 物理パラメータ解放 (一回だけ)
                 if (et >= 0.8 && !singDimSwitched) {
                     singDimSwitched = true;
+                    // pixelRatio 0.5 → デバイスネイティブ（setSizeは呼ばない）
+                    renderer.setPixelRatio(window.devicePixelRatio);
                     bgMat.uniforms.u_pixelSize.value = 1.0;
                     if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
 
@@ -1693,8 +1695,9 @@ function renderPhase1() {
                         win95.querySelectorAll('*').forEach(el => {
                             const ff = el.style.fontFamily;
                             if (ff && (ff.includes('MS Sans Serif') || ff.includes('Tahoma'))) {
-                                el.style.fontFamily = "'Courier New', monospace";
-                                el.style.letterSpacing = '0.04em';
+                                el.style.fontFamily = "'Courier New', 'Lucida Console', monospace";
+                                el.style.fontWeight = '300';
+                                el.style.letterSpacing = '0.08em';
                             }
                         });
                     }
