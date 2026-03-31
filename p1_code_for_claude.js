@@ -993,7 +993,17 @@ function renderPhase1() {
             setInterval(() => {
                 if (phase === PH.DONE) return;
                 if (EVENT_PHASES.includes(phase)) return;
-                const rate = AUTO_RATE[phase] !== undefined ? AUTO_RATE[phase] : 5.0;
+                let rate = AUTO_RATE[phase] !== undefined ? AUTO_RATE[phase] : 5.0;
+                // CONSUME フェーズ: 区間ごとに速度変更
+                if (phase === PH.CONSUME) {
+                    if (prog >= 100) {
+                        rate = 80.0;  // 100→101%: 一瞬で跳ぶ
+                    } else if (prog >= 99) {
+                        rate = 0.8;   // 99→100%: 焦らし（非常に遅い）
+                    } else if (prog >= 75) {
+                        rate = 2.5;   // 75→99%: やや減速
+                    }
+                }
                 prog = Math.min(101, prog + rate / 62.5);
                 showProg(prog);
             }, 16);
