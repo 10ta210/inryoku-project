@@ -1570,7 +1570,8 @@ function renderPhase1() {
         let phase = PH.ATTRACT, prog = 0, progPaused = false, eventTimer = 0, tunnelBorn = false, phaseCInited = false, singDimSwitched = false, singShakeFrame = 0
         , numberRampageActive = false, numberRampageVal = 101, numberRampageStartTime = 0
         , silenceTriggered = false, warpGrowStartTime = -1
-        , win95VortexOriginX = 0, win95VortexOriginY = 0; // スパゲッティ開始時の中心座標（キャッシュ）
+        , win95VortexOriginX = 0, win95VortexOriginY = 0 // スパゲッティ開始時の中心座標（キャッシュ）
+        , freezeActive = false, freezeStartMs = -1; // 101%フリーズ用
 
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
@@ -1596,6 +1597,20 @@ function renderPhase1() {
             if (!alive) return;
             const dt = Math.min(clk.getDelta(), 0.05);
             globalTime += dt;
+
+            // 101%フリーズ処理（全シェーダー含む全アニメーション0.1秒停止）
+            if (freezeActive) {
+                const freezeElapsed = (performance.now() - freezeStartMs) / 1000;
+                if (freezeElapsed < 0.1) return; // 静止フレームをそのままレンダー
+                freezeActive = false;
+                if (phase === PH.CONSUME) {
+                    phase = PH.EVENT_COLLAPSE;
+                    eventTimer = 0;
+                    progPaused = true;
+                    console.log('[101] WHITEOUT');
+                }
+            }
+
             bgMat.uniforms.u_time.value = globalTime;
             fieldMat.uniforms.u_time.value = globalTime;
             if (warpTunnelPlane.visible) { warpTunnelMat.uniforms.u_time.value = globalTime; }
@@ -2075,16 +2090,16 @@ function renderPhase1() {
                 if (logoEl) {
                     logoEl.style.filter = `drop-shadow(0 0 ${8 + at * 20}px #00ff44) drop-shadow(${at * -8}px 0 ${at * 12}px rgba(0,255,68,0.4))`;
                 }
-                if (prog >= 101) { phase = PH.EVENT_COLLAPSE; eventTimer = 0; prog = 101; showProg(101); progPaused = true; }
+                if (prog >= 101 && !freezeActive) {
+                    prog = 101; showProg(101); progPaused = true;
+                    freezeActive = true;
+                    freezeStartMs = performance.now();
+                    console.log('[101] FREEZE');
+                }
 
                 // ═══ PHASE 7: EVENT_COLLAPSE — トンネルが溢れ出す ═══
             } else if (phase === PH.EVENT_COLLAPSE) {
-                // 数字暴走初期化 (一回だけ)
-                if (!numberRampageActive) {
-                    numberRampageActive = true;
-                    numberRampageVal = 101;
-                    numberRampageStartTime = globalTime;
-                }
+                // 数字暴走は廃止 — 101%のまま固定表示
                 eventTimer += dt;
                 const et = eventTimer;
                 updateWin95Status('Shutting down current dimension...');
