@@ -1893,14 +1893,21 @@ function renderPhase1() {
                     if (bloom) bloom.strength = 1.5 + t2 * 2.0;
                 }
 
-                // Step 9 (3.5-4.0s): Yin-Yang消去 → tunnel born
+                // Step 9 (3.5-4.0s): Yin-Yang飲み込まれ消去 → tunnel born
                 if (et >= 3.5 && et < 4.0) {
-                    yyPlane.visible = false;
-                    yyPlane.position.x = 0;
-                    bDot.userData.greySet = false;
-                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - (et - 3.5) / 0.5);
-                    tunnelPlane.visible = true;
                     const t2 = (et - 3.5) / 0.5;
+                    // 陰陽マーク: 縮小しながらフェードアウト（ワープトンネルに飲み込まれる）
+                    yyPlane.visible = true;
+                    yyPlane.position.x = 0;
+                    const shrink = Math.max(0.001, 1.0 - t2 * t2);
+                    yyPlane.scale.set(shrink, shrink, 1);
+                    yyMat.uniforms.u_alpha.value = Math.max(0, 0.2 * (1.0 - t2 * 2.0));
+                    if (Math.floor(globalTime * 6) !== Math.floor((globalTime - dt) * 6)) {
+                        console.log('[YINYANG] fadeOut progress=' + t2.toFixed(1));
+                    }
+                    bDot.userData.greySet = false;
+                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - t2);
+                    tunnelPlane.visible = true;
                     tunnelMat.uniforms.u_radius.value = 0.05 + t2 * 0.15;
                     tunnelMat.uniforms.u_alpha.value = t2;
                     tunnelMat.uniforms.u_progress.value = t2 * 0.2;
@@ -1909,6 +1916,9 @@ function renderPhase1() {
 
                 // Step 10 (4.0-5.0s): Tunnel安定成長
                 if (et >= 4.0) {
+                    // 陰陽マーク完全非表示 + スケールリセット
+                    yyPlane.visible = false;
+                    yyPlane.scale.set(1, 1, 1);
                     const t2 = Math.min((et - 4.0) / 1.0, 1.0);
                     const pulse = 1 + Math.sin(et * 6) * 0.04;
                     tunnelMat.uniforms.u_radius.value = (0.2 + t2 * 0.05) * pulse;
