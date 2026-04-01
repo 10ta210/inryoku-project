@@ -60,7 +60,7 @@ function renderPhase1() {
   display:flex;
   align-items:center;
   justify-content:center;
-  font-family:'Press Start 2P', monospace;
+  font-family:'ChicagoFLF', 'Geneva', 'Lucida Grande', Helvetica, sans-serif;
   cursor:default;
   animation:p0Flicker 7s step-end infinite;
 ">
@@ -76,6 +76,13 @@ function renderPhase1() {
   "></div>
 
   <style>
+    /* Load Chicago-like font from CDN */
+    @font-face {
+      font-family: 'ChicagoFLF';
+      src: url('https://cdn.jsdelivr.net/gh/smolck/chicago-flf-font@master/ChicagoFLF.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
     /* 1-bit dither: 50% grey (Mac System 1 style) */
     .dither50 {
       background-color: transparent !important;
@@ -114,8 +121,8 @@ function renderPhase1() {
     }
     /* System 7 ベベルボタン */
     #evolve-btn {
-      font-family:'Press Start 2P', monospace;
-      font-size:11px;
+      font-family:'ChicagoFLF', 'Geneva', 'Lucida Grande', Helvetica, sans-serif;
+      font-size:12px;
       letter-spacing:1px;
       padding:7px 40px;
       background:#ffffff;
@@ -145,8 +152,7 @@ function renderPhase1() {
       pointer-events:none;
       z-index:9990;
       opacity:0;
-      transform:translate(-50%,-50%);
-      will-change:left,top,width,height,opacity,filter;
+      will-change:transform,width,height,opacity,filter;
     }
   </style>
 
@@ -155,7 +161,7 @@ function renderPhase1() {
     background:#ffffff;
     border:1px solid #000000;
     width:clamp(476px,54vw,580px);
-    box-shadow:inset 1px 1px 0 #ffffff, inset -1px -1px 0 #000000;
+    box-shadow:2px 2px 0 #000000, inset 1px 1px 0 #ffffff, inset -1px -1px 0 #000000;
     border-radius:0;
     overflow:hidden;
   ">
@@ -180,15 +186,15 @@ function renderPhase1() {
         width:13px;height:13px;
         border:1px solid #000000;
         background:#ffffff;
-        box-shadow:inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080;
+        box-shadow:inset 1px 1px 0 #ffffff, inset -1px -1px 0 #808080, inset -2px -2px 0 #808080;
       "></div>
       <!-- タイトルテキスト（白背景帯） -->
       <span style="
         background:#ffffff;
         padding:1px 8px;
-        font-size:10px;
+        font-size:11px;
         white-space:nowrap;
-        font-family:'Press Start 2P', monospace;
+        font-family:'ChicagoFLF', 'Geneva', 'Lucida Grande', Helvetica, sans-serif;
         color:#000000;
       ">Welcome to the inryok\u00fc</span>
     </div>
@@ -207,58 +213,16 @@ function renderPhase1() {
       <div>
         <svg id="orbit-svg" width="200" height="200" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <!-- 発光フィルター: モノクロUIの中で浮かぶ「異質な窓」 -->
-            <filter id="orb-glow-c"  x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood flood-color="#00FFFF" flood-opacity="0.85" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="orb-glow-g"  x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood flood-color="#00FF00" flood-opacity="0.85" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="orb-glow-b"  x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood flood-color="#0000FF" flood-opacity="0.85" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="orb-glow-m"  x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood flood-color="#FF00FF" flood-opacity="0.85" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="orb-glow-r"  x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood flood-color="#FF0000" flood-opacity="0.85" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="orb-glow-y"  x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood flood-color="#FFFF00" flood-opacity="0.85" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-            <filter id="wave-glow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="4" result="blur"/>
-              <feFlood flood-color="#ffffff" flood-opacity="0.9" result="color"/>
-              <feComposite in="color" in2="blur" operator="in" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
+            <!-- Filters removed for System 7 hard pixel aesthetic -->
           </defs>
           <circle cx="80" cy="80" r="58" fill="none" stroke="#000000" stroke-width="0.5" stroke-dasharray="3 4"/>
           <!-- 上から時計回り: Cyan Green Blue Magenta Red Yellow (CMY+RGB交互) -->
-          <circle id="px0" r="4" fill="#00FFFF" filter="url(#orb-glow-c)"/>
-          <circle id="px1" r="4" fill="#00FF00" filter="url(#orb-glow-g)"/>
-          <circle id="px2" r="4" fill="#0000FF" filter="url(#orb-glow-b)"/>
-          <circle id="px3" r="4" fill="#FF00FF" filter="url(#orb-glow-m)"/>
-          <circle id="px4" r="4" fill="#FF0000" filter="url(#orb-glow-r)"/>
-          <circle id="px5" r="4" fill="#FFFF00" filter="url(#orb-glow-y)"/>
+          <circle id="px0" r="4" fill="#00FFFF"/>
+          <circle id="px1" r="4" fill="#00FF00"/>
+          <circle id="px2" r="4" fill="#0000FF"/>
+          <circle id="px3" r="4" fill="#FF00FF"/>
+          <circle id="px4" r="4" fill="#FF0000"/>
+          <circle id="px5" r="4" fill="#FFFF00"/>
           <!-- iアイコン: 黒枠・白背景の円 -->
           <circle cx="80" cy="80" r="36" fill="#ffffff" stroke="#000000" stroke-width="2"/>
           <!-- i の点 -->
@@ -271,7 +235,7 @@ function renderPhase1() {
       <hr class="mac-divider"/>
 
       <!-- visitor counter -->
-      <p style="font-size:9px;color:#000000;margin:0;font-family:'Press Start 2P', monospace;text-align:center;">
+      <p style="font-size:12px;color:#000000;margin:0;font-family:'ChicagoFLF', 'Geneva', 'Lucida Grande', Helvetica, sans-serif;text-align:center;">
         Hello.<span style="animation:cursorBlink 1s step-end infinite;font-weight:normal;">&#9646;</span>
       </p>
 
@@ -279,13 +243,13 @@ function renderPhase1() {
 
       <!-- Newton quote -->
       <p style="
-        font-size:7px;color:#000000;margin:0;
+        font-size:10px;color:#000000;margin:0;
         text-align:center;line-height:2;
-        font-family:'Press Start 2P', monospace;
+        font-family:'ChicagoFLF', 'Geneva', 'Lucida Grande', Helvetica, sans-serif;
         max-width:460px;
       ">
         "Cogitamus, ergo sumus."<br>
-        <span style="font-size:6px;letter-spacing:2px;">— R. DESCARTES, 1637 (reimagined)</span>
+        <span style="font-size:8px;letter-spacing:2px;">— R. DESCARTES, 1637 (reimagined)</span>
       </p>
 
       <hr class="mac-divider"/>
@@ -294,8 +258,8 @@ function renderPhase1() {
       <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;">
         <button id="evolve-btn">ENTER</button>
         <a href="#" onclick="event.preventDefault();"
-           style="font-size:7px;color:#000000;text-decoration:none;letter-spacing:1px;
-                  font-family:'Press Start 2P', monospace;">
+           style="font-size:9px;color:#000000;text-decoration:none;letter-spacing:1px;
+                  font-family:'ChicagoFLF', 'Geneva', 'Lucida Grande', Helvetica, sans-serif;">
           Skip to Shop →
         </a>
       </div>
@@ -330,12 +294,12 @@ function renderPhase1() {
         const EXPLODE_DUR=0.45;
 
         const CFG=[
-            {edge:'left',        bx:0.0,by:0.5,ctrl: 1,rgb:[0,255,255],  noteHz:220.00,noteType:'triangle',filterId:'orb-glow-c'},
-            {edge:'right',       bx:1.0,by:0.5,ctrl:-1,rgb:[0,255,0],    noteHz:554.37,noteType:'sine',    filterId:'orb-glow-g'},
-            {edge:'top-right',   bx:0.8,by:0.0,ctrl: 1,rgb:[0,0,255],    noteHz:659.25,noteType:'sine',    filterId:'orb-glow-b'},
-            {edge:'top-left',    bx:0.2,by:0.0,ctrl:-1,rgb:[255,0,255],  noteHz:261.63,noteType:'triangle',filterId:'orb-glow-m'},
-            {edge:'bottom-left', bx:0.2,by:1.0,ctrl:-1,rgb:[255,0,0],    noteHz:440.00,noteType:'sine',    filterId:'orb-glow-r'},
-            {edge:'bottom-right',bx:0.8,by:1.0,ctrl: 1,rgb:[255,255,0],  noteHz:329.63,noteType:'triangle',filterId:'orb-glow-y'},
+            {edge:'left',        bx:0.0,by:0.5,ctrl: 1,rgb:[0,255,255],  noteHz:220.00,noteType:'triangle'},
+            {edge:'right',       bx:1.0,by:0.5,ctrl:-1,rgb:[0,255,0],    noteHz:554.37,noteType:'sine'},
+            {edge:'top-right',   bx:0.8,by:0.0,ctrl: 1,rgb:[0,0,255],    noteHz:659.25,noteType:'sine'},
+            {edge:'top-left',    bx:0.2,by:0.0,ctrl:-1,rgb:[255,0,255],  noteHz:261.63,noteType:'triangle'},
+            {edge:'bottom-left', bx:0.2,by:1.0,ctrl:-1,rgb:[255,0,0],    noteHz:440.00,noteType:'sine'},
+            {edge:'bottom-right',bx:0.8,by:1.0,ctrl: 1,rgb:[255,255,0],  noteHz:329.63,noteType:'triangle'},
         ];
         CFG.forEach(c=>{
             c.phase='idle'; c.phaseStartAt=null;
@@ -465,10 +429,10 @@ function renderPhase1() {
                     const [bx,by]=bezier2(te,cfg.p0x,cfg.p0y,cfg.p1x,cfg.p1y,cfg.p2x,cfg.p2y);
                     const pulse=0.5+0.5*Math.sin(nowMs*0.004+i*1.1);
                     const radius=22+pulse*14;
-                    div.style.left=bx+'px';div.style.top=by+'px';
+                    div.style.transform='translate('+bx+'px,'+by+'px)';
                     div.style.width=(radius*2)+'px';div.style.height=(radius*2)+'px';
                     div.style.background=`radial-gradient(circle,rgba(${r},${g},${b},0.82) 0%,rgba(${r},${g},${b},0.22) 52%,transparent 75%)`;
-                    div.style.filter='blur(9px)';
+                    div.style.filter='blur(3px)';
                     div.style.opacity=clamp(t/0.25,0,1).toString();
                     el.setAttribute('r','0');el.setAttribute('opacity','0');
                     if(tN>=1.0){cfg.phase='flash';cfg.phaseStartAt=elapsed;}
@@ -477,17 +441,17 @@ function renderPhase1() {
                     const fp=clamp(t/FLASH_DUR,0,1);
                     if(fp<0.28){
                         const ex=fp/0.28;
-                        div.style.left=cfg.p2x+'px';div.style.top=cfg.p2y+'px';
+                        div.style.transform='translate('+cfg.p2x+'px,'+cfg.p2y+'px)';
                         div.style.width=(60+ex*60)+'px';div.style.height=(60+ex*60)+'px';
                         div.style.background=`radial-gradient(circle,rgba(255,255,255,0.96) 0%,rgba(255,255,255,0.35) 55%,transparent 78%)`;
-                        div.style.filter='blur(5px)';div.style.opacity='1';
+                        div.style.filter='blur(2px)';div.style.opacity='1';
                     }else{
                         const sp=easeOut3((fp-0.28)/0.72);
                         const cr=lerp(60,5,sp);
-                        div.style.left=cfg.p2x+'px';div.style.top=cfg.p2y+'px';
+                        div.style.transform='translate('+cfg.p2x+'px,'+cfg.p2y+'px)';
                         div.style.width=(cr*2)+'px';div.style.height=(cr*2)+'px';
                         div.style.background=cs;
-                        div.style.filter=`blur(${lerp(3,0,sp)}px) drop-shadow(0 0 ${lerp(4,10,sp)}px ${cs})`;
+                        div.style.filter=`blur(${lerp(2,0,sp)}px) drop-shadow(0 0 ${lerp(4,10,sp)}px ${cs})`;
                         div.style.opacity='1';
                     }
                     el.setAttribute('r','0');el.setAttribute('opacity','0');
@@ -496,8 +460,7 @@ function renderPhase1() {
                 }else if(cfg.phase==='gliding'){
                     const gp=clamp(t/GLIDE_DUR,0,1);
                     const ge=easeOut3(gp);
-                    div.style.left=lerp(cfg.glideFromX,cfg.glideToX,ge)+'px';
-                    div.style.top =lerp(cfg.glideFromY,cfg.glideToY,ge)+'px';
+                    div.style.transform='translate('+lerp(cfg.glideFromX,cfg.glideToX,ge)+'px,'+lerp(cfg.glideFromY,cfg.glideToY,ge)+'px)';
                     div.style.width='10px';div.style.height='10px';
                     div.style.background=cs;
                     div.style.filter=`drop-shadow(0 0 8px ${cs})`;
@@ -507,7 +470,7 @@ function renderPhase1() {
 
                 }else if(cfg.phase==='waiting'){
                     const isNext=FLY_ORDER[absorbStep]===i;
-                    div.style.left=idotScrX+'px';div.style.top=idotScrY+'px';
+                    div.style.transform='translate('+idotScrX+'px,'+idotScrY+'px)';
                     div.style.width='10px';div.style.height='10px';
                     div.style.background=cs;
                     div.style.filter=`drop-shadow(0 0 6px ${cs})`;
@@ -524,7 +487,7 @@ function renderPhase1() {
                         const pull=easeIn3((ap-0.20)/0.80);
                         sz=lerp(15,0,pull);opacity=lerp(0.9,0,pull);glow=lerp(10,20,pull);
                     }
-                    div.style.left=idotScrX+'px';div.style.top=idotScrY+'px';
+                    div.style.transform='translate('+idotScrX+'px,'+idotScrY+'px)';
                     div.style.width=sz+'px';div.style.height=sz+'px';
                     div.style.background=cs;
                     div.style.filter=`drop-shadow(0 0 ${glow}px ${cs})`;
@@ -543,7 +506,6 @@ function renderPhase1() {
                     if(ep<0.10){
                         el.setAttribute('r',lerp(3,22,ep/0.10).toString());
                         el.setAttribute('fill','#ffffff');
-                        el.setAttribute('filter','url(#wave-glow)');
                         el.setAttribute('cx',I_DOT_X.toString());el.setAttribute('cy',I_DOT_Y.toString());
                         el.setAttribute('opacity','1');
                     }else{
@@ -552,15 +514,13 @@ function renderPhase1() {
                         el.setAttribute('cy',lerp(I_DOT_Y,orbitY,fp2).toString());
                         el.setAttribute('r',lerp(22,4,fp2).toString());
                         el.setAttribute('fill',cs);
-                        el.setAttribute('filter',`url(#${cfg.filterId})`);
                         el.setAttribute('opacity','1');
                     }
                     if(ep>=1.0){cfg.phase='orbiting';}
 
                 }else if(cfg.phase==='orbiting'){
                     el.setAttribute('cx',orbitX.toString());el.setAttribute('cy',orbitY.toString());
-                    el.setAttribute('r','4');el.setAttribute('fill',cs);
-                    el.setAttribute('filter',`url(#${cfg.filterId})`);el.setAttribute('opacity','1');
+                    el.setAttribute('r','4');el.setAttribute('fill',cs);el.setAttribute('opacity','1');
                     div.style.opacity='0';
                 }
             });
@@ -685,7 +645,7 @@ function renderPhase1() {
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setPixelRatio(0.5); // 低解像度レンダリング（Win95風）
         renderer.setSize(W, H);
-        renderer.setClearColor(0x1a1a1a, 1);
+        renderer.setClearColor(0x008080, 1); // Win95 default teal desktop
         renderer.domElement.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;';
         document.body.appendChild(renderer.domElement);
 
@@ -782,6 +742,7 @@ function renderPhase1() {
     100%{transform:translateY(100vh)}
   }
   #win95-bar::-webkit-scrollbar{display:none;}
+  .win95-menu-item:hover { background:#000080; color:#ffffff; }
 </style>
 
 <!-- CRTスキャンライン効果 -->
@@ -795,67 +756,89 @@ function renderPhase1() {
   border-bottom:2px solid #555;
   display:flex;align-items:center;
   padding:0 4px;gap:4px;z-index:20;">
-  <div style="background:#c0c0c0;border:2px solid #fff;border-right-color:#555;border-bottom-color:#555;
-    padding:2px 8px;font-size:11px;font-family:monospace;font-weight:bold;color:#000;">
-    ▶ Start
+  <div style="background:#c0c0c0;
+    border-top:2px solid #ffffff;border-left:2px solid #ffffff;
+    border-right:2px solid #404040;border-bottom:2px solid #404040;
+    padding:2px 6px;font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;font-weight:bold;color:#000;
+    display:flex;align-items:center;gap:3px;cursor:pointer;">
+    <!-- Win95 4-color Windows logo -->
+    <svg width="14" height="14" viewBox="0 0 14 14" style="image-rendering:pixelated;">
+      <rect x="1" y="1" width="5" height="5" fill="#FF0000"/>
+      <rect x="8" y="1" width="5" height="5" fill="#00FF00"/>
+      <rect x="1" y="8" width="5" height="5" fill="#0000FF"/>
+      <rect x="8" y="8" width="5" height="5" fill="#FFFF00"/>
+    </svg> Start
   </div>
-  <div style="width:1px;height:20px;background:#888;margin:0 2px;"></div>
-  <div style="background:#888;border:1px solid #555;padding:2px 8px;
-    font-size:10px;font-family:monospace;color:#fff;">
-    inryokü - Phase 1
+  <div style="width:2px;height:20px;border-left:1px solid #808080;border-right:1px solid #ffffff;margin:0 2px;"></div>
+  <div style="background:#c0c0c0;
+    border-top:2px solid #808080;border-left:2px solid #808080;
+    border-right:2px solid #ffffff;border-bottom:2px solid #ffffff;
+    padding:2px 8px;font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;
+    color:#000;font-weight:bold;min-width:160px;">
+    inryokü — Loading Reality
   </div>
-  <!-- win-clock 削除: 黒パネル右下に見えていたため -->
+  <div style="flex:1;"></div>
+  <div style="
+    border-top:2px solid #808080;border-left:2px solid #808080;
+    border-right:2px solid #ffffff;border-bottom:2px solid #ffffff;
+    padding:1px 8px;font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;
+    color:#000;background:#c0c0c0;">
+    ${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2,'0')}
+  </div>
 </div>
 
-<div id="win95-main" style="position:absolute;left:${winLeft}px;top:${winTop}px;width:${winWidth}px;height:${winHeight}px;z-index:10;animation:p1In 0.5s ease-out both;outline:1px solid #000000;border-top:2px solid #ffffff;border-left:2px solid #ffffff;border-right:2px solid #808080;border-bottom:2px solid #808080;display:flex;flex-direction:column;overflow:hidden;">
+<div id="win95-main" style="position:absolute;left:${winLeft}px;top:${winTop}px;width:${winWidth}px;height:${winHeight}px;z-index:10;opacity:1;outline:1px solid #000000;border-top:2px solid #ffffff;border-left:2px solid #ffffff;border-right:2px solid #808080;border-bottom:2px solid #808080;display:flex;flex-direction:column;overflow:hidden;">
 
   <!-- タイトルバー -->
   <div style="
-    /* BACKUP: height:28px; linear-gradient(to right,#0a246a,#a6b8e8) */
-    height:20px;min-height:20px;
-    background:#000080;
+    height:24px;min-height:24px;
+    background:linear-gradient(to right,#000080,#1084d0);
     padding:0 3px;
     display:flex;align-items:center;justify-content:space-between;
   ">
     <div style="display:flex;align-items:center;gap:4px;">
-      <div style="width:16px;height:16px;background:#008080;border:1px solid #005050;
-        display:flex;align-items:center;justify-content:center;
-        font-size:8px;color:white;font-weight:bold;">G</div>
+      <!-- Win95-style 16x16 pixel art icon -->
+      <svg width="16" height="16" viewBox="0 0 16 16" style="image-rendering:pixelated;">
+        <rect width="16" height="16" fill="#008080"/>
+        <rect x="2" y="2" width="12" height="12" fill="#000"/>
+        <rect x="3" y="3" width="10" height="10" fill="#008080"/>
+        <rect x="6" y="4" width="4" height="2" fill="#fff"/>
+        <rect x="6" y="7" width="4" height="5" fill="#fff"/>
+      </svg>
       <span style="color:white;font-size:11px;font-weight:bold;
         font-family:'MS Sans Serif',Arial,sans-serif;letter-spacing:0;">
         inryokü — Loading Reality
       </span>
     </div>
     <div style="display:flex;gap:2px;">
-      <!-- BACKUP: 2px borders, 16×14px buttons -->
-      <div style="width:14px;height:13px;background:#c0c0c0;
-        border-top:1px solid #ffffff;border-left:1px solid #ffffff;
-        border-right:1px solid #404040;border-bottom:1px solid #404040;
-        font-size:8px;font-weight:bold;display:flex;align-items:center;justify-content:center;
-        cursor:pointer;color:#000;font-family:'MS Sans Serif',Arial,sans-serif;">_</div>
-      <div style="width:14px;height:13px;background:#c0c0c0;
-        border-top:1px solid #ffffff;border-left:1px solid #ffffff;
-        border-right:1px solid #404040;border-bottom:1px solid #404040;
-        font-size:8px;font-weight:bold;display:flex;align-items:center;justify-content:center;
-        cursor:pointer;color:#000;font-family:'MS Sans Serif',Arial,sans-serif;">□</div>
-      <div style="width:14px;height:13px;background:#c0c0c0;
-        border-top:1px solid #ffffff;border-left:1px solid #ffffff;
-        border-right:1px solid #404040;border-bottom:1px solid #404040;
-        font-size:8px;font-weight:bold;display:flex;align-items:center;justify-content:center;
-        cursor:pointer;color:#000;font-family:'MS Sans Serif',Arial,sans-serif;">✕</div>
+      <div style="width:16px;height:14px;background:#c0c0c0;
+        border-top:2px solid #ffffff;border-left:2px solid #ffffff;
+        border-right:2px solid #404040;border-bottom:2px solid #404040;
+        font-size:9px;font-weight:bold;display:flex;align-items:center;justify-content:center;
+        cursor:pointer;color:#000;font-family:'Marlett','MS Sans Serif',Arial,sans-serif;line-height:1;">_</div>
+      <div style="width:16px;height:14px;background:#c0c0c0;
+        border-top:2px solid #ffffff;border-left:2px solid #ffffff;
+        border-right:2px solid #404040;border-bottom:2px solid #404040;
+        font-size:9px;font-weight:bold;display:flex;align-items:center;justify-content:center;
+        cursor:pointer;color:#000;font-family:'Marlett','MS Sans Serif',Arial,sans-serif;line-height:1;">□</div>
+      <div style="width:16px;height:14px;background:#c0c0c0;
+        border-top:2px solid #ffffff;border-left:2px solid #ffffff;
+        border-right:2px solid #404040;border-bottom:2px solid #404040;
+        font-size:9px;font-weight:bold;display:flex;align-items:center;justify-content:center;
+        cursor:pointer;color:#000;font-family:'Marlett','MS Sans Serif',Arial,sans-serif;line-height:1;">✕</div>
     </div>
   </div>
 
   <!-- メニューバー -->
   <div style="background:#c0c0c0;height:20px;display:flex;align-items:center;padding:0 2px;gap:0;
     border-bottom:1px solid #808080;">
-    <div style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
+    <div class="win95-menu-item" style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
       padding:1px 6px;cursor:default;"><u>F</u>ile</div>
-    <div style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
+    <div class="win95-menu-item" style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
       padding:1px 6px;cursor:default;"><u>E</u>dit</div>
-    <div style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
+    <div class="win95-menu-item" style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
       padding:1px 6px;cursor:default;"><u>V</u>iew</div>
-    <div style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
+    <div class="win95-menu-item" style="font-size:11px;font-family:'MS Sans Serif',Tahoma,Arial,sans-serif;color:#000;
       padding:1px 6px;cursor:default;"><u>H</u>elp</div>
   </div>
 
@@ -890,7 +873,7 @@ function renderPhase1() {
   ">
     <div id="p1-lb" style="
       width:0%;height:100%;
-      background:#0000aa;
+      background:repeating-linear-gradient(to right,#0000aa 0px,#0000aa 8px,#000044 8px,#000044 10px);
       pointer-events:none;
     "></div>
     <div id="drag-handle" style="
@@ -906,7 +889,7 @@ function renderPhase1() {
     font-size:11px;font-family:'MS Sans Serif',Arial,sans-serif;
     color:#444;text-align:left;letter-spacing:0;
     padding:0 12px 6px 12px;
-  ">HOLD TO LOAD</div>
+  ">Initializing reality engine...</div>
   </div><!-- /ヘッダーエリア -->
 
   <!-- Three.jsキャンバスエリア（スクエアボーダー） -->
@@ -919,8 +902,19 @@ function renderPhase1() {
     border-bottom:2px solid #ffffff;
     position:relative;
     overflow:hidden;
+    box-shadow:-6px 0 0 0 #c0c0c0, 6px 0 0 0 #c0c0c0, 0 6px 0 0 #c0c0c0;
   ">
   <!-- BACKUP: CSSグラデーションライン削除 → Three.js Newton's Ring に置き換え -->
+  </div>
+
+  <!-- Win95 sizing grip (bottom-right corner) -->
+  <div style="position:absolute;bottom:2px;right:2px;width:12px;height:12px;overflow:hidden;">
+    <div style="position:absolute;bottom:0;right:0;border-right:2px solid #fff;border-bottom:2px solid #808080;width:4px;height:4px;"></div>
+    <div style="position:absolute;bottom:0;right:4px;border-right:2px solid #fff;border-bottom:2px solid #808080;width:4px;height:4px;"></div>
+    <div style="position:absolute;bottom:4px;right:0;border-right:2px solid #fff;border-bottom:2px solid #808080;width:4px;height:4px;"></div>
+    <div style="position:absolute;bottom:0;right:8px;border-right:2px solid #fff;border-bottom:2px solid #808080;width:4px;height:4px;"></div>
+    <div style="position:absolute;bottom:4px;right:4px;border-right:2px solid #fff;border-bottom:2px solid #808080;width:4px;height:4px;"></div>
+    <div style="position:absolute;bottom:8px;right:0;border-right:2px solid #fff;border-bottom:2px solid #808080;width:4px;height:4px;"></div>
   </div>
 
 </div>
@@ -1128,7 +1122,10 @@ function renderPhase1() {
                 '  }',
                 '',
                 '  vec3 grey = vec3(0.5);',
-                '  col = mix(col, grey, u_grey);',
+                '  float greyMix = clamp(u_grey, 0.0, 1.0);',
+                '  float darkMix = clamp(u_grey - 1.0, 0.0, 1.0);',
+                '  col = mix(col, grey, greyMix);',
+                '  col = mix(col, vec3(0.0), darkMix);',
                 '  col = mix(col, vec3(1.0), u_flash);',
                 '  // 16色ディザリング (u_grey > 0.05の時のみ適用 = グレー化中のみ)',
                 '  if(u_grey > 0.05) {',
@@ -1164,20 +1161,21 @@ function renderPhase1() {
                 '  vec2 p = (vUv - 0.5) * 2.0;',
                 '  float r = length(p);',
                 '',
-                '  // RGBCMY 6色',
+                '  // RGBCMY 6色 — 補色ペア順: R↔C, G↔M, B↔Y',
                 '  vec3 wc[6];',
-                '  wc[0]=vec3(1.0,0.05,0.05); wc[1]=vec3(0.05,1.0,0.05); wc[2]=vec3(0.05,0.05,1.0);',
-                '  wc[3]=vec3(0.0,1.0,1.0);   wc[4]=vec3(1.0,0.0,1.0);   wc[5]=vec3(1.0,1.0,0.0);',
+                '  wc[0]=vec3(1.0,0.0,0.0); wc[1]=vec3(0.0,1.0,1.0);',   // Red, Cyan
+                '  wc[2]=vec3(0.0,1.0,0.0); wc[3]=vec3(1.0,0.0,1.0);',   // Green, Magenta
+                '  wc[4]=vec3(0.0,0.0,1.0); wc[5]=vec3(1.0,1.0,0.0);',   // Blue, Yellow
                 '',
                 '  // 引力加速: progress^2 で終盤ほど速くなる',
                 '  float spd = u_speed * (1.0 + u_progress * u_progress * 4.0);',
                 '',
                 '  vec3 col = vec3(0.0);',
                 '',
-                '  for(int i = 0; i < 9; i++){',
+                '  for(int i = 0; i < 6; i++){',
                 '    float fi = float(i);',
-                '    // 9リングを均等位相配置',
-                '    float basePhase = fi / 9.0;',
+                '    // 6リング (RGBCMY) を均等位相配置',
+                '    float basePhase = fi / 6.0;',
                 '    // phase: 0=奥(小)/1=手前(大)、directionで流れる方向を変える',
                 '    float phase = fract(basePhase + u_time * spd * u_direction + 2.0);',
                 '',
@@ -1187,22 +1185,21 @@ function renderPhase1() {
                 '',
                 '    // 画面外のリングはスキップ',
                 '    if(ringRadius < 1.3){',
-                '      // 太さ: 手前ほど太く',
-                '      float thick = 0.004 + phase * 0.02;',
+                '      // 太さ: 手前ほど太く（6リングなのでやや太めに）',
+                '      float thick = 0.008 + phase * 0.03;',
                 '      float dist = abs(r - ringRadius);',
                 '      float ringVal = max(0.0, 1.0 - dist / max(thick, 0.001));',
                 '',
                 '      // 輝度: 手前ほど明るく (phase^2)',
                 '      float brightness = phase * phase * 2.2;',
                 '',
-                '      // 色: i%6 でRGBCMYを順に割り当て',
+                '      // 色: 各リングがRGBCMY（6色6リング、1対1）',
                 '      vec3 ringColor;',
-                '      int ci = int(mod(fi, 6.0));',
-                '      if(ci==0) ringColor=wc[0];',
-                '      else if(ci==1) ringColor=wc[1];',
-                '      else if(ci==2) ringColor=wc[2];',
-                '      else if(ci==3) ringColor=wc[3];',
-                '      else if(ci==4) ringColor=wc[4];',
+                '      if(i==0) ringColor=wc[0];',
+                '      else if(i==1) ringColor=wc[1];',
+                '      else if(i==2) ringColor=wc[2];',
+                '      else if(i==3) ringColor=wc[3];',
+                '      else if(i==4) ringColor=wc[4];',
                 '      else ringColor=wc[5];',
                 '',
                 '      col += ringColor * ringVal * brightness;',
@@ -1255,31 +1252,82 @@ function renderPhase1() {
         const fieldPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 6, sqWorld), fieldMat);
         fieldPlane.position.z = 0.1; fieldPlane.visible = false; scene.add(fieldPlane);
 
-        // ── CMY particles (物質: フラットな円・減法混色) ──
-        const cmySphereGeo = new THREE.CircleGeometry(0.6 * unit, 64);
+        // ── CMY particles (物質: 1シェーダーで減法混色) ──
+        // 減法混色: 白(紙)から各インクが補色を吸収
+        // C×M=Blue, C×Y=Green, M×Y=Red, C×M×Y=Black
         const cmyTriPos = [ // 正三角形（スクエア左半分中心基準）
-            [0, 0.8 * unit],         // 上
-            [-0.7 * unit, -0.4 * unit], // 左下
-            [0.7 * unit, -0.4 * unit],  // 右下
+            [0, 0.8 * unit],         // 上 (Cyan)
+            [-0.7 * unit, -0.4 * unit], // 左下 (Magenta)
+            [0.7 * unit, -0.4 * unit],  // 右下 (Yellow)
         ];
         const cmyCtr = new THREE.Vector3(-2.5 * unit, -0.2 * unit, 0);
-        const cmyDefs = [
-            { color: 0x00FFFF }, // Cyan #00FFFF
-            { color: 0xFF00FF }, // Magenta #FF00FF
-            { color: 0xFFFF00 }, // Yellow #FFFF00
-        ];
-        const cmyP = cmyDefs.map((def, i) => {
-            const mat = new THREE.MeshBasicMaterial({
-                color: def.color,
-                transparent: true,
-                opacity: 1.0,
-                depthWrite: false,
-            });
-            const m = new THREE.Mesh(cmySphereGeo, mat);
-            m.position.set(cmyCtr.x + cmyTriPos[i][0], cmyCtr.y + cmyTriPos[i][1], 0.5);
+        // プロキシ Object3D（位置・スケール・visibleを既存アニメコードと互換）
+        const cmyP = cmyTriPos.map((pos, i) => {
+            const m = new THREE.Object3D();
+            m.position.set(cmyCtr.x + pos[0], cmyCtr.y + pos[1], 0.5);
             m.userData = { ox: m.position.x, oy: m.position.y };
-            scene.add(m); return m;
+            return m;
         });
+        const cmyRadius = 0.6 * unit;
+        const cmyShaderMat = new THREE.ShaderMaterial({
+            uniforms: {
+                u_c0: { value: new THREE.Vector2(cmyP[0].position.x, cmyP[0].position.y) },
+                u_c1: { value: new THREE.Vector2(cmyP[1].position.x, cmyP[1].position.y) },
+                u_c2: { value: new THREE.Vector2(cmyP[2].position.x, cmyP[2].position.y) },
+                u_radius: { value: cmyRadius },
+                u_scale: { value: 1.0 },
+                u_visible: { value: 1.0 },
+            },
+            vertexShader: [
+                'varying vec2 vWorldPos;',
+                'void main(){',
+                '  vWorldPos = (modelMatrix * vec4(position,1.0)).xy;',
+                '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);',
+                '}'
+            ].join('\n'),
+            fragmentShader: [
+                'precision highp float;',
+                'varying vec2 vWorldPos;',
+                'uniform vec2 u_c0, u_c1, u_c2;',
+                'uniform float u_radius, u_scale, u_visible;',
+                '',
+                'void main(){',
+                '  if(u_visible < 0.5) discard;',
+                '  float r = u_radius * u_scale;',
+                '  float edge = r * 0.05;',
+                '  float d0 = length(vWorldPos - u_c0);',
+                '  float d1 = length(vWorldPos - u_c1);',
+                '  float d2 = length(vWorldPos - u_c2);',
+                '',
+                '  // 各円の内側判定（ソフトエッジ）',
+                '  float c = smoothstep(r, r - edge, d0);',  // Cyan
+                '  float m = smoothstep(r, r - edge, d1);',  // Magenta
+                '  float y = smoothstep(r, r - edge, d2);',  // Yellow
+                '',
+                '  float any = max(c, max(m, y));',
+                '  if(any < 0.001) discard;',
+                '',
+                '  // 減法混色: 白(紙)から各インクが補色を吸収',
+                '  // Cyan = (0,1,1) → Redを吸収',
+                '  // Magenta = (1,0,1) → Greenを吸収',
+                '  // Yellow = (1,1,0) → Blueを吸収',
+                '  vec3 col = vec3(1.0);',                    // 白い紙
+                '  col *= mix(vec3(1.0), vec3(0.0, 1.0, 1.0), c);',  // Cyan ink
+                '  col *= mix(vec3(1.0), vec3(1.0, 0.0, 1.0), m);',  // Magenta ink
+                '  col *= mix(vec3(1.0), vec3(1.0, 1.0, 0.0), y);',  // Yellow ink
+                '',
+                '  gl_FragColor = vec4(col, any);',
+                '}'
+            ].join('\n'),
+            transparent: true,
+            depthWrite: false,
+        });
+        const cmyPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(sqWorld * 6, sqWorld * 3),
+            cmyShaderMat
+        );
+        cmyPlane.position.z = 0.5;
+        scene.add(cmyPlane);
 
         // ── RGB particles (精神: フラットな円・加法混色) ──
         const rgbSphereGeo = new THREE.CircleGeometry(0.6 * unit, 64);
@@ -1310,21 +1358,75 @@ function renderPhase1() {
 
         // ── Fused dots ──
         const dotGeo = new THREE.SphereGeometry(0.65 * unit, 16, 16);
+        // ── CMY球（物質）: 重厚な影・フレネル反射 + グレー遷移 ──
         const bDotMat = new THREE.ShaderMaterial({
-            uniforms: { u_time: { value: 0 } },
+            uniforms: { u_time: { value: 0 }, u_greyMix: { value: 0.0 } },
             vertexShader: [
                 'varying vec3 vNormal;',
+                'varying vec3 vViewDir;',
                 'void main(){',
                 '  vNormal = normalize(normalMatrix * normal);',
-                '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);',
+                '  vec4 mvPos = modelViewMatrix * vec4(position,1.0);',
+                '  vViewDir = normalize(-mvPos.xyz);',
+                '  gl_Position = projectionMatrix * mvPos;',
                 '}'
             ].join('\n'),
-            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(0.0,0.0,0.0,1.0);}',
+            fragmentShader: [
+                'precision highp float;',
+                'varying vec3 vNormal;',
+                'varying vec3 vViewDir;',
+                'uniform float u_time, u_greyMix;',
+                'void main(){',
+                '  vec3 lightDir = normalize(vec3(0.5, 0.8, 1.0));',
+                '  float diff = max(dot(vNormal, lightDir), 0.0);',
+                '  float spec = pow(max(dot(reflect(-lightDir, vNormal), vViewDir), 0.0), 32.0);',
+                '  float fresnel = pow(1.0 - max(dot(vNormal, vViewDir), 0.0), 3.0);',
+                '  float ambient = 0.05;',
+                '  vec3 blackCol = vec3(0.0) * (ambient + diff * 0.5);',
+                '  blackCol += vec3(0.08) * spec * 0.3;',
+                '  blackCol += vec3(0.03) * fresnel * 0.2;',
+                '  // グレー遷移: 0=純黒、1=50%グレー',
+                '  vec3 greyTarget = vec3(0.5) * (0.6 + diff * 0.4) + vec3(0.08) * spec;',
+                '  vec3 col = mix(blackCol, greyTarget, u_greyMix);',
+                '  gl_FragColor = vec4(col, 1.0);',
+                '}'
+            ].join('\n'),
             depthWrite: false, depthTest: false
         });
+        // ── RGB球（精神）: 内側から発光・柔らかいグロー + グレー遷移 ──
         const wDotMat = new THREE.ShaderMaterial({
-            vertexShader: 'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-            fragmentShader: 'precision highp float;void main(){gl_FragColor=vec4(vec3(0.98),1.0);}',
+            uniforms: { u_time: { value: 0 }, u_greyMix: { value: 0.0 } },
+            vertexShader: [
+                'varying vec3 vNormal;',
+                'varying vec3 vViewDir;',
+                'void main(){',
+                '  vNormal = normalize(normalMatrix * normal);',
+                '  vec4 mvPos = modelViewMatrix * vec4(position,1.0);',
+                '  vViewDir = normalize(-mvPos.xyz);',
+                '  gl_Position = projectionMatrix * mvPos;',
+                '}'
+            ].join('\n'),
+            fragmentShader: [
+                'precision highp float;',
+                'varying vec3 vNormal;',
+                'varying vec3 vViewDir;',
+                'uniform float u_time, u_greyMix;',
+                'void main(){',
+                '  vec3 lightDir = normalize(vec3(0.5, 0.8, 1.0));',
+                '  float diff = max(dot(vNormal, lightDir), 0.0);',
+                '  float spec = pow(max(dot(reflect(-lightDir, vNormal), vViewDir), 0.0), 64.0);',
+                '  float fresnel = pow(1.0 - max(dot(vNormal, vViewDir), 0.0), 2.0);',
+                '  float glow = 0.7 + 0.1 * sin(u_time * 2.0);',
+                '  vec3 whiteCol = vec3(1.0) * (glow + diff * 0.3);',
+                '  whiteCol += vec3(1.0) * spec * 0.5;',
+                '  whiteCol += vec3(1.0) * fresnel * 0.15;',
+                '  whiteCol = min(whiteCol, vec3(1.0));',
+                '  // グレー遷移: 0=純白、1=50%グレー',
+                '  vec3 greyTarget = vec3(0.5) * (0.6 + diff * 0.4) + vec3(0.08) * spec;',
+                '  vec3 col = mix(whiteCol, greyTarget, u_greyMix);',
+                '  gl_FragColor = vec4(col, 1.0);',
+                '}'
+            ].join('\n'),
             depthWrite: false, depthTest: false
         });
         const bDot = new THREE.Mesh(dotGeo, bDotMat); bDot.visible = false; scene.add(bDot);
@@ -1410,89 +1512,141 @@ function renderPhase1() {
         const yyPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 0.65, sqWorld * 0.65), yyMat);
         yyPlane.visible = false; yyPlane.position.z = 0.5; scene.add(yyPlane);
 
+        // ── Grey Sphere (demo_pattern_d移植 — uniform制御のみ、runtime書き換え禁止) ──
+        const greySphereGeo = new THREE.SphereGeometry(sqWorld * 0.32, 48, 48);
+        const greySphereMat = new THREE.ShaderMaterial({
+            uniforms: {
+                u_time: { value: 0 }, u_glow: { value: 0 },
+                u_rainbow: { value: 0 }, u_opacity: { value: 1.0 }
+            },
+            vertexShader: [
+                'varying vec3 vNormal; varying vec3 vPos;',
+                'void main() {',
+                '  vNormal = normalize(normalMatrix * normal);',
+                '  vPos = position;',
+                '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+                '}'
+            ].join('\n'),
+            fragmentShader: [
+                'precision highp float;',
+                'varying vec3 vNormal; varying vec3 vPos;',
+                'uniform float u_time, u_glow, u_rainbow, u_opacity;',
+                'void main() {',
+                '  if (u_opacity < 0.005) discard;',
+                '  vec3 N = normalize(vNormal);',
+                '  float fresnel = pow(1.0 - max(dot(N, vec3(0,0,1)), 0.0), 3.0);',
+                '  float r = length(vPos.xy);',
+                '  float ring = sin(r * 40.0 - u_time * 2.0) * 0.5 + 0.5;',
+                '  float grey = 0.50 + ring * 0.04;',
+                '  vec3 col = vec3(grey);',
+                '  vec3 rainbow = vec3(',
+                '    0.5+0.5*sin(fresnel*8.0+u_time*1.5),',
+                '    0.5+0.5*sin(fresnel*8.0+u_time*1.5+2.094),',
+                '    0.5+0.5*sin(fresnel*8.0+u_time*1.5+4.189)',
+                '  );',
+                '  col = mix(col, rainbow, fresnel * u_rainbow);',
+                '  col += vec3(u_glow * 0.4);',
+                '  col += vec3(1.0) * fresnel * u_glow * 0.8;',
+                '  float diff = max(dot(N, normalize(vec3(1,1,2))), 0.0) * 0.4 + 0.6;',
+                '  col *= diff;',
+                '  gl_FragColor = vec4(col, u_opacity);',
+                '}'
+            ].join('\n'),
+            transparent: true, depthWrite: false, depthTest: false
+        });
+        const greySphere = new THREE.Mesh(greySphereGeo, greySphereMat);
+        greySphere.visible = false; greySphere.position.z = 0.5; scene.add(greySphere);
+
         // ── RGBCMY Tunnel (OVERSIZED — covers full screen for overflow) ──
+        // ── RGBCMY Tunnel 3D (demo_pattern_d移植 — u_scale=3.0固定、u_depth/u_ringDensity/u_scrollMul追加) ──
         const tunnelSize = Math.max(camW, camH) * 4;
-        const tunnelScale = tunnelSize / sqWorld; // how many times bigger than square
         const tunnelMat = new THREE.ShaderMaterial({
             uniforms: {
-                u_time: { value: 0 }, u_progress: { value: 0 },
+                u_time: { value: 0 },
                 u_radius: { value: 0 }, u_alpha: { value: 0 },
-                u_warpSpeed: { value: 1.0 }, u_scale: { value: tunnelScale },
-                u_pixelSize: { value: 8.0 }
+                u_scale: { value: 3.0 },
+                u_depth: { value: 0 },          // 奥行き (0=flat, 1=deep)
+                u_ringDensity: { value: 3.0 },   // リング密度
+                u_scrollMul: { value: 0.2 }      // スクロール速度倍率
             },
             vertexShader: VS,
             fragmentShader: [
-                'precision highp float;',
-                'varying vec2 vUv;',
-                'uniform float u_time, u_progress, u_radius, u_alpha, u_warpSpeed, u_scale, u_pixelSize;',
-                '',
-                'vec2 pixelate(vec2 uv) {',
-                '  if(u_pixelSize <= 1.0) return uv;',
-                '  vec2 pixCount = vec2(512.0) / u_pixelSize;',
-                '  return floor(uv * pixCount) / pixCount;',
+                'precision highp float;varying vec2 vUv;',
+                'uniform float u_time,u_radius,u_alpha,u_scale,u_depth,u_ringDensity,u_scrollMul;',
+                'vec3 ringColor(int i){',
+                '  if(i==0)return vec3(1.0,0.0,0.0);',   // Red
+                '  if(i==1)return vec3(0.0,1.0,1.0);',   // Cyan
+                '  if(i==2)return vec3(0.0,1.0,0.0);',   // Green
+                '  if(i==3)return vec3(1.0,0.0,1.0);',   // Magenta
+                '  if(i==4)return vec3(0.0,0.0,1.0);',   // Blue
+                '  return vec3(1.0,1.0,0.0);',           // Yellow
                 '}',
-                '',
-                'void main() {',
-                '    vec2 pxUv = pixelate(vUv);',
-                '    vec2 pos = (pxUv - 0.5) * 2.0 * u_scale;',
-                '    float r = length(pos);',
-                '    float angle = atan(pos.y, pos.x);',
-                '',
-                '    float mask = 1.0 - smoothstep(u_radius - 0.02, u_radius, r);',
-                '    if(mask < 0.005) discard;',
-                '',
-                '    float speed = u_time * u_warpSpeed * 0.5;',
-                '',
-                '    float wl[6];',
-                '    wl[0]=0.70; wl[1]=0.60; wl[2]=0.55;',
-                '    wl[3]=0.51; wl[4]=0.47; wl[5]=0.43;',
-                '',
-                '    vec3 wc[6];',
-                '    wc[0]=vec3(1.0, 0.05, 0.05);',
-                '    wc[1]=vec3(0.0,  1.0,  1.0);',
-                '    wc[2]=vec3(1.0,  0.0,  1.0);',
-                '    wc[3]=vec3(0.05, 1.0, 0.05);',
-                '    wc[4]=vec3(0.05,0.05,  1.0);',
-                '    wc[5]=vec3(1.0,  1.0,  0.0);',
-                '',
-                '    vec3 col = vec3(0.0);',
-                '    float totalBright = 0.0;',
-                '',
-                '    for(int i = 0; i < 6; i++) {',
-                '        float n = (r * r) / (wl[i] * 3.5 * 0.15);',
-                '        float phase = n * 6.28318 - speed * (1.0 + float(i) * 0.04);',
-                '        float intensity = pow(cos(phase * 0.5), 2.0);',
-                '        col += wc[i] * intensity;',
-                '        totalBright += intensity;',
-                '    }',
-                '    col /= 6.0;',
-                '',
-                '    float depth = 1.0 - smoothstep(0.0, u_radius, r);',
-                '    float depthPow = pow(depth, 1.4);',
-                '',
-                '    float brightness = totalBright / 6.0;',
-                '    col *= smoothstep(0.2, 0.8, brightness) * 1.8;',
-                '    col *= depthPow * (0.3 + u_progress * 1.4);',
-                '',
-                '    float focal = exp(-r * r * 7.0 / max(u_radius * u_radius, 0.001));',
-                '    col = mix(col, vec3(1.0), focal * (0.2 + u_progress * 0.8));',
-                '',
-                '    float wall = smoothstep(u_radius, u_radius - 0.04, r)',
-                '               * smoothstep(u_radius - 0.09, u_radius - 0.04, r);',
-                '    float eh = fract(angle / 6.28318 - u_time * 0.05);',
-                '    vec3 edgeCol = vec3(',
-                '        0.5 + 0.5*sin(eh * 6.28318),',
-                '        0.5 + 0.5*sin(eh * 6.28318 + 2.094),',
-                '        0.5 + 0.5*sin(eh * 6.28318 + 4.189)',
-                '    );',
-                '    col += wall * edgeCol * 0.5;',
-                '',
-                '    gl_FragColor = vec4(col * mask, mask * u_alpha);',
+                'void main(){',
+                '  vec2 p=(vUv-0.5)*2.0*u_scale;',
+                '  float r=length(p);',
+                '  float mask=1.0-smoothstep(u_radius-0.03,u_radius,r);',
+                '  if(mask<0.005)discard;',
+                // 3D遠近法
+                '  float normR=r/max(u_radius,0.001);',
+                '  float depthR=pow(normR,0.6+u_depth*0.6);',
+                // スクロール: 奥はゆっくり、手前は速い
+                '  float scrollSpeed=(0.8+normR*normR*1.5)*u_scrollMul;',
+                '  float phase=depthR*u_ringDensity-u_time*scrollSpeed;',
+                '  float band=mod(phase,6.0);',
+                '  int idx=int(floor(band));',
+                '  float frac_=fract(band);',
+                '  vec3 c0=ringColor(int(mod(float(idx),6.0)));',
+                '  vec3 c1=ringColor(int(mod(float(idx+1),6.0)));',
+                '  float blend=smoothstep(0.3,0.7,frac_);',
+                '  vec3 col=mix(c0,c1,blend);',
+                // 奥行き明暗
+                '  float depthBright=0.3+normR*1.2;',
+                '  col*=depthBright;',
+                // トンネル出口の白い光
+                '  float focal=exp(-normR*normR*8.0);',
+                '  col=mix(col,vec3(1.4),focal*0.6);',
+                // 壁面RGBCMY反射
+                '  float angle=atan(p.y,p.x);',
+                '  float wallZone=smoothstep(u_radius,u_radius-0.06,r)*smoothstep(u_radius-0.15,u_radius-0.06,r);',
+                '  int wallIdx=int(mod(angle/6.28318*6.0-u_time*0.5,6.0));',
+                '  vec3 wallCol=ringColor(wallIdx);',
+                '  col+=wallCol*wallZone*0.4*(0.5+normR*0.5);',
+                // リング間の暗い隙間
+                '  float ringEdge=abs(frac_-0.5)*2.0;',
+                '  float edgeDarken=0.85+0.15*smoothstep(0.0,0.3,ringEdge);',
+                '  col*=edgeDarken;',
+                // ビネット
+                '  float vignette=1.0-normR*normR*0.3;',
+                '  col*=vignette;',
+                '  gl_FragColor=vec4(col*mask,mask*u_alpha);',
                 '}'
             ].join('\n'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
         });
         const tunnelPlane = new THREE.Mesh(new THREE.PlaneGeometry(tunnelSize, tunnelSize), tunnelMat);
-        tunnelPlane.visible = false; tunnelPlane.position.z = 1; scene.add(tunnelPlane);
+        // z=0: bgPlane(z=-1)の手前、greySphere(z=0.5)の奥 → 球の裏からにじみ出る
+        tunnelPlane.visible = false; tunnelPlane.position.z = 0; scene.add(tunnelPlane);
+
+        // ── Halo (demo_pattern_d移植 — 球の背後のグロー) ──
+        const haloMat = new THREE.ShaderMaterial({
+            uniforms: { u_glow: { value: 0 }, u_time: { value: 0 } },
+            vertexShader: VS,
+            fragmentShader: [
+                'precision highp float;varying vec2 vUv;uniform float u_glow,u_time;',
+                'void main(){',
+                '  vec2 p=(vUv-0.5)*2.0;float r=length(p);',
+                '  float glow=exp(-r*r*2.0)*u_glow;',
+                '  vec3 col=vec3(0.7);',
+                '  float angle=atan(p.y,p.x);',
+                '  col.r+=sin(angle*3.0+u_time)*0.15*u_glow;',
+                '  col.g+=sin(angle*3.0+u_time+2.094)*0.15*u_glow;',
+                '  col.b+=sin(angle*3.0+u_time+4.189)*0.15*u_glow;',
+                '  gl_FragColor=vec4(col*glow,glow);',
+                '}'
+            ].join('\n'),
+            transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+        });
+        const haloPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 1.8, sqWorld * 1.8), haloMat);
+        haloPlane.visible = false; haloPlane.position.z = 0.2; scene.add(haloPlane);
 
         // ── Solar cross GLSL ──
         const scMat = new THREE.ShaderMaterial({
@@ -1616,10 +1770,19 @@ function renderPhase1() {
             if (warpTunnelPlane.visible) { warpTunnelMat.uniforms.u_time.value = globalTime; }
             if (yyPlane.visible) yyMat.uniforms.u_time.value = globalTime;
             if (tunnelPlane.visible) tunnelMat.uniforms.u_time.value = globalTime;
+            if (greySphere.visible) greySphereMat.uniforms.u_time.value = globalTime;
+            if (haloPlane.visible) haloMat.uniforms.u_time.value = globalTime;
             if (scPlane.visible) scMat.uniforms.u_time.value = globalTime;
             if (bDot.visible && bDot.material.uniforms && bDot.material.uniforms.u_time) {
                 bDot.material.uniforms.u_time.value = globalTime;
             }
+
+            // ── CMYシェーダー位置同期（プロキシ→uniform） ──
+            cmyShaderMat.uniforms.u_c0.value.set(cmyP[0].position.x, cmyP[0].position.y);
+            cmyShaderMat.uniforms.u_c1.value.set(cmyP[1].position.x, cmyP[1].position.y);
+            cmyShaderMat.uniforms.u_c2.value.set(cmyP[2].position.x, cmyP[2].position.y);
+            cmyShaderMat.uniforms.u_scale.value = cmyP[0].scale.x;
+            cmyShaderMat.uniforms.u_visible.value = cmyP[0].visible ? 1.0 : 0.0;
 
             // ── ピクセルサイズ制御（progressに応じて解像度が上がる） ──
             const pixelSize = prog < 50 ? 8.0 :
@@ -1630,14 +1793,6 @@ function renderPhase1() {
                     mat.uniforms.u_pixelSize.value = pixelSize;
                 }
             });
-            // tunnelMatピクセルサイズ別制御
-            if (tunnelMat?.uniforms?.u_pixelSize) {
-                tunnelMat.uniforms.u_pixelSize.value =
-                    prog < 75 ? 0.05 :
-                    prog < 90 ? 0.03 :
-                    prog < 100 ? 0.01 : 0.005;
-            }
-
             // ── ランナーアニメーション速度制御 ──
             const runnerSvg = document.getElementById('exit-man-svg');
             if (runnerSvg) {
@@ -1718,30 +1873,101 @@ function renderPhase1() {
                 updateWin95Status('⚠ REALITY.EXE is not responding...');
                 eventTimer += dt;
                 const et = eventTimer;
-                if (et < 0.5) {
-                    const t2 = et / 0.5;
-                    cmyP.forEach(p => { p.position.x += (cmyCtr.x - p.position.x) * 0.12; p.position.y += (cmyCtr.y - p.position.y) * 0.12; p.scale.setScalar(1 - t2 * 0.6); });
-                    rgbP.forEach(p => { p.position.x += (rgbCtr.x - p.position.x) * 0.2; p.position.y += (rgbCtr.y - p.position.y) * 0.2; p.scale.setScalar(1 - t2 * 0.5); });
+
+                // Step A (0-0.6s): 6球が各重心へ加速収縮 — ease-out cubic で滑らかに
+                if (et < 0.6) {
+                    const t2 = et / 0.6;
+                    const ease = 1 - Math.pow(1 - t2, 3); // ease-out cubic
+                    cmyP.forEach(p => {
+                        p.position.x += (cmyCtr.x - p.position.x) * (0.05 + ease * 0.15);
+                        p.position.y += (cmyCtr.y - p.position.y) * (0.05 + ease * 0.15);
+                        p.scale.setScalar(1 - ease * 0.65);
+                        // 融合直前に球が光る
+                        if (p.material && p.material.emissiveIntensity !== undefined) {
+                            p.material.emissiveIntensity = ease * 0.3;
+                        }
+                    });
+                    rgbP.forEach(p => {
+                        p.position.x += (rgbCtr.x - p.position.x) * (0.08 + ease * 0.2);
+                        p.position.y += (rgbCtr.y - p.position.y) * (0.08 + ease * 0.2);
+                        p.scale.setScalar(1 - ease * 0.55);
+                    });
                     fieldPlane.visible = false;
+                    // bloom: 融合直前にじわっと光る
+                    if (bloom) bloom.strength = ease * 0.8;
                 }
-                if (et >= 0.5 && et < 0.55) {
-                    cmyP.forEach(p => p.visible = false); rgbP.forEach(p => p.visible = false);
-                    bDot.visible = true; bDot.position.set(cmyCtr.x, 0, 0);
-                    wDot.visible = true; wDot.position.set(rgbCtr.x, 0, 0);
-                    bgMat.uniforms.u_flash.value = 0.6;
+
+                // Step B (0.6-0.75s): フラッシュと同時に切り替え — 瞬間ではなくクロスフェード
+                if (et >= 0.6 && et < 0.75) {
+                    const t2 = (et - 0.6) / 0.15;
+                    const ease = t2 * t2; // ease-in for impact
+                    // 6球を縮小フェードアウト
+                    cmyP.forEach(p => { p.scale.setScalar(Math.max(0.01, 0.35 * (1 - ease))); });
+                    rgbP.forEach(p => { p.scale.setScalar(Math.max(0.01, 0.45 * (1 - ease))); });
+                    // bDot/wDotを小さいスケールからフェードイン
+                    if (t2 > 0.3) {
+                        const appear = (t2 - 0.3) / 0.7;
+                        cmyP.forEach(p => p.visible = appear < 0.5);
+                        rgbP.forEach(p => p.visible = appear < 0.5);
+                        bDot.visible = true; bDot.position.set(cmyCtr.x, 0, 0);
+                        wDot.visible = true; wDot.position.set(rgbCtr.x, 0, 0);
+                        bDot.scale.setScalar(0.3 + appear * 0.7);
+                        wDot.scale.setScalar(0.3 + appear * 0.7);
+                    }
+                    // フラッシュ: ease-in → peak
+                    bgMat.uniforms.u_flash.value = ease * 0.7;
+                    if (bloom) bloom.strength = 0.8 + ease * 2.5;
                 }
-                if (et >= 0.6) bgMat.uniforms.u_flash.value = Math.max(0, bgMat.uniforms.u_flash.value - dt * 2);
-                if (et >= 0.5 && et < 1.5) { bDot.position.x += ((-1.2 * unit) - bDot.position.x) * 0.04; wDot.position.x += ((1.2 * unit) - wDot.position.x) * 0.04; }
-                if (et >= 1.0 && et < 1.05) {
-                    sqBorder.style.boxShadow = '0 0 20px rgba(255,255,255,0.8), inset 0 0 10px rgba(255,255,255,0.4)';
+                // 6球完全非表示
+                if (et >= 0.75 && et < 0.8) {
+                    cmyP.forEach(p => p.visible = false);
+                    rgbP.forEach(p => p.visible = false);
+                    bDot.scale.setScalar(1.0);
+                    wDot.scale.setScalar(1.0);
                 }
+
+                // Step C (0.75-1.5s): フラッシュ減衰 — 指数減衰でリアルに
+                if (et >= 0.75) {
+                    const decay = Math.exp(-(et - 0.75) * 3.0); // exponential decay
+                    bgMat.uniforms.u_flash.value = 0.7 * decay;
+                    if (bloom) bloom.strength = Math.max(0, 3.3 * decay);
+                }
+
+                // Step D (0.75-2.0s): bDot/wDotが定位置へ滑らかに移動
+                if (et >= 0.75 && et < 2.0) {
+                    const t2 = (et - 0.75) / 1.25;
+                    const ease = 1 - Math.pow(1 - t2, 2); // ease-out quad
+                    bDot.position.x += ((-1.2 * unit) - bDot.position.x) * (0.02 + ease * 0.06);
+                    wDot.position.x += ((1.2 * unit) - wDot.position.x) * (0.02 + ease * 0.06);
+                }
+
+                // Step E (1.0-1.1s): 枠グロー（衝撃波の余韻）
+                if (et >= 1.0 && et < 1.1) {
+                    const t2 = (et - 1.0) / 0.1;
+                    const glow = Math.sin(t2 * Math.PI); // 0→1→0のパルス
+                    sqBorder.style.boxShadow = '0 0 ' + (glow * 25) + 'px rgba(255,255,255,' + (glow * 0.8) + '), inset 0 0 ' + (glow * 12) + 'px rgba(255,255,255,' + (glow * 0.4) + ')';
+                }
+                if (et >= 1.1) {
+                    sqBorder.style.boxShadow = 'none';
+                }
+
+                // Step F (2.5-3.0s): DUALITY移行前の「静」— bloom完全消灯、呼吸の間
+                if (et >= 2.5) {
+                    if (bloom) bloom.strength = Math.max(0, bloom.strength - dt * 0.5);
+                }
+
                 if (et >= 3.0) { phase = PH.DUALITY; progPaused = false; }
 
                 // ═══ PHASE 2: DUALITY (30→50%) ═══
             } else if (phase === PH.DUALITY) {
                 updateWin95Status('Resolving duality conflict...');
                 if (bloom) bloom.strength = 0;
-                renderer.setClearColor(0x808080, 1.0); // 透明背景防止
+                // 背景: teal(#008080) → grey(#808080) へグラデーション遷移
+                const dualT = (prog - 30) / 20; // 0→1
+                const bgR = Math.round(0x00 + (0x80 - 0x00) * dualT);
+                const bgG = Math.round(0x80 + (0x80 - 0x80) * dualT);
+                const bgB = Math.round(0x80 + (0x80 - 0x80) * dualT);
+                renderer.setClearColor(new THREE.Color(bgR / 255, bgG / 255, bgB / 255), 1.0);
                 const t = (prog - 30) / 20;
                 // Black and white dots accelerate toward center
                 const targetX_b = -2.5 * unit + t * 2.4 * unit; // approaches center
@@ -1754,6 +1980,10 @@ function renderPhase1() {
                 const stretchFactor = 1.0 + Math.max(0, 1.0 - dist / (4 * unit)) * 0.3;
                 bDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
                 wDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
+                // bDot/wDotを距離に応じてグレーに遷移（近づくほどグレーに）
+                const greyMix = Math.pow(t, 2.0); // ease-in: 後半で急激にグレー化
+                bDotMat.uniforms.u_greyMix.value = greyMix;
+                wDotMat.uniforms.u_greyMix.value = greyMix;
                 // 背景は純白/純黒のまま（u_grey更新なし）
                 // u_grey=0のままなのでbayer/quantize16ディザリングは発火しない
                 bgMat.uniforms.u_grey.value = 0.0;
@@ -1765,331 +1995,254 @@ function renderPhase1() {
                 eventTimer += dt;
                 const et = eventTimer;
 
-                // Step 1 (0-0.3s): 衝突フラッシュ + カメラシェイク + 色収差
-                if (et < 0.3) {
+                // Step 1 (0-0.5s): 衝突フラッシュ + カメラシェイク + 色収差（イージング減衰付き）
+                if (et < 0.5) {
                     updateWin95Status('⚠ DIMENSION SHIFT DETECTED');
-                    const t2 = et / 0.3;
-                    bDot.position.x += (0 - bDot.position.x) * 0.3;
-                    wDot.position.x += (0 - wDot.position.x) * 0.3;
-                    bgMat.uniforms.u_flash.value = t2 * t2;
-                    if (bloom) bloom.strength = 1.0 + t2 * 4.0;
-                    // DOMシェイク: canvasのtransformを毎フレームランダムオフセット(±5px)
-                    const tx = Math.round((Math.random() - 0.5) * 10);
-                    const ty = Math.round((Math.random() - 0.5) * 10);
+                    const t2 = et / 0.5;
+                    // 球が衝突点へ — ease-out cubic で急接近→減速
+                    const collideEase = 1 - Math.pow(1 - Math.min(t2 * 2, 1), 3);
+                    bDot.position.x += (0 - bDot.position.x) * (0.1 + collideEase * 0.25);
+                    wDot.position.x += (0 - wDot.position.x) * (0.1 + collideEase * 0.25);
+                    // フラッシュ: 急激ピーク → 減衰（指数カーブ）
+                    const flashPeak = t2 < 0.3 ? Math.pow(t2 / 0.3, 2) : Math.exp(-(t2 - 0.3) * 4.0);
+                    bgMat.uniforms.u_flash.value = flashPeak;
+                    // bloom: ピークから滑らかに減衰
+                    if (bloom) bloom.strength = 1.0 + flashPeak * 4.0;
+                    // DOMシェイク: 強度を指数減衰（最初が最も激しく、自然に収まる）
+                    const shakeDecay = Math.exp(-t2 * 3.5);
+                    const shakeAmp = 10 * shakeDecay;
+                    const tx = Math.round((Math.random() - 0.5) * shakeAmp);
+                    const ty = Math.round((Math.random() - 0.5) * shakeAmp);
                     renderer.domElement.style.transform = `translate(${tx}px,${ty}px)`;
                     singShakeFrame++;
-                    console.log('[SHAKE] frame '+singShakeFrame+': tx='+tx+'px ty='+ty+'px');
-                    // 色収差: ShaderPassのu_caを最大0.04にジャンプ（画面幅4%のRGB分離）
+                    // 色収差: ピーク後に滑らかに消える
                     if (caPass) {
-                        const t2ca = et / 0.3;
-                        const caStrength = (1 - t2ca * t2ca) * 0.04;
-                        caPass.uniforms.u_ca.value = caStrength;
+                        const caPeak = t2 < 0.2 ? Math.pow(t2 / 0.2, 2) : Math.exp(-(t2 - 0.2) * 5.0);
+                        caPass.uniforms.u_ca.value = caPeak * 0.04;
                     }
                 }
-
-                // Step 2 (0.3-0.8s): グリッチ — win95-mainジッター + flash点滅
-                if (et >= 0.3 && et < 0.8) {
-                    const t2 = (et - 0.3) / 0.5;
-                    bDot.visible = false; wDot.visible = false;
-                    bgMat.uniforms.u_flash.value = Math.abs(Math.sin(et * 25)) * 0.6 * (1 - t2);
-
-                    const win95 = document.getElementById('win95-main');
-                    if (win95) {
-                        const jx = (Math.random() - 0.5) * 14 * (1 - t2);
-                        const jy = (Math.random() - 0.5) * 6 * (1 - t2);
-                        win95.style.transform = `translate(${jx}px, ${jy}px)`;
-                    }
-                    if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 30)) * 1.5;
-                    updateWin95Status('⚠ REALITY.SYS CORRUPTED');
-                }
-                // シェイク終了: canvasをリセット + CA解除
-                if (et >= 0.3 && et < 0.35) {
+                // シェイクリセット（0.5sでスムーズに止まっているはずだが念のため）
+                if (et >= 0.5 && et < 0.55) {
                     renderer.domElement.style.transform = 'translate(0,0)';
                     if (caPass) caPass.uniforms.u_ca.value = 0.0;
                 }
 
-                // Step 3 (0.8s〜): 物理パラメータ解放 (一回だけ)
-                if (et >= 0.8 && !singDimSwitched) {
+                // Step 2 (0.5-1.0s): グリッチ — 球フェードアウト + win95ジッター減衰 + flash点滅
+                if (et >= 0.5 && et < 1.0) {
+                    const t2 = (et - 0.5) / 0.5;
+                    const decay = 1 - t2 * t2; // 二次減衰 — 自然に収まる
+                    // 球をフェードアウト（突然消さずにスケールダウン）
+                    const sphereFade = Math.max(0.01, 1 - t2 * 1.5);
+                    bDot.scale.setScalar(sphereFade);
+                    wDot.scale.setScalar(sphereFade);
+                    if (t2 > 0.6) { bDot.visible = false; wDot.visible = false; }
+                    // flash点滅 — 周波数を落としながら減衰
+                    bgMat.uniforms.u_flash.value = Math.abs(Math.sin(et * (25 - t2 * 10))) * 0.5 * decay;
+
+                    const win95 = document.getElementById('win95-main');
+                    if (win95) {
+                        // ジッター振幅も減衰
+                        const jx = (Math.random() - 0.5) * 14 * decay;
+                        const jy = (Math.random() - 0.5) * 6 * decay;
+                        win95.style.transform = `translate(${jx}px, ${jy}px)`;
+                    }
+                    if (bloom) bloom.strength = 1.5 + Math.abs(Math.sin(et * 20)) * 1.2 * decay;
+                    updateWin95Status('⚠ REALITY.SYS CORRUPTED');
+                }
+
+                // Step 3 (1.0s〜): 物理パラメータ解放 (一回だけ) — グリッチ収束後に
+                if (et >= 1.0 && !singDimSwitched) {
                     singDimSwitched = true;
-                    // pixelRatio 0.5 → デバイスネイティブ（setSizeは呼ばない）
+                    // pixelRatio 0.5 → デバイスネイティブ（解像度の次元が変わる）
                     renderer.setPixelRatio(window.devicePixelRatio);
                     bgMat.uniforms.u_pixelSize.value = 1.0;
                     if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
 
+                    // Win95 UIはそのまま残す（101%で飲み込まれるまで）
                     const win95 = document.getElementById('win95-main');
                     if (win95) {
                         win95.style.transform = 'translate(0px, 0px)';
-                        win95.querySelectorAll('*').forEach(el => {
-                            const ff = el.style.fontFamily;
-                            if (ff && (ff.includes('MS Sans Serif') || ff.includes('Tahoma'))) {
-                                el.style.fontFamily = "'Courier New', 'Lucida Console', monospace";
-                                el.style.fontWeight = '300';
-                                el.style.letterSpacing = '0.08em';
-                            }
-                        });
                     }
                     updateWin95Status('RELOADING DIMENSION...');
                 }
 
-                // Step 4 (0.85-1.5s): UIフリッカー → 安定
-                if (et >= 0.85 && et < 1.5) {
-                    const t2 = (et - 0.85) / 0.65;
-                    bgMat.uniforms.u_flash.value = Math.abs(Math.sin(et * 18)) * 0.25 * (1 - t2);
-                    if (bloom) bloom.strength = 1.5 - t2 * 0.5;
+                // Step 4 (1.0-1.8s): フリッカー → 安定 + 背景グレー→黒（減衰を滑らかに）
+                if (et >= 1.0 && et < 1.8) {
+                    const t2 = (et - 1.0) / 0.8;
+                    const flickerFreq = 18 - t2 * 10;
+                    const flickerAmp = Math.exp(-t2 * 2.5); // 指数減衰
+                    bgMat.uniforms.u_flash.value = Math.abs(Math.sin(et * flickerFreq)) * 0.25 * flickerAmp;
+                    bgMat.uniforms.u_grey.value = t2 * 2.0; // 0→2 (白/黒混合 → 完全黒)
+                    if (bloom) bloom.strength = 1.5 * flickerAmp + 0.5;
                 }
 
-                // Step 5 (1.5-1.7s): Flash peak + grey sphere出現
-                if (et >= 1.5 && et < 1.7) {
+                // Step 5 (1.8-2.5s): greySphere出現 — 黒背景に球がふわっと現れる + ハロー
+                if (et >= 1.8 && et < 2.5) {
+                    const t2 = (et - 1.8) / 0.7;
+                    const ease = 1 - Math.pow(1 - t2, 2); // ease-out quad
                     bDot.visible = false; wDot.visible = false;
-                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - (et - 1.5) / 0.2);
-                    bgMat.uniforms.u_grey.value = 1.0;
-                    bDot.visible = true; bDot.position.set(0, 0, 0.5);
-                    bDot.scale.setScalar(1.0);
+                    bgMat.uniforms.u_grey.value = 2.0; // 黒維持
+                    bgMat.uniforms.u_flash.value = 0;
+                    greySphere.visible = true;
+                    greySphere.position.set(0, 0, 0.5);
+                    greySphere.scale.setScalar(0.1 + ease * 0.9);
+                    greySphereMat.uniforms.u_opacity.value = ease;
+                    greySphereMat.uniforms.u_glow.value = 0.08;
+                    haloPlane.visible = true;
+                    haloMat.uniforms.u_glow.value = ease * 0.05;
+                    if (bloom) bloom.strength = 0.3 + ease * 0.3;
                 }
 
-                // Step 6 (1.5-2.2s): grey sphere脈動
-                if (et >= 1.5 && et < 2.2) {
-                    const t2 = (et - 1.5) / 0.7;
-                    bDot.visible = true;
-                    bDot.scale.setScalar(1.0 + Math.sin(t2 * Math.PI * 3) * 0.2 * (1 - t2));
-                    if (bloom) bloom.strength = 1.0 + Math.abs(Math.sin(t2 * Math.PI * 3)) * 1.5 * (1 - t2);
+                // Step 6 (2.5-4.5s): greySphere 静かに呼吸（デモPhase1と同じ）
+                if (et >= 2.5 && et < 4.5) {
+                    const t2 = (et - 2.5) / 2.0;
+                    bgMat.uniforms.u_grey.value = 2.0;
+                    greySphere.visible = true;
+                    greySphereMat.uniforms.u_opacity.value = 1.0;
+                    greySphere.rotation.y = et * 0.2;
+                    greySphere.rotation.x = Math.sin(et * 0.3) * 0.05;
+                    const breath = Math.sin(et * 1.5) * 0.008;
+                    greySphere.scale.setScalar(1.0 + breath);
+                    greySphereMat.uniforms.u_glow.value = t2 / 4.0 * 0.08;
+                    haloMat.uniforms.u_glow.value = 0.05 + t2 * 0.03;
+                    if (bloom) bloom.strength = 0.4;
                 }
 
-                // Step 7 (2.0-3.0s): Yin-Yang fade-in
-                if (et >= 2.0 && et < 3.0) {
-                    const t2 = (et - 2.0) / 1.0;
-                    bDot.visible = false;
-                    yyPlane.visible = true;
-                    yyMat.uniforms.u_alpha.value = Math.min(1.0, t2 * 1.5);
-                    yyMat.uniforms.u_rot.value = globalTime * 1.5;
-                    yyMat.uniforms.u_grey.value = 0.0;
-                    if (bloom) bloom.strength = 1.5;
-                }
-
-                // Step 8 (3.0-3.5s): Yin-Yang → grey morphing
-                if (et >= 3.0 && et < 3.5) {
-                    const t2 = (et - 3.0) / 0.5;
-                    yyPlane.visible = true;
-                    yyMat.uniforms.u_grey.value = t2;
-                    yyMat.uniforms.u_rot.value = globalTime * (1.5 + t2 * 8.0);
-                    yyMat.uniforms.u_alpha.value = 1.0 - t2 * 0.8;
-                    if (t2 > 0.4) {
-                        const gt = (t2 - 0.4) / 0.6;
-                        bDot.visible = true;
-                        bDot.position.set(0, 0, 0.5);
-                        if (!bDot.userData.greySet) {
-                            bDot.material.fragmentShader = [
-                                'precision highp float;',
-                                'varying vec3 vNormal;',
-                                'uniform float u_time;',
-                                'void main(){',
-                                '  vec3 N = normalize(vNormal);',
-                                '  float r = length(gl_FragCoord.xy / 400.0 - vec2(1.0));',
-                                '  float ring = sin(r * 60.0 - u_time * 2.0) * 0.5 + 0.5;',
-                                '  float grey = 0.45 + ring * 0.08;',
-                                '  float fresnel = pow(1.0 - max(dot(N, vec3(0.0,0.0,1.0)), 0.0), 3.0);',
-                                '  vec3 rainbow = vec3(',
-                                '    0.5+0.5*sin(fresnel*8.0+u_time),',
-                                '    0.5+0.5*sin(fresnel*8.0+u_time+2.094),',
-                                '    0.5+0.5*sin(fresnel*8.0+u_time+4.189)',
-                                '  );',
-                                '  vec3 col = mix(vec3(grey), rainbow, fresnel * 0.25);',
-                                '  gl_FragColor = vec4(col, 1.0);',
-                                '}'
-                            ].join('\n');
-                            bDot.material.needsUpdate = true;
-                            bDot.userData.greySet = true;
-                        }
-                        bDot.scale.setScalar(gt * 1.0);
-                        if (bloom) bloom.strength = 1.0 + gt * 0.5;
-                    }
-                    const shake = Math.sin(et * 30) * 0.015 * (1 - t2);
-                    if (yyPlane.visible) yyPlane.position.x = shake;
-                    if (bloom) bloom.strength = 1.5 + t2 * 2.0;
-                }
-
-                // Step 9 (3.5-4.0s): Yin-Yang飲み込まれ消去 → tunnel born
-                if (et >= 3.5 && et < 4.0) {
-                    const t2 = (et - 3.5) / 0.5;
-                    // 陰陽マーク: 縮小しながらフェードアウト（ワープトンネルに飲み込まれる）
-                    yyPlane.visible = true;
-                    yyPlane.position.x = 0;
-                    const shrink = Math.max(0.001, 1.0 - t2 * t2);
-                    yyPlane.scale.set(shrink, shrink, 1);
-                    yyMat.uniforms.u_alpha.value = Math.max(0, 0.2 * (1.0 - t2 * 2.0));
-                    if (Math.floor(globalTime * 6) !== Math.floor((globalTime - dt) * 6)) {
-                        console.log('[YINYANG] fadeOut progress=' + t2.toFixed(1));
-                    }
-                    bDot.userData.greySet = false;
-                    bgMat.uniforms.u_flash.value = Math.max(0, 1.0 - t2);
+                // Step 7 (4.5-6.5s): 虹フレネルにじみ → トンネルの気配（デモPhase2+3初期）
+                if (et >= 4.5 && et < 6.5) {
+                    const t2 = (et - 4.5) / 2.0;
+                    const ease = t2 * t2 * t2; // ease-in cubic
+                    bgMat.uniforms.u_grey.value = 2.0;
+                    greySphere.rotation.y = et * 0.2;
+                    greySphere.rotation.x = Math.sin(et * 0.3) * 0.05;
+                    haloMat.uniforms.u_glow.value = 0.08 + ease * 0.15;
+                    greySphereMat.uniforms.u_glow.value = 0.08 + ease * 0.25;
+                    greySphereMat.uniforms.u_rainbow.value = ease * 0.3;
+                    const pulse = 1 + Math.sin(et * 2) * 0.01 * (0.3 + ease);
+                    greySphere.scale.setScalar(pulse);
+                    // トンネルの気配: 球の裏からごくうっすら
                     tunnelPlane.visible = true;
-                    tunnelMat.uniforms.u_radius.value = 0.05 + t2 * 0.15;
-                    tunnelMat.uniforms.u_alpha.value = t2;
-                    tunnelMat.uniforms.u_progress.value = t2 * 0.2;
-                    if (bloom) bloom.strength = 4.0 * (1 - t2) + 1.5;
+                    tunnelMat.uniforms.u_radius.value = ease * 0.04;
+                    tunnelMat.uniforms.u_alpha.value = ease * 0.15;
+                    tunnelMat.uniforms.u_depth.value = ease * 0.1;
+                    tunnelMat.uniforms.u_ringDensity.value = 3.0;
+                    tunnelMat.uniforms.u_scrollMul.value = 0.2;
+                    if (bloom) bloom.strength = 0.6 + ease * 0.5;
+                    updateWin95Status('Entering warp tunnel...');
                 }
 
-                // Step 10 (4.0-5.0s): Tunnel安定成長
-                if (et >= 4.0) {
-                    // 陰陽マーク完全非表示 + スケールリセット
-                    yyPlane.visible = false;
-                    yyPlane.scale.set(1, 1, 1);
-                    const t2 = Math.min((et - 4.0) / 1.0, 1.0);
-                    const pulse = 1 + Math.sin(et * 6) * 0.04;
-                    tunnelMat.uniforms.u_radius.value = (0.2 + t2 * 0.05) * pulse;
-                    tunnelMat.uniforms.u_alpha.value = 1.0;
-                    tunnelMat.uniforms.u_progress.value = 0.2 + t2 * 0.1;
-                    if (bloom) bloom.strength = 1.5;
-                }
+                if (et >= 6.5) { phase = PH.WARP_GROW; progPaused = false; }
 
-                if (et >= 5.0) { phase = PH.WARP_GROW; progPaused = false; }
-
-                // ═══ PHASE 4: WARP_GROW (50→75%) ═══
+                // ═══ PHASE 4: WARP_GROW (50→75%) — トンネルの気配、球の裏からにじみ出る ═══
             } else if (phase === PH.WARP_GROW) {
-                // Phase C初期化 (一回だけ実行)
                 if (!phaseCInited) {
                     phaseCInited = true;
-
-                    // Win95 UI渦巻き吸い込み開始（TV縦線禁止 — 螺旋+縮小+中心移動）
-                    warpGrowStartTime = globalTime;
-                    const win95 = document.getElementById('win95-main');
-                    if (win95) {
-                        win95.style.transition = 'none';
-                        win95.style.transformOrigin = '50% 50%';
-                        // 初期中心座標をキャッシュ（毎フレームBoundingClientRectが変わるため）
-                        const r0 = win95.getBoundingClientRect();
-                        win95VortexOriginX = r0.left + r0.width / 2;
-                        win95VortexOriginY = r0.top + r0.height / 2;
-                    }
-                    // タスクバーもフェードアウト
-                    if (wrap) {
-                        const allDivs = wrap.querySelectorAll('div');
-                        allDivs.forEach(el => {
-                            if (el.style.position === 'absolute' && (el.style.bottom === '0px' || el.style.bottom === '0')) {
-                                el.style.transition = 'opacity 0.6s ease-out';
-                                el.style.opacity = '0';
-                                setTimeout(() => { if (el) el.style.display = 'none'; }, 700);
-                            }
-                        });
-                    }
-
-                    // Phase C プログレスバーを表示
-                    const pcBar = document.getElementById('phase-c-bar-wrap');
-                    if (pcBar) {
-                        pcBar.style.display = 'block';
-                        pcBar.style.opacity = '0';
-                        pcBar.style.transition = 'opacity 0.8s ease-in';
-                        setTimeout(() => { if (pcBar) pcBar.style.opacity = '1'; }, 100);
-                    }
-
-                    // bgPlaneを非表示にしてwarpTunnelPlaneに切り替え
                     bgPlane.visible = false;
-                    renderer.setClearColor(0x000000, 1);
-                    warpTunnelPlane.visible = true;
-                    warpTunnelMat.uniforms.u_alpha.value = 0.0;
-                    warpTunnelMat.uniforms.u_direction.value = 1.0;  // WARP_GROW: 外向き
-                    warpTunnelMat.uniforms.u_speed.value = 0.06;
-                    warpTunnelMat.uniforms.u_progress.value = 0.0;
-                    scissor.enabled = false; // sq-border が display:none になるので scissor を無効化
-                    renderer.setScissorTest(false);
-                    renderer.setViewport(0, 0, W, H);
-                    camera.left = -camW; camera.right = camW;
-                    camera.top = camH; camera.bottom = -camH;
-                    camera.updateProjectionMatrix();
+                    tunnelPlane.visible = true;
                 }
+                updateWin95Status('Travelling through warp tunnel...');
+                const wt = (prog - 50) / 25; // 0→1
+                bgMat.uniforms.u_grey.value = 2.0; // 黒維持
+                const ease = wt * wt;
 
-                // ワープトンネル alpha/progress をprogに応じてフェードイン
-                const nrAlpha = Math.min(1.0, (prog - 50) / 15);
-                const warpProg = (prog - 50) / 25;
-                warpTunnelMat.uniforms.u_alpha.value = nrAlpha;
-                warpTunnelMat.uniforms.u_progress.value = warpProg;
-                console.log('[WARP] ringCount=9 direction=outward prog='+prog.toFixed(0)+'%');
+                // トンネル: 球の裏からにじみ出る（デモPhase3と同じ値）
+                tunnelMat.uniforms.u_radius.value = 0.04 + ease * 0.18;
+                tunnelMat.uniforms.u_alpha.value = ease * 0.35;
+                tunnelMat.uniforms.u_depth.value = ease * 0.2;
+                tunnelMat.uniforms.u_ringDensity.value = 3.0 + ease * 2.0;
+                tunnelMat.uniforms.u_scrollMul.value = 0.2 + ease * 0.3;
 
-                updateWin95Status('Loading warp tunnel...');
-                const wt = (prog - 50) / 25;
-                const tR = 0.2 + wt * 0.35;
-                tunnelMat.uniforms.u_radius.value = tR;
-                tunnelMat.uniforms.u_progress.value = 0.2 + wt * 0.3;
-                tunnelMat.uniforms.u_alpha.value = 0.8 + wt * 0.2;
-                if (bloom) bloom.strength = 1.5 + wt * 1.5;
+                // ハロー（デモPhase3と同じ）
+                haloPlane.visible = true;
+                haloMat.uniforms.u_glow.value = 0.23 + wt * 0.05;
 
-                // Win95 UI渦巻き吸い込み: WARP_GROW開始から1.0秒間
-                // scaleX/scaleY縦線禁止 — 螺旋（回転+縮小+中心へ移動）
-                if (warpGrowStartTime >= 0) {
-                    const vortElapsed = globalTime - warpGrowStartTime;
-                    const vortDur = 1.0;
-                    const win95v = document.getElementById('win95-main');
-                    if (win95v && win95v.style.display !== 'none') {
-                        if (vortElapsed < vortDur) {
-                            const vt = vortElapsed / vortDur;
-                            const ease3 = vt * vt * vt;
-                            // 画面中心への移動量
-                            const cx = W / 2, cy = H / 2;
-                            const movX = (cx - win95VortexOriginX) * ease3;
-                            const movY = (cy - win95VortexOriginY) * ease3;
-                            // 回転: 0 → 540° (1.5回転) — 渦巻き
-                            const rotDeg = ease3 * 540;
-                            // 均一縮小: 1→0 (縦線にならない)
-                            const scl = Math.max(0, 1 - ease3 * 1.05);
-                            win95v.style.transform = `translate(${movX}px, ${movY}px) rotate(${rotDeg}deg) scale(${scl})`;
-                            win95v.style.opacity = String(Math.max(0, 1 - ease3 * 1.4));
-                            win95v.style.filter = `blur(${ease3 * 4}px) brightness(${1 + ease3 * 2})`;
-                            console.log('[VORTEX] vt='+vt.toFixed(2)+' rot='+rotDeg.toFixed(0)+'deg scale='+scl.toFixed(3)+' movX='+movX.toFixed(0)+'px opacity='+win95v.style.opacity);
-                        } else {
-                            win95v.style.display = 'none';
-                            warpGrowStartTime = -1;
-                        }
-                    }
-                }
+                // 球: まだほぼ縮まない、虹強化
+                greySphere.visible = true;
+                greySphere.rotation.y += dt * 0.2;
+                greySphereMat.uniforms.u_glow.value = 0.33 + wt * 0.1;
+                greySphereMat.uniforms.u_rainbow.value = 0.3 + wt * 0.2;
+                const shrink = 1.0 - ease * 0.08;
+                const pulse = 1 + Math.sin(globalTime * 2) * 0.01;
+                greySphere.scale.setScalar(shrink * pulse);
+                if (bloom) bloom.strength = 0.2 + wt * 0.3; // max 0.5（bloom過多でコントラスト潰れ防止）
 
                 if (prog >= 75) { phase = PH.EVENT_BREACH; eventTimer = 0; prog = 75; showProg(75); progPaused = true; }
 
-                // ═══ PHASE 5: EVENT_BREACH (75% — 3s fixed) ═══
+                // ═══ PHASE 5: EVENT_BREACH (75% — 4s fixed) — トンネル成長（デモPhase4） ═══
             } else if (phase === PH.EVENT_BREACH) {
                 updateWin95Status('Breaching reality boundary...');
                 eventTimer += dt;
                 const et = eventTimer;
-                if (et < 1.0) {
-                    const t2 = et;
-                    sqBorder.style.borderColor = 'rgba(255,255,255,' + (0.1 + t2 * 0.3) + ')';
-                    const g = 40 + t2 * 40;
-                    sqBorder.style.boxShadow = '0 0 ' + g + 'px 20px rgba(255,100,255,0.25),0 0 ' + (g * 1.5) + 'px 40px rgba(100,255,255,0.15)';
-                    tunnelMat.uniforms.u_radius.value = 0.55 + t2 * 0.05;
-                    tunnelMat.uniforms.u_alpha.value = 1.0;
-                }
-                if (et >= 1.0 && et < 2.0) {
-                    const t2 = (et - 1.0);
-                    barWrap.style.boxShadow = '0 0 ' + (t2 * 20) + 'px rgba(255,255,255,' + (t2 * 0.4) + ')';
-                    sqBorder.style.borderColor = 'transparent';
-                }
-                if (et >= 2.0) { if (logoEl) { const t2 = (et - 2.0); logoEl.style.filter = 'blur(' + (t2 * 3) + 'px) brightness(' + (1 + t2 * 0.5) + ')'; } }
-                // 残像エフェクト
-                if (logoEl) {
-                    const breachAt = Math.min(et / 3.0, 1.0);
-                    logoEl.style.filter = `drop-shadow(0 0 ${8 + breachAt * 20}px #00ff44) drop-shadow(${breachAt * -8}px 0 ${breachAt * 12}px rgba(0,255,68,0.4))`;
-                }
-                if (bloom) bloom.strength = 3.5;
-                if (et >= 3.0) { phase = PH.CONSUME; progPaused = false; sqBorder.style.borderColor = 'transparent'; }
+                const p = Math.min(et / 4.0, 1.0); // 4秒かけて
+                const ease = 1 - Math.pow(1 - p, 2);
+                bgMat.uniforms.u_grey.value = 2.0; // 背景黒維持
 
-                // ═══ PHASE 6: CONSUME (75→101%) — ビッグクランチ: 全て内向きに収縮 ═══
+                // トンネル成長（デモPhase4と同じ値）
+                tunnelPlane.visible = true;
+                tunnelMat.uniforms.u_radius.value = 0.22 + ease * 0.20;
+                tunnelMat.uniforms.u_alpha.value = 0.35 + ease * 0.35;
+                tunnelMat.uniforms.u_depth.value = 0.2 + ease * 0.4;
+                tunnelMat.uniforms.u_ringDensity.value = 5.0 + ease * 3.0;
+                tunnelMat.uniforms.u_scrollMul.value = 0.5 + ease * 0.5;
+
+                // 球: ゆっくり縮み + 虹強化
+                greySphere.visible = true;
+                greySphere.rotation.y += dt * 0.15;
+                const shrinkEase = p * p;
+                greySphereMat.uniforms.u_glow.value = 0.43 - shrinkEase * 0.1;
+                greySphereMat.uniforms.u_rainbow.value = 0.5 + p * 0.3;
+                greySphere.scale.setScalar((0.92 - shrinkEase * 0.15) * (1 + Math.sin(globalTime * 2.5) * 0.01));
+                // ハロー
+                haloPlane.visible = true;
+                haloMat.uniforms.u_glow.value = 0.28 - shrinkEase * 0.08;
+
+                // スクエア境界のグロー（UI演出）
+                const g = 40 + p * 40;
+                sqBorder.style.borderColor = 'rgba(255,255,255,' + (0.05 + p * 0.15) + ')';
+                sqBorder.style.boxShadow = '0 0 ' + g + 'px 15px rgba(255,100,255,0.2),0 0 ' + (g * 1.5) + 'px 30px rgba(100,255,255,0.15)';
+                if (logoEl) {
+                    const breachAt = p;
+                    logoEl.style.filter = `drop-shadow(0 0 ${8 + breachAt * 12}px #00ff44)`;
+                }
+                if (bloom) bloom.strength = 0.2 + ease * 0.3; // max 0.5（デモ準拠）
+
+                if (et >= 4.0) { phase = PH.CONSUME; progPaused = false; sqBorder.style.borderColor = 'transparent'; }
+
+                // ═══ PHASE 6: CONSUME (75→101%) — スクエア内でトンネル加速、光の先へ ═══
             } else if (phase === PH.CONSUME) {
-                updateWin95Status('Consuming reality... do not turn off');
-                const at = (prog - 75) / 26;
-                tunnelMat.uniforms.u_radius.value = 0.6 + at * 0.35;
-                tunnelMat.uniforms.u_progress.value = 0.5 + at * 0.5;
-                tunnelMat.uniforms.u_alpha.value = 1.0;
-                // ワープトンネル: 方向反転（内向き）+ 加速（全て内向きに吸い込まれる）
-                warpTunnelMat.uniforms.u_direction.value = -1.0;  // 内向きに反転
-                warpTunnelMat.uniforms.u_progress.value = at;     // 0→1で加速
-                warpTunnelMat.uniforms.u_alpha.value = 1.0;
-                console.log('[WARP] ringCount=9 direction=inward prog='+prog.toFixed(0)+'%');
+                updateWin95Status('Approaching the light...');
+                const at = (prog - 75) / 26; // 0→1
+                const consumeEase = 1 - Math.pow(1 - Math.min(at, 1.0), 2);
+                bgMat.uniforms.u_grey.value = 2.0; // 黒維持
+
+                // 球フェードアウト（デモPhase5）
+                const shrinkP = at * at;
+                greySphere.visible = at < 0.5;
+                if (at < 0.5) {
+                    greySphere.scale.setScalar(Math.max(0.05, 0.77 * (1 - shrinkP * 0.8)));
+                    greySphereMat.uniforms.u_opacity.value = Math.max(0, 1.0 - shrinkP * 1.2);
+                    greySphereMat.uniforms.u_glow.value = 0.33 * (1 - at);
+                    greySphereMat.uniforms.u_rainbow.value = 0.8;
+                }
+
+                // ハロー減衰（球が消えるにつれて）
+                haloPlane.visible = at < 0.5;
+                if (at < 0.5) haloMat.uniforms.u_glow.value = 0.20 * (1 - shrinkP);
+
+                // トンネル完成へ（デモPhase5と同じ値 + 呼吸アニメ）
+                const consumeBreath = Math.sin(globalTime * 1.2) * 0.02;
+                tunnelMat.uniforms.u_radius.value = 0.42 + consumeEase * 0.18 + consumeBreath * consumeEase;
+                tunnelMat.uniforms.u_alpha.value = 0.70 + consumeEase * 0.25;
+                tunnelMat.uniforms.u_depth.value = 0.6 + consumeEase * 0.3;
+                tunnelMat.uniforms.u_ringDensity.value = 8.0 + consumeEase * 3.0;
+                tunnelMat.uniforms.u_scrollMul.value = 1.0 + consumeEase * 0.4;
+                // u_progress removed — new tunnel uses u_depth/u_ringDensity/u_scrollMul
+
+                // スクエア枠がトンネルの光で照らされる
                 const g = 40 + at * 40;
                 sqBorder.style.boxShadow = '0 0 ' + g + 'px 15px rgba(255,100,255,0.2),0 0 ' + (g * 1.5) + 'px 30px rgba(100,255,255,0.15)';
-                if (bloom) bloom.strength = 3.5 + at * 3;
-                // 残像エフェクト
-                if (logoEl) {
-                    logoEl.style.filter = `drop-shadow(0 0 ${8 + at * 20}px #00ff44) drop-shadow(${at * -8}px 0 ${at * 12}px rgba(0,255,68,0.4))`;
-                }
+                if (bloom) bloom.strength = 0.3 + at * 0.2; // max 0.5（デモ準拠）
+
                 if (prog >= 101 && !freezeActive) {
                     prog = 101; showProg(101); progPaused = true;
                     freezeActive = true;
@@ -2103,9 +2256,14 @@ function renderPhase1() {
                 eventTimer += dt;
                 const et = eventTimer;
                 updateWin95Status('Shutting down current dimension...');
-                tunnelMat.uniforms.u_radius.value = 0.95 + Math.min(et, 2.0) * 2.0; // expand beyond square
-                tunnelMat.uniforms.u_progress.value = 1.0;
+                greySphere.visible = false; // 球は既に消えているはずだが念のため
+                haloPlane.visible = false;  // ハロー消す
+                // Tunnel breathing at final form
+                tunnelMat.uniforms.u_radius.value = 0.60 + Math.sin(globalTime * 1.2) * 0.02;
                 tunnelMat.uniforms.u_alpha.value = 1.0;
+                tunnelMat.uniforms.u_depth.value = 0.9;
+                tunnelMat.uniforms.u_ringDensity.value = 11.0;
+                tunnelMat.uniforms.u_scrollMul.value = 1.4;
 
                 // Step 1 (0-0.5s): UI absorbed into center
                 if (et < 0.5) {
@@ -2121,19 +2279,26 @@ function renderPhase1() {
                         pcBarWrap.style.transform = `translateX(-50%) translateY(${ease * 60}px) scale(${Math.max(0.01, 1 - ease)})`;
                         pcBarWrap.style.opacity = String(Math.max(0, 1 - ease * 2));
                     }
-                    // UIスパゲッティ: win95-mainを引き伸ばして渦吸い込み
+                    // Win95ウィンドウ: トンネル中心に螺旋吸い込み（101%で現実がトンネルに飲み込まれる）
                     const win95s = document.getElementById('win95-main');
                     if (win95s && win95s.style.display !== 'none' && win95s.style.opacity !== '0') {
                         const ease3 = t2 * t2 * t2;
-                        const stretchX = 1.0 - ease3 * 0.85; // 横に縮む
-                        const stretchY = 1.0 + ease3 * 3.0;  // 縦に伸びる
-                        const rotate = ease3 * 180;           // 180°まで回転
-                        const translateX = ease3 * (Math.random() - 0.5) * 40;
-                        const translateY = ease3 * 80;        // 下方向に引き寄せ
-                        win95s.style.transform = `perspective(400px) translate(${translateX}px, ${translateY}px) rotate(${rotate}deg) scaleX(${stretchX}) scaleY(${stretchY})`;
-                        win95s.style.opacity = String(Math.max(0, 1 - ease3 * 1.5));
-                        win95s.style.filter = `blur(${ease3 * 3}px) brightness(${1 + ease3 * 2})`;
-                        win95s.style.transformOrigin = '50% 100%'; // 底辺を中心に
+                        // トンネル中心（sqBorderの中心）への移動
+                        const sqRect = sqBorder.getBoundingClientRect();
+                        const tunnelCX = sqRect.left + sqRect.width / 2;
+                        const tunnelCY = sqRect.top + sqRect.height / 2;
+                        const winRect = win95s.getBoundingClientRect();
+                        const winCX = winRect.left + winRect.width / 2;
+                        const winCY = winRect.top + winRect.height / 2;
+                        const movX = (tunnelCX - winCX) * ease3;
+                        const movY = (tunnelCY - winCY) * ease3;
+                        // 螺旋回転 + 均一縮小（トンネルに吸い込まれる）
+                        const rotDeg = ease3 * ease3 * 720; // 2回転の螺旋
+                        const scl = Math.max(0.01, 1 - ease3 * 1.05);
+                        win95s.style.transformOrigin = '50% 50%';
+                        win95s.style.transform = `translate(${movX}px, ${movY}px) rotate(${rotDeg}deg) scale(${scl})`;
+                        win95s.style.opacity = String(Math.max(0, 1 - ease3 * 1.4));
+                        win95s.style.filter = `blur(${ease3 * 6}px) brightness(${1 + ease3 * 3})`;
                     }
                 }
                 if (et >= 0.5 && et < 0.55) {
@@ -2144,6 +2309,17 @@ function renderPhase1() {
                     const win95hide = document.getElementById('win95-main');
                     if (win95hide) win95hide.style.display = 'none';
                     wrap.querySelectorAll('.p1-orb').forEach(o => o.style.display = 'none');
+                    // タスクバーも消す
+                    if (wrap) {
+                        wrap.querySelectorAll('div').forEach(el => {
+                            if (el.style.position === 'absolute' && (el.style.bottom === '0px' || el.style.bottom === '0')) {
+                                el.style.display = 'none';
+                            }
+                        });
+                    }
+                    // CRTスキャンラインも消す
+                    const scanlines = wrap.querySelector('div[style*="repeating-linear-gradient(0deg"]');
+                    if (scanlines) scanlines.style.display = 'none';
                     // Hide all non-tunnel 3D objects
                     bgPlane.visible = false;
                     fieldPlane.visible = false;
@@ -2151,10 +2327,18 @@ function renderPhase1() {
                     yyPlane.visible = false;
                     cmyP.forEach(p => p.visible = false);
                     rgbP.forEach(p => p.visible = false);
-                    // ワープリング: CONSUME内向きから外向きに反転して加速開始
+                    // scissor解除 → フルスクリーントンネルへ
+                    scissor.enabled = false;
+                    renderer.setScissorTest(false);
+                    renderer.setViewport(0, 0, W, H);
+                    camera.left = -camW; camera.right = camW;
+                    camera.top = camH; camera.bottom = -camH;
+                    camera.updateProjectionMatrix();
+                    // ワープリング: 外向きに加速開始
                     warpTunnelPlane.visible = true;
-                    warpTunnelMat.uniforms.u_direction.value = 1.0; // 外向きに反転
+                    warpTunnelMat.uniforms.u_direction.value = 1.0;
                     warpTunnelMat.uniforms.u_alpha.value = 1.0;
+                    warpTunnelMat.uniforms.u_speed.value = 0.06;
                     warpTunnelMat.uniforms.u_progress.value = 0.0;
                 }
 
@@ -2179,8 +2363,7 @@ function renderPhase1() {
                     scissor.y = Math.round(H / 2 - curH / 2);
                     scissor.w = Math.round(curW);
                     scissor.h = Math.round(curH);
-                    tunnelMat.uniforms.u_warpSpeed.value = 1.0 + eased * 3.0;
-                    if (bloom) bloom.strength = 1.5 + eased * 3.0;
+                    if (bloom) bloom.strength = 0.5 + eased * 0.5;
                 }
 
                 // Step 3 (2.5-5.0s): Camera warp into the light
@@ -2200,43 +2383,40 @@ function renderPhase1() {
                     scissor.enabled = false; // Full screen — no clip
                     camera.position.z = 50 - eased * 40;
                     camera.rotation.z += dt * (0.3 + eased * 1.5);
-                    tunnelMat.uniforms.u_warpSpeed.value = 4.0 + eased * 6.0;
-                    if (bloom) bloom.strength = 4.5 + eased * 4.0;
-                    tunnelMat.uniforms.u_progress.value = 1.0 + eased;
+                    tunnelMat.uniforms.u_scale.value = 3.0 * (1.0 - eased * 0.4);
+                    if (bloom) bloom.strength = 0.6 + eased * 0.4;
                 }
 
-                // Step 3.5 (4.5-5.0s): リング最高速 → ホワイトアウト準備
+                // Step 3.5 (4.5-5.0s): トンネルに吸い込まれる — 全てが中心に収束
                 if (et >= 4.5 && et < 5.0) {
-                    tunnelPlane.visible = false;
-                    scissor.enabled = false;
-                    if (bloom) bloom.strength = 6.0;
-                    // ホワイトアウト先行フェード
                     const pre = (et - 4.5) / 0.5;
-                    whiteOv.style.opacity = String(pre * pre * 0.6);
-                    renderer.setClearColor(0xffffff, 1);
+                    tunnelMat.uniforms.u_scale.value = 3.0 * (1.0 - pre * 0.3); // scale down = zoom in
+                    if (bloom) bloom.strength = 0.8 + pre * 0.5;
+                    renderer.setClearColor(0x000000, 1);
                 }
 
-                // Step 4 (5.0-5.8s): Whiteout
+                // Step 4 (5.0-5.8s): 吸い込み完了 — ブラックアウト
                 if (et >= 5.0 && et < 5.8) {
                     const t2 = (et - 5.0) / 0.8;
+                    tunnelMat.uniforms.u_alpha.value = Math.max(0, 1.0 - t2);
+                    whiteOv.style.background = '#000';
                     whiteOv.style.opacity = String(t2);
-                    if (bloom) bloom.strength = 8.5;
+                    if (bloom) bloom.strength = 0.3 * (1.0 - t2);
+                    renderer.setClearColor(0x000000, 1);
                 }
 
-                // Step 5 (5.8-6.6s): Solar cross (GLSL)
+                // Step 5 (5.8-6.6s): 暗闘の中から光が見える
                 if (et >= 5.8 && et < 6.6) {
+                    whiteOv.style.background = '#000';
                     whiteOv.style.opacity = '1';
                     tunnelPlane.visible = false;
                     bgPlane.visible = false;
-                    scPlane.visible = true;
+                    scPlane.visible = false;
                     scissor.enabled = false;
-                    renderer.setClearColor(0xffffff, 1);
-                    const scPhase = et - 5.8;
-                    const scA = scPhase < 0.3 ? (scPhase / 0.3) * (scPhase / 0.3) : (scPhase > 0.6 ? Math.max(0, 1 - ((scPhase - 0.6) / 0.2) * ((scPhase - 0.6) / 0.2)) : 1.0);
-                    scMat.uniforms.u_alpha.value = scA;
+                    renderer.setClearColor(0x000000, 1);
                 }
 
-                // Step 6 (6.6s): Transition to P3
+                // Step 6 (6.6s): Transition to P2
                 if (et >= 6.6 && phase !== PH.DONE) {
                     phase = PH.DONE; alive = false;
                     // ── クリーンアップ: 全3Dリソース解放 ──
