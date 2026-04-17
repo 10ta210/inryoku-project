@@ -23,14 +23,48 @@
 if (typeof currentPhase === 'undefined') { window.currentPhase = 0; }
 if (typeof audioContext === 'undefined') { window.audioContext = null; }
 
+// ═══ UNIVERSE SEED SYSTEM ═══
+// URLパラメータ ?universe=xxxx → localStorage → 新規生成
+(function initUniverseSeed() {
+    const params = new URLSearchParams(window.location.search);
+    let seed = params.get('universe');
+    if (!seed) seed = localStorage.getItem('inryoku_universe_seed');
+    if (!seed) {
+        seed = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0');
+    }
+    localStorage.setItem('inryoku_universe_seed', seed);
+    window._inryokuSeed = seed;
+
+    // mulberry32 PRNG
+    function mulberry32(a) {
+        return function() {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            var t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+    window.uRng = mulberry32(parseInt(seed, 16));
+
+    // シェアURL生成ヘルパー
+    window.getUniverseShareURL = function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('universe', seed);
+        return url.toString();
+    };
+
+    console.log('[Universe] seed=' + seed + ' shareURL=' + window.getUniverseShareURL());
+})();
+
 // ═══ PRODUCT DATA ═══
 const PRODUCTS = [
     {
         id: 'enter-hoodie',
         name: 'ENTER HOODIE',
-        price: '¥14,800',
-        priceNum: 14800,
+        price: '¥12,800',
+        priceNum: 12800,
         image: 'enter_hoodie.png',
+        shopifyVariantId: 'gid://shopify/ProductVariant/49652498514214',
         description: 'EXIT is just the beginning. ENTER the next dimension.',
         details: 'Oversized fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
         sizes: ['S', 'M', 'L', 'XL'],
@@ -38,21 +72,292 @@ const PRODUCTS = [
     },
     {
         id: 'info-logo-hoodie',
-        name: 'INFORMATION LOGO HOODIE',
+        name: 'INRYOKÜ LOGO HOODIE',
         price: '¥14,800',
         priceNum: 14800,
         image: 'info_logo_hoodie.png',
+        shopifyVariantId: 'gid://shopify/ProductVariant/49652498546982',
         description: 'The information symbol reimagined. 101% identity.',
         details: 'Oversized fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'enter-hoodie-white',
+        name: 'ENTER HOODIE WHITE',
+        price: '¥12,800',
+        priceNum: 12800,
+        image: 'enter_hoodie_white.png',
+        shopifyVariantId: null,
+        description: 'The white dimension. ENTER purity.',
+        details: 'Oversized fit · 100% Cotton · White · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'White'
+    },
+    {
+        id: 'info-logo-hoodie-oversized',
+        name: 'INRYOKÜ LOGO HOODIE OVERSIZED',
+        price: '¥14,800',
+        priceNum: 14800,
+        image: 'info_logo_hoodie_oversized.png',
+        shopifyVariantId: null,
+        description: 'Expanded silhouette. 101% presence.',
+        details: 'Extra oversized fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'enter-tee',
+        name: 'ENTER TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'enter_tee.png',
+        shopifyVariantId: null,
+        description: 'Lightweight portal. ENTER everyday.',
+        details: 'Regular fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'info-logo-tee',
+        name: 'INRYOKÜ LOGO TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'info_logo_tee.png',
+        shopifyVariantId: null,
+        description: 'Essential identity. Minimal gravity.',
+        details: 'Regular fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'enter-longsleeve',
+        name: 'ENTER LONG SLEEVE',
+        price: '¥9,800',
+        priceNum: 9800,
+        image: 'enter_longsleeve.png',
+        shopifyVariantId: null,
+        description: 'Extended reach. ENTER the continuum.',
+        details: 'Regular fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'info-logo-longsleeve',
+        name: 'INRYOKÜ LOGO LONG SLEEVE',
+        price: '¥9,800',
+        priceNum: 9800,
+        image: 'info_logo_longsleeve.png',
+        shopifyVariantId: null,
+        description: 'Sustained wavelength. 101% signal.',
+        details: 'Regular fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'enter-crewneck',
+        name: 'ENTER CREWNECK',
+        price: '¥11,800',
+        priceNum: 11800,
+        image: 'enter_crewneck.png',
+        shopifyVariantId: null,
+        description: 'Classic form. ENTER the orbit.',
+        details: 'Regular fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'info-logo-tank',
+        name: 'INRYOKÜ LOGO TANK',
+        price: '¥6,800',
+        priceNum: 6800,
+        image: 'info_logo_tank.png',
+        shopifyVariantId: null,
+        description: 'Zero resistance. Pure gravity.',
+        details: 'Regular fit · 100% Cotton · Washed Black · inryokü logo emblem',
         sizes: ['S', 'M', 'L', 'XL'],
         color: 'Washed Black'
     }
 ];
 
+// ═══ CART SYSTEM ═══
+const CART = {
+    items: [], // { productId, size, qty, product }
+    add: function(productId, size, qty) {
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (!product) return;
+        const existing = this.items.find(it => it.productId === productId && it.size === size);
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            this.items.push({ productId, size, qty, product });
+        }
+        this.updateBadge();
+        this.showAddFeedback();
+    },
+    remove: function(idx) {
+        this.items.splice(idx, 1);
+        this.updateBadge();
+    },
+    getTotal: function() {
+        return this.items.reduce((sum, it) => sum + it.product.priceNum * it.qty, 0);
+    },
+    updateBadge: function() {
+        const badge = document.getElementById('cart-badge');
+        const totalQty = this.items.reduce((sum, it) => sum + it.qty, 0);
+        if (badge) {
+            badge.textContent = totalQty;
+            badge.style.display = totalQty > 0 ? 'flex' : 'none';
+        }
+    },
+    showAddFeedback: function() {
+        const btn = document.getElementById('cart-float-btn');
+        if (btn) {
+            btn.style.transform = 'scale(1.3)';
+            setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+        }
+    }
+};
+
+function showCartDrawer() {
+    let drawer = document.getElementById('cart-drawer');
+    if (drawer) { drawer.classList.add('cart-open'); return; }
+
+    drawer = document.createElement('div');
+    drawer.id = 'cart-drawer';
+    drawer.innerHTML = `
+        <div class="cart-drawer-overlay" id="cart-drawer-overlay"></div>
+        <div class="cart-drawer-panel glass-card">
+            <div class="cart-drawer-header">
+                <span class="cart-drawer-title">CART</span>
+                <button class="cart-drawer-close" id="cart-drawer-close">\u2715</button>
+            </div>
+            <div class="cart-drawer-items" id="cart-drawer-items"></div>
+            <div class="cart-drawer-footer" id="cart-drawer-footer"></div>
+        </div>`;
+    drawer.style.cssText = 'position:fixed;inset:0;z-index:10000;pointer-events:auto;';
+    document.body.appendChild(drawer);
+
+    document.getElementById('cart-drawer-close').addEventListener('click', hideCartDrawer);
+    document.getElementById('cart-drawer-overlay').addEventListener('click', hideCartDrawer);
+
+    renderCartItems();
+    setTimeout(() => drawer.classList.add('cart-open'), 10);
+}
+
+function hideCartDrawer() {
+    const drawer = document.getElementById('cart-drawer');
+    if (drawer) {
+        drawer.classList.remove('cart-open');
+        setTimeout(() => drawer.remove(), 300);
+    }
+}
+
+function renderCartItems() {
+    const itemsEl = document.getElementById('cart-drawer-items');
+    const footerEl = document.getElementById('cart-drawer-footer');
+    if (!itemsEl || !footerEl) return;
+
+    if (CART.items.length === 0) {
+        itemsEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#888;font-size:14px;">CART IS EMPTY</div>';
+        footerEl.innerHTML = '';
+        return;
+    }
+
+    itemsEl.innerHTML = CART.items.map((it, idx) => `
+        <div class="cart-item" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+            <img src="${it.product.image}" alt="${it.product.name}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;background:#111;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.product.name}</div>
+                <div style="font-size:11px;color:#888;">Size: ${it.size} \u00d7 ${it.qty}</div>
+            </div>
+            <div style="font-size:13px;color:#fff;white-space:nowrap;">\u00a5${(it.product.priceNum * it.qty).toLocaleString()}</div>
+            <button onclick="CART.remove(${idx});renderCartItems();CART.updateBadge();" style="background:none;border:none;color:#666;font-size:16px;cursor:pointer;padding:4px;">\u2715</button>
+        </div>`).join('');
+
+    const total = CART.getTotal();
+    footerEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:16px 0 8px;font-size:14px;font-weight:600;color:#fff;">
+            <span>TOTAL</span><span>\u00a5${total.toLocaleString()}</span>
+        </div>
+        <button id="cart-checkout-btn" style="width:100%;padding:14px;background:#fff;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.05em;margin-top:8px;">CHECKOUT</button>`;
+
+    document.getElementById('cart-checkout-btn').addEventListener('click', () => {
+        shopifyCheckout(CART.items);
+    });
+}
+
+// ═══ SHOPIFY STOREFRONT API ═══
+const SHOPIFY_CONFIG = {
+    storeDomain: '0xi10h-x1.myshopify.com',
+    storefrontToken: 'ce0dc399245e874fd85d218df2d9bb04',
+    apiVersion: '2026-04'
+};
+
+async function shopifyFetch(query, variables) {
+    const url = 'https://' + SHOPIFY_CONFIG.storeDomain + '/api/' + SHOPIFY_CONFIG.apiVersion + '/graphql.json';
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Storefront-Access-Token': SHOPIFY_CONFIG.storefrontToken
+        },
+        body: JSON.stringify({ query, variables })
+    });
+    if (!resp.ok) throw new Error('Shopify API error: ' + resp.status);
+    const json = await resp.json();
+    if (json.errors) throw new Error('Shopify GQL error: ' + JSON.stringify(json.errors));
+    return json.data;
+}
+
+async function shopifyCheckout(cartItems) {
+    // shopifyVariantIdがある商品のみチェックアウト可能
+    const lines = cartItems
+        .filter(it => it.product.shopifyVariantId)
+        .map(it => ({
+            merchandiseId: it.product.shopifyVariantId,
+            quantity: it.qty
+        }));
+
+    if (lines.length === 0) {
+        alert('Currently unavailable for checkout. Coming soon.');
+        return;
+    }
+
+    const checkoutBtn = document.getElementById('cart-checkout-btn');
+    if (checkoutBtn) { checkoutBtn.textContent = 'LOADING...'; checkoutBtn.disabled = true; }
+
+    try {
+        const data = await shopifyFetch(`
+            mutation cartCreate($input: CartInput!) {
+                cartCreate(input: $input) {
+                    cart { checkoutUrl }
+                    userErrors { field message }
+                }
+            }
+        `, { input: { lines: lines } });
+
+        const result = data.cartCreate;
+        if (result.userErrors && result.userErrors.length > 0) {
+            throw new Error(result.userErrors.map(e => e.message).join(', '));
+        }
+        if (result.cart && result.cart.checkoutUrl) {
+            window.location.href = result.cart.checkoutUrl;
+        }
+    } catch (e) {
+        console.error('[Shopify] Checkout error:', e);
+        alert('Checkout error: ' + e.message);
+        if (checkoutBtn) { checkoutBtn.textContent = 'CHECKOUT'; checkoutBtn.disabled = false; }
+    }
+}
+
 // ═══ PHASE 6 メインエントリー ═══
 function renderPhase3() {
     currentPhase = 3;
     localStorage.setItem('inryoku_visited', '1');
+
+    // ── ミュート状態初期化 ──
+    if (window._inryokuMuted === undefined) window._inryokuMuted = true;
 
     // ── P2→P3 遷移オーバーレイを引き継ぐ ──────────────────────
     // P2のホワイトアウト (#p2-fade-ov) が残っていれば:
@@ -89,6 +394,7 @@ function renderPhase3() {
         p6bgm.loop = true;
         p6bgm.volume = 0;
         p6bgm.crossOrigin = 'anonymous';
+        if (window._inryokuMuted) p6bgm.muted = true;
         const playPromise = p6bgm.play();
         if (playPromise) {
             playPromise.catch(() => {
@@ -128,7 +434,7 @@ function renderPhase3() {
     }
 
     const productCardsHTML = PRODUCTS.map((p, i) => `
-        <div class="item-card glass-card" onclick="showProductModal(${i})" id="product-${p.id}">
+        <div class="item-card glass-card" style="min-width:200px;flex-shrink:0;scroll-snap-align:center;" onclick="showProductModal(${i})" id="product-${p.id}">
           <div class="item-thumb">
             <img src="${p.image}" alt="${p.name}" class="item-thumb-img">
           </div>
@@ -138,8 +444,17 @@ function renderPhase3() {
           </div>
         </div>`).join('');
 
+    const muteIcon = window._inryokuMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+
     root.innerHTML = `
         <canvas id="pu-cv" style="display:none;"></canvas>
+    <!-- Cart floating button -->
+    <div id="cart-float-btn" style="position:fixed;top:16px;right:16px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.2s ease;" onclick="showCartDrawer()">
+        \uD83D\uDED2
+        <span id="cart-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ff3366;color:#fff;font-size:11px;font-weight:700;border-radius:50%;width:20px;height:20px;align-items:center;justify-content:center;">0</span>
+    </div>
+    <!-- Mute button -->
+    <div id="mute-btn" style="position:fixed;top:16px;right:76px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.2s ease;">${muteIcon}</div>
     <div class="singularity-content" style="position:relative;z-index:5;pointer-events:auto;">
         <div class="hologram-logo">
             <div class="brand-name p6-logo-text">
@@ -156,10 +471,29 @@ function renderPhase3() {
         </div>
 
         <div class="item-grid" style="opacity:0;transition:opacity 1.2s ease;">
-            ${productCardsHTML}
+          <div id="store-grid" style="width:100%;overflow:visible;position:relative;">
+            <div id="carousel-ring" style="display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 20px;scrollbar-width:none;">
+              ${productCardsHTML}
+            </div>
+          </div>
         </div>
 
     </div>`;
+
+    // ── ミュートボタンのイベント ──
+    const muteBtn = document.getElementById('mute-btn');
+    if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+            window._inryokuMuted = !window._inryokuMuted;
+            muteBtn.textContent = window._inryokuMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+            if (window._p6bgm) window._p6bgm.muted = window._inryokuMuted;
+        });
+    }
+
+    // ── カルーセルスクロールバー非表示（webkit） ──
+    const carouselStyle = document.createElement('style');
+    carouselStyle.textContent = '#carousel-ring::-webkit-scrollbar{display:none;} .cart-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);} .cart-drawer-panel{position:fixed;top:0;right:-360px;width:340px;height:100%;padding:20px;overflow-y:auto;transition:right 0.3s ease;background:rgba(10,10,10,0.9);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.1);} .cart-open .cart-drawer-panel{right:0;} .cart-drawer-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1);} .cart-drawer-title{font-size:14px;font-weight:700;color:#fff;letter-spacing:0.1em;} .cart-drawer-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;}';
+    document.head.appendChild(carouselStyle);
 
 
     // ── Bolero プレーヤー ──
@@ -2014,7 +2348,7 @@ function showProductModal(idx) {
                         <span class="cart-btn-text">ADD TO CART</span>
                         <span class="cart-btn-price">${p.price}</span>
                     </button>
-                    <div class="stripe-badge">Powered by <strong>Stripe</strong> · Secure Checkout</div>
+                    <div class="stripe-badge">Powered by <strong>Shopify</strong> · Secure Checkout</div>
                 </div>
             </div>
         </div>`;
@@ -2030,12 +2364,14 @@ function showProductModal(idx) {
         });
     });
 
-    // カートボタン → Stripe Checkout (MVP: alertで代替、後でStripe URL差し替え)
+    // カートボタン → CARTに追加
     document.getElementById('pm-cart').addEventListener('click', () => {
-        const msg = `${p.name} (${selectedSize}) — ${p.price} \n\nStripe Checkout に遷移します。\n(Stripe APIキー設定後に有効化)`;
-        alert(msg);
-        // TODO: 実際のStripe Checkout Session URL
-        // window.location.href = `YOUR_STRIPE_CHECKOUT_URL ? product = ${ p.id }&size=${ selectedSize } `;
+        CART.add(p.id, selectedSize, 1);
+        // ボタンフィードバック
+        const cartBtn = document.getElementById('pm-cart');
+        const origText = cartBtn.querySelector('.cart-btn-text').textContent;
+        cartBtn.querySelector('.cart-btn-text').textContent = 'ADDED \u2713';
+        setTimeout(() => { cartBtn.querySelector('.cart-btn-text').textContent = origText; }, 1200);
     });
 
     // 閉じる
