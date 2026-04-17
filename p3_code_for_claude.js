@@ -490,8 +490,140 @@ function initBrandParticleReveal() {
             var carousel = document.querySelector('.item-carousel');
             if (carousel) carousel.style.opacity = '1';
             initProductCarousel();
+            // Step3: 3Dホログラムロゴ起動（復元版から移植）
+            try { init3DLogoSphere(); } catch(e) { console.warn('[P3] 3D logo init failed:', e); }
         }, 800);
     }, allDoneTime);
+}
+
+// ═══ Step3: 3Dホログラムロゴ球体（復元版 2026-04-16 より移植） ═══
+// Three.js SphereGeometry + カスタムシェーダー
+// 虹色ニュートンリング + フレネル + 回転 + 脈動
+// 依存: window.p3AudioEnergy (未実装なら 0 を使う)
+var _logo3DRef = null;
+function init3DLogoSphere() {
+    if (_logo3DRef) return _logo3DRef; // 二重起動防止
+    var imgEl = document.querySelector('.logo-sphere');
+    var wrap  = document.querySelector('.logo-holo-wrap');
+    if (!imgEl || !wrap || typeof THREE === 'undefined') return null;
+
+    var canvas = document.createElement('canvas');
+    var size = Math.max(wrap.offsetWidth, 60);
+    canvas.width = size * 2;
+    canvas.height = size * 2;
+    canvas.className = 'logo-sphere logo-sphere-3d';
+    // CSSで配置制御（.logo-sphere-3d / .logo-sphere を参照）
+
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setSize(size * 2, size * 2);
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(1);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.2);
+    camera.lookAt(0, 0, 0);
+
+    var geo = new THREE.SphereGeometry(1, 64, 64);
+    var mat = new THREE.ShaderMaterial({
+        uniforms: {
+            uTime: { value: 0.0 },
+            uPulse: { value: 0.0 },
+            uAudioEnergy: { value: 0.0 }
+        },
+        vertexShader: [
+            'varying vec3 vNormal;',
+            'varying vec3 vViewDir;',
+            'varying vec2 vUv;',
+            'void main() {',
+            '    vNormal = normalize(normalMatrix * normal);',
+            '    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);',
+            '    vViewDir = normalize(-mvPos.xyz);',
+            '    vUv = uv;',
+            '    gl_Position = projectionMatrix * mvPos;',
+            '}'
+        ].join('\n'),
+        fragmentShader: [
+            'uniform float uTime;',
+            'uniform float uPulse;',
+            'uniform float uAudioEnergy;',
+            'varying vec3 vNormal;',
+            'varying vec3 vViewDir;',
+            'varying vec2 vUv;',
+            '',
+            'vec3 spectrum(float t) {',
+            '    vec3 c = vec3(0.0);',
+            '    float tt = fract(t) * 6.0;',
+            '    if (tt < 1.0) c = mix(vec3(1,0,0), vec3(1,1,0), tt);',
+            '    else if (tt < 2.0) c = mix(vec3(1,1,0), vec3(0,1,0), tt-1.0);',
+            '    else if (tt < 3.0) c = mix(vec3(0,1,0), vec3(0,1,1), tt-2.0);',
+            '    else if (tt < 4.0) c = mix(vec3(0,1,1), vec3(0,0,1), tt-3.0);',
+            '    else if (tt < 5.0) c = mix(vec3(0,0,1), vec3(1,0,1), tt-4.0);',
+            '    else c = mix(vec3(1,0,1), vec3(1,0,0), tt-5.0);',
+            '    return c;',
+            '}',
+            '',
+            'void main() {',
+            '    float fresnel = 1.0 - abs(dot(vNormal, vViewDir));',
+            '    fresnel = pow(fresnel, 2.5);',
+            '    float theta = acos(vNormal.y);',
+            '    float phi = atan(vNormal.z, vNormal.x);',
+            '    float ringFreq = 8.0 + uAudioEnergy * 4.0;',
+            '    float ring = sin(theta * ringFreq + uTime * 0.3) * 0.5 + 0.5;',
+            '    ring *= sin(phi * 6.0 - uTime * 0.5) * 0.3 + 0.7;',
+            '    float specT = theta * 0.5 + phi * 0.15 + uTime * 0.08;',
+            '    vec3 rainbow = spectrum(specT);',
+            '    float specT2 = theta * 0.3 - phi * 0.2 + uTime * 0.12 + 0.5;',
+            '    vec3 rainbow2 = spectrum(specT2);',
+            '    vec3 iridescent = mix(rainbow, rainbow2, ring * 0.4);',
+            '    vec3 grey = vec3(0.45);',
+            '    vec3 color = mix(grey, iridescent, fresnel * 0.85 + 0.15);',
+            '    float core = pow(max(dot(vNormal, vViewDir), 0.0), 4.0);',
+            '    color += vec3(0.3, 0.35, 0.4) * core * 0.3;',
+            '    float edgeGlow = pow(fresnel, 4.0);',
+            '    color += iridescent * edgeGlow * 0.6;',
+            '    float pulse = 1.0 + uPulse * 0.15;',
+            '    color *= pulse;',
+            '    float alpha = smoothstep(0.0, 0.15, 1.0 - fresnel) * 0.95 + 0.05;',
+            '    gl_FragColor = vec4(color, alpha);',
+            '}'
+        ].join('\n'),
+        transparent: true,
+        side: THREE.FrontSide
+    });
+
+    var sphere = new THREE.Mesh(geo, mat);
+    scene.add(sphere);
+
+    // PNGを非表示にしてcanvasを追加
+    imgEl.style.display = 'none';
+    wrap.appendChild(canvas);
+
+    var startTime = performance.now();
+    var animId = null;
+    function animate() {
+        if (currentPhase !== 3) { cancelAnimationFrame(animId); return; }
+        animId = requestAnimationFrame(animate);
+        var elapsed = (performance.now() - startTime) * 0.001;
+        mat.uniforms.uTime.value = elapsed;
+        mat.uniforms.uPulse.value = Math.sin(elapsed * 1.2) * 0.5 + 0.5;
+        mat.uniforms.uAudioEnergy.value = (window.p3AudioEnergy || 0);
+        sphere.rotation.y = elapsed * 0.25;
+        sphere.rotation.x = Math.sin(elapsed * 0.15) * 0.1;
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    _logo3DRef = {
+        canvas: canvas, renderer: renderer, sphere: sphere, material: mat,
+        stop: function() { if (animId) cancelAnimationFrame(animId); },
+        getCenter: function() {
+            var r = canvas.getBoundingClientRect();
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        }
+    };
+    window._logo3DRef = _logo3DRef;
+    return _logo3DRef;
 }
 
 // ═══ THREE.JS 粒子宇宙 ═══

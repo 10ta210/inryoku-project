@@ -61,6 +61,89 @@
       mix-blend-mode: screen;
     }
 
+    /* ═══ Step 3: ホログラム3Dロゴ (Three.js) のラッパー ═══ */
+    .logo-holo-wrap {
+      position: relative;
+      width: clamp(120px, 14vw, 180px);
+      aspect-ratio: 1 / 1;
+      margin: 14px auto 0 auto;
+      z-index: 10;
+      filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.35));
+    }
+    .logo-shell,
+    .logo-sphere {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+    .logo-shell {
+      z-index: 2;
+      opacity: 0.85;
+      mix-blend-mode: screen;
+    }
+    .logo-sphere {
+      z-index: 1;
+      opacity: 0.9;
+    }
+    .logo-sphere-3d {
+      /* Three.js 置き換え時の canvas */
+      z-index: 1;
+      mix-blend-mode: screen;
+    }
+    .holo-scanlines,
+    .holo-overlay,
+    .holo-scanline {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    .holo-scanlines {
+      z-index: 3;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(255,255,255,0.04) 0px,
+        rgba(255,255,255,0.04) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      mix-blend-mode: overlay;
+      opacity: 0.6;
+    }
+    .holo-overlay {
+      z-index: 4;
+      background: radial-gradient(
+        circle at 35% 30%,
+        rgba(255,255,255,0.25) 0%,
+        rgba(255,255,255,0.05) 30%,
+        transparent 60%
+      );
+      mix-blend-mode: screen;
+    }
+    .holo-scanline {
+      z-index: 5;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        transparent 48%,
+        rgba(180,220,255,0.35) 50%,
+        transparent 52%,
+        transparent 100%
+      );
+      animation: holoScan 3.6s linear infinite;
+      opacity: 0.7;
+    }
+    @keyframes holoScan {
+      0%   { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
     /* Glassmorphism共通 */
     .glass-card {
       background: rgba(255, 255, 255, 0.08);
