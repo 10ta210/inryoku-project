@@ -15,13 +15,14 @@
     .singularity-content {
       position: relative;
       z-index: 10;
-      padding: 0 20px;
+      padding: 32px 20px 64px;
       overflow-y: auto;
-      height: 100%;
+      min-height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center; /* 垂直中央 */
+      /* 2026-04-17 修正: center だと高さ制限超過でロゴが viewport 上に飛ぶ */
+      justify-content: flex-start;
       gap: 24px;
     }
 
