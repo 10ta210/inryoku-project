@@ -29,6 +29,11 @@
     .hologram-logo {
       text-align: center;
       margin-top: 0;
+      /* 2026-04-17: ブランド名とロゴ楕円の間隔を詰める */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
     }
 
     .brand-name {
@@ -46,8 +51,9 @@
     /* ── ホログラムラッパー ── */
     .logo-holo-wrap {
       display: block;
-      margin: 16px auto 0 auto;
-      width: clamp(60px, 8vw, 100px); /* was clamp(80px, 12vw, 140px) — ロゴ小さく */
+      /* 2026-04-17: ブランド名直下にピッタリ付ける */
+      margin: 0 auto;
+      width: clamp(60px, 8vw, 100px);
       position: relative;
       z-index: 10;
     }
