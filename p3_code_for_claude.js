@@ -2106,8 +2106,9 @@ void main() {
     float sizeBreath = 1.0 + vBreathe * (0.35 + uAudioEnergy * 0.4);
 
     vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * sizeBreath * (280.0 / -mvPos.z);
-    gl_PointSize = max(gl_PointSize, 0.5);
+    // 2026-04-18: Bloom不在補償 280→480, min 0.5→1.4
+    gl_PointSize = aSize * sizeBreath * (480.0 / -mvPos.z);
+    gl_PointSize = max(gl_PointSize, 1.4);
     gl_Position = projectionMatrix * mvPos;
 }
 `,
@@ -2146,6 +2147,8 @@ void main() {
     vec3 finalColor = mix(vColor, vColor + rainbow * rainbowStrength, core * 0.5);
     // コア中心を白く飛ばす（音が大きい → さらに眩しく）
     finalColor += vec3(core * (0.6 + uAudioEnergy * 0.3));
+    // 2026-04-18: Bloom不在補償 輝度 x1.5
+    finalColor *= 1.5;
 
     gl_FragColor = vec4(finalColor * breathe, alpha * breathe);
 }
