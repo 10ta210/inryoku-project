@@ -2290,12 +2290,27 @@ function showProductModal(idx) {
         });
     });
 
-    // カートボタン → Stripe Checkout (MVP: alertで代替、後でStripe URL差し替え)
+    // カートボタン → CARTに追加 + トースト通知 + bigBang
     document.getElementById('pm-cart').addEventListener('click', () => {
-        const msg = `${p.name} (${selectedSize}) — ${p.price} \n\nStripe Checkout に遷移します。\n(Stripe APIキー設定後に有効化)`;
-        alert(msg);
-        // TODO: 実際のStripe Checkout Session URL
-        // window.location.href = `YOUR_STRIPE_CHECKOUT_URL ? product = ${ p.id }&size=${ selectedSize } `;
+        var vid = (p.shopifyVariants && p.shopifyVariants[selectedSize]) || '';
+        if (window.CART) {
+            window.CART.add(p.id, selectedSize, p.priceNum, p.name, vid);
+        }
+        // Toast
+        var toast = document.createElement('div');
+        toast.className = 'cart-toast';
+        toast.textContent = `${p.name} (${selectedSize}) をカートに追加しました`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
+        // BigBang 粒子
+        if (typeof spawnBigBang === 'function') {
+            var btn = document.getElementById('pm-cart');
+            if (btn) {
+                var cr = btn.getBoundingClientRect();
+                try { spawnBigBang(cr.left + cr.width/2, cr.top + cr.height/2, 12); } catch(e) {}
+            }
+        }
     });
 
     // 閉じる
@@ -2333,3 +2348,202 @@ function skipToShop() {
 function vibrate(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  Step 4 + 7: SHOPIFY / CART / TOP-RIGHT CONTROLS
+//  復元版 p3_recovered_20260416.reference.js より移植
+// ═══════════════════════════════════════════════════════════════
+
+// ── SHOPIFY CONFIG ──
+const SHOPIFY_CONFIG = {
+    storeDomain: '',      // 司さんが Shopify ストア取得後に埋める
+    storefrontToken: '',  // Storefront API トークン
+    apiVersion: '2026-04'
+};
+
+function shopifyFetch(query, variables) {
+    if (!SHOPIFY_CONFIG.storeDomain || !SHOPIFY_CONFIG.storefrontToken) {
+        return Promise.reject(new Error('Shopify not configured'));
+    }
+    return fetch('https://' + SHOPIFY_CONFIG.storeDomain + '/api/' + SHOPIFY_CONFIG.apiVersion + '/graphql.json', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Storefront-Access-Token': SHOPIFY_CONFIG.storefrontToken
+        },
+        body: JSON.stringify({ query: query, variables: variables })
+    }).then(function(r) { return r.json(); });
+}
+
+function shopifyCheckout(cartItems) {
+    var lines = cartItems.map(function(item) {
+        var vid = item.shopifyVariantId;
+        if (!vid) return null;
+        return { merchandiseId: vid, quantity: item.qty || 1 };
+    }).filter(Boolean);
+    if (lines.length === 0) return Promise.reject(new Error('No Shopify variants mapped'));
+    var query = 'mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { id checkoutUrl } userErrors { field message } } }';
+    return shopifyFetch(query, { input: { lines: lines, attributes: [{ key: 'source', value: 'inryoku-p3' }] } }).then(function(data) {
+        if (data.data && data.data.cartCreate && data.data.cartCreate.cart) {
+            return data.data.cartCreate.cart.checkoutUrl;
+        }
+        var errors = data.data && data.data.cartCreate && data.data.cartCreate.userErrors;
+        throw new Error(errors && errors.length ? errors[0].message : 'Cart creation failed');
+    });
+}
+
+// ── CART state (localStorage 永続化) ──
+window.CART = (function() {
+    var KEY = 'inryoku_cart_v1';
+    var items = [];
+    try { items = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch(e) { items = []; }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch(e) {} updateBadge(); }
+    function updateBadge() {
+        var b = document.getElementById('cart-badge');
+        if (!b) return;
+        var n = count();
+        b.textContent = n;
+        b.style.display = n > 0 ? 'flex' : 'none';
+    }
+    function count() { return items.reduce(function(s, i) { return s + (i.qty || 1); }, 0); }
+    function total() { return items.reduce(function(s, i) { return s + i.price * (i.qty || 1); }, 0); }
+    function add(id, size, price, name, shopifyVariantId) {
+        var existing = items.find(function(i) { return i.id === id && i.size === size; });
+        if (existing) existing.qty = (existing.qty || 1) + 1;
+        else items.push({ id: id, size: size, price: price, name: name, qty: 1, shopifyVariantId: shopifyVariantId || '' });
+        save();
+    }
+    function remove(idx) { items.splice(idx, 1); save(); }
+    function clear() { items = []; save(); }
+    return { get items() { return items; }, count: count, total: total, add: add, remove: remove, clear: clear, _updateBadge: updateBadge };
+})();
+
+// ── 右上コントロール (cart / mute / BGM) ──
+function createTopRightControls() {
+    if (document.getElementById('top-right-controls')) return;
+    var wrap = document.createElement('div');
+    wrap.id = 'top-right-controls';
+    wrap.style.cssText = 'position:fixed;top:16px;right:16px;z-index:1000;display:flex;gap:8px;opacity:0;transition:opacity 1.2s ease;pointer-events:none;';
+
+    // Cart
+    var cart = document.createElement('button');
+    cart.id = 'cart-icon';
+    cart.className = 'tr-ctrl-btn';
+    cart.setAttribute('aria-label', 'Cart');
+    cart.innerHTML = '<span style="font-size:18px;">🛒</span><span id="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#ff0055;color:#fff;font-size:9px;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-family:\'Press Start 2P\',monospace;padding:0 4px;">0</span>';
+    cart.addEventListener('click', function() { showCartDrawer(); });
+    wrap.appendChild(cart);
+
+    // Mute
+    var mute = document.createElement('button');
+    mute.id = 'mute-btn';
+    mute.className = 'tr-ctrl-btn';
+    mute.setAttribute('aria-label', 'Mute');
+    mute.innerHTML = window._inryokuMuted ? '🔇' : '🔊';
+    mute.addEventListener('click', function() {
+        window._inryokuMuted = !window._inryokuMuted;
+        mute.innerHTML = window._inryokuMuted ? '🔇' : '🔊';
+        if (window._p6bgm) window._p6bgm.muted = !!window._inryokuMuted;
+    });
+    wrap.appendChild(mute);
+
+    // BGM trigger (Jupiter toggle — 将来 BGM_TRACKS 切替用)
+    var bgm = document.createElement('button');
+    bgm.id = 'bgm-btn';
+    bgm.className = 'tr-ctrl-btn';
+    bgm.setAttribute('aria-label', 'BGM');
+    bgm.innerHTML = '♪';
+    bgm.addEventListener('click', function() {
+        if (!window._p6bgm) return;
+        if (window._p6bgm.paused) { window._p6bgm.play().catch(function(){}); bgm.style.opacity = '1'; }
+        else { window._p6bgm.pause(); bgm.style.opacity = '0.5'; }
+    });
+    wrap.appendChild(bgm);
+
+    document.body.appendChild(wrap);
+    // Fade in
+    setTimeout(function() { wrap.style.opacity = '1'; wrap.style.pointerEvents = 'auto'; }, 2000);
+    // Initial badge
+    if (window.CART && window.CART._updateBadge) setTimeout(window.CART._updateBadge, 50);
+}
+
+// ── カートドロワー ──
+function showCartDrawer() {
+    var existing = document.getElementById('cart-drawer');
+    if (existing) { existing.remove(); return; }
+    var CART = window.CART;
+    var drawer = document.createElement('div');
+    drawer.id = 'cart-drawer';
+    function render() {
+        if (CART.items.length === 0) {
+            return '<div class="cart-drawer-header"><span class="cart-drawer-title">CART</span><button class="cart-drawer-close" id="cd-close">✕</button></div><div class="cart-empty">カートは空です</div>';
+        }
+        var itemsHTML = CART.items.map(function(item, idx) {
+            return '<div class="cart-item"><div class="cart-item-info"><div class="cart-item-name">' + item.name + '</div><div class="cart-item-meta">' + item.size + ' × ' + item.qty + '</div></div><div class="cart-item-right"><div class="cart-item-price">¥' + (item.price * item.qty).toLocaleString() + '</div><button class="cart-item-remove" data-idx="' + idx + '">✕</button></div></div>';
+        }).join('');
+        return '<div class="cart-drawer-header"><span class="cart-drawer-title">CART (' + CART.count() + ')</span><button class="cart-drawer-close" id="cd-close">✕</button></div><div class="cart-items">' + itemsHTML + '</div><div class="cart-footer"><div class="cart-total"><span>TOTAL</span><span>¥' + CART.total().toLocaleString() + '</span></div><button class="cart-checkout-btn" id="cd-checkout">CHECKOUT</button><div class="cart-stripe-note">Secure Checkout</div></div>';
+    }
+    drawer.innerHTML = render();
+    document.body.appendChild(drawer);
+    setTimeout(function() { drawer.classList.add('cart-drawer-open'); }, 10);
+
+    function closeDrawer() { drawer.classList.remove('cart-drawer-open'); setTimeout(function() { drawer.remove(); }, 300); }
+
+    drawer.addEventListener('click', function(e) {
+        if (e.target.id === 'cd-close') closeDrawer();
+        if (e.target.classList.contains('cart-item-remove')) {
+            var idx = parseInt(e.target.dataset.idx);
+            CART.remove(idx);
+            drawer.innerHTML = render();
+        }
+        if (e.target.id === 'cd-checkout') {
+            if (CART.items.length === 0) return;
+            var btn = e.target;
+            btn.textContent = 'PROCESSING...';
+            btn.disabled = true;
+            var hasShopify = CART.items.some(function(item) { return !!item.shopifyVariantId; });
+            var done = function() { btn.textContent = 'CHECKOUT'; btn.disabled = false; };
+            if (hasShopify && SHOPIFY_CONFIG.storeDomain && SHOPIFY_CONFIG.storefrontToken) {
+                shopifyCheckout(CART.items)
+                    .then(function(url) { window.location.href = url; })
+                    .catch(function(err) { alert('Checkout error: ' + err.message); done(); });
+            } else {
+                fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: CART.items }) })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) { if (data.url) window.location.href = data.url; else { alert(data.error || 'Checkout not ready yet'); done(); } })
+                    .catch(function(err) { alert('Checkout error: ' + err.message); done(); });
+            }
+        }
+    });
+    function onEsc(e) { if (e.key === 'Escape') { closeDrawer(); window.removeEventListener('keydown', onEsc); } }
+    window.addEventListener('keydown', onEsc);
+}
+
+// spawnBigBang は復元版では独立関数。ここでは軽量スタブを用意（詳細演出は既存の初期化で上書きされる想定）
+if (typeof window.spawnBigBang === 'undefined') {
+    window.spawnBigBang = function(x, y, count) {
+        count = count || 10;
+        for (var i = 0; i < count; i++) {
+            var p = document.createElement('div');
+            p.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:4px;height:4px;border-radius:50%;background:hsl(' + (Math.random() * 360) + ',100%,60%);pointer-events:none;z-index:99999;transition:all .6s cubic-bezier(.1,.6,.3,1);';
+            document.body.appendChild(p);
+            var ang = Math.random() * Math.PI * 2;
+            var r = 40 + Math.random() * 60;
+            requestAnimationFrame(function(el, dx, dy) {
+                return function() { el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; el.style.opacity = '0'; };
+            }(p, Math.cos(ang) * r, Math.sin(ang) * r)());
+            setTimeout(function(el) { return function() { el.remove(); }; }(p), 700);
+        }
+    };
+}
+
+// 既存の renderPhase3 後に createTopRightControls を確実に呼ぶ
+// (renderPhase3 内で呼ぶより安全なため、フェーズ完了後に hookup)
+(function() {
+    var orig = window.renderPhase3 || renderPhase3;
+    window.renderPhase3 = function() {
+        var r = orig.apply(this, arguments);
+        setTimeout(createTopRightControls, 100);
+        return r;
+    };
+})();
