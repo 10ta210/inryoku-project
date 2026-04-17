@@ -368,22 +368,25 @@ function init3DLogoSphere() {
     var wrap = document.querySelector('.logo-holo-wrap');
     if (!imgEl || !wrap || typeof THREE === 'undefined') return null;
 
-    // canvasでPNGを置き換え
+    // canvasでキャンドル位置に小さな3Dロゴを配置
     var canvas = document.createElement('canvas');
-    var size = Math.max(wrap.offsetWidth, 60);
-    canvas.width = size * 2;  // 高解像度
-    canvas.height = size * 2;
-    canvas.style.cssText = imgEl.style.cssText;
-    canvas.className = 'logo-sphere logo-sphere-3d';
-    canvas.style.position = 'absolute';
-    /* 2026-04-18: シェルのキャンドル位置（上部中央、シェル幅の45%相当）に配置 */
-    canvas.style.top = '18%';
-    canvas.style.left = '27.5%';
-    canvas.style.width = '45%';
-    canvas.style.height = 'auto';
-    canvas.style.aspectRatio = '1';
-    canvas.style.zIndex = '3';
-    canvas.style.pointerEvents = 'none';
+    var wrapW = Math.max(wrap.offsetWidth, 60);
+    var candleSize = Math.round(wrapW * 0.42);  // シェル幅の42%
+    canvas.width = candleSize * 2;  // 高解像度
+    canvas.height = candleSize * 2;
+    // cssTextコピーは廃止（img の transition/transform 等が混入してズレるため）
+    canvas.className = 'logo-sphere-3d';  // .logo-sphere クラスは付けない（ブランドリビール対象外にする）
+    canvas.style.cssText = [
+        'position: absolute',
+        'top: 19%',
+        'left: 50%',
+        'transform: translateX(-50%)',
+        'width: ' + candleSize + 'px',
+        'height: ' + candleSize + 'px',
+        'z-index: 3',
+        'pointer-events: none',
+        'mix-blend-mode: screen'
+    ].join(';');
 
     // Three.jsセットアップ（ロゴ専用の小さなレンダラー）
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
