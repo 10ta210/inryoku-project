@@ -16,14 +16,18 @@
     }
 
     .brand-name {
-      /* 2026-04-17: サイズ縮小 (旧 clamp(48px,10vw,96px) / letter 8px) */
-      font-size: clamp(28px, 5vw, 52px);
-      font-weight: bold;
-      letter-spacing: 5px;
+      /* 2026-04-17: ピクセルフォント + サイズ調整 */
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(16px, 3vw, 28px);
+      font-weight: normal;
+      letter-spacing: 3px;
       display: flex;
       justify-content: center;
       align-items: center;
       animation: logoGlow 3s ease-in-out infinite;
+    }
+    .p6-logo-text {
+      font-family: 'Press Start 2P', monospace !important;
     }
 
     @keyframes logoGlow {
@@ -61,11 +65,13 @@
       mix-blend-mode: screen;
     }
 
-    /* ═══ Step 3: ホログラムロゴのラッパー（PNG派に戻した） ═══ */
+    /* ═══ Step 3: ホログラムロゴのラッパー（PNG派） ═══ */
     .logo-holo-wrap {
       position: relative;
-      /* 2026-04-17: 180→90px max に縮小 */
-      width: clamp(72px, 8vw, 96px);
+      /* 2026-04-17 確実にサイズ制約するため !important (Step3再) */
+      width: 96px !important;
+      max-width: 96px !important;
+      height: 96px !important;
       aspect-ratio: 1 / 1;
       margin: 10px auto 0 auto;
       z-index: 10;
@@ -268,7 +274,8 @@
       scroll-snap-align: start;
       width: 200px;
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
+      /* 2026-04-17: 復元参考 — 曲面カード, 角丸28px */
+      border-radius: 28px;
       overflow: hidden;
       background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(20px);
@@ -290,7 +297,8 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      border-radius: 12px 12px 0 0;
+      /* 2026-04-17: 曲面カードに合わせて上部角丸増 */
+      border-radius: 24px 24px 0 0;
     }
 
     .item-thumb-img {
