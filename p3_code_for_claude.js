@@ -732,8 +732,9 @@ void main() {
     float sizeBreath = 1.0 + vBreathe * 0.35;
 
     vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * sizeBreath * (280.0 / -mvPos.z);
-    gl_PointSize = max(gl_PointSize, 0.5);
+    // 2026-04-17: Bloom不在(Three.js 0.160 examples/js削除)の代替として基準サイズ強化 280→500
+    gl_PointSize = aSize * sizeBreath * (500.0 / -mvPos.z);
+    gl_PointSize = max(gl_PointSize, 1.2);
     gl_Position = projectionMatrix * mvPos;
 }
 `,
@@ -765,6 +766,8 @@ void main() {
     );
     // グレー→虹の観測エフェクト（コアに近いほど虹が見える）
     vec3 finalColor = mix(vColor, vColor + rainbow * 0.2, core * 0.4);
+    // Bloom不在補償で輝度 +60%
+    finalColor *= 1.6;
 
     gl_FragColor = vec4(finalColor * breathe, alpha * breathe);
 }
