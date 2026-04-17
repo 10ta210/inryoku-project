@@ -12,13 +12,44 @@
 
     .hologram-logo {
       text-align: center;
-      margin-top: 20px;
+      margin-top: 10px;
+    }
+
+    .logo-holo-wrap {
+      position: relative;
+      width: clamp(80px, 12vw, 140px);
+      height: auto;
+      margin: 12px auto 0 auto;
+    }
+
+    .logo-shell {
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
+      animation: iconGlow 3s ease-in-out infinite;
+    }
+
+    .logo-sphere {
+      position: absolute;
+      top: 15%;
+      left: 15%;
+      width: 70%;
+      height: auto;
+      z-index: 2;
+    }
+
+    /* ピクセルフォント: 8-bit風ブランド名 */
+    .p6-logo-text {
+      font-family: 'Press Start 2P', 'Courier New', monospace;
+      image-rendering: pixelated;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: unset;
     }
 
     .brand-name {
-      font-size: clamp(48px, 10vw, 96px);
+      font-size: clamp(32px, 7vw, 64px);
       font-weight: bold;
-      letter-spacing: 8px;
+      letter-spacing: 6px;
       display: flex;
       justify-content: center;
       align-items: center;
