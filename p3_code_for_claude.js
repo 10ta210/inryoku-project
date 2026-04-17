@@ -490,8 +490,8 @@ function initBrandParticleReveal() {
             var carousel = document.querySelector('.item-carousel');
             if (carousel) carousel.style.opacity = '1';
             initProductCarousel();
-            // Step3: 3Dホログラムロゴ起動（復元版から移植）
-            try { init3DLogoSphere(); } catch(e) { console.warn('[P3] 3D logo init failed:', e); }
+            // Step3: 3Dホログラムロゴ起動 — 2026-04-17 コアPNG派に戻すためコメントアウト
+            // try { init3DLogoSphere(); } catch(e) { console.warn('[P3] 3D logo init failed:', e); }
         }, 800);
     }, allDoneTime);
 }

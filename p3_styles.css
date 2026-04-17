@@ -61,14 +61,15 @@
       mix-blend-mode: screen;
     }
 
-    /* ═══ Step 3: ホログラム3Dロゴ (Three.js) のラッパー ═══ */
+    /* ═══ Step 3: ホログラムロゴのラッパー（PNG派に戻した） ═══ */
     .logo-holo-wrap {
       position: relative;
-      width: clamp(120px, 14vw, 180px);
+      /* 2026-04-17: 180→90px max に縮小 */
+      width: clamp(72px, 8vw, 96px);
       aspect-ratio: 1 / 1;
-      margin: 14px auto 0 auto;
+      margin: 10px auto 0 auto;
       z-index: 10;
-      filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.35));
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
     }
     .logo-shell,
     .logo-sphere {
