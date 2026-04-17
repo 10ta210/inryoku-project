@@ -1,93 +1,282 @@
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+    :root {
+      --glow-cyan: rgba(0,255,255,0.8);
+      --glow-cyan-mid: rgba(0,255,255,0.4);
+      --glow-cyan-soft: rgba(0,255,255,0.15);
+      --glow-white: rgba(255,255,255,0.7);
+      --glow-white-mid: rgba(255,255,255,0.4);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-blur: 12px;
+      --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     .singularity-content {
       position: relative;
       z-index: 10;
-      padding: 40px 20px;
+      padding: 0 20px;
       overflow-y: auto;
       height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 30px;
+      justify-content: center; /* 垂直中央 */
+      gap: 24px;
     }
 
     .hologram-logo {
       text-align: center;
-      margin-top: 10px;
-    }
-
-    .logo-holo-wrap {
-      position: relative;
-      width: clamp(80px, 12vw, 140px);
-      height: auto;
-      margin: 12px auto 0 auto;
-    }
-
-    .logo-shell {
-      width: 100%;
-      height: auto;
-      filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
-      animation: iconGlow 3s ease-in-out infinite;
-    }
-
-    .logo-sphere {
-      position: absolute;
-      top: 15%;
-      left: 15%;
-      width: 70%;
-      height: auto;
-      z-index: 2;
-    }
-
-    /* ピクセルフォント: 8-bit風ブランド名 */
-    .p6-logo-text {
-      font-family: 'Press Start 2P', 'Courier New', monospace;
-      image-rendering: pixelated;
-      -webkit-font-smoothing: none;
-      -moz-osx-font-smoothing: unset;
+      margin-top: 0;
     }
 
     .brand-name {
-      font-size: clamp(32px, 7vw, 64px);
-      font-weight: bold;
-      letter-spacing: 6px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(28px, 6vw, 56px);
+      font-weight: normal;
+      letter-spacing: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
-      animation: logoGlow 3s ease-in-out infinite;
+      /* logoGlow削除: 各brand-charが独自にcharGlowするため、
+         コンテナ側のtext-shadowは固定位置に残り文字とズレる */
     }
 
-    @keyframes logoGlow {
-
-      0%,
-      100% {
-        text-shadow:
-          0 0 10px rgba(255, 255, 255, 0.3),
-          0 0 30px rgba(255, 255, 255, 0.2),
-          0 0 60px rgba(255, 255, 255, 0.1);
-        transform: scale(1.0);
-      }
-
-      50% {
-        text-shadow:
-          0 0 20px rgba(255, 255, 255, 0.5),
-          0 0 50px rgba(255, 255, 255, 0.3),
-          0 0 100px rgba(255, 255, 255, 0.15),
-          0 0 150px rgba(255, 255, 255, 0.05);
-        transform: scale(1.02);
-      }
-    }
-
-    .logo-icon {
+    /* ── ホログラムラッパー ── */
+    .logo-holo-wrap {
       display: block;
       margin: 16px auto 0 auto;
-      width: clamp(80px, 12vw, 140px);
-      height: auto;
-      opacity: 0.95;
+      width: clamp(60px, 8vw, 100px); /* was clamp(80px, 12vw, 140px) — ロゴ小さく */
       position: relative;
       z-index: 10;
-      animation: iconGlow 3s ease-in-out infinite;
-      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+    }
+
+    /* ── ラッパーに3Dパースペクティブ ── */
+    .logo-holo-wrap {
+      perspective: 400px;
+    }
+
+    /* ── シェル（卵+I）= 3Dホログラム投影 ── */
+    .logo-shell {
+      display: block;
+      width: 100%;
+      height: auto;
+      position: relative;
+      z-index: 1;
+      opacity: 0.85;
       mix-blend-mode: screen;
+      filter:
+        hue-rotate(160deg) saturate(3.5) brightness(1.5)
+        drop-shadow(0 0 12px rgba(0,255,255,0.8))
+        drop-shadow(0 0 30px rgba(0,255,255,0.4))
+        drop-shadow(0 0 60px rgba(0,255,255,0.15));
+      animation: shell3D 6s ease-in-out infinite, shellFlicker 5s step-end infinite;
+      transform-style: preserve-3d;
+    }
+
+    /* ── 球体 = 実体（投影の源）── */
+    .logo-sphere {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: auto;
+      z-index: 3;
+      opacity: 1;
+      filter:
+        drop-shadow(0 0 15px rgba(255,255,255,0.7))
+        drop-shadow(0 0 35px rgba(0,255,255,0.5))
+        drop-shadow(0 0 60px rgba(100,200,255,0.25))
+        saturate(1.6) brightness(1.2);
+      animation: sphereGlow 3s ease-in-out infinite;
+    }
+
+    /* ── 3D球体（Three.js canvas版） ── */
+    .logo-sphere-3d {
+      filter:
+        drop-shadow(0 0 12px rgba(255,255,255,0.6))
+        drop-shadow(0 0 30px rgba(0,255,255,0.4))
+        drop-shadow(0 0 50px rgba(100,200,255,0.2));
+      animation: none !important;
+    }
+
+    /* ── 横スキャンライン（CRTホログラム感）── */
+    .holo-scanlines {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,255,255,0.08) 2px,
+        rgba(0,255,255,0.08) 3px
+      );
+      mix-blend-mode: screen;
+      opacity: 0.9;
+      animation: shell3D 6s ease-in-out infinite;
+      transform-style: preserve-3d;
+    }
+
+    /* 3D回転 — 微かな揺らぎ（ホログラムの浮遊感） */
+    @keyframes shell3D {
+      0%   { transform: rotateY(0deg) rotateX(0deg);
+             opacity:0.85; filter: hue-rotate(160deg) saturate(3) brightness(1.4) drop-shadow(0 0 10px rgba(0,255,255,0.6)) drop-shadow(0 0 25px rgba(0,255,255,0.3)); }
+      25%  { transform: rotateY(3deg) rotateX(-1.5deg);
+             opacity:0.82; filter: hue-rotate(162deg) saturate(3.2) brightness(1.42) drop-shadow(0 0 12px rgba(0,255,255,0.65)) drop-shadow(0 0 28px rgba(0,255,255,0.32)); }
+      50%  { transform: rotateY(-2deg) rotateX(1deg);
+             opacity:0.85; filter: hue-rotate(158deg) saturate(3) brightness(1.38) drop-shadow(0 0 10px rgba(0,255,255,0.6)) drop-shadow(0 0 25px rgba(0,255,255,0.3)); }
+      75%  { transform: rotateY(2deg) rotateX(-1deg);
+             opacity:0.83; filter: hue-rotate(161deg) saturate(3.1) brightness(1.43) drop-shadow(0 0 11px rgba(0,255,255,0.62)) drop-shadow(0 0 26px rgba(0,255,255,0.31)); }
+      100% { transform: rotateY(0deg) rotateX(0deg);
+             opacity:0.85; filter: hue-rotate(160deg) saturate(3) brightness(1.4) drop-shadow(0 0 10px rgba(0,255,255,0.6)) drop-shadow(0 0 25px rgba(0,255,255,0.3)); }
+    }
+
+    /* シェルのちらつき（控えめ — リアルなホログラム） */
+    @keyframes shellFlicker {
+      0%   { opacity:0.85; }
+      24%  { opacity:0.85; }
+      24.3%{ opacity:0.55; }
+      25.0%{ opacity:0.85; }
+      58%  { opacity:0.85; }
+      58.2%{ opacity:0.60; }
+      58.8%{ opacity:0.85; }
+      100% { opacity:0.85; }
+    }
+
+    /* 球体の脈動（実体 — 安定して光る） */
+    @keyframes sphereGlow {
+      0%   { filter: drop-shadow(0 0 15px rgba(255,255,255,0.7)) drop-shadow(0 0 35px rgba(0,255,255,0.5)) drop-shadow(0 0 60px rgba(100,200,255,0.25)) saturate(1.6) brightness(1.2); }
+      50%  { filter: drop-shadow(0 0 22px rgba(255,255,255,0.9)) drop-shadow(0 0 50px rgba(0,255,255,0.6)) drop-shadow(0 0 80px rgba(100,200,255,0.35)) saturate(1.8) brightness(1.3); }
+      100% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.7)) drop-shadow(0 0 35px rgba(0,255,255,0.5)) drop-shadow(0 0 60px rgba(100,200,255,0.25)) saturate(1.6) brightness(1.2); }
+    }
+
+    /* コア球体の強い脈動（タップ誘導時） */
+    @keyframes sphereBeacon {
+      0%   { filter: drop-shadow(0 0 15px rgba(255,255,255,0.7)) drop-shadow(0 0 35px rgba(0,255,255,0.5)) saturate(1.6) brightness(1.2);
+             transform: scale(1.0); }
+      50%  { filter: drop-shadow(0 0 30px rgba(255,255,255,1.0)) drop-shadow(0 0 60px rgba(0,255,255,0.8)) drop-shadow(0 0 100px rgba(255,0,255,0.4)) saturate(2.0) brightness(1.6);
+             transform: scale(1.08); }
+      100% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.7)) drop-shadow(0 0 35px rgba(0,255,255,0.5)) saturate(1.6) brightness(1.2);
+             transform: scale(1.0); }
+    }
+
+    /* タップヒントテキスト */
+    .tap-hint {
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 8px;
+      color: rgba(255,255,255,0);
+      letter-spacing: 3px;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: color 1.5s ease;
+    }
+    .tap-hint.visible {
+      color: rgba(255,255,255,0.5);
+      animation: tapPulse 2s ease-in-out infinite;
+    }
+    @keyframes tapPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1.0; }
+    }
+
+    /* ホログラフィックオーバーレイ（虹色の光沢が流れる） */
+    .holo-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      border-radius: 50% 50% 30% 30%;
+      background: linear-gradient(
+        135deg,
+        rgba(255,0,0,0) 0%,
+        rgba(255,0,100,0.12) 15%,
+        rgba(0,255,255,0.15) 30%,
+        rgba(255,255,0,0.1) 45%,
+        rgba(0,255,100,0.12) 60%,
+        rgba(100,0,255,0.1) 75%,
+        rgba(255,0,0,0) 100%
+      );
+      background-size: 200% 200%;
+      animation: holoShimmer 3s ease-in-out infinite;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes holoShimmer {
+      0%   { background-position: 0% 0%; opacity: 0.6; }
+      50%  { background-position: 100% 100%; opacity: 1.0; }
+      100% { background-position: 0% 0%; opacity: 0.6; }
+    }
+
+    /* スキャンライン（球体から投影されたように上から下へ走る） */
+    .holo-scanline {
+      position: absolute;
+      left: 5%;
+      width: 90%;
+      height: 1.5px;
+      z-index: 3;
+      pointer-events: none;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0,255,255,0.4) 15%,
+        rgba(255,255,255,0.9) 45%,
+        rgba(255,255,255,0.9) 55%,
+        rgba(0,255,255,0.4) 85%,
+        transparent 100%
+      );
+      box-shadow:
+        0 0 6px rgba(0,255,255,0.6),
+        0 0 15px rgba(0,255,255,0.3),
+        0 -2px 20px rgba(255,255,255,0.15);
+      animation: scanProject 3s ease-in-out infinite;
+      opacity: 0.6;
+    }
+
+    /* 投影元の球体位置（35%付近）から下へスキャン */
+    @keyframes scanProject {
+      0%   { top: 30%; opacity: 0; }
+      8%   { opacity: 0.6; }
+      85%  { opacity: 0.5; }
+      100% { top: 95%; opacity: 0; }
+    }
+
+    /* 追加：縦方向のホログラム投影線（球体から下に広がる光の柱） */
+    .logo-holo-wrap::before {
+      content: '';
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 65%;
+      background: linear-gradient(to bottom,
+        rgba(0,255,255,0.4) 0%,
+        rgba(0,255,255,0.15) 30%,
+        rgba(0,255,255,0.05) 60%,
+        transparent 100%
+      );
+      box-shadow: 0 0 8px rgba(0,255,255,0.3), 0 0 20px rgba(0,255,255,0.1);
+      z-index: 4;
+      pointer-events: none;
+      animation: projectionBeam 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes projectionBeam {
+      0%   { opacity: 0.3; width: 1px; }
+      50%  { opacity: 0.6; width: 3px; }
+      100% { opacity: 0.3; width: 1px; }
+    }
+
+    /* ── ホログラムフリッカーは .logo-shell 自体に統合済み ── */
+
+    @keyframes brandPulse {
+      0%   { transform: scale(1);   opacity: 0.9; }
+      50%  { transform: scale(1.5); opacity: 1; }
+      100% { transform: scale(1);   opacity: 0.9; }
     }
 
     /* Glassmorphism共通 */
@@ -117,55 +306,100 @@
     .brand-char {
       display: inline-block;
       text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
-      animation: charPulse 2s ease-in-out infinite;
+      animation: charFloat 4s ease-in-out infinite, charGlow 3s ease-in-out infinite;
+      position: relative;
     }
 
     .brand-char:nth-child(1) {
       color: #808080;
-      animation-delay: 0s;
+      animation: charFloatMirror 4s ease-in-out infinite, charGlow 3s ease-in-out infinite;
+      animation-delay: 0s, 0s;
     }
 
     .brand-char:nth-child(2) {
       color: #FF0000;
-      animation-delay: .14s;
+      animation-delay: -0.57s, -0.4s;
     }
 
     .brand-char:nth-child(3) {
       color: #00FF00;
-      animation-delay: .28s;
+      animation-delay: -1.14s, -0.8s;
     }
 
     .brand-char:nth-child(4) {
       color: #0044FF;
-      animation-delay: .42s;
+      animation-delay: -1.71s, -1.2s;
     }
 
     .brand-char:nth-child(5) {
       color: #00FFFF;
-      animation-delay: .57s;
+      animation-delay: -2.28s, -1.6s;
     }
 
     .brand-char:nth-child(6) {
       color: #FF00FF;
-      animation-delay: .71s;
+      animation-delay: -2.85s, -2.0s;
     }
 
     .brand-char:nth-child(7) {
       color: #FFFF00;
-      animation-delay: .85s;
+      animation-delay: -3.42s, -2.4s;
     }
 
-    @keyframes charPulse {
-
-      0%,
+    /* 各文字が独立して浮遊（波のようにうねる） */
+    /* iだけ左右反転 + 浮遊 */
+    @keyframes charFloatMirror {
+      0% {
+        transform: scaleX(-1) translateY(0px) scale(1) rotate(0deg);
+      }
+      25% {
+        transform: scaleX(-1) translateY(-8px) scale(1.05) rotate(2deg);
+      }
+      50% {
+        transform: scaleX(-1) translateY(0px) scale(1) rotate(0deg);
+      }
+      75% {
+        transform: scaleX(-1) translateY(6px) scale(0.97) rotate(-1.5deg);
+      }
       100% {
-        transform: scale(1);
+        transform: scaleX(-1) translateY(0px) scale(1) rotate(0deg);
+      }
+    }
+
+    @keyframes charFloat {
+      0% {
+        transform: translateY(0px) scale(1) rotate(0deg);
+      }
+      25% {
+        transform: translateY(-8px) scale(1.05) rotate(-2deg);
+      }
+      50% {
+        transform: translateY(0px) scale(1) rotate(0deg);
+      }
+      75% {
+        transform: translateY(6px) scale(0.97) rotate(1.5deg);
+      }
+      100% {
+        transform: translateY(0px) scale(1) rotate(0deg);
+      }
+    }
+
+    /* グロー脈動（各文字の色で発光が強まる→弱まる） */
+    @keyframes charGlow {
+      0%, 100% {
+        text-shadow:
+          0 0 10px currentColor,
+          0 0 25px currentColor,
+          0 0 50px currentColor;
         filter: brightness(1);
       }
-
       50% {
-        transform: scale(1.1);
-        filter: brightness(1.8);
+        text-shadow:
+          0 0 20px currentColor,
+          0 0 50px currentColor,
+          0 0 100px currentColor,
+          0 0 150px currentColor;
+        filter: brightness(1.6);
       }
     }
 
@@ -179,240 +413,146 @@
     }
 
     .prism-line {
-      width: 300px;
-      height: 2px;
+      width: 240px;
+      height: 1px;
       background: linear-gradient(90deg, #808080, #F00, #0F0, #00F, #0FF, #F0F, #FF0);
-      margin: 10px auto;
+      margin: 8px auto 0;
     }
 
     .item-grid {
       display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .item-card {
-      width: 180px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      overflow: hidden;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      cursor: pointer;
-      transition: border-color .3s, transform .3s;
-      touch-action: manipulation;
-    }
-
-    .item-card:hover {
-      border-color: #555;
-      transform: translateY(-4px);
-    }
-
-    .item-thumb {
-      width: 100%;
-      height: 180px;
-      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      border-radius: 12px 12px 0 0;
+      margin-top: 400px;
     }
 
-    .item-thumb-img {
+    /* ═══ 3D Carousel — Merry-go-round ═══ */
+    .carousel-wrap {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      perspective: 1200px;
+      padding: 20px 0;
+      cursor: grab;
+    }
+    .carousel-wrap:active {
+      cursor: grabbing;
+    }
+    .carousel-scene {
+      width: 110px;
+      height: 200px;
+      margin: 0 auto;
+      position: relative;
+      perspective: 800px;
+      transform-style: preserve-3d;
+    }
+    .carousel-ring {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      transition: transform 0.4s ease;
-    }
-
-    .item-card:hover .item-thumb-img {
-      transform: scale(1.08);
-    }
-
-    .item-info {
-      padding: 12px;
-      text-align: center;
-    }
-
-    .item-name {
-      color: #EEE;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .item-price {
-      color: #999;
-      font-size: 12px;
-      margin-top: 4px;
-      font-family: 'Inter', Arial, sans-serif;
-    }
-
-    .philosophy-window {
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 12px;
-      width: clamp(260px, 75vw, 400px);
-      z-index: 100;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    }
-
-    .window-titlebar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #222;
-      padding: 6px 10px;
-      border-radius: 4px 4px 0 0;
-    }
-
-    .window-title {
-      color: #AAA;
-      font-size: 12px;
-    }
-
-    .window-controls {
-      display: flex;
-      gap: 4px;
-    }
-
-    .window-controls button {
-      width: 20px;
-      height: 20px;
-      border: 1px solid #444;
-      background: #333;
-      color: #AAA;
-      font-size: 10px;
-      cursor: pointer;
-      border-radius: 2px;
-    }
-
-    .window-content {
-      padding: 15px;
-      color: #CCC;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .sutra-text {
-      color: #FFD700;
-      margin-bottom: 10px;
-    }
-
-    .sutra-translation {
-      color: #888;
-      font-style: italic;
-    }
-
-    .binary-footer {
-      text-align: center;
-      color: #333;
-      font-size: 12px;
-      padding: 20px 0;
-      font-family: 'Courier New';
-    }
-
-    /* Bolero player */
-    #bolero-player {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      background: rgba(0, 0, 0, .8);
-      border: 1px solid #444;
-      border-radius: 8px;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      transition: border-color .3s;
-    }
-
-    #bolero-player:hover {
-      border-color: #808080;
-    }
-
-    #bolero-btn {
-      background: none;
-      border: none;
-      color: #808080;
-      font-size: 20px;
-      cursor: pointer;
-      padding: 0;
-      line-height: 1;
-    }
-
-    #bolero-label {
-      color: #666;
-      font-size: 11px;
-      font-family: 'Courier New';
-    }
-
-    .coming-soon-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      transition: opacity .3s;
-    }
-
-    .coming-soon-modal.modal-visible {
-      opacity: 1;
-    }
-
-    .modal-overlay {
       position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, .85);
+      transform-style: preserve-3d;
+      transition: none;
     }
-
-    .modal-content {
-      position: relative;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 30px;
-      max-width: 90%;
-      width: 380px;
-      text-align: center;
-      color: #FFF;
-    }
-
-    .modal-content h2 {
-      font-size: 22px;
-      margin-bottom: 12px;
-      background: linear-gradient(90deg, #F0F, #0FF);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .modal-content p {
-      margin: 8px 0;
-      color: #888;
-      font-size: 13px;
-    }
-
-    .modal-close-btn {
-      margin-top: 20px;
-      padding: 10px 28px;
-      background: transparent;
-      border: 2px solid #FFF;
-      color: #FFF;
-      font-size: 15px;
+    .carousel-item {
+      position: absolute;
+      width: 90px;
+      left: 10px;
+      top: 0;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
       cursor: pointer;
+      transition: filter 0.5s ease, transform 0.4s ease, opacity 0.5s ease;
+      opacity: 0.3;
+      filter: brightness(0.4) saturate(0.5);
+    }
+    /* 正面カード: RGBCMYグロー + スケールアップ + 完全な明るさ */
+    .carousel-item.carousel-front {
+      z-index: 10;
+      opacity: 1;
+      filter: brightness(1) saturate(1);
+    }
+    .carousel-item.carousel-front .product-card-img {
+      box-shadow:
+        0 0 15px rgba(255,0,0,0.12),
+        0 0 30px rgba(0,255,255,0.08),
+        0 0 50px rgba(255,0,255,0.06);
+    }
+    .carousel-item:hover .product-card-img {
+      box-shadow:
+        0 0 15px rgba(255,0,0,0.1),
+        0 0 25px rgba(0,255,255,0.12),
+        0 0 40px rgba(255,0,255,0.08),
+        0 0 60px rgba(255,255,0,0.05);
+    }
+    .carousel-item:hover {
+      opacity: 0.8;
+      filter: brightness(0.8) saturate(0.8);
+    }
+
+    .product-card-img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
       border-radius: 20px;
+      background: rgba(20,20,25,0.25);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: none;
+      transition: box-shadow 0.5s ease;
+    }
+
+    /* ── 軌道リング（球面を示す赤道線 + 経線） ── */
+    .carousel-scene::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 440px;
+      height: 440px;
+      transform: translate(-50%, -50%) rotateX(85deg);
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow:
+        0 0 20px rgba(0,255,255,0.03),
+        0 0 40px rgba(255,0,255,0.02),
+        inset 0 0 20px rgba(0,255,255,0.02);
+      pointer-events: none;
+      animation: orbitPulse 4s ease-in-out infinite;
+    }
+    @keyframes orbitPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    .product-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .product-card-info {
+      padding: 8px 0 0;
+      text-align: center;
+    }
+
+    .product-card-name {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 10px;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      line-height: 1.4;
+    }
+
+    .product-card-price {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 3px;
+      letter-spacing: 0.05em;
     }
 
     /* ─── Product Modal ──────────────────────────────────── */
@@ -430,6 +570,16 @@
 
     .product-modal.modal-visible {
       opacity: 1;
+    }
+
+    .product-modal.modal-closing {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .product-modal.modal-closing .product-detail {
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s ease;
+      opacity: 0;
     }
 
     .product-modal .modal-overlay {
@@ -524,7 +674,7 @@
     }
 
     .product-title {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 20px;
       font-weight: 700;
       color: #fff;
@@ -533,7 +683,7 @@
     }
 
     .product-price-tag {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 24px;
       font-weight: 300;
       color: #fff;
@@ -541,7 +691,7 @@
     }
 
     .product-desc {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 14px;
       color: #aaa;
       line-height: 1.6;
@@ -549,14 +699,14 @@
     }
 
     .product-specs {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 12px;
       color: #666;
       margin: 0;
     }
 
     .product-color {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 12px;
       color: #888;
       letter-spacing: 1px;
@@ -567,7 +717,7 @@
     }
 
     .size-label {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 11px;
       color: #666;
       letter-spacing: 2px;
@@ -585,7 +735,7 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: transparent;
       color: #999;
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
@@ -610,27 +760,27 @@
       justify-content: space-between;
       width: 100%;
       padding: 16px 24px;
-      background: #fff;
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Inter', Arial, sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.2em;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.3s ease;
       margin-top: 8px;
+      text-transform: uppercase;
     }
 
     .add-to-cart-btn:hover {
-      background: #e0e0e0;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.7);
     }
 
     .add-to-cart-btn:active {
-      transform: translateY(0);
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .cart-btn-text {
@@ -642,7 +792,7 @@
     }
 
     .stripe-badge {
-      font-family: 'Inter', Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
       font-size: 11px;
       color: #555;
       text-align: center;
@@ -684,3 +834,1321 @@
         width: 155px;
         height: 155px;
       }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CHAT UI — Win95 / DOS / Mac / Famicom / Glitch
+       ═══════════════════════════════════════════════════════════ */
+
+    /* ── 共通 ── */
+    #inryoku-chat {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 340px;
+      max-height: 420px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: auto;
+    }
+    #inryoku-chat.chat-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    #chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      cursor: default;
+      user-select: none;
+    }
+    #chat-title {
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    #chat-close {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 14px;
+      line-height: 1;
+      padding: 2px 6px;
+    }
+    #chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      min-height: 180px;
+      max-height: 280px;
+    }
+    .chat-msg {
+      margin-bottom: 6px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .user-msg {
+      opacity: 0.7;
+    }
+    #chat-input-row {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      gap: 6px;
+    }
+    #chat-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      padding: 4px 8px;
+      background: transparent;
+    }
+    #chat-send {
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 12px;
+    }
+
+    /* ── Win95 テーマ ── */
+    .chat-win95 {
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #ffffff #808080 #808080 #ffffff;
+      box-shadow: inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #0a0a0a;
+      font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+    }
+    .chat-win95 #chat-header {
+      background: linear-gradient(to right, #0a246a, #a6b8e8);
+      color: #ffffff;
+    }
+    .chat-win95 #chat-close {
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #ffffff #808080 #808080 #ffffff;
+      color: #000;
+      font-size: 11px;
+      font-weight: bold;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-win95 #chat-messages {
+      background: #ffffff;
+      border: 2px solid;
+      border-color: #808080 #ffffff #ffffff #808080;
+      margin: 4px;
+      color: #000;
+    }
+    .chat-win95 #chat-input-row {
+      margin: 0 4px 4px 4px;
+    }
+    .chat-win95 #chat-input {
+      background: #ffffff;
+      border: 2px solid;
+      border-color: #808080 #ffffff #ffffff #808080;
+      color: #000;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    }
+    .chat-win95 #chat-send {
+      background: #c0c0c0;
+      border: 2px solid;
+      border-color: #ffffff #808080 #808080 #ffffff;
+      color: #000;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-weight: bold;
+    }
+    .chat-win95 #chat-send:active {
+      border-color: #808080 #ffffff #ffffff #808080;
+    }
+
+    /* ── DOS テーマ ── */
+    .chat-dos {
+      background: #000000;
+      border: 1px solid #00aa00;
+      font-family: 'Courier New', monospace;
+      color: #00ff00;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.15);
+    }
+    .chat-dos #chat-header {
+      border-bottom: 1px solid #003300;
+    }
+    .chat-dos #chat-title {
+      color: #00aa00;
+    }
+    .chat-dos #chat-close {
+      color: #00aa00;
+    }
+    .chat-dos #chat-messages {
+      color: #00ff00;
+      background: transparent;
+    }
+    .chat-dos .user-msg { color: #aaaaaa; }
+    .chat-dos #chat-input {
+      color: #00ff00;
+      caret-color: #00ff00;
+    }
+    .chat-dos #chat-prompt {
+      color: #00aa00;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .chat-dos #chat-cursor {
+      color: #00ff00;
+      animation: dosBlink 0.6s step-end infinite;
+    }
+    @keyframes dosBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── Mac テーマ（Classic Mac風） ── */
+    .chat-mac {
+      background: #f5f5dc;
+      border: 2px solid #000;
+      border-radius: 8px 8px 4px 4px;
+      font-family: 'Chicago', 'Geneva', 'Lucida Grande', sans-serif;
+      color: #000;
+      box-shadow: 2px 2px 0 #000;
+    }
+    .chat-mac #chat-header {
+      background: repeating-linear-gradient(
+        0deg,
+        #000 0px, #000 1px,
+        #f5f5dc 1px, #f5f5dc 3px
+      );
+      border-bottom: 2px solid #000;
+      padding: 3px 8px;
+      height: 22px;
+    }
+    .chat-mac #chat-close {
+      width: 14px; height: 14px;
+      border: 2px solid #000;
+      background: #f5f5dc;
+      border-radius: 0;
+      padding: 0;
+      font-size: 0;
+    }
+    .chat-mac #chat-title-wrap {
+      background: #f5f5dc;
+      padding: 0 8px;
+    }
+    .chat-mac #chat-title {
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .chat-mac #chat-messages {
+      background: #fff;
+      border: 1px solid #000;
+      margin: 4px;
+      color: #000;
+    }
+    .chat-mac #chat-input {
+      background: #fff;
+      border: 1px solid #000;
+      color: #000;
+    }
+    .chat-mac #chat-send {
+      background: #f5f5dc;
+      border: 2px solid #000;
+      border-radius: 6px;
+      color: #000;
+      font-weight: bold;
+    }
+
+    /* ── ファミコン テーマ（ドラクエ/FF風メッセージウィンドウ） ── */
+    .chat-famicom {
+      /* DQ風: 黒背景 + 白の二重枠 */
+      background: #000010;
+      border: 4px solid #f8f8f8;
+      outline: 4px solid #6868a8;
+      outline-offset: 0px;
+      box-shadow:
+        inset 0 0 0 2px #3838a0,
+        0 0 24px rgba(56, 56, 160, 0.4);
+      font-family: 'Courier New', 'MS Gothic', monospace;
+      color: #f8f8f8;
+      image-rendering: pixelated;
+      width: 380px;
+      max-height: 320px;
+      border-radius: 0;
+      padding: 0;
+      position: fixed;
+      bottom: 40px;
+      right: 30px;
+    }
+    .chat-famicom #chat-header {
+      background: transparent;
+      border-bottom: none;
+      padding: 0;
+      height: 0;
+      overflow: hidden;
+    }
+    .chat-famicom #chat-title {
+      display: none;
+    }
+    .chat-famicom #chat-close {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      color: #6868a8;
+      font-size: 14px;
+      z-index: 5;
+      background: none;
+      border: none;
+    }
+    .chat-famicom #chat-close:hover {
+      color: #f8f8f8;
+    }
+    .chat-famicom #chat-messages {
+      background: transparent;
+      min-height: 100px;
+      max-height: 180px;
+      padding: 16px 18px 8px 18px;
+      overflow-y: auto;
+    }
+    .chat-famicom .chat-msg {
+      font-size: 14px;
+      line-height: 2.0;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .chat-famicom .chat-msg.ai-msg {
+      color: #f8f8f8;
+    }
+    .chat-famicom .chat-msg.user-msg {
+      color: #78f878;
+      opacity: 1;
+    }
+    /* ネームボックス（DQ風: ウィンドウ上部にかぶる名前枠） */
+    .nes-namebox {
+      position: absolute;
+      top: -14px;
+      left: 16px;
+      background: #000010;
+      border: 3px solid #f8f8f8;
+      outline: 3px solid #6868a8;
+      padding: 3px 14px;
+      font-size: 12px;
+      color: #f8f8f8;
+      font-family: 'Courier New', 'MS Gothic', monospace;
+      letter-spacing: 2px;
+      z-index: 5;
+    }
+    /* ▼カーソル（DQ風: ゆっくり点滅） */
+    .nes-cursor {
+      color: #f8f8f8;
+      animation: nesBlink 0.7s step-end infinite;
+    }
+    @keyframes nesBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    /* 入力欄（DQ風: 画面下部のコマンド入力） */
+    .chat-famicom #chat-input-row {
+      border-top: 2px solid #3838a0;
+      padding: 10px 14px;
+      background: rgba(56, 56, 160, 0.15);
+    }
+    .chat-famicom #chat-input {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #6868a8;
+      color: #f8f8f8;
+      font-family: 'Courier New', 'MS Gothic', monospace;
+      font-size: 14px;
+      letter-spacing: 1px;
+      padding: 4px 2px;
+    }
+    .chat-famicom #chat-input::placeholder {
+      color: #4848a8;
+    }
+    .chat-famicom #chat-input:focus {
+      border-bottom-color: #f8f8f8;
+    }
+    /* ▶ プロンプト */
+    #nes-prompt {
+      color: #f8d860;
+      font-size: 14px;
+      margin-right: 4px;
+    }
+
+    /* ── グリッチモード（Win95ベース + 一時切り替え） ── */
+    .chat-glitch-mode {
+      animation: glitchShake 0.1s infinite;
+    }
+    @keyframes glitchShake {
+      0%   { transform: translateY(0) scale(1); }
+      25%  { transform: translateY(-1px) scale(1); }
+      50%  { transform: translateY(1px) scale(1); }
+      75%  { transform: translateY(-0.5px) scale(1); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    /* グリッチ一時テーマ切り替え */
+    .gmode-dos #chat-header { background: #000 !important; }
+    .gmode-dos #chat-messages { background: #000 !important; color: #00ff00 !important; }
+    .gmode-mac #chat-header {
+      background: repeating-linear-gradient(0deg, #000 0px, #000 1px, #f5f5dc 1px, #f5f5dc 3px) !important;
+    }
+
+    /* ── Telepathy / Sculpt / Quantum オーバーレイ ── */
+    #chat-tp-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      pointer-events: none;
+    }
+    #chat-tp-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0; right: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      transition: opacity 0.5s ease;
+    }
+    #chat-tp-input {
+      flex: 1;
+      max-width: 500px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-size: 16px;
+      padding: 8px 4px;
+      outline: none;
+      font-family: 'Courier New', monospace;
+    }
+    #chat-tp-close {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 20px;
+      cursor: pointer;
+      margin-left: 16px;
+      padding: 4px 8px;
+    }
+
+    /* ── 二進数メッセージ演出 ── */
+    .binary-msg {
+      font-family: 'Courier New', monospace !important;
+      color: #00FF00 !important;
+      text-shadow: 0 0 6px #00FF00 !important;
+      letter-spacing: 1px;
+    }
+
+/* ── Footer ── */
+.site-footer {
+    position: relative; z-index: 10;
+    margin-top: 60px; text-align: center;
+}
+/* ── 最小化状態 ── */
+.site-footer--mini .footer-toggle {
+    display: inline-block; cursor: pointer;
+    font-size: 14px; color: rgba(255,255,255,0.15);
+    padding: 12px 20px; transition: color 0.3s;
+    user-select: none;
+}
+.site-footer--mini .footer-toggle:hover { color: rgba(255,255,255,0.5); text-shadow: 0 0 8px rgba(0,255,255,0.3), 0 0 20px rgba(0,255,255,0.1); }
+.site-footer--mini .footer-expanded {
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+/* ── 展開状態 ── */
+.site-footer--open .footer-expanded {
+    max-height: 120px; opacity: 1; padding: 8px 20px 16px;
+}
+.site-footer--open .footer-toggle { color: rgba(255,255,255,0.4); }
+.footer-brand {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    color: rgba(255,255,255,0.2); margin-bottom: 8px;
+}
+.footer-links {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 6px;
+}
+.footer-link {
+    font-size: 9px; color: rgba(255,255,255,0.25); text-decoration: none;
+    transition: color 0.3s;
+}
+.footer-link:hover { color: rgba(255,255,255,0.6); }
+.footer-stripe {
+    font-size: 8px; color: rgba(255,255,255,0.15);
+}
+
+/* ── Cart Drawer ── */
+#cart-drawer {
+    position: fixed;
+    top: 0;
+    right: -360px;
+    width: 340px;
+    max-width: 90vw;
+    height: 100vh;
+    background: rgba(10, 10, 14, 0.97);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+#cart-drawer.cart-drawer-open {
+    right: 0;
+}
+
+.cart-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cart-drawer-title {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.2em;
+}
+.cart-drawer-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+.cart-drawer-close:hover { color: #fff; }
+
+.cart-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+}
+
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.cart-item-info { flex: 1; }
+.cart-item-name {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+.cart-item-meta {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: 3px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+.cart-item-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cart-item-price {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+.cart-item-remove {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.25);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 4px;
+    transition: color 0.2s;
+}
+.cart-item-remove:hover { color: #ff4444; }
+
+.cart-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cart-total {
+    display: flex;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+}
+.cart-checkout-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.cart-checkout-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.7);
+}
+.cart-stripe-note {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+    margin-top: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+
+/* ── Cart Toast ── */
+.cart-toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(18,18,22,0.95); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 12px;
+    padding: 12px 24px; color: #fff; font-size: 13px; font-family: sans-serif;
+    z-index: 10000; opacity: 0; transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+}
+.cart-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE — P3 完全対応
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    /* ── レイアウト: スクロール可能に ── */
+    .singularity-content {
+        justify-content: flex-start;
+        padding: 60px 12px 80px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 16px;
+    }
+
+    /* ── ブランド名 ── */
+    .brand-name {
+        font-size: clamp(18px, 5vw, 32px);
+        letter-spacing: 6px;
+    }
+
+    /* ── ロゴ ── */
+    .logo-holo-wrap {
+        width: clamp(50px, 14vw, 80px);
+        margin: 8px auto 0;
+    }
+
+    /* ── タップヒント ── */
+    .tap-hint {
+        font-size: 7px;
+        bottom: -22px;
+    }
+
+    /* ── プリズムライン ── */
+    .prism-line {
+        width: 160px;
+    }
+
+    /* ── カルーセル モバイル ── */
+    .carousel-wrap {
+      max-width: 100%;
+      padding: 10px 0;
+    }
+    .carousel-scene {
+      width: 90px;
+      height: 160px;
+      perspective: 600px;
+    }
+    .carousel-item {
+      width: 80px;
+      left: 5px;
+    }
+    .item-grid {
+      margin-top: 50px;
+    }
+    .product-card-img {
+      border-radius: 12px;
+    }
+    .product-card-name { font-size: 8px; }
+    .product-card-price { font-size: 8px; }
+    /* モバイル: 問い合わせ・メール */
+    .contact-input, .contact-textarea {
+      font-size: 16px; /* iOS zoom防止 */
+    }
+    .email-signup-input {
+      font-size: 16px;
+    }
+
+    /* ── カート・ミュートボタン ── */
+    #cart-icon, #mute-btn {
+        padding: 8px !important;
+    }
+    #cart-icon span, #mute-btn span {
+        font-size: 16px !important;
+    }
+
+    /* ── チャットUI: フル幅・下部固定 ── */
+    #inryoku-chat {
+        left: 8px;
+        right: 8px;
+        bottom: 0;
+        width: auto;
+        max-height: 50vh;
+        border-radius: 12px 12px 0 0 !important;
+    }
+    #chat-messages {
+        min-height: 120px;
+        max-height: 200px;
+    }
+    #chat-input {
+        font-size: 16px; /* iOS: 16px未満でズームされる */
+    }
+
+    /* ── テレパシーバー ── */
+    #chat-tp-input {
+        font-size: 16px;
+    }
+
+    /* ── フッター ── */
+    .site-footer {
+        margin-top: 30px;
+    }
+
+    /* ── 商品モーダル ── */
+    .product-detail {
+        max-height: 90vh;
+        border-radius: 12px 12px 0 0;
+    }
+    .product-detail-inner {
+        flex-direction: column;
+    }
+    .product-image-wrap {
+        min-height: 180px;
+        padding: 16px;
+        border-radius: 12px 12px 0 0;
+    }
+    .product-info-wrap {
+        padding: 20px 16px;
+    }
+    .product-title {
+        font-size: 16px;
+    }
+    .product-price-tag {
+        font-size: 20px;
+    }
+    .size-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 12px;
+    }
+}
+
+    /* ── 配送情報 & サイズガイドリンク ── */
+    .product-shipping-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 12px;
+      padding: 10px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .product-shipping-info span {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.03em;
+    }
+    .size-guide-toggle {
+      display: inline-block;
+      margin-top: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      transition: color 0.2s ease;
+    }
+    .size-guide-toggle:hover {
+      color: rgba(255,255,255,0.8);
+    }
+    .size-guide-table {
+      margin-top: 12px;
+      animation: fadeSlideIn 0.3s ease;
+    }
+    .size-guide-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 11px;
+    }
+    .size-guide-table th, .size-guide-table td {
+      padding: 6px 8px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.5);
+    }
+    .size-guide-table th {
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      letter-spacing: 0.1em;
+    }
+    .size-guide-table td:first-child {
+      text-align: left;
+      color: rgba(255,255,255,0.35);
+      font-size: 10px;
+    }
+    .size-guide-note {
+      font-size: 9px;
+      color: rgba(255,255,255,0.25);
+      margin-top: 6px;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+/* ── Email Signup ── */
+.email-signup {
+    text-align: center;
+    margin-top: 40px;
+    padding: 0 20px;
+    position: relative;
+}
+/* ── メール欄RGBCMY静かな星 ── */
+.form-particle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--size);
+    height: var(--size);
+    background: var(--color);
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 0 calc(var(--size) * 2) var(--color);
+    transform: translate(var(--ox), var(--oy));
+    animation: formTwinkle var(--dur) var(--delay) ease-in-out infinite;
+    pointer-events: none;
+}
+/* 普段: ゆっくり明滅するだけ */
+@keyframes formTwinkle {
+    0%, 100% { opacity: 0.08; }
+    50% { opacity: 0.35; }
+}
+
+/* ── アクション時ビッグバン粒子 ── */
+.bang-particle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 1;
+    animation: bangExplode 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+@keyframes bangExplode {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    60% { opacity: 0.6; }
+    100% { transform: translate(var(--bx), var(--by)) scale(0); opacity: 0; }
+}
+.email-signup-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px rgba(0,255,255,0.15);
+    animation: labelPulse 4s ease-in-out infinite;
+}
+@keyframes labelPulse {
+    0%, 100% { color: rgba(255,255,255,0.35); }
+    50% { color: rgba(255,255,255,0.55); text-shadow: 0 0 25px rgba(0,255,255,0.2); }
+}
+.email-signup-sub {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 16px;
+}
+.email-signup-row {
+    display: flex;
+    gap: 0;
+    max-width: 320px;
+    margin: 0 auto;
+}
+.email-signup-input {
+    flex: 1;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-right: none;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.email-signup-input:focus {
+    border-color: rgba(255,255,255,0.4);
+}
+.email-signup-input::placeholder {
+    color: rgba(255,255,255,0.2);
+}
+.email-signup-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.5);
+    font-size: 16px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.email-signup-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.4);
+}
+.email-signup-status {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+    min-height: 16px;
+}
+
+/* ══════════════════════════════════════════════
+   CONTACT FORM
+   ══════════════════════════════════════════════ */
+.contact-form {
+    text-align: center;
+    margin-top: 30px;
+    padding: 0 20px;
+}
+.contact-toggle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.contact-toggle:hover {
+    color: rgba(255,255,255,0.6);
+    text-shadow: 0 0 12px rgba(0,255,255,0.2);
+}
+.contact-body {
+    max-width: 320px;
+    margin: 12px auto 0;
+    animation: fadeSlideIn 0.3s ease;
+}
+.contact-input, .contact-textarea {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.3s;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+.contact-input:focus, .contact-textarea:focus {
+    border-color: rgba(255,255,255,0.35);
+}
+.contact-input::placeholder, .contact-textarea::placeholder {
+    color: rgba(255,255,255,0.2);
+}
+.contact-textarea {
+    resize: none;
+    min-height: 60px;
+}
+.contact-submit-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.5);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.contact-submit-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.4);
+}
+.contact-status {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 8px;
+    min-height: 16px;
+}
+
+/* ══════════════════════════════════════════════
+   THEME SWITCHER
+   ══════════════════════════════════════════════ */
+.theme-switcher {
+    text-align: center;
+    margin-top: 30px;
+    padding: 0 20px;
+}
+.theme-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.3em;
+    margin-bottom: 10px;
+}
+.theme-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+.theme-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.theme-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    border-color: rgba(255,255,255,0.3);
+}
+.theme-btn--active {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(0,255,255,0.3);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(0,255,255,0.15);
+}
+
+/* ══════════════════════════════════════════════
+   MAC CARD STYLES — 4種ミックス（常時適用）
+   ══════════════════════════════════════════════ */
+
+/* ── STYLE 1: SYSTEM 1 — 初代Macダイアログ ── */
+.mac-system1 .product-card-img {
+    border-radius: 6px;
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 2px solid #000;
+    box-shadow: 3px 3px 0 #000;
+    position: relative;
+    padding-top: 12px;
+}
+.mac-system1 .product-card-img::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 12px;
+    background: repeating-linear-gradient(0deg, #fff 0px, #fff 1px, #000 1px, #000 2px);
+    border-radius: 4px 4px 0 0;
+    border-bottom: 2px solid #000;
+}
+.mac-system1 .product-card-img img {
+    mix-blend-mode: multiply;
+}
+.mac-system1 .product-card-name {
+    font-family: 'Chicago', 'Geneva', monospace;
+    font-size: 8px;
+    color: #fff;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.9);
+}
+.mac-system1 .product-card-price {
+    font-family: 'Geneva', monospace;
+    font-size: 8px;
+    color: rgba(255,255,255,0.7);
+}
+.mac-system1.carousel-front .product-card-img {
+    box-shadow: 4px 4px 0 #000;
+}
+
+/* ── STYLE 2: MAC OS 9 — Platinumウィンドウ ── */
+.mac-os9 .product-card-img {
+    border-radius: 5px;
+    background: linear-gradient(180deg, #e8e8e8, #c8c8c8);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid #888;
+    box-shadow: 0 1px 0 #fff inset, 0 2px 6px rgba(0,0,0,0.5);
+    position: relative;
+    padding-top: 14px;
+}
+.mac-os9 .product-card-img::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 14px;
+    background: linear-gradient(180deg, #ddd, #bbb);
+    border-bottom: 1px solid #999;
+    border-radius: 5px 5px 0 0;
+}
+.mac-os9 .product-card-img::after {
+    content: '';
+    position: absolute;
+    top: 5px; left: 5px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #aaa;
+    border: 0.5px solid #888;
+    box-shadow: 7px 0 0 #aaa, 14px 0 0 #aaa;
+}
+.mac-os9 .product-card-name {
+    font-family: 'Charcoal', 'Geneva', 'Lucida Grande', sans-serif;
+    font-size: 8px;
+    color: #fff;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
+}
+.mac-os9 .product-card-price {
+    font-family: 'Geneva', sans-serif;
+    font-size: 8px;
+    color: rgba(255,255,255,0.6);
+}
+.mac-os9.carousel-front .product-card-img {
+    box-shadow: 0 1px 0 #fff inset, 0 4px 12px rgba(0,0,0,0.6);
+}
+
+/* ── STYLE 3: iMAC G3 — ボンダイブルー半透明 ── */
+.mac-imacg3 .product-card-img {
+    border-radius: 14px;
+    background: rgba(0, 160, 200, 0.15);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 2px solid rgba(0, 180, 220, 0.35);
+    box-shadow: 0 4px 16px rgba(0, 160, 200, 0.12), inset 0 0 20px rgba(0, 180, 220, 0.06);
+    position: relative;
+}
+.mac-imacg3 .product-card-img::before {
+    content: '';
+    position: absolute;
+    top: 5px; left: 50%; transform: translateX(-50%);
+    width: 8px; height: 3px;
+    border-radius: 2px;
+    background: rgba(0, 200, 240, 0.4);
+}
+.mac-imacg3 .product-card-img img {
+    filter: drop-shadow(0 2px 6px rgba(0, 160, 200, 0.3));
+}
+.mac-imacg3 .product-card-name {
+    font-family: 'Charcoal', 'Geneva', -apple-system, sans-serif;
+    font-size: 8px;
+    color: rgba(0, 220, 255, 0.9);
+    text-shadow: 0 0 6px rgba(0, 200, 240, 0.3);
+}
+.mac-imacg3 .product-card-price {
+    font-family: 'Geneva', sans-serif;
+    font-size: 8px;
+    color: rgba(0, 200, 240, 0.5);
+}
+.mac-imacg3.carousel-front .product-card-img {
+    border-color: rgba(0, 200, 240, 0.5);
+    box-shadow: 0 6px 24px rgba(0, 160, 200, 0.2), inset 0 0 20px rgba(0, 180, 220, 0.08),
+                0 0 30px rgba(0, 200, 240, 0.08);
+}
+
+/* ── STYLE 4: APPLE II — グリーンモニタ ── */
+.mac-apple2 .product-card-img {
+    border-radius: 8px;
+    background: #001a00;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 2px solid #2a2a2a;
+    box-shadow: 0 0 12px rgba(0, 255, 0, 0.06), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+.mac-apple2 .product-card-img::before {
+    content: ']LIST';
+    position: absolute;
+    top: 4px; left: 6px;
+    font-family: monospace;
+    font-size: 5px;
+    color: #0f0;
+    opacity: 0.5;
+}
+.mac-apple2 .product-card-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 40, 0, 0.12) 2px, rgba(0, 40, 0, 0.12) 3px);
+    pointer-events: none;
+}
+.mac-apple2 .product-card-img img {
+    filter: none;
+}
+.mac-apple2 .product-card-name {
+    font-family: monospace;
+    font-size: 8px;
+    color: #0f0;
+    text-shadow: 0 0 4px rgba(0, 255, 0, 0.3);
+}
+.mac-apple2 .product-card-price {
+    font-family: monospace;
+    font-size: 8px;
+    color: rgba(0, 255, 0, 0.5);
+}
+.mac-apple2.carousel-front .product-card-img {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+.mac-apple2.carousel-front .product-card-img img {
+    filter: none;
+}
+
+/* ══════════════════════════════════════════════
+   Windows 95 THEME
+   ══════════════════════════════════════════════ */
+body[data-theme="win95"] .product-card-img {
+    border-radius: 0;
+    background: #c0c0c0;
+    backdrop-filter: none;
+    border: 2px outset #fff;
+    box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #fff;
+}
+body[data-theme="win95"] .product-card-img img {
+    mix-blend-mode: multiply;
+}
+body[data-theme="win95"] .carousel-item.carousel-front .product-card-img {
+    border: 2px inset #fff;
+    box-shadow:
+        inset 1px 1px 0 #808080,
+        inset -1px -1px 0 #dfdfdf,
+        2px 2px 0 #000;
+}
+body[data-theme="win95"] .product-card-name {
+    font-family: 'MS Sans Serif', 'Arial', sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #c0c0c0;
+    letter-spacing: 0;
+    text-transform: none;
+}
+body[data-theme="win95"] .product-card-price {
+    font-family: 'MS Sans Serif', 'Arial', sans-serif;
+    font-size: 10px;
+    color: #00ff00;
+}
+body[data-theme="win95"] .product-modal .product-detail {
+    border-radius: 0;
+    background: #c0c0c0;
+    backdrop-filter: none;
+    border: 2px outset #fff;
+    box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #fff;
+}
+body[data-theme="win95"] .product-modal .product-detail * {
+    color: #000;
+}
+body[data-theme="win95"] .product-modal .product-close-btn {
+    border-radius: 0;
+    background: #c0c0c0;
+    border: 2px outset #fff;
+    color: #000;
+}
+body[data-theme="win95"] .email-signup-input {
+    border-radius: 0;
+    background: #fff;
+    border: 2px inset #808080;
+    color: #000;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+}
+body[data-theme="win95"] .email-signup-input::placeholder {
+    color: #808080;
+}
+body[data-theme="win95"] .email-signup-btn {
+    border-radius: 0;
+    background: #c0c0c0;
+    border: 2px outset #fff;
+    color: #000;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+}
+body[data-theme="win95"] .email-signup-btn:hover {
+    background: #d4d4d4;
+}
+body[data-theme="win95"] .email-signup-label {
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    color: #00ffff;
+    text-shadow: 1px 1px 0 #008080;
+}
+body[data-theme="win95"] .email-signup-sub {
+    color: rgba(255,255,255,0.5);
+}
+body[data-theme="win95"] #cart-icon,
+body[data-theme="win95"] #mute-btn,
+body[data-theme="win95"] #bgm-btn {
+    border-radius: 0 !important;
+    background: #c0c0c0 !important;
+    backdrop-filter: none !important;
+    border: 2px outset #fff !important;
+    box-shadow: none !important;
+}
+body[data-theme="win95"] #cart-icon span,
+body[data-theme="win95"] #mute-btn span,
+body[data-theme="win95"] #bgm-btn span {
+    filter: grayscale(1) contrast(2);
+}
+body[data-theme="win95"] .theme-btn {
+    border-radius: 0;
+    border: 2px outset #fff;
+    background: #c0c0c0;
+    color: #000;
+}
+body[data-theme="win95"] .theme-btn--active {
+    border: 2px inset #808080;
+    background: #a0a0a0;
+    box-shadow: none;
+}
+body[data-theme="win95"] .theme-label {
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    color: #00ff00;
+}
+body[data-theme="win95"] .carousel-scene::before {
+    border: 1px dashed rgba(0,255,0,0.15);
+    box-shadow: none;
+    animation: none;
+    opacity: 0.5;
+}
