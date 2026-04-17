@@ -372,10 +372,108 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ── POST /api/checkout — Shopify Storefront API（未実装: トークン設定後に有効化） ──
+    // ── POST /api/checkout — Shopify Storefront API 本実装（ENV 有効時） ──
     if (req.method === 'POST' && req.url === '/api/checkout') {
-        res.writeHead(200, {'Content-Type':'application/json'});
-        res.end(JSON.stringify({ error: 'Checkout is being migrated to Shopify. Coming soon.' }));
+        readBody(req, res, MAX_BODY_SIZE, (body) => {
+            if (!process.env.SHOPIFY_STORE_DOMAIN || !process.env.SHOPIFY_STOREFRONT_TOKEN) {
+                res.writeHead(200, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'Shopify not configured (env missing)' }));
+            }
+            let parsed;
+            try { parsed = JSON.parse(body); } catch(e) {
+                res.writeHead(400, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'invalid JSON' }));
+            }
+            const items = (parsed.items || []).filter(i => i.shopifyVariantId);
+            if (items.length === 0) {
+                res.writeHead(200, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'No Shopify variants mapped' }));
+            }
+            const lines = items.map(i => ({ merchandiseId: i.shopifyVariantId, quantity: i.qty || 1 }));
+            const query = 'mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { id checkoutUrl } userErrors { field message } } }';
+            const payload = JSON.stringify({ query, variables: { input: { lines, attributes: [{ key: 'source', value: 'inryoku-p3' }] } } });
+            const https = require('https');
+            const opts = {
+                method: 'POST',
+                hostname: process.env.SHOPIFY_STORE_DOMAIN,
+                path: `/api/2024-10/graphql.json`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Shopify-Storefront-Access-Token': process.env.SHOPIFY_STOREFRONT_TOKEN,
+                    'Content-Length': Buffer.byteLength(payload)
+                }
+            };
+            const rq = https.request(opts, (rr) => {
+                let chunks = '';
+                rr.on('data', d => chunks += d);
+                rr.on('end', () => {
+                    res.writeHead(200, {'Content-Type':'application/json'});
+                    try {
+                        const data = JSON.parse(chunks);
+                        const cart = data.data && data.data.cartCreate && data.data.cartCreate.cart;
+                        const errors = data.data && data.data.cartCreate && data.data.cartCreate.userErrors;
+                        if (cart && cart.checkoutUrl) return res.end(JSON.stringify({ url: cart.checkoutUrl }));
+                        res.end(JSON.stringify({ error: (errors && errors.length) ? errors[0].message : 'Cart creation failed', raw: data }));
+                    } catch(e) {
+                        res.end(JSON.stringify({ error: 'parse error', raw: chunks }));
+                    }
+                });
+            });
+            rq.on('error', err => {
+                res.writeHead(502, {'Content-Type':'application/json'});
+                res.end(JSON.stringify({ error: err.message }));
+            });
+            rq.write(payload);
+            rq.end();
+        });
+        return;
+    }
+
+    // ── POST /api/gelato/order — Gelato POD 注文中継 (API キー保護) ──
+    if (req.method === 'POST' && req.url === '/api/gelato/order') {
+        readBody(req, res, MAX_BODY_SIZE, (body) => {
+            if (!process.env.GELATO_API_KEY) {
+                res.writeHead(200, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'Gelato not configured (GELATO_API_KEY missing)' }));
+            }
+            let parsed;
+            try { parsed = JSON.parse(body); } catch(e) {
+                res.writeHead(400, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'invalid JSON' }));
+            }
+            const https = require('https');
+            const payload = JSON.stringify({
+                orderReferenceId: 'inryoku-' + Date.now(),
+                customerReferenceId: parsed.customerReferenceId || 'anon',
+                currency: 'JPY',
+                items: parsed.items || [],
+                shippingAddress: parsed.shipping || {}
+            });
+            const opts = {
+                method: 'POST',
+                hostname: 'order.gelatoapis.com',
+                path: '/v4/orders',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': process.env.GELATO_API_KEY,
+                    'Content-Length': Buffer.byteLength(payload)
+                }
+            };
+            const rq = https.request(opts, (rr) => {
+                let chunks = '';
+                rr.on('data', d => chunks += d);
+                rr.on('end', () => {
+                    res.writeHead(rr.statusCode || 200, {'Content-Type':'application/json'});
+                    res.end(chunks);
+                });
+            });
+            rq.on('error', err => {
+                res.writeHead(502, {'Content-Type':'application/json'});
+                res.end(JSON.stringify({ error: err.message }));
+            });
+            rq.write(payload);
+            rq.end();
+        });
         return;
     }
 
