@@ -8,11 +8,15 @@
 
   <!-- Three.js 0.160.0 UMD -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <!-- 2026-04-17: 0.160 では examples/js/ が廃止され404で 5秒近く遅延するため削除
+       Bloom効果はシェーダー内で補償済み -->
+  <!--
   <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
   <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
   <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
   <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
   <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
+  -->
 
   <link rel="stylesheet" href="p3_styles.css">
   <style>
