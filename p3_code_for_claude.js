@@ -166,19 +166,15 @@ function renderPhase3() {
     </div>`;
 
 
-    // ── Bolero プレーヤー ──
-    const boleroEl = document.createElement('div');
-    boleroEl.id = 'bolero-player';
-    boleroEl.innerHTML = `
-        <button id="bolero-btn">▶</button>
-        <span id="bolero-label">BOLERO (Ravel)</span>`;
-    document.body.appendChild(boleroEl);
+    // ── Bolero プレーヤー削除済み（2026-04-17: Jupiter BGMのみ採用） ──
+    // 旧コード:
+    //   const boleroEl = document.createElement('div'); boleroEl.id='bolero-player'; ...
+    //   initBoleroPlayer();
 
     console.log('[Phase 3] DOM setup complete, initializing particle universe...');
     // 同期呼び出し（rAFだとバックグラウンドタブや競合で不発になるケースがある）
     try {
         initParticleUniverse();
-        initBoleroPlayer();
         console.log('[Phase 3] Particle universe initialized successfully');
     } catch(e) {
         console.error('[Phase 3] initParticleUniverse error:', e);
@@ -789,8 +785,7 @@ void main() {
             var itemGrid = document.querySelector('.item-grid');
             var brandName = document.querySelector('.brand-name');
             var prismLine = document.querySelector('.prism-line');
-            var bolero = document.getElementById('bolero-player');
-            [itemGrid, brandName, prismLine, bolero].forEach(function(el) {
+            [itemGrid, brandName, prismLine].forEach(function(el) {
                 if (el) { el.style.transition = 'opacity 1.5s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
             });
         });
@@ -1532,8 +1527,7 @@ void main() {
         var hideEls = [
             document.querySelector('.item-grid'),
             document.querySelector('.brand-name'),
-            document.querySelector('.prism-line'),
-            document.getElementById('bolero-player')
+            document.querySelector('.prism-line')
         ];
         hideEls.forEach(function(el) {
             if (el) { el.style.transition = 'opacity 0.8s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
@@ -1619,8 +1613,7 @@ void main() {
             var itemGrid = document.querySelector('.item-grid');
             var brandName = document.querySelector('.brand-name');
             var prismLine = document.querySelector('.prism-line');
-            var bolero = document.getElementById('bolero-player');
-            [itemGrid, brandName, prismLine, bolero].forEach(function(el) {
+            [itemGrid, brandName, prismLine].forEach(function(el) {
                 if (el) { el.style.transition = 'opacity 2.0s ease'; el.style.opacity = '1'; el.style.pointerEvents = ''; }
             });
         }, 5000);
@@ -2063,44 +2056,8 @@ function playDivineSound() { if (!iac()) return; const n = audioContext.currentT
 function playWaterSplashSound() { if (!iac()) return; const n = audioContext.currentTime; const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = 280; o.type = 'sine'; g.gain.setValueAtTime(.13, n); g.gain.exponentialRampToValueAtTime(.01, n + .28); o.start(n); o.stop(n + .28); }
 function playGlitchSound() { if (!iac()) return; const n = audioContext.currentTime; const bs = audioContext.sampleRate * .5, nb = audioContext.createBuffer(1, bs, audioContext.sampleRate), out = nb.getChannelData(0); for (let i = 0; i < bs; i++)out[i] = Math.random() * 2 - 1; const s = audioContext.createBufferSource(); s.buffer = nb; const g = audioContext.createGain(), f = audioContext.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3000; f.Q.value = 10; s.connect(f); f.connect(g); g.connect(audioContext.destination); g.gain.setValueAtTime(.18, n); g.gain.exponentialRampToValueAtTime(.01, n + .5); s.start(n); }
 
-// ═══ BOLERO (Ravel) ═══
-let boleroPlaying = false, boleroNodes = [], boleroInterval = null;
-function initBoleroPlayer() {
-    const btn = document.getElementById('bolero-btn'), lbl = document.getElementById('bolero-label'); if (!btn) return;
-    btn.addEventListener('click', () => { if (!boleroPlaying) { startBolero(); btn.textContent = '⏸'; } else { stopBolero(); btn.textContent = '▶'; } boleroPlaying = !boleroPlaying; });
-}
-function startBolero() {
-    if (!iac()) return;
-    const themeA = [[261.63, .5], [261.63, .25], [293.66, .25], [261.63, .25], [233.08, .25], [261.63, .5], [261.63, .25], [293.66, .25], [261.63, .25], [311.13, .5], [293.66, .5], [261.63, .25], [293.66, .25], [349.23, .25], [329.63, .25], [293.66, .5], [261.63, .5], [220.00, .25], [246.94, .25], [261.63, 1.0]];
-    const themeB = [[392.00, .5], [349.23, .25], [329.63, .25], [293.66, .5], [261.63, .5], [293.66, .25], [329.63, .25], [349.23, .25], [392.00, .25], [440.00, .5], [392.00, .5], [349.23, .5], [329.63, .25], [293.66, .75], [261.63, .5], [293.66, .25], [329.63, .25], [261.63, .25], [293.66, .25], [261.63, 1.0]];
-    const snare = [0, 1.5, 2, 3, 4, 4.5, 5, 6, 7, 7.5];
-    const bpm = 76, bl = 60 / bpm; let mt = audioContext.currentTime + .1, mc = 0;
-    function pm() {
-        if (!boleroPlaying) return;
-        const theme = mc % 4 < 2 ? themeA : themeB, vol = .04 + Math.min(.18, mc * .006);
-        let tOff = mt;
-        theme.forEach(([freq, dur]) => {
-            const o = audioContext.createOscillator(), g2 = audioContext.createGain(), filt = audioContext.createBiquadFilter();
-            filt.type = 'bandpass'; filt.frequency.value = freq * 2; filt.Q.value = 2;
-            o.type = mc < 8 ? 'sine' : mc < 16 ? 'triangle' : 'sawtooth'; o.frequency.value = freq;
-            g2.gain.setValueAtTime(0, tOff); g2.gain.linearRampToValueAtTime(vol, tOff + .02); g2.gain.linearRampToValueAtTime(vol * .7, tOff + dur * bl - .05); g2.gain.linearRampToValueAtTime(0, tOff + dur * bl);
-            o.connect(filt); filt.connect(g2); g2.connect(audioContext.destination); o.start(tOff); o.stop(tOff + dur * bl + .01);
-            boleroNodes.push(o); tOff += dur * bl;
-        });
-        const md = 8 * bl;
-        snare.forEach(beat => {
-            const st = mt + beat * bl;
-            const buf = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * .08), audioContext.sampleRate);
-            const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * .3));
-            const src = audioContext.createBufferSource(); src.buffer = buf;
-            const sg = audioContext.createGain(); sg.gain.setValueAtTime(.08 + Math.min(.25, mc * .008), st); sg.gain.exponentialRampToValueAtTime(.001, st + .08);
-            src.connect(sg); sg.connect(audioContext.destination); src.start(st); boleroNodes.push(src);
-        });
-        mt += md; mc++; boleroInterval = setTimeout(pm, (md - .2) * 1000);
-    }
-    pm();
-}
-function stopBolero() { if (boleroInterval) clearTimeout(boleroInterval); boleroNodes.forEach(n => { try { n.stop(); } catch (e) { } }); boleroNodes = []; }
+// ═══ BOLERO (Ravel) 削除済み — 2026-04-17 Jupiter BGMのみ採用 ═══
+// 旧: initBoleroPlayer / startBolero / stopBolero は削除（git履歴参照: e0f1f93）
 
 // ═══ SKIP TO SHOP ═══
 function skipToShop() {
