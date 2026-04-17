@@ -686,11 +686,12 @@ function initParticleUniverse() {
 
         // サイズバラつき（よりランダムに、大きいのも混ぜる）
         const sR = Math.random();
-        if (sR < 0.03) aSizes[i] = 12.0 + Math.random() * 8.0;       // 3%: 巨大な光球
-        else if (sR < 0.10) aSizes[i] = 6.0 + Math.random() * 6.0;  // 7%: 大きい
-        else if (sR < 0.30) aSizes[i] = 3.0 + Math.random() * 3.0;  // 20%: 中大
-        else if (sR < 0.55) aSizes[i] = 1.5 + Math.random() * 2.0;  // 25%: 中
-        else aSizes[i] = 0.3 + Math.random() * 1.5;                  // 45%: 小さい星
+        // 2026-04-17 Bloom不在のため全体的にサイズ増強
+        if (sR < 0.03) aSizes[i] = 20.0 + Math.random() * 12.0;      // 3%: 巨大な光球
+        else if (sR < 0.10) aSizes[i] = 10.0 + Math.random() * 8.0;  // 7%: 大きい
+        else if (sR < 0.30) aSizes[i] = 5.0 + Math.random() * 4.0;   // 20%: 中大
+        else if (sR < 0.55) aSizes[i] = 2.5 + Math.random() * 2.5;   // 25%: 中
+        else aSizes[i] = 1.0 + Math.random() * 2.0;                  // 45%: 小さい星
 
         // 呼吸フェーズ
         aPhases[i] = Math.random() * Math.PI * 2;
