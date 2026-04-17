@@ -843,6 +843,12 @@ function renderPhase3() {
     // 修正: ラッパー表示をinitBrandParticleReveal内に統合
     setTimeout(initBrandParticleReveal, 5000);
 
+    // ── 3Dホログラムロゴ球体（ShaderMaterial）を起動 ──
+    // brand reveal 完了後、PNG sphere を Three.js sphere に置換
+    setTimeout(function() {
+        try { init3DLogoSphere(); } catch(e) { console.warn('[3DLogo] init failed:', e); }
+    }, 7500);
+
     // ── ストアグリッド制御 ──
     initStoreGrid();
 
