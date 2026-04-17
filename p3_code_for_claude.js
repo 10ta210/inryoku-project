@@ -64,7 +64,7 @@ if (typeof audioContext === 'undefined') { window.audioContext = null; }
 const SHOPIFY_CONFIG = {
     storeDomain: '0xi10h-x1.myshopify.com',
     storefrontToken: 'ce0dc399245e874fd85d218df2d9bb04', // Dev Dashboard クライアントID
-    apiVersion: '2026-04'
+    apiVersion: '2024-10' // 2026-04 は存在しない。実 API バージョンに修正
 };
 
 // ═══ GELATO POD API CONFIG (Print-on-Demand) ═══
