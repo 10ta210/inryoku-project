@@ -16,9 +16,10 @@
     }
 
     .brand-name {
-      font-size: clamp(48px, 10vw, 96px);
+      /* 2026-04-17: サイズ縮小 (旧 clamp(48px,10vw,96px) / letter 8px) */
+      font-size: clamp(28px, 5vw, 52px);
       font-weight: bold;
-      letter-spacing: 8px;
+      letter-spacing: 5px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -48,8 +49,9 @@
 
     .logo-icon {
       display: block;
-      margin: 16px auto 0 auto;
-      width: clamp(80px, 12vw, 140px);
+      /* 2026-04-17: サイズ縮小 (旧 clamp(80px,12vw,140px)) */
+      margin: 10px auto 0 auto;
+      width: clamp(48px, 6vw, 72px);
       height: auto;
       opacity: 0.95;
       position: relative;
