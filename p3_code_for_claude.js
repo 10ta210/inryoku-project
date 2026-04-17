@@ -67,6 +67,32 @@ const SHOPIFY_CONFIG = {
     apiVersion: '2026-04'
 };
 
+// ═══ GELATO POD API CONFIG (Print-on-Demand) ═══
+// 各商品の gelato_product に bella_canvas_3001 等の UID が記録済み
+// サーバー側 /api/gelato/order に API キーを隠蔽して中継する方式
+const GELATO_CONFIG = {
+    apiEndpoint: '/api/gelato/order',
+    enabled: false  // 司さんが API キー設定後に true に
+};
+
+function gelatoCreateOrder(cartItems, shipping) {
+    if (!GELATO_CONFIG.enabled) return Promise.reject(new Error('Gelato not configured'));
+    var items = cartItems.map(function(it) {
+        var p = PRODUCTS.find(function(x) { return x.id === it.id; });
+        return {
+            productUid: p && p.gelato_product ? p.gelato_product : null,
+            size: it.size,
+            quantity: it.qty || 1,
+            printFile: p && p.image ? (location.origin + '/' + p.image) : null
+        };
+    }).filter(function(x) { return x.productUid && x.printFile; });
+    return fetch(GELATO_CONFIG.apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items, shipping: shipping })
+    }).then(function(r) { return r.json(); });
+}
+
 // Shopify Storefront API GraphQL呼び出し
 function shopifyFetch(query, variables) {
     if (!SHOPIFY_CONFIG.storeDomain || !SHOPIFY_CONFIG.storefrontToken) {
@@ -766,7 +792,7 @@ function renderPhase3() {
           <div class="carousel-ring" id="carousel-ring">
             ${PRODUCTS.map((p, i) => {
               var angle = (360 / PRODUCTS.length) * i;
-              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(200px);">
+              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(360px);">
                 <div class="product-card-img">
                   <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;color:rgba(255,255,255,0.15);font-family:monospace;\\'>${p.name.charAt(0)}</div>'">
                 </div>
@@ -1239,7 +1265,7 @@ function initStoreGrid() {
             ring.style.transform = 'rotateY(' + dest + 'deg)';
             // カードを前に出す
             var angle = (360 / count) * idx;
-            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(260px) scale(1.15)';
+            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(420px) scale(1.15)';
             card.style.filter = 'brightness(1.4)';
             card.style.zIndex = '20';
         });
@@ -1251,7 +1277,7 @@ function initStoreGrid() {
             // カードを元に戻す
             var idx = parseInt(card.dataset.idx);
             var angle = (360 / count) * idx;
-            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(200px) scale(1)';
+            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(360px) scale(1)';
             card.style.filter = '';
             card.style.zIndex = '';
         });
