@@ -2166,3 +2166,71 @@ body[data-theme="win95"] .carousel-scene::before {
     animation: none;
     opacity: 0.5;
 }
+
+/* 2026-04-17: UI全般ピクセルフォント化 */
+.item-name,
+.item-price,
+.product-name,
+.product-price,
+.product-title,
+.product-price-tag,
+.size-btn,
+.cart-drawer-title,
+.cart-item-name,
+.cart-item-meta,
+.cart-item-price,
+.cart-total,
+.cart-checkout-btn,
+.cart-stripe-note,
+.cart-empty,
+.cart-toast,
+.email-signup-label,
+.email-signup-sub,
+.email-signup-input,
+.email-signup-btn,
+.email-signup-status,
+.contact-toggle,
+.contact-form label,
+.contact-form input,
+.contact-form textarea,
+.contact-submit,
+.theme-label,
+.theme-option,
+.binary-footer,
+.brand-truth,
+#cart-badge,
+.tr-ctrl-btn,
+.drop-notification,
+.size-label,
+.size-guide-toggle,
+.product-shipping-info,
+.stripe-badge,
+.add-to-cart-btn,
+.cart-btn-text,
+.cart-btn-price,
+.product-desc,
+.product-specs,
+.product-color {
+  font-family: 'Press Start 2P', 'Courier New', monospace !important;
+  letter-spacing: 1px;
+}
+
+/* サイズは読みやすさキープ: 説明文はやや小さく調整 */
+.product-desc,
+.product-specs,
+.email-signup-sub,
+.cart-item-meta,
+.size-guide-note {
+  font-size: 9px !important;
+  line-height: 1.7;
+}
+.item-price,
+.cart-item-price,
+.cart-stripe-note,
+.binary-footer {
+  font-size: 10px !important;
+}
+.product-price-tag,
+.cart-total {
+  font-size: 12px !important;
+}
