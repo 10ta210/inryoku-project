@@ -1332,6 +1332,23 @@ void main() {
     const origColArr = geometry.attributes.color.array.slice();
     let logoWX6 = 0, logoWY6 = 0;
 
+    // ── Round3: チャット会話カウンター + アイドルタイマー ──
+    let chatMsgCount = 0;          // AI応答回数（3回でビッグバン遷移）
+    let chatIdleTimer = 0;         // 入力なし経過秒（10秒でビッグバン遷移）
+    let chatIdleActive = false;    // アイドル監視中フラグ
+
+    // ── Round3: リング軌道用（chatting中の非メッセージ粒子） ──
+    const ringOrbitAngle = new Float32Array(N);   // 各粒子の軌道角度
+    const ringOrbitRadius = new Float32Array(N);  // 各粒子の軌道半径
+    const ringOrbitSpeed = new Float32Array(N);   // 各粒子の周回速度
+    const ringOrbitY = new Float32Array(N);       // Y軸オフセット（3Dリング感）
+    for (let i = 0; i < N; i++) {
+        ringOrbitAngle[i] = Math.random() * Math.PI * 2;
+        ringOrbitRadius[i] = 8 + Math.random() * 25;     // ロゴ周辺に集まるリング
+        ringOrbitSpeed[i] = 0.3 + Math.random() * 0.7;   // ゆるやかに周回
+        ringOrbitY[i] = (Math.random() - 0.5) * 12;      // 縦方向の散らばり
+    }
+
     // ── スクロールパララックス ──
     let scrollY6 = 0;
     const scrollEl = document.querySelector('.singularity-content');
@@ -1370,6 +1387,32 @@ void main() {
             geometry.setDrawRange(0, N);
             console.log('[ABSORB] started, logoWX=' + logoWX6.toFixed(2) + ' logoWY=' + logoWY6.toFixed(2));
             for (let i = 0; i < N; i++) { attractVelX[i] = 0; attractVelY[i] = 0; }
+            // Round3: 会話カウンター+アイドルタイマーリセット
+            chatMsgCount = 0;
+            chatIdleTimer = 0;
+            chatIdleActive = false;
+
+            // ── Round3: 吸収サウンド（低周波うなり 60Hz→30Hz, 2秒） ──
+            if (!window._inryokuMuted) {
+                try {
+                    var actx = iac();
+                    if (actx) {
+                        var now = actx.currentTime;
+                        var osc = actx.createOscillator();
+                        var gain = actx.createGain();
+                        osc.connect(gain);
+                        gain.connect(actx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(60, now);
+                        osc.frequency.exponentialRampToValueAtTime(30, now + 2.0);
+                        gain.gain.setValueAtTime(0, now);
+                        gain.gain.linearRampToValueAtTime(0.15, now + 0.8);
+                        gain.gain.linearRampToValueAtTime(0, now + 2.0);
+                        osc.start(now);
+                        osc.stop(now + 2.1);
+                    }
+                } catch(e) { console.warn('[ABSORB] sound error:', e); }
+            }
 
             // ── UIフェードアウト（ロゴ=infoは残す）──
             var itemGrid = document.querySelector('.item-grid');
@@ -1435,6 +1478,8 @@ void main() {
             if (bigBangState === 'absorb' && bigBangTimer >= 3.0) {
                 bigBangState = 'chatting';
                 bigBangTimer = 0;
+                chatIdleTimer = 0;
+                chatIdleActive = true;
                 console.log('[STATE] absorb→chatting: チャットUI表示（二進数は会話時に発動）');
                 showChatUI();
             }
@@ -1459,6 +1504,56 @@ void main() {
                     bbVelZ[j] = spd * Math.cos(phi);
                 }
                 geometry.attributes.color.needsUpdate = true;
+
+                // ── Round3: ビッグバンフラッシュ（白→減衰） ──
+                var flash = document.createElement('div');
+                flash.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;pointer-events:none;opacity:1;transition:opacity 1.5s ease-out;';
+                document.body.appendChild(flash);
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() { flash.style.opacity = '0'; });
+                });
+                setTimeout(function() { flash.remove(); }, 1600);
+
+                // ── Round3: ビッグバンサウンド（爆発的な低音ブースト） ──
+                if (!window._inryokuMuted) {
+                    try {
+                        var actx2 = iac();
+                        if (actx2) {
+                            var now2 = actx2.currentTime;
+                            // 低音バースト
+                            var osc2 = actx2.createOscillator();
+                            var gain2 = actx2.createGain();
+                            osc2.connect(gain2);
+                            gain2.connect(actx2.destination);
+                            osc2.type = 'sine';
+                            osc2.frequency.setValueAtTime(40, now2);
+                            osc2.frequency.exponentialRampToValueAtTime(120, now2 + 0.5);
+                            osc2.frequency.exponentialRampToValueAtTime(30, now2 + 2.0);
+                            gain2.gain.setValueAtTime(0.2, now2);
+                            gain2.gain.linearRampToValueAtTime(0.05, now2 + 1.0);
+                            gain2.gain.linearRampToValueAtTime(0, now2 + 2.5);
+                            osc2.start(now2);
+                            osc2.stop(now2 + 2.6);
+                            // ノイズバースト
+                            var bs = actx2.sampleRate * 0.8;
+                            var nb = actx2.createBuffer(1, bs, actx2.sampleRate);
+                            var nd = nb.getChannelData(0);
+                            for (var ni = 0; ni < bs; ni++) nd[ni] = Math.random() * 2 - 1;
+                            var ns = actx2.createBufferSource();
+                            ns.buffer = nb;
+                            var ng = actx2.createGain();
+                            var nf = actx2.createBiquadFilter();
+                            nf.type = 'lowpass';
+                            nf.frequency.value = 800;
+                            ns.connect(nf);
+                            nf.connect(ng);
+                            ng.connect(actx2.destination);
+                            ng.gain.setValueAtTime(0.12, now2);
+                            ng.gain.exponentialRampToValueAtTime(0.001, now2 + 1.5);
+                            ns.start(now2);
+                        }
+                    } catch(e) { console.warn('[BB] sound error:', e); }
+                }
             }
             // bb_explode完了 → done（idle復帰）
             else if (bigBangState === 'bb_explode' && bigBangTimer >= 4.0) {
@@ -1519,6 +1614,16 @@ void main() {
         }
 
         // ═══ パーティクル物理 ═══
+        // ═══ Round3: チャット中アイドルタイマー（10秒無入力 or 3回会話でビッグバン） ═══
+        if (bigBangState === 'chatting' && chatIdleActive && !chatSpeaking) {
+            chatIdleTimer += dt;
+            if (chatIdleTimer >= 10.0) {
+                console.log('[CHAT] idle timeout → closing chat → bigbang');
+                chatIdleActive = false;
+                closeChatUI();
+            }
+        }
+
         const colArr = geometry.attributes.color.array;
         for (let i = 0; i < N; i++) {
             if (bigBangState === 'absorb') {
@@ -1624,8 +1729,23 @@ void main() {
                         colArr[i*3] = 0; colArr[i*3+1] = 0; colArr[i*3+2] = 0;
                         geometry.attributes.aSize.array[i] = 0;
                     }
-                } else if (chatSpeaking) {
-                    colArr[i*3] *= 0.95; colArr[i*3+1] *= 0.95; colArr[i*3+2] *= 0.95;
+                } else {
+                    // ── Round3: 非メッセージ粒子 → ロゴ周辺をリング軌道で周回 ──
+                    ringOrbitAngle[i] += ringOrbitSpeed[i] * dt;
+                    var targetX = logoWX6 + Math.cos(ringOrbitAngle[i]) * ringOrbitRadius[i];
+                    var targetY = logoWY6 + Math.sin(ringOrbitAngle[i]) * ringOrbitRadius[i] * 0.35 + ringOrbitY[i];
+                    var targetZ = Math.sin(ringOrbitAngle[i] * 0.5) * ringOrbitRadius[i] * 0.3;
+                    // ゆるやかに目標位置へ補間（最初はゆっくり、徐々に軌道に乗る）
+                    var orbitLerp = 0.02;
+                    posArr[i*3]   += (targetX - posArr[i*3])   * orbitLerp;
+                    posArr[i*3+1] += (targetY - posArr[i*3+1]) * orbitLerp;
+                    posArr[i*3+2] += (targetZ - posArr[i*3+2]) * orbitLerp;
+                    // 呼吸するような明暗（chatSpeaking中は暗め）
+                    var orbitDim = chatSpeaking ? 0.15 : 0.35;
+                    var orbitBreath = orbitDim + 0.08 * Math.sin(uTime * 1.5 + ringOrbitAngle[i]);
+                    colArr[i*3]   = origColArr[i*3]   * orbitBreath;
+                    colArr[i*3+1] = origColArr[i*3+1] * orbitBreath;
+                    colArr[i*3+2] = origColArr[i*3+2] * orbitBreath;
                 }
 
             } else if (bigBangState === 'bb_collapse') {
@@ -2237,6 +2357,9 @@ void main() {
     }
 
     function sendChatMsg() {
+        // Round3: アイドルタイマーリセット（ユーザーが入力した）
+        chatIdleTimer = 0;
+
         // telepathy / sculpt / quantum
         if (chatMode === 'telepathy' || chatMode === 'sculpt' || chatMode === 'quantum') {
             var input = document.getElementById('chat-tp-input');
@@ -2250,7 +2373,15 @@ void main() {
             appearFn(txt, 'tp-user', function() {
                 // AI応答を取得して表示
                 fetchAIResponse(txt, function(response) {
+                    chatMsgCount++;
+                    chatIdleTimer = 0;
+                    console.log('[CHAT] AI response #' + chatMsgCount);
                     setTimeout(function() { appearFn(response, 'tp-ai'); }, 400);
+                    // Round3: 3回会話後 → ビッグバン遷移
+                    if (chatMsgCount >= 3) {
+                        chatIdleActive = false;
+                        setTimeout(function() { closeChatUI(); }, 3000);
+                    }
                 });
             });
             return;
@@ -2279,10 +2410,18 @@ void main() {
 
         // AI応答を取得 → 二進数粒子演出 → テキスト表示
         fetchAIResponse(txt, function(response) {
+            chatMsgCount++;
+            chatIdleTimer = 0;
+            console.log('[CHAT] AI response #' + chatMsgCount);
             aDiv.remove();
             // 粒子が円環を形成してから「読み取り」としてテキスト表示
             speakBinary(response, function() {
                 typeMsg(response);
+                // Round3: 3回会話後 → ビッグバン遷移
+                if (chatMsgCount >= 3) {
+                    chatIdleActive = false;
+                    setTimeout(function() { closeChatUI(); }, 3000);
+                }
             });
         });
     }
