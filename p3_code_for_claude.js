@@ -23,7 +23,7 @@
 if (typeof currentPhase === 'undefined') { window.currentPhase = 0; }
 if (typeof audioContext === 'undefined') { window.audioContext = null; }
 
-// ═══ PRODUCT DATA ═══
+// ═══ PRODUCT DATA (10商品) ═══
 const PRODUCTS = [
     {
         id: 'enter-hoodie',
@@ -46,6 +46,94 @@ const PRODUCTS = [
         details: 'Oversized fit · 100% Cotton · Washed Black · inryokü logo emblem',
         sizes: ['S', 'M', 'L', 'XL'],
         color: 'Washed Black'
+    },
+    {
+        id: 'exit-tee',
+        name: 'EXIT TEE',
+        price: '¥6,800',
+        priceNum: 6800,
+        image: 'enter.png',
+        description: 'The door is always open. You just forgot where.',
+        details: 'Standard fit · 100% Cotton · White · Black "EXIT" print',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'White'
+    },
+    {
+        id: 'universe-tee',
+        name: 'UNIVERSE TEE',
+        price: '¥7,800',
+        priceNum: 7800,
+        image: 'print_universe_tee.png',
+        description: 'You are stardust observing stardust.',
+        details: 'Standard fit · 100% Cotton · Black · Full-back constellation print',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Black'
+    },
+    {
+        id: 'qr-tee',
+        name: 'QR TEE',
+        price: '¥6,800',
+        priceNum: 6800,
+        image: 'print_qr_tee.png',
+        description: 'Scan me. See what you become.',
+        details: 'Standard fit · 100% Cotton · White · Scannable QR graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'White'
+    },
+    {
+        id: 'grey-hoodie',
+        name: '50% HOODIE',
+        price: '¥14,800',
+        priceNum: 14800,
+        image: 'inryoku_logo_3d.png',
+        description: 'The color of reality. Contains every color.',
+        details: 'Oversized fit · 100% Cotton · Grey · Tonal embroidery',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Grey'
+    },
+    {
+        id: 'cap-101',
+        name: '101% CAP',
+        price: '¥5,800',
+        priceNum: 5800,
+        image: 'inryoku_logo_icon.png',
+        description: 'One percent past the limit. Every day.',
+        details: '6-panel · Cotton twill · Black · "101%" embroidery',
+        sizes: ['ONE SIZE'],
+        color: 'Black'
+    },
+    {
+        id: 'grey-bandana',
+        name: 'GREY BANDANA',
+        price: '¥2,400',
+        priceNum: 2400,
+        image: 'logo_shell.png',
+        description: 'Wear the 50%. Carry the 101%.',
+        details: '100% Cotton · 55×55cm · Grey · RGBCMY pattern border',
+        sizes: ['ONE SIZE'],
+        color: 'Grey'
+    },
+    {
+        id: 'prism-poster',
+        name: 'PRISM POSTER A2',
+        price: '¥3,200',
+        priceNum: 3200,
+        image: 'inryoku_logo_embedded.svg',
+        description: 'White light, broken open.',
+        details: 'A2 (420×594mm) · Archival matte paper · Ships in tube',
+        sizes: ['A2'],
+        color: 'Multi'
+    },
+    {
+        id: 'yinyang-pins',
+        name: 'YINYANG PINS SET',
+        price: '¥1,800',
+        priceNum: 1800,
+        image: 'logo_sphere.png',
+        description: 'Three pins. Two halves. One truth.',
+        details: 'Set of 3 · Hard enamel · 25mm · Black/White/Grey',
+        sizes: ['SET'],
+        color: 'Mixed'
     }
 ];
 
@@ -159,8 +247,12 @@ function renderPhase3() {
                 <div class="prism-line"></div>
         </div>
 
-        <div class="item-grid" style="opacity:0;transition:opacity 1.2s ease;">
-            ${productCardsHTML}
+        <div class="item-carousel" style="opacity:0;transition:opacity 1.2s ease;">
+            <button class="carousel-arrow" data-dir="prev" aria-label="Previous" type="button">◀</button>
+            <div class="item-grid">
+                ${productCardsHTML}
+            </div>
+            <button class="carousel-arrow" data-dir="next" aria-label="Next" type="button">▶</button>
         </div>
 
     </div>`;
@@ -394,8 +486,10 @@ function initBrandParticleReveal() {
         container.remove();
         if (prismLine) { prismLine.style.transition = 'opacity 1s ease'; prismLine.style.opacity = '1'; }
         setTimeout(function() {
-            var itemGrid = document.querySelector('.item-grid');
-            if (itemGrid) itemGrid.style.opacity = '1';
+            // カルーセル全体をフェードイン（Step2: 外側ラッパーに opacity transition を付与済み）
+            var carousel = document.querySelector('.item-carousel');
+            if (carousel) carousel.style.opacity = '1';
+            initProductCarousel();
         }, 800);
     }, allDoneTime);
 }
@@ -782,10 +876,10 @@ void main() {
             for (let i = 0; i < N; i++) { attractVelX[i] = 0; attractVelY[i] = 0; }
 
             // ── UIフェードアウト（ロゴ=infoは残す）──
-            var itemGrid = document.querySelector('.item-grid');
+            var carousel = document.querySelector('.item-carousel');
             var brandName = document.querySelector('.brand-name');
             var prismLine = document.querySelector('.prism-line');
-            [itemGrid, brandName, prismLine].forEach(function(el) {
+            [carousel, brandName, prismLine].forEach(function(el) {
                 if (el) { el.style.transition = 'opacity 1.5s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
             });
         });
@@ -1525,7 +1619,7 @@ void main() {
 
         // ── トーク中はロゴ+チャットのみ。他UI完全非表示 ──
         var hideEls = [
-            document.querySelector('.item-grid'),
+            document.querySelector('.item-carousel'),
             document.querySelector('.brand-name'),
             document.querySelector('.prism-line')
         ];
@@ -1610,10 +1704,10 @@ void main() {
 
         // ── UI復元: ビッグバン爆発後にフェードイン（ロゴ以外）──
         setTimeout(function() {
-            var itemGrid = document.querySelector('.item-grid');
+            var carousel = document.querySelector('.item-carousel');
             var brandName = document.querySelector('.brand-name');
             var prismLine = document.querySelector('.prism-line');
-            [itemGrid, brandName, prismLine].forEach(function(el) {
+            [carousel, brandName, prismLine].forEach(function(el) {
                 if (el) { el.style.transition = 'opacity 2.0s ease'; el.style.opacity = '1'; el.style.pointerEvents = ''; }
             });
         }, 5000);
@@ -1980,6 +2074,43 @@ void main() {
 // initParticleUniverseCanvas() — Canvas 2D使用のため削除 (inryokü技術制約違反)
 
 
+
+// ═══ 商品カルーセル制御（Step2: 10商品対応） ═══
+function initProductCarousel() {
+    const carousel = document.querySelector('.item-carousel');
+    if (!carousel) return;
+    const grid = carousel.querySelector('.item-grid');
+    const prev = carousel.querySelector('.carousel-arrow[data-dir="prev"]');
+    const next = carousel.querySelector('.carousel-arrow[data-dir="next"]');
+    if (!grid || !prev || !next) return;
+
+    // 1ページ分スクロール量 = カード幅 + gap * 可視枚数 近似
+    function pageWidth() {
+        const card = grid.querySelector('.item-card');
+        const cw = card ? card.getBoundingClientRect().width : 200;
+        const gap = 20;
+        // 可視幅から見えているカード数を算出（最低1）
+        const visible = Math.max(1, Math.floor(grid.clientWidth / (cw + gap)));
+        return (cw + gap) * visible;
+    }
+
+    function updateArrows() {
+        const max = grid.scrollWidth - grid.clientWidth - 2;
+        prev.disabled = grid.scrollLeft <= 2;
+        next.disabled = grid.scrollLeft >= max;
+    }
+
+    prev.addEventListener('click', () => {
+        grid.scrollBy({ left: -pageWidth(), behavior: 'smooth' });
+    });
+    next.addEventListener('click', () => {
+        grid.scrollBy({ left: pageWidth(), behavior: 'smooth' });
+    });
+    grid.addEventListener('scroll', updateArrows, { passive: true });
+    window.addEventListener('resize', updateArrows);
+    // 初期状態
+    requestAnimationFrame(updateArrows);
+}
 
 // ═══ 商品モーダル ═══
 function showProductModal(idx) {
