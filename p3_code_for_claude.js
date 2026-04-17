@@ -23,14 +23,48 @@
 if (typeof currentPhase === 'undefined') { window.currentPhase = 0; }
 if (typeof audioContext === 'undefined') { window.audioContext = null; }
 
-// ═══ PRODUCT DATA (10商品) ═══
+// ═══ UNIVERSE SEED SYSTEM ═══
+// URLパラメータ ?universe=xxxx → localStorage → 新規生成
+(function initUniverseSeed() {
+    const params = new URLSearchParams(window.location.search);
+    let seed = params.get('universe');
+    if (!seed) seed = localStorage.getItem('inryoku_universe_seed');
+    if (!seed) {
+        seed = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0');
+    }
+    localStorage.setItem('inryoku_universe_seed', seed);
+    window._inryokuSeed = seed;
+
+    // mulberry32 PRNG
+    function mulberry32(a) {
+        return function() {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            var t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+    window.uRng = mulberry32(parseInt(seed, 16));
+
+    // シェアURL生成ヘルパー
+    window.getUniverseShareURL = function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('universe', seed);
+        return url.toString();
+    };
+
+    console.log('[Universe] seed=' + seed + ' shareURL=' + window.getUniverseShareURL());
+})();
+
+// ═══ PRODUCT DATA ═══
 const PRODUCTS = [
     {
         id: 'enter-hoodie',
         name: 'ENTER HOODIE',
-        price: '¥14,800',
-        priceNum: 14800,
+        price: '¥12,800',
+        priceNum: 12800,
         image: 'enter_hoodie.png',
+        shopifyVariantId: 'gid://shopify/ProductVariant/49652498514214',
         description: 'EXIT is just the beginning. ENTER the next dimension.',
         details: 'Oversized fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
         sizes: ['S', 'M', 'L', 'XL'],
@@ -38,109 +72,441 @@ const PRODUCTS = [
     },
     {
         id: 'info-logo-hoodie',
-        name: 'INFORMATION LOGO HOODIE',
+        name: 'INRYOKÜ LOGO HOODIE',
         price: '¥14,800',
         priceNum: 14800,
         image: 'info_logo_hoodie.png',
+        shopifyVariantId: 'gid://shopify/ProductVariant/49652498546982',
         description: 'The information symbol reimagined. 101% identity.',
         details: 'Oversized fit · 100% Cotton · Washed Black · inryokü logo emblem',
         sizes: ['S', 'M', 'L', 'XL'],
         color: 'Washed Black'
     },
     {
-        id: 'exit-tee',
-        name: 'EXIT TEE',
-        price: '¥6,800',
-        priceNum: 6800,
-        image: 'enter.png',
-        description: 'The door is always open. You just forgot where.',
-        details: 'Standard fit · 100% Cotton · White · Black "EXIT" print',
+        id: 'enter-hoodie-white',
+        name: 'ENTER HOODIE WHITE',
+        price: '¥12,800',
+        priceNum: 12800,
+        image: 'enter_hoodie_white.png',
+        shopifyVariantId: null,
+        description: 'The white dimension. ENTER purity.',
+        details: 'Oversized fit · 100% Cotton · White · Neon green "ENTER" graphic',
         sizes: ['S', 'M', 'L', 'XL'],
         color: 'White'
     },
     {
-        id: 'universe-tee',
-        name: 'UNIVERSE TEE',
-        price: '¥7,800',
-        priceNum: 7800,
-        image: 'print_universe_tee.png',
-        description: 'You are stardust observing stardust.',
-        details: 'Standard fit · 100% Cotton · Black · Full-back constellation print',
-        sizes: ['S', 'M', 'L', 'XL'],
-        color: 'Black'
-    },
-    {
-        id: 'qr-tee',
-        name: 'QR TEE',
-        price: '¥6,800',
-        priceNum: 6800,
-        image: 'print_qr_tee.png',
-        description: 'Scan me. See what you become.',
-        details: 'Standard fit · 100% Cotton · White · Scannable QR graphic',
-        sizes: ['S', 'M', 'L', 'XL'],
-        color: 'White'
-    },
-    {
-        id: 'grey-hoodie',
-        name: '50% HOODIE',
+        id: 'info-logo-hoodie-oversized',
+        name: 'INRYOKÜ LOGO HOODIE OVERSIZED',
         price: '¥14,800',
         priceNum: 14800,
-        image: 'inryoku_logo_3d.png',
-        description: 'The color of reality. Contains every color.',
-        details: 'Oversized fit · 100% Cotton · Grey · Tonal embroidery',
+        image: 'info_logo_hoodie_oversized.png',
+        shopifyVariantId: null,
+        description: 'Expanded silhouette. 101% presence.',
+        details: 'Extra oversized fit · 100% Cotton · Washed Black · inryokü logo emblem',
         sizes: ['S', 'M', 'L', 'XL'],
-        color: 'Grey'
+        color: 'Washed Black'
     },
     {
-        id: 'cap-101',
-        name: '101% CAP',
-        price: '¥5,800',
-        priceNum: 5800,
-        image: 'inryoku_logo_icon.png',
-        description: 'One percent past the limit. Every day.',
-        details: '6-panel · Cotton twill · Black · "101%" embroidery',
-        sizes: ['ONE SIZE'],
-        color: 'Black'
+        id: 'enter-tee',
+        name: 'ENTER TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'enter_tee.png',
+        shopifyVariantId: null,
+        description: 'Lightweight portal. ENTER everyday.',
+        details: 'Regular fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
     },
     {
-        id: 'grey-bandana',
-        name: 'GREY BANDANA',
-        price: '¥2,400',
-        priceNum: 2400,
-        image: 'logo_shell.png',
-        description: 'Wear the 50%. Carry the 101%.',
-        details: '100% Cotton · 55×55cm · Grey · RGBCMY pattern border',
-        sizes: ['ONE SIZE'],
-        color: 'Grey'
+        id: 'info-logo-tee',
+        name: 'INRYOKÜ LOGO TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'info_logo_tee.png',
+        shopifyVariantId: null,
+        description: 'Essential identity. Minimal gravity.',
+        details: 'Regular fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
     },
     {
-        id: 'prism-poster',
-        name: 'PRISM POSTER A2',
-        price: '¥3,200',
-        priceNum: 3200,
-        image: 'inryoku_logo_embedded.svg',
-        description: 'White light, broken open.',
-        details: 'A2 (420×594mm) · Archival matte paper · Ships in tube',
-        sizes: ['A2'],
-        color: 'Multi'
+        id: 'enter-longsleeve',
+        name: 'ENTER LONG SLEEVE',
+        price: '¥9,800',
+        priceNum: 9800,
+        image: 'enter_longsleeve.png',
+        shopifyVariantId: null,
+        description: 'Extended reach. ENTER the continuum.',
+        details: 'Regular fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
     },
     {
-        id: 'yinyang-pins',
-        name: 'YINYANG PINS SET',
-        price: '¥1,800',
-        priceNum: 1800,
-        image: 'logo_sphere.png',
-        description: 'Three pins. Two halves. One truth.',
-        details: 'Set of 3 · Hard enamel · 25mm · Black/White/Grey',
-        sizes: ['SET'],
-        color: 'Mixed'
+        id: 'info-logo-longsleeve',
+        name: 'INRYOKÜ LOGO LONG SLEEVE',
+        price: '¥9,800',
+        priceNum: 9800,
+        image: 'info_logo_longsleeve.png',
+        shopifyVariantId: null,
+        description: 'Sustained wavelength. 101% signal.',
+        details: 'Regular fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'enter-crewneck',
+        name: 'ENTER CREWNECK',
+        price: '¥11,800',
+        priceNum: 11800,
+        image: 'enter_crewneck.png',
+        shopifyVariantId: null,
+        description: 'Classic form. ENTER the orbit.',
+        details: 'Regular fit · 100% Cotton · Washed Black · Neon green "ENTER" graphic',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
+    },
+    {
+        id: 'info-logo-tank',
+        name: 'INRYOKÜ LOGO TANK',
+        price: '¥6,800',
+        priceNum: 6800,
+        image: 'info_logo_tank.png',
+        shopifyVariantId: null,
+        description: 'Zero resistance. Pure gravity.',
+        details: 'Regular fit · 100% Cotton · Washed Black · inryokü logo emblem',
+        sizes: ['S', 'M', 'L', 'XL'],
+        color: 'Washed Black'
     }
 ];
+
+// ═══ CART SYSTEM ═══
+const CART = {
+    items: [], // { productId, size, qty, product }
+    add: function(productId, size, qty) {
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (!product) return;
+        const existing = this.items.find(it => it.productId === productId && it.size === size);
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            this.items.push({ productId, size, qty, product });
+        }
+        this.updateBadge();
+        this.showAddFeedback();
+    },
+    remove: function(idx) {
+        this.items.splice(idx, 1);
+        this.updateBadge();
+    },
+    getTotal: function() {
+        return this.items.reduce((sum, it) => sum + it.product.priceNum * it.qty, 0);
+    },
+    updateBadge: function() {
+        const badge = document.getElementById('cart-badge');
+        const totalQty = this.items.reduce((sum, it) => sum + it.qty, 0);
+        if (badge) {
+            badge.textContent = totalQty;
+            badge.style.display = totalQty > 0 ? 'flex' : 'none';
+        }
+    },
+    showAddFeedback: function() {
+        const btn = document.getElementById('cart-float-btn');
+        if (btn) {
+            btn.style.transform = 'scale(1.3)';
+            setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+        }
+    }
+};
+
+function showCartDrawer() {
+    let drawer = document.getElementById('cart-drawer');
+    if (drawer) { drawer.classList.add('cart-open'); return; }
+
+    drawer = document.createElement('div');
+    drawer.id = 'cart-drawer';
+    drawer.innerHTML = `
+        <div class="cart-drawer-overlay" id="cart-drawer-overlay"></div>
+        <div class="cart-drawer-panel glass-card">
+            <div class="cart-drawer-header">
+                <span class="cart-drawer-title">CART</span>
+                <button class="cart-drawer-close" id="cart-drawer-close">\u2715</button>
+            </div>
+            <div class="cart-drawer-items" id="cart-drawer-items"></div>
+            <div class="cart-drawer-footer" id="cart-drawer-footer"></div>
+        </div>`;
+    drawer.style.cssText = 'position:fixed;inset:0;z-index:10000;pointer-events:auto;';
+    document.body.appendChild(drawer);
+
+    document.getElementById('cart-drawer-close').addEventListener('click', hideCartDrawer);
+    document.getElementById('cart-drawer-overlay').addEventListener('click', hideCartDrawer);
+
+    renderCartItems();
+    setTimeout(() => drawer.classList.add('cart-open'), 10);
+}
+
+function hideCartDrawer() {
+    const drawer = document.getElementById('cart-drawer');
+    if (drawer) {
+        drawer.classList.remove('cart-open');
+        setTimeout(() => drawer.remove(), 300);
+    }
+}
+
+function renderCartItems() {
+    const itemsEl = document.getElementById('cart-drawer-items');
+    const footerEl = document.getElementById('cart-drawer-footer');
+    if (!itemsEl || !footerEl) return;
+
+    if (CART.items.length === 0) {
+        itemsEl.innerHTML = '<div style="text-align:center;padding:40px 0;color:#888;font-size:14px;">CART IS EMPTY</div>';
+        footerEl.innerHTML = '';
+        return;
+    }
+
+    itemsEl.innerHTML = CART.items.map((it, idx) => `
+        <div class="cart-item" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.1);">
+            <img src="${it.product.image}" alt="${it.product.name}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;background:#111;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${it.product.name}</div>
+                <div style="font-size:11px;color:#888;">Size: ${it.size} \u00d7 ${it.qty}</div>
+            </div>
+            <div style="font-size:13px;color:#fff;white-space:nowrap;">\u00a5${(it.product.priceNum * it.qty).toLocaleString()}</div>
+            <button onclick="CART.remove(${idx});renderCartItems();CART.updateBadge();" style="background:none;border:none;color:#666;font-size:16px;cursor:pointer;padding:4px;">\u2715</button>
+        </div>`).join('');
+
+    const total = CART.getTotal();
+    footerEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;padding:16px 0 8px;font-size:14px;font-weight:600;color:#fff;">
+            <span>TOTAL</span><span>\u00a5${total.toLocaleString()}</span>
+        </div>
+        <button id="cart-checkout-btn" style="width:100%;padding:14px;background:#fff;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.05em;margin-top:8px;">CHECKOUT</button>`;
+
+    document.getElementById('cart-checkout-btn').addEventListener('click', () => {
+        shopifyCheckout(CART.items);
+    });
+}
+
+// ═══ SHOPIFY STOREFRONT API ═══
+const SHOPIFY_CONFIG = {
+    storeDomain: '0xi10h-x1.myshopify.com',
+    storefrontToken: 'ce0dc399245e874fd85d218df2d9bb04',
+    apiVersion: '2026-04'
+};
+
+async function shopifyFetch(query, variables) {
+    const url = 'https://' + SHOPIFY_CONFIG.storeDomain + '/api/' + SHOPIFY_CONFIG.apiVersion + '/graphql.json';
+    const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Storefront-Access-Token': SHOPIFY_CONFIG.storefrontToken
+        },
+        body: JSON.stringify({ query, variables })
+    });
+    if (!resp.ok) throw new Error('Shopify API error: ' + resp.status);
+    const json = await resp.json();
+    if (json.errors) throw new Error('Shopify GQL error: ' + JSON.stringify(json.errors));
+    return json.data;
+}
+
+async function shopifyCheckout(cartItems) {
+    // shopifyVariantIdがある商品のみチェックアウト可能
+    const lines = cartItems
+        .filter(it => it.product.shopifyVariantId)
+        .map(it => ({
+            merchandiseId: it.product.shopifyVariantId,
+            quantity: it.qty
+        }));
+
+    if (lines.length === 0) {
+        alert('Currently unavailable for checkout. Coming soon.');
+        return;
+    }
+
+    const checkoutBtn = document.getElementById('cart-checkout-btn');
+    if (checkoutBtn) { checkoutBtn.textContent = 'LOADING...'; checkoutBtn.disabled = true; }
+
+    try {
+        const data = await shopifyFetch(`
+            mutation cartCreate($input: CartInput!) {
+                cartCreate(input: $input) {
+                    cart { checkoutUrl }
+                    userErrors { field message }
+                }
+            }
+        `, { input: { lines: lines } });
+
+        const result = data.cartCreate;
+        if (result.userErrors && result.userErrors.length > 0) {
+            throw new Error(result.userErrors.map(e => e.message).join(', '));
+        }
+        if (result.cart && result.cart.checkoutUrl) {
+            window.location.href = result.cart.checkoutUrl;
+        }
+    } catch (e) {
+        console.error('[Shopify] Checkout error:', e);
+        alert('Checkout error: ' + e.message);
+        if (checkoutBtn) { checkoutBtn.textContent = 'CHECKOUT'; checkoutBtn.disabled = false; }
+    }
+}
+
+// ═══ 3Dホログラムロゴ球体 ═══
+function init3DLogoSphere() {
+    if (typeof THREE === 'undefined') { console.warn('[3DLogo] Three.js required'); return; }
+
+    // .logo-sphere img要素を見つけてcanvasに置き換え
+    var logoSphereImg = document.querySelector('.logo-sphere');
+    if (!logoSphereImg) { console.warn('[3DLogo] .logo-sphere not found'); return; }
+
+    var parent = logoSphereImg.parentElement;
+    var rect = logoSphereImg.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height, 120);
+
+    // WebGLRenderer（alpha:true で背景透過）
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(size, size);
+    renderer.setClearColor(0x000000, 0);
+    renderer.domElement.className = 'logo-sphere logo-sphere-3d';
+    renderer.domElement.style.cssText = logoSphereImg.style.cssText || '';
+
+    // imgをcanvasに置き換え
+    logoSphereImg.style.display = 'none';
+    parent.insertBefore(renderer.domElement, logoSphereImg.nextSibling);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.2);
+    camera.lookAt(0, 0, 0);
+
+    // SphereGeometry(1, 64, 64) + カスタムShaderMaterial
+    var geo = new THREE.SphereGeometry(1, 64, 64);
+    var mat = new THREE.ShaderMaterial({
+        uniforms: {
+            u_time: { value: 0.0 },
+            u_morph: { value: 0.0 }
+        },
+        vertexShader: [
+            'varying vec3 vNormal;',
+            'varying vec3 vPosition;',
+            'varying vec3 vViewDir;',
+            'uniform float u_time;',
+            'uniform float u_morph;',
+            'void main() {',
+            '    vNormal = normalize(normalMatrix * normal);',
+            '    vPosition = position;',
+            '    // 微脈動',
+            '    float pulse = 1.0 + 0.02 * sin(u_time * 1.5) * u_morph;',
+            '    vec3 pos = position * pulse;',
+            '    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);',
+            '    vViewDir = normalize(-mvPos.xyz);',
+            '    gl_Position = projectionMatrix * mvPos;',
+            '}'
+        ].join('\n'),
+        fragmentShader: [
+            'varying vec3 vNormal;',
+            'varying vec3 vPosition;',
+            'varying vec3 vViewDir;',
+            'uniform float u_time;',
+            'uniform float u_morph;',
+            '',
+            'void main() {',
+            '    vec3 N = normalize(vNormal);',
+            '    vec3 V = normalize(vViewDir);',
+            '',
+            '    // ニュートンリング: r^2 proportional to n*lambda*R',
+            '    float r2 = dot(vPosition.xy, vPosition.xy);',
+            '    float R = 2.0; // ring curvature',
+            '',
+            '    // 6波長（RGBCMY）のニュートンリング干渉',
+            '    float lambdaR = 0.620;',
+            '    float lambdaG = 0.530;',
+            '    float lambdaB = 0.470;',
+            '    float lambdaC = 0.500;',
+            '    float lambdaM = 0.550;',
+            '    float lambdaY = 0.580;',
+            '',
+            '    float phase = r2 / R + u_time * 0.3;',
+            '    float ringR = 0.5 + 0.5 * cos(6.2832 * phase / lambdaR);',
+            '    float ringG = 0.5 + 0.5 * cos(6.2832 * phase / lambdaG);',
+            '    float ringB = 0.5 + 0.5 * cos(6.2832 * phase / lambdaB);',
+            '    float ringC = 0.5 + 0.5 * cos(6.2832 * phase / lambdaC);',
+            '    float ringM = 0.5 + 0.5 * cos(6.2832 * phase / lambdaM);',
+            '    float ringY = 0.5 + 0.5 * cos(6.2832 * phase / lambdaY);',
+            '',
+            '    // RGBCMY合成',
+            '    vec3 newtonColor = vec3(',
+            '        ringR * 0.5 + ringM * 0.25 + ringY * 0.25,',
+            '        ringG * 0.5 + ringC * 0.25 + ringY * 0.25,',
+            '        ringB * 0.5 + ringC * 0.25 + ringM * 0.25',
+            '    );',
+            '',
+            '    // フレネル反射（RGBCMY 6色）',
+            '    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);',
+            '    vec3 fresnelColorR = vec3(1.0, 0.0, 0.0) * pow(fresnel, 2.5);',
+            '    vec3 fresnelColorG = vec3(0.0, 1.0, 0.0) * pow(fresnel, 2.8);',
+            '    vec3 fresnelColorB = vec3(0.0, 0.0, 1.0) * pow(fresnel, 3.0);',
+            '    vec3 fresnelColorC = vec3(0.0, 1.0, 1.0) * pow(fresnel, 2.6);',
+            '    vec3 fresnelColorM = vec3(1.0, 0.0, 1.0) * pow(fresnel, 2.4);',
+            '    vec3 fresnelColorY = vec3(1.0, 1.0, 0.0) * pow(fresnel, 2.2);',
+            '    vec3 fresnelTotal = (fresnelColorR + fresnelColorG + fresnelColorB + fresnelColorC + fresnelColorM + fresnelColorY) * 0.35;',
+            '',
+            '    // 内部グロー',
+            '    float innerGlow = pow(max(dot(N, V), 0.0), 1.5) * 0.4;',
+            '    vec3 glowColor = vec3(0.5, 0.6, 0.7) * innerGlow;',
+            '',
+            '    // グレー→虹の観測エフェクト（morph=0でグレー、morph=1で虹色）',
+            '    vec3 grey = vec3(0.5);',
+            '    vec3 rainbow = newtonColor * 0.6 + fresnelTotal + glowColor;',
+            '    vec3 finalColor = mix(grey, rainbow, u_morph);',
+            '',
+            '    // 全体の明るさ',
+            '    float alpha = 0.85 + fresnel * 0.15;',
+            '    gl_FragColor = vec4(finalColor, alpha * u_morph);',
+            '}'
+        ].join('\n'),
+        transparent: true,
+        side: THREE.FrontSide
+    });
+
+    var sphere = new THREE.Mesh(geo, mat);
+    scene.add(sphere);
+
+    var startTime = performance.now();
+    var morphTarget = 1.0;
+
+    function animate3DLogo() {
+        if (!renderer.domElement.parentNode) return; // removed from DOM
+        requestAnimationFrame(animate3DLogo);
+
+        var elapsed = (performance.now() - startTime) / 1000;
+        mat.uniforms.u_time.value = elapsed;
+
+        // morph: 0→1 over 2 seconds (ease-out)
+        var morphProg = Math.min(elapsed / 2.0, 1.0);
+        mat.uniforms.u_morph.value = 1.0 - Math.pow(1.0 - morphProg, 3);
+
+        // Y軸ゆっくり回転
+        sphere.rotation.y = elapsed * 0.3;
+        // 微小な傾き揺れ
+        sphere.rotation.x = Math.sin(elapsed * 0.5) * 0.1;
+
+        renderer.render(scene, camera);
+    }
+
+    animate3DLogo();
+    console.log('[3DLogo] Hologram sphere initialized');
+    window._logoSphere3D = { renderer: renderer, scene: scene, sphere: sphere, mat: mat };
+}
 
 // ═══ PHASE 6 メインエントリー ═══
 function renderPhase3() {
     currentPhase = 3;
     localStorage.setItem('inryoku_visited', '1');
+
+    // ── ミュート状態初期化 ──
+    if (window._inryokuMuted === undefined) window._inryokuMuted = true;
 
     // ── P2→P3 遷移オーバーレイを引き継ぐ ──────────────────────
     // P2のホワイトアウト (#p2-fade-ov) が残っていれば:
@@ -169,40 +535,78 @@ function renderPhase3() {
     document.body.style.background = '#000';
     document.body.style.overflow = 'hidden';
 
-    // ── ミュート状態を引き継ぐ ──
-    if (window._inryokuMuted === undefined) window._inryokuMuted = true;
+    // ── BGMセレクタ（複数曲対応） ──
+    const BGM_TRACKS = [
+        { id:'jupiter', name:'Jupiter', emoji:'\u2643', url:'https://archive.org/download/Holst-ThePlanets/Jupiter.mp3' },
+        { id:'newworld', name:'\u65B0\u4E16\u754C \u7B2C2\u697D\u7AE0', emoji:'\uD83C\uDF0D', url:'https://archive.org/download/DvorakSymphonyNo.9fromTheNewWorld/02_Largo.mp3' },
+        { id:'bolero', name:'Bol\u00E9ro', emoji:'\uD83E\uDD41', url:'https://archive.org/download/ravel-bolero/RAVEL_BOLERO.mp3' },
+        { id:'gstring', name:'G\u7DDA\u4E0A\u306E\u30A2\u30EA\u30A2', emoji:'\uD83C\uDFBB', url:'https://archive.org/download/Bach-airOnTheGString/LaMusicaClasicaMasRelajanteDelMundo-Bach-AirOnTheGString.mp3' },
+        { id:'clairdelune', name:'\u6708\u306E\u5149', emoji:'\uD83C\uDF19', url:'https://archive.org/download/ClairDeLunedebussy/2009-03-30-clairdelune.mp3' },
+        { id:'gymnopedie', name:'Gymnop\u00E9die No.1', emoji:'\uD83C\uDF43', url:'https://archive.org/download/GymnopedieNo.1/Gymnopedie%20No.1.mp3' },
+        { id:'gnossienne', name:'Gnossienne', emoji:'\uD83D\uDD2E', url:'https://archive.org/download/ThreeGnossiennesErikSatie/gnossiennes.mp3' }
+    ];
+    window._bgmTracks = BGM_TRACKS;
+    window._bgmCurrentId = 'jupiter';
 
-    // ── BGM: Holst - Jupiter (The Bringer of Jollity) ──
-    // Public domain recording from Wikimedia Commons
     let p6bgm = null;
-    try {
-        p6bgm = new Audio('https://upload.wikimedia.org/wikipedia/commons/a/a0/Holst_The_Planets_Jupiter.ogg');
-        p6bgm.loop = true;
-        p6bgm.volume = 0;
-        if (window._inryokuMuted) p6bgm.muted = true;
-        p6bgm.crossOrigin = 'anonymous';
-        const playPromise = p6bgm.play();
-        if (playPromise) {
-            playPromise.catch(() => {
-                // Autoplay blocked — play on first interaction
-                const resumeBGM = () => {
-                    p6bgm.play().catch(() => { });
-                    document.removeEventListener('click', resumeBGM);
-                    document.removeEventListener('touchstart', resumeBGM);
-                };
-                document.addEventListener('click', resumeBGM, { once: true });
-                document.addEventListener('touchstart', resumeBGM, { once: true });
-            });
+    function initBGM(trackId) {
+        const track = BGM_TRACKS.find(t => t.id === trackId) || BGM_TRACKS[0];
+        try {
+            const audio = new Audio(track.url);
+            audio.loop = true;
+            audio.volume = 0;
+            audio.crossOrigin = 'anonymous';
+            if (window._inryokuMuted) audio.muted = true;
+            const playPromise = audio.play();
+            if (playPromise) {
+                playPromise.catch(() => {
+                    const resumeBGM = () => {
+                        audio.play().catch(() => { });
+                        document.removeEventListener('click', resumeBGM);
+                        document.removeEventListener('touchstart', resumeBGM);
+                    };
+                    document.addEventListener('click', resumeBGM, { once: true });
+                    document.addEventListener('touchstart', resumeBGM, { once: true });
+                });
+            }
+            // Fade in over 3 seconds
+            let fadeVol = 0;
+            const fadeIn = setInterval(() => {
+                fadeVol += 0.01;
+                if (fadeVol >= 0.7) { fadeVol = 0.7; clearInterval(fadeIn); }
+                if (audio) audio.volume = fadeVol;
+            }, 30);
+            return audio;
+        } catch (e) { console.warn('BGM load failed:', e); return null; }
+    }
+
+    function switchBGM(newTrackId) {
+        if (newTrackId === window._bgmCurrentId && p6bgm) return;
+        window._bgmCurrentId = newTrackId;
+        // Fade out current
+        if (p6bgm) {
+            const old = p6bgm;
+            let vol = old.volume;
+            const fadeOut = setInterval(() => {
+                vol -= 0.02;
+                if (vol <= 0) { vol = 0; clearInterval(fadeOut); old.pause(); old.src = ''; }
+                try { old.volume = vol; } catch(e) { clearInterval(fadeOut); }
+            }, 30);
         }
-        // Fade in over 3 seconds
-        let fadeVol = 0;
-        const fadeIn = setInterval(() => {
-            fadeVol += 0.01;
-            if (fadeVol >= 0.7) { fadeVol = 0.7; clearInterval(fadeIn); }
-            if (p6bgm) p6bgm.volume = fadeVol;
-        }, 30);
-    } catch (e) { console.warn('BGM load failed:', e); }
-    // Store reference for cleanup
+        // Start new
+        p6bgm = initBGM(newTrackId);
+        window._p6bgm = p6bgm;
+        // Update selector button label
+        const track = BGM_TRACKS.find(t => t.id === newTrackId);
+        const selectorBtn = document.getElementById('bgm-selector-btn');
+        if (selectorBtn && track) selectorBtn.textContent = '\u266A';
+        // Close popup
+        const popup = document.getElementById('bgm-popup');
+        if (popup) popup.style.display = 'none';
+    }
+    window.switchBGM = switchBGM;
+
+    p6bgm = initBGM('jupiter');
     window._p6bgm = p6bgm;
 
     const root = document.getElementById('root');
@@ -220,7 +624,7 @@ function renderPhase3() {
     }
 
     const productCardsHTML = PRODUCTS.map((p, i) => `
-        <div class="item-card glass-card" onclick="showProductModal(${i})" id="product-${p.id}">
+        <div class="item-card glass-card" style="min-width:200px;flex-shrink:0;scroll-snap-align:center;" onclick="showProductModal(${i})" id="product-${p.id}">
           <div class="item-thumb">
             <img src="${p.image}" alt="${p.name}" class="item-thumb-img">
           </div>
@@ -230,8 +634,23 @@ function renderPhase3() {
           </div>
         </div>`).join('');
 
+    const muteIcon = window._inryokuMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+
     root.innerHTML = `
         <canvas id="pu-cv" style="display:none;"></canvas>
+    <!-- Cart floating button -->
+    <div id="cart-float-btn" style="position:fixed;top:16px;right:16px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.2s ease;" onclick="showCartDrawer()">
+        \uD83D\uDED2
+        <span id="cart-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ff3366;color:#fff;font-size:11px;font-weight:700;border-radius:50%;width:20px;height:20px;align-items:center;justify-content:center;">0</span>
+    </div>
+    <!-- BGM selector button -->
+    <div id="bgm-selector-btn" style="position:fixed;top:16px;right:136px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform 0.2s ease;">\u266A</div>
+    <!-- BGM popup menu -->
+    <div id="bgm-popup" style="display:none;position:fixed;top:72px;right:136px;z-index:10001;pointer-events:auto;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:8px 0;min-width:220px;">
+        ${BGM_TRACKS.map(t => '<div class="bgm-track-item" data-track="' + t.id + '" style="padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.2s;color:rgba(255,255,255,0.7);font-size:13px;font-family:monospace;" onmouseenter="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseleave="this.style.background=\'transparent\'"><span style="font-size:18px;">' + t.emoji + '</span><span>' + t.name + '</span></div>').join('')}
+    </div>
+    <!-- Mute button -->
+    <div id="mute-btn" style="position:fixed;top:16px;right:76px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.2s ease;">${muteIcon}</div>
     <div class="singularity-content" style="position:relative;z-index:5;pointer-events:auto;">
         <div class="hologram-logo">
             <div class="brand-name p6-logo-text">
@@ -247,21 +666,86 @@ function renderPhase3() {
                 <div class="prism-line"></div>
         </div>
 
-        <div class="item-carousel" style="opacity:0;transition:opacity 1.2s ease;">
-            <button class="carousel-arrow" data-dir="prev" aria-label="Previous" type="button">◀</button>
-            <div class="item-grid">
-                ${productCardsHTML}
+        <div class="item-grid" style="opacity:0;transition:opacity 1.2s ease;">
+          <div id="store-grid" style="width:100%;overflow:visible;position:relative;">
+            <div id="carousel-ring" style="display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 20px;scrollbar-width:none;">
+              ${productCardsHTML}
             </div>
-            <button class="carousel-arrow" data-dir="next" aria-label="Next" type="button">▶</button>
+          </div>
+        </div>
+
+        <!-- Email signup -->
+        <div id="email-signup" style="opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;padding:20px;">
+          <h3 style="font-family:monospace;color:rgba(255,255,255,0.6);letter-spacing:3px;font-size:12px;">DROP NOTIFICATION</h3>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:8px 0;">\u65B0\u4F5C\u30FB\u9650\u5B9A\u30C9\u30ED\u30C3\u30D7\u306E\u901A\u77E5\u3092\u53D7\u3051\u53D6\u308B</p>
+          <div style="display:flex;gap:0;max-width:400px;margin:12px auto;">
+            <input id="email-input" type="email" placeholder="your@email.com" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-right:none;color:#fff;font-size:13px;outline:none;border-radius:4px 0 0 4px;">
+            <button id="email-submit" onclick="submitEmail()" style="padding:10px 20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:16px;border-radius:0 4px 4px 0;">\u2192</button>
+          </div>
+          <div id="email-status" style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:8px;"></div>
+        </div>
+
+        <!-- Contact form (toggle) -->
+        <div id="contact-section" style="opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;padding:10px 20px;">
+          <div id="contact-toggle" onclick="toggleContact()" style="cursor:pointer;font-family:monospace;color:rgba(255,255,255,0.4);letter-spacing:3px;font-size:12px;padding:10px;user-select:none;">CONTACT <span id="contact-arrow">\u25BC</span></div>
+          <div id="contact-form-wrap" style="display:none;max-width:400px;margin:12px auto;background:rgba(255,255,255,0.03);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:20px;">
+            <input id="contact-name" type="text" placeholder="Name" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:13px;outline:none;margin-bottom:10px;border-radius:4px;">
+            <input id="contact-email" type="email" placeholder="Email" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:13px;outline:none;margin-bottom:10px;border-radius:4px;">
+            <textarea id="contact-message" placeholder="Message" rows="4" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:13px;outline:none;resize:vertical;margin-bottom:10px;border-radius:4px;font-family:inherit;"></textarea>
+            <button onclick="submitContact()" style="width:100%;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:13px;font-family:monospace;letter-spacing:2px;border-radius:4px;">SEND</button>
+            <div id="contact-status" style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Theme switcher -->
+        <div id="theme-switcher" style="opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;padding:10px;">
+          <span style="font-family:monospace;color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:2px;">THEME</span>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+            <button class="theme-btn" data-theme="singularity" onclick="setTheme('singularity')" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;transition:all 0.3s ease;" title="Singularity">\u2726</button>
+            <button class="theme-btn" data-theme="void" onclick="setTheme('void')" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;transition:all 0.3s ease;" title="Void">\u2610</button>
+            <button class="theme-btn" data-theme="grid" onclick="setTheme('grid')" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;transition:all 0.3s ease;" title="Grid">\u229E</button>
+          </div>
         </div>
 
     </div>`;
 
+    // ── BGMセレクタボタンのイベント ──
+    const bgmSelectorBtn = document.getElementById('bgm-selector-btn');
+    const bgmPopup = document.getElementById('bgm-popup');
+    if (bgmSelectorBtn && bgmPopup) {
+        bgmSelectorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgmPopup.style.display = bgmPopup.style.display === 'none' ? 'block' : 'none';
+        });
+        bgmPopup.querySelectorAll('.bgm-track-item').forEach(item => {
+            item.addEventListener('click', () => {
+                switchBGM(item.dataset.track);
+            });
+        });
+        // ポップアップ外クリックで閉じる
+        document.addEventListener('click', () => {
+            bgmPopup.style.display = 'none';
+        });
+        bgmPopup.addEventListener('click', (e) => e.stopPropagation());
+    }
 
-    // ── Bolero プレーヤー削除済み（2026-04-17: Jupiter BGMのみ採用） ──
-    // 旧コード:
-    //   const boleroEl = document.createElement('div'); boleroEl.id='bolero-player'; ...
-    //   initBoleroPlayer();
+    // ── ミュートボタンのイベント ──
+    const muteBtn = document.getElementById('mute-btn');
+    if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+            window._inryokuMuted = !window._inryokuMuted;
+            muteBtn.textContent = window._inryokuMuted ? '\uD83D\uDD07' : '\uD83D\uDD0A';
+            if (window._p6bgm) window._p6bgm.muted = window._inryokuMuted;
+        });
+    }
+
+    // ── カルーセルスクロールバー非表示（webkit） ──
+    const carouselStyle = document.createElement('style');
+    carouselStyle.textContent = '#carousel-ring::-webkit-scrollbar{display:none;} .cart-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);} .cart-drawer-panel{position:fixed;top:0;right:-360px;width:340px;height:100%;padding:20px;overflow-y:auto;transition:right 0.3s ease;background:rgba(10,10,10,0.9);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.1);} .cart-open .cart-drawer-panel{right:0;} .cart-drawer-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1);} .cart-drawer-title{font-size:14px;font-weight:700;color:#fff;letter-spacing:0.1em;} .cart-drawer-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;}';
+    document.head.appendChild(carouselStyle);
+
+
+    // ── 旧Boleroプレーヤーは削除済み。BGMセレクタに統合 ──
 
     console.log('[Phase 3] DOM setup complete, initializing particle universe...');
     // 同期呼び出し（rAFだとバックグラウンドタブや競合で不発になるケースがある）
@@ -305,10 +789,15 @@ function initBrandParticleReveal() {
 
     // ═══════════════════════════════════════════
     //  STEP 1: 球体コアが光って実体化（0ms〜）
+    //  → 3Dホログラムロゴ球体を初期化
     // ═══════════════════════════════════════════
     if (logoSphere) {
         logoSphere.style.filter = 'drop-shadow(0 0 60px rgba(255,255,255,1)) drop-shadow(0 0 100px rgba(0,255,255,0.9)) brightness(2.5)';
     }
+    // 3Dホログラム球体を起動（imgをThree.js canvasに置き換え）
+    setTimeout(function() {
+        init3DLogoSphere();
+    }, 100);
     setTimeout(function() {
         if (logoSphere) {
             logoSphere.style.transition = 'opacity 0.6s ease';
@@ -486,144 +975,19 @@ function initBrandParticleReveal() {
         container.remove();
         if (prismLine) { prismLine.style.transition = 'opacity 1s ease'; prismLine.style.opacity = '1'; }
         setTimeout(function() {
-            // カルーセル全体をフェードイン（Step2: 外側ラッパーに opacity transition を付与済み）
-            var carousel = document.querySelector('.item-carousel');
-            if (carousel) carousel.style.opacity = '1';
-            initProductCarousel();
-            // Step3: 3Dホログラムロゴ起動 — 2026-04-17 コアPNG派に戻すためコメントアウト
-            // try { init3DLogoSphere(); } catch(e) { console.warn('[P3] 3D logo init failed:', e); }
+            var itemGrid = document.querySelector('.item-grid');
+            if (itemGrid) itemGrid.style.opacity = '1';
+            // メール登録・コンタクト・テーマ切替を遅延表示
+            setTimeout(function() {
+                var emailSignup = document.getElementById('email-signup');
+                var contactSection = document.getElementById('contact-section');
+                var themeSwitcher = document.getElementById('theme-switcher');
+                if (emailSignup) { emailSignup.style.opacity = '1'; emailSignup.style.pointerEvents = 'auto'; }
+                if (contactSection) { contactSection.style.opacity = '1'; contactSection.style.pointerEvents = 'auto'; }
+                if (themeSwitcher) { themeSwitcher.style.opacity = '1'; themeSwitcher.style.pointerEvents = 'auto'; }
+            }, 1200);
         }, 800);
     }, allDoneTime);
-}
-
-// ═══ Step3: 3Dホログラムロゴ球体（復元版 2026-04-16 より移植） ═══
-// Three.js SphereGeometry + カスタムシェーダー
-// 虹色ニュートンリング + フレネル + 回転 + 脈動
-// 依存: window.p3AudioEnergy (未実装なら 0 を使う)
-var _logo3DRef = null;
-function init3DLogoSphere() {
-    if (_logo3DRef) return _logo3DRef; // 二重起動防止
-    var imgEl = document.querySelector('.logo-sphere');
-    var wrap  = document.querySelector('.logo-holo-wrap');
-    if (!imgEl || !wrap || typeof THREE === 'undefined') return null;
-
-    var canvas = document.createElement('canvas');
-    var size = Math.max(wrap.offsetWidth, 60);
-    canvas.width = size * 2;
-    canvas.height = size * 2;
-    canvas.className = 'logo-sphere logo-sphere-3d';
-    // CSSで配置制御（.logo-sphere-3d / .logo-sphere を参照）
-
-    var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(size * 2, size * 2);
-    renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(1);
-
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(0, 0, 3.2);
-    camera.lookAt(0, 0, 0);
-
-    var geo = new THREE.SphereGeometry(1, 64, 64);
-    var mat = new THREE.ShaderMaterial({
-        uniforms: {
-            uTime: { value: 0.0 },
-            uPulse: { value: 0.0 },
-            uAudioEnergy: { value: 0.0 }
-        },
-        vertexShader: [
-            'varying vec3 vNormal;',
-            'varying vec3 vViewDir;',
-            'varying vec2 vUv;',
-            'void main() {',
-            '    vNormal = normalize(normalMatrix * normal);',
-            '    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);',
-            '    vViewDir = normalize(-mvPos.xyz);',
-            '    vUv = uv;',
-            '    gl_Position = projectionMatrix * mvPos;',
-            '}'
-        ].join('\n'),
-        fragmentShader: [
-            'uniform float uTime;',
-            'uniform float uPulse;',
-            'uniform float uAudioEnergy;',
-            'varying vec3 vNormal;',
-            'varying vec3 vViewDir;',
-            'varying vec2 vUv;',
-            '',
-            'vec3 spectrum(float t) {',
-            '    vec3 c = vec3(0.0);',
-            '    float tt = fract(t) * 6.0;',
-            '    if (tt < 1.0) c = mix(vec3(1,0,0), vec3(1,1,0), tt);',
-            '    else if (tt < 2.0) c = mix(vec3(1,1,0), vec3(0,1,0), tt-1.0);',
-            '    else if (tt < 3.0) c = mix(vec3(0,1,0), vec3(0,1,1), tt-2.0);',
-            '    else if (tt < 4.0) c = mix(vec3(0,1,1), vec3(0,0,1), tt-3.0);',
-            '    else if (tt < 5.0) c = mix(vec3(0,0,1), vec3(1,0,1), tt-4.0);',
-            '    else c = mix(vec3(1,0,1), vec3(1,0,0), tt-5.0);',
-            '    return c;',
-            '}',
-            '',
-            'void main() {',
-            '    float fresnel = 1.0 - abs(dot(vNormal, vViewDir));',
-            '    fresnel = pow(fresnel, 2.5);',
-            '    float theta = acos(vNormal.y);',
-            '    float phi = atan(vNormal.z, vNormal.x);',
-            '    float ringFreq = 8.0 + uAudioEnergy * 4.0;',
-            '    float ring = sin(theta * ringFreq + uTime * 0.3) * 0.5 + 0.5;',
-            '    ring *= sin(phi * 6.0 - uTime * 0.5) * 0.3 + 0.7;',
-            '    float specT = theta * 0.5 + phi * 0.15 + uTime * 0.08;',
-            '    vec3 rainbow = spectrum(specT);',
-            '    float specT2 = theta * 0.3 - phi * 0.2 + uTime * 0.12 + 0.5;',
-            '    vec3 rainbow2 = spectrum(specT2);',
-            '    vec3 iridescent = mix(rainbow, rainbow2, ring * 0.4);',
-            '    vec3 grey = vec3(0.45);',
-            '    vec3 color = mix(grey, iridescent, fresnel * 0.85 + 0.15);',
-            '    float core = pow(max(dot(vNormal, vViewDir), 0.0), 4.0);',
-            '    color += vec3(0.3, 0.35, 0.4) * core * 0.3;',
-            '    float edgeGlow = pow(fresnel, 4.0);',
-            '    color += iridescent * edgeGlow * 0.6;',
-            '    float pulse = 1.0 + uPulse * 0.15;',
-            '    color *= pulse;',
-            '    float alpha = smoothstep(0.0, 0.15, 1.0 - fresnel) * 0.95 + 0.05;',
-            '    gl_FragColor = vec4(color, alpha);',
-            '}'
-        ].join('\n'),
-        transparent: true,
-        side: THREE.FrontSide
-    });
-
-    var sphere = new THREE.Mesh(geo, mat);
-    scene.add(sphere);
-
-    // PNGを非表示にしてcanvasを追加
-    imgEl.style.display = 'none';
-    wrap.appendChild(canvas);
-
-    var startTime = performance.now();
-    var animId = null;
-    function animate() {
-        if (currentPhase !== 3) { cancelAnimationFrame(animId); return; }
-        animId = requestAnimationFrame(animate);
-        var elapsed = (performance.now() - startTime) * 0.001;
-        mat.uniforms.uTime.value = elapsed;
-        mat.uniforms.uPulse.value = Math.sin(elapsed * 1.2) * 0.5 + 0.5;
-        mat.uniforms.uAudioEnergy.value = (window.p3AudioEnergy || 0);
-        sphere.rotation.y = elapsed * 0.25;
-        sphere.rotation.x = Math.sin(elapsed * 0.15) * 0.1;
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    _logo3DRef = {
-        canvas: canvas, renderer: renderer, sphere: sphere, material: mat,
-        stop: function() { if (animId) cancelAnimationFrame(animId); },
-        getCenter: function() {
-            var r = canvas.getBoundingClientRect();
-            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-        }
-    };
-    window._logo3DRef = _logo3DRef;
-    return _logo3DRef;
 }
 
 // ═══ THREE.JS 粒子宇宙 ═══
@@ -686,12 +1050,11 @@ function initParticleUniverse() {
 
         // サイズバラつき（よりランダムに、大きいのも混ぜる）
         const sR = Math.random();
-        // 2026-04-17 Bloom不在のため全体的にサイズ増強
-        if (sR < 0.03) aSizes[i] = 20.0 + Math.random() * 12.0;      // 3%: 巨大な光球
-        else if (sR < 0.10) aSizes[i] = 10.0 + Math.random() * 8.0;  // 7%: 大きい
-        else if (sR < 0.30) aSizes[i] = 5.0 + Math.random() * 4.0;   // 20%: 中大
-        else if (sR < 0.55) aSizes[i] = 2.5 + Math.random() * 2.5;   // 25%: 中
-        else aSizes[i] = 1.0 + Math.random() * 2.0;                  // 45%: 小さい星
+        if (sR < 0.03) aSizes[i] = 12.0 + Math.random() * 8.0;       // 3%: 巨大な光球
+        else if (sR < 0.10) aSizes[i] = 6.0 + Math.random() * 6.0;  // 7%: 大きい
+        else if (sR < 0.30) aSizes[i] = 3.0 + Math.random() * 3.0;  // 20%: 中大
+        else if (sR < 0.55) aSizes[i] = 1.5 + Math.random() * 2.0;  // 25%: 中
+        else aSizes[i] = 0.3 + Math.random() * 1.5;                  // 45%: 小さい星
 
         // 呼吸フェーズ
         aPhases[i] = Math.random() * Math.PI * 2;
@@ -733,9 +1096,8 @@ void main() {
     float sizeBreath = 1.0 + vBreathe * 0.35;
 
     vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-    // 2026-04-17: Bloom不在(Three.js 0.160 examples/js削除)の代替として基準サイズ強化 280→500
-    gl_PointSize = aSize * sizeBreath * (500.0 / -mvPos.z);
-    gl_PointSize = max(gl_PointSize, 1.2);
+    gl_PointSize = aSize * sizeBreath * (280.0 / -mvPos.z);
+    gl_PointSize = max(gl_PointSize, 0.5);
     gl_Position = projectionMatrix * mvPos;
 }
 `,
@@ -767,8 +1129,6 @@ void main() {
     );
     // グレー→虹の観測エフェクト（コアに近いほど虹が見える）
     vec3 finalColor = mix(vColor, vColor + rainbow * 0.2, core * 0.4);
-    // Bloom不在補償で輝度 +60%
-    finalColor *= 1.6;
 
     gl_FragColor = vec4(finalColor * breathe, alpha * breathe);
 }
@@ -972,6 +1332,23 @@ void main() {
     const origColArr = geometry.attributes.color.array.slice();
     let logoWX6 = 0, logoWY6 = 0;
 
+    // ── Round3: チャット会話カウンター + アイドルタイマー ──
+    let chatMsgCount = 0;          // AI応答回数（3回でビッグバン遷移）
+    let chatIdleTimer = 0;         // 入力なし経過秒（10秒でビッグバン遷移）
+    let chatIdleActive = false;    // アイドル監視中フラグ
+
+    // ── Round3: リング軌道用（chatting中の非メッセージ粒子） ──
+    const ringOrbitAngle = new Float32Array(N);   // 各粒子の軌道角度
+    const ringOrbitRadius = new Float32Array(N);  // 各粒子の軌道半径
+    const ringOrbitSpeed = new Float32Array(N);   // 各粒子の周回速度
+    const ringOrbitY = new Float32Array(N);       // Y軸オフセット（3Dリング感）
+    for (let i = 0; i < N; i++) {
+        ringOrbitAngle[i] = Math.random() * Math.PI * 2;
+        ringOrbitRadius[i] = 8 + Math.random() * 25;     // ロゴ周辺に集まるリング
+        ringOrbitSpeed[i] = 0.3 + Math.random() * 0.7;   // ゆるやかに周回
+        ringOrbitY[i] = (Math.random() - 0.5) * 12;      // 縦方向の散らばり
+    }
+
     // ── スクロールパララックス ──
     let scrollY6 = 0;
     const scrollEl = document.querySelector('.singularity-content');
@@ -1010,12 +1387,39 @@ void main() {
             geometry.setDrawRange(0, N);
             console.log('[ABSORB] started, logoWX=' + logoWX6.toFixed(2) + ' logoWY=' + logoWY6.toFixed(2));
             for (let i = 0; i < N; i++) { attractVelX[i] = 0; attractVelY[i] = 0; }
+            // Round3: 会話カウンター+アイドルタイマーリセット
+            chatMsgCount = 0;
+            chatIdleTimer = 0;
+            chatIdleActive = false;
+
+            // ── Round3: 吸収サウンド（低周波うなり 60Hz→30Hz, 2秒） ──
+            if (!window._inryokuMuted) {
+                try {
+                    var actx = iac();
+                    if (actx) {
+                        var now = actx.currentTime;
+                        var osc = actx.createOscillator();
+                        var gain = actx.createGain();
+                        osc.connect(gain);
+                        gain.connect(actx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(60, now);
+                        osc.frequency.exponentialRampToValueAtTime(30, now + 2.0);
+                        gain.gain.setValueAtTime(0, now);
+                        gain.gain.linearRampToValueAtTime(0.15, now + 0.8);
+                        gain.gain.linearRampToValueAtTime(0, now + 2.0);
+                        osc.start(now);
+                        osc.stop(now + 2.1);
+                    }
+                } catch(e) { console.warn('[ABSORB] sound error:', e); }
+            }
 
             // ── UIフェードアウト（ロゴ=infoは残す）──
-            var carousel = document.querySelector('.item-carousel');
+            var itemGrid = document.querySelector('.item-grid');
             var brandName = document.querySelector('.brand-name');
             var prismLine = document.querySelector('.prism-line');
-            [carousel, brandName, prismLine].forEach(function(el) {
+            var bolero = document.getElementById('bolero-player');
+            [itemGrid, brandName, prismLine, bolero].forEach(function(el) {
                 if (el) { el.style.transition = 'opacity 1.5s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
             });
         });
@@ -1074,6 +1478,8 @@ void main() {
             if (bigBangState === 'absorb' && bigBangTimer >= 3.0) {
                 bigBangState = 'chatting';
                 bigBangTimer = 0;
+                chatIdleTimer = 0;
+                chatIdleActive = true;
                 console.log('[STATE] absorb→chatting: チャットUI表示（二進数は会話時に発動）');
                 showChatUI();
             }
@@ -1098,6 +1504,56 @@ void main() {
                     bbVelZ[j] = spd * Math.cos(phi);
                 }
                 geometry.attributes.color.needsUpdate = true;
+
+                // ── Round3: ビッグバンフラッシュ（白→減衰） ──
+                var flash = document.createElement('div');
+                flash.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#fff;pointer-events:none;opacity:1;transition:opacity 1.5s ease-out;';
+                document.body.appendChild(flash);
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() { flash.style.opacity = '0'; });
+                });
+                setTimeout(function() { flash.remove(); }, 1600);
+
+                // ── Round3: ビッグバンサウンド（爆発的な低音ブースト） ──
+                if (!window._inryokuMuted) {
+                    try {
+                        var actx2 = iac();
+                        if (actx2) {
+                            var now2 = actx2.currentTime;
+                            // 低音バースト
+                            var osc2 = actx2.createOscillator();
+                            var gain2 = actx2.createGain();
+                            osc2.connect(gain2);
+                            gain2.connect(actx2.destination);
+                            osc2.type = 'sine';
+                            osc2.frequency.setValueAtTime(40, now2);
+                            osc2.frequency.exponentialRampToValueAtTime(120, now2 + 0.5);
+                            osc2.frequency.exponentialRampToValueAtTime(30, now2 + 2.0);
+                            gain2.gain.setValueAtTime(0.2, now2);
+                            gain2.gain.linearRampToValueAtTime(0.05, now2 + 1.0);
+                            gain2.gain.linearRampToValueAtTime(0, now2 + 2.5);
+                            osc2.start(now2);
+                            osc2.stop(now2 + 2.6);
+                            // ノイズバースト
+                            var bs = actx2.sampleRate * 0.8;
+                            var nb = actx2.createBuffer(1, bs, actx2.sampleRate);
+                            var nd = nb.getChannelData(0);
+                            for (var ni = 0; ni < bs; ni++) nd[ni] = Math.random() * 2 - 1;
+                            var ns = actx2.createBufferSource();
+                            ns.buffer = nb;
+                            var ng = actx2.createGain();
+                            var nf = actx2.createBiquadFilter();
+                            nf.type = 'lowpass';
+                            nf.frequency.value = 800;
+                            ns.connect(nf);
+                            nf.connect(ng);
+                            ng.connect(actx2.destination);
+                            ng.gain.setValueAtTime(0.12, now2);
+                            ng.gain.exponentialRampToValueAtTime(0.001, now2 + 1.5);
+                            ns.start(now2);
+                        }
+                    } catch(e) { console.warn('[BB] sound error:', e); }
+                }
             }
             // bb_explode完了 → done（idle復帰）
             else if (bigBangState === 'bb_explode' && bigBangTimer >= 4.0) {
@@ -1158,6 +1614,16 @@ void main() {
         }
 
         // ═══ パーティクル物理 ═══
+        // ═══ Round3: チャット中アイドルタイマー（10秒無入力 or 3回会話でビッグバン） ═══
+        if (bigBangState === 'chatting' && chatIdleActive && !chatSpeaking) {
+            chatIdleTimer += dt;
+            if (chatIdleTimer >= 10.0) {
+                console.log('[CHAT] idle timeout → closing chat → bigbang');
+                chatIdleActive = false;
+                closeChatUI();
+            }
+        }
+
         const colArr = geometry.attributes.color.array;
         for (let i = 0; i < N; i++) {
             if (bigBangState === 'absorb') {
@@ -1263,8 +1729,23 @@ void main() {
                         colArr[i*3] = 0; colArr[i*3+1] = 0; colArr[i*3+2] = 0;
                         geometry.attributes.aSize.array[i] = 0;
                     }
-                } else if (chatSpeaking) {
-                    colArr[i*3] *= 0.95; colArr[i*3+1] *= 0.95; colArr[i*3+2] *= 0.95;
+                } else {
+                    // ── Round3: 非メッセージ粒子 → ロゴ周辺をリング軌道で周回 ──
+                    ringOrbitAngle[i] += ringOrbitSpeed[i] * dt;
+                    var targetX = logoWX6 + Math.cos(ringOrbitAngle[i]) * ringOrbitRadius[i];
+                    var targetY = logoWY6 + Math.sin(ringOrbitAngle[i]) * ringOrbitRadius[i] * 0.35 + ringOrbitY[i];
+                    var targetZ = Math.sin(ringOrbitAngle[i] * 0.5) * ringOrbitRadius[i] * 0.3;
+                    // ゆるやかに目標位置へ補間（最初はゆっくり、徐々に軌道に乗る）
+                    var orbitLerp = 0.02;
+                    posArr[i*3]   += (targetX - posArr[i*3])   * orbitLerp;
+                    posArr[i*3+1] += (targetY - posArr[i*3+1]) * orbitLerp;
+                    posArr[i*3+2] += (targetZ - posArr[i*3+2]) * orbitLerp;
+                    // 呼吸するような明暗（chatSpeaking中は暗め）
+                    var orbitDim = chatSpeaking ? 0.15 : 0.35;
+                    var orbitBreath = orbitDim + 0.08 * Math.sin(uTime * 1.5 + ringOrbitAngle[i]);
+                    colArr[i*3]   = origColArr[i*3]   * orbitBreath;
+                    colArr[i*3+1] = origColArr[i*3+1] * orbitBreath;
+                    colArr[i*3+2] = origColArr[i*3+2] * orbitBreath;
                 }
 
             } else if (bigBangState === 'bb_collapse') {
@@ -1755,9 +2236,10 @@ void main() {
 
         // ── トーク中はロゴ+チャットのみ。他UI完全非表示 ──
         var hideEls = [
-            document.querySelector('.item-carousel'),
+            document.querySelector('.item-grid'),
             document.querySelector('.brand-name'),
-            document.querySelector('.prism-line')
+            document.querySelector('.prism-line'),
+            document.getElementById('bolero-player')
         ];
         hideEls.forEach(function(el) {
             if (el) { el.style.transition = 'opacity 0.8s ease'; el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
@@ -1840,10 +2322,11 @@ void main() {
 
         // ── UI復元: ビッグバン爆発後にフェードイン（ロゴ以外）──
         setTimeout(function() {
-            var carousel = document.querySelector('.item-carousel');
+            var itemGrid = document.querySelector('.item-grid');
             var brandName = document.querySelector('.brand-name');
             var prismLine = document.querySelector('.prism-line');
-            [carousel, brandName, prismLine].forEach(function(el) {
+            var bolero = document.getElementById('bolero-player');
+            [itemGrid, brandName, prismLine, bolero].forEach(function(el) {
                 if (el) { el.style.transition = 'opacity 2.0s ease'; el.style.opacity = '1'; el.style.pointerEvents = ''; }
             });
         }, 5000);
@@ -1874,6 +2357,9 @@ void main() {
     }
 
     function sendChatMsg() {
+        // Round3: アイドルタイマーリセット（ユーザーが入力した）
+        chatIdleTimer = 0;
+
         // telepathy / sculpt / quantum
         if (chatMode === 'telepathy' || chatMode === 'sculpt' || chatMode === 'quantum') {
             var input = document.getElementById('chat-tp-input');
@@ -1887,7 +2373,15 @@ void main() {
             appearFn(txt, 'tp-user', function() {
                 // AI応答を取得して表示
                 fetchAIResponse(txt, function(response) {
+                    chatMsgCount++;
+                    chatIdleTimer = 0;
+                    console.log('[CHAT] AI response #' + chatMsgCount);
                     setTimeout(function() { appearFn(response, 'tp-ai'); }, 400);
+                    // Round3: 3回会話後 → ビッグバン遷移
+                    if (chatMsgCount >= 3) {
+                        chatIdleActive = false;
+                        setTimeout(function() { closeChatUI(); }, 3000);
+                    }
                 });
             });
             return;
@@ -1916,10 +2410,18 @@ void main() {
 
         // AI応答を取得 → 二進数粒子演出 → テキスト表示
         fetchAIResponse(txt, function(response) {
+            chatMsgCount++;
+            chatIdleTimer = 0;
+            console.log('[CHAT] AI response #' + chatMsgCount);
             aDiv.remove();
             // 粒子が円環を形成してから「読み取り」としてテキスト表示
             speakBinary(response, function() {
                 typeMsg(response);
+                // Round3: 3回会話後 → ビッグバン遷移
+                if (chatMsgCount >= 3) {
+                    chatIdleActive = false;
+                    setTimeout(function() { closeChatUI(); }, 3000);
+                }
             });
         });
     }
@@ -2211,43 +2713,6 @@ void main() {
 
 
 
-// ═══ 商品カルーセル制御（Step2: 10商品対応） ═══
-function initProductCarousel() {
-    const carousel = document.querySelector('.item-carousel');
-    if (!carousel) return;
-    const grid = carousel.querySelector('.item-grid');
-    const prev = carousel.querySelector('.carousel-arrow[data-dir="prev"]');
-    const next = carousel.querySelector('.carousel-arrow[data-dir="next"]');
-    if (!grid || !prev || !next) return;
-
-    // 1ページ分スクロール量 = カード幅 + gap * 可視枚数 近似
-    function pageWidth() {
-        const card = grid.querySelector('.item-card');
-        const cw = card ? card.getBoundingClientRect().width : 200;
-        const gap = 20;
-        // 可視幅から見えているカード数を算出（最低1）
-        const visible = Math.max(1, Math.floor(grid.clientWidth / (cw + gap)));
-        return (cw + gap) * visible;
-    }
-
-    function updateArrows() {
-        const max = grid.scrollWidth - grid.clientWidth - 2;
-        prev.disabled = grid.scrollLeft <= 2;
-        next.disabled = grid.scrollLeft >= max;
-    }
-
-    prev.addEventListener('click', () => {
-        grid.scrollBy({ left: -pageWidth(), behavior: 'smooth' });
-    });
-    next.addEventListener('click', () => {
-        grid.scrollBy({ left: pageWidth(), behavior: 'smooth' });
-    });
-    grid.addEventListener('scroll', updateArrows, { passive: true });
-    window.addEventListener('resize', updateArrows);
-    // 初期状態
-    requestAnimationFrame(updateArrows);
-}
-
 // ═══ 商品モーダル ═══
 function showProductModal(idx) {
     const p = PRODUCTS[idx];
@@ -2278,7 +2743,7 @@ function showProductModal(idx) {
                         <span class="cart-btn-text">ADD TO CART</span>
                         <span class="cart-btn-price">${p.price}</span>
                     </button>
-                    <div class="stripe-badge">Powered by <strong>Stripe</strong> · Secure Checkout</div>
+                    <div class="stripe-badge">Powered by <strong>Shopify</strong> · Secure Checkout</div>
                 </div>
             </div>
         </div>`;
@@ -2294,27 +2759,14 @@ function showProductModal(idx) {
         });
     });
 
-    // カートボタン → CARTに追加 + トースト通知 + bigBang
+    // カートボタン → CARTに追加
     document.getElementById('pm-cart').addEventListener('click', () => {
-        var vid = (p.shopifyVariants && p.shopifyVariants[selectedSize]) || '';
-        if (window.CART) {
-            window.CART.add(p.id, selectedSize, p.priceNum, p.name, vid);
-        }
-        // Toast
-        var toast = document.createElement('div');
-        toast.className = 'cart-toast';
-        toast.textContent = `${p.name} (${selectedSize}) をカートに追加しました`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 10);
-        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
-        // BigBang 粒子
-        if (typeof spawnBigBang === 'function') {
-            var btn = document.getElementById('pm-cart');
-            if (btn) {
-                var cr = btn.getBoundingClientRect();
-                try { spawnBigBang(cr.left + cr.width/2, cr.top + cr.height/2, 12); } catch(e) {}
-            }
-        }
+        CART.add(p.id, selectedSize, 1);
+        // ボタンフィードバック
+        const cartBtn = document.getElementById('pm-cart');
+        const origText = cartBtn.querySelector('.cart-btn-text').textContent;
+        cartBtn.querySelector('.cart-btn-text').textContent = 'ADDED \u2713';
+        setTimeout(() => { cartBtn.querySelector('.cart-btn-text').textContent = origText; }, 1200);
     });
 
     // 閉じる
@@ -2338,8 +2790,10 @@ function playDivineSound() { if (!iac()) return; const n = audioContext.currentT
 function playWaterSplashSound() { if (!iac()) return; const n = audioContext.currentTime; const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = 280; o.type = 'sine'; g.gain.setValueAtTime(.13, n); g.gain.exponentialRampToValueAtTime(.01, n + .28); o.start(n); o.stop(n + .28); }
 function playGlitchSound() { if (!iac()) return; const n = audioContext.currentTime; const bs = audioContext.sampleRate * .5, nb = audioContext.createBuffer(1, bs, audioContext.sampleRate), out = nb.getChannelData(0); for (let i = 0; i < bs; i++)out[i] = Math.random() * 2 - 1; const s = audioContext.createBufferSource(); s.buffer = nb; const g = audioContext.createGain(), f = audioContext.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3000; f.Q.value = 10; s.connect(f); f.connect(g); g.connect(audioContext.destination); g.gain.setValueAtTime(.18, n); g.gain.exponentialRampToValueAtTime(.01, n + .5); s.start(n); }
 
-// ═══ BOLERO (Ravel) 削除済み — 2026-04-17 Jupiter BGMのみ採用 ═══
-// 旧: initBoleroPlayer / startBolero / stopBolero は削除（git履歴参照: e0f1f93）
+// ═══ 旧BOLERO (Ravel) — BGMセレクタに統合済み。関数は互換性のため空で残す ═══
+function initBoleroPlayer() { /* removed — BGM selector handles all tracks */ }
+function startBolero() { }
+function stopBolero() { }
 
 // ═══ SKIP TO SHOP ═══
 function skipToShop() {
@@ -2353,201 +2807,132 @@ function vibrate(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  Step 4 + 7: SHOPIFY / CART / TOP-RIGHT CONTROLS
-//  復元版 p3_recovered_20260416.reference.js より移植
-// ═══════════════════════════════════════════════════════════════
-
-// ── SHOPIFY CONFIG ──
-const SHOPIFY_CONFIG = {
-    storeDomain: '',      // 司さんが Shopify ストア取得後に埋める
-    storefrontToken: '',  // Storefront API トークン
-    apiVersion: '2026-04'
-};
-
-function shopifyFetch(query, variables) {
-    if (!SHOPIFY_CONFIG.storeDomain || !SHOPIFY_CONFIG.storefrontToken) {
-        return Promise.reject(new Error('Shopify not configured'));
+// ═══ EMAIL SIGNUP ═══
+function submitEmail() {
+    var input = document.getElementById('email-input');
+    var status = document.getElementById('email-status');
+    if (!input || !status) return;
+    var email = input.value.trim();
+    if (!email || !email.includes('@')) {
+        status.textContent = '\u2715 \u6709\u52B9\u306A\u30E1\u30FC\u30EB\u30A2\u30C9\u30EC\u30B9\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
+        return;
     }
-    return fetch('https://' + SHOPIFY_CONFIG.storeDomain + '/api/' + SHOPIFY_CONFIG.apiVersion + '/graphql.json', {
+    status.textContent = 'SENDING...';
+    status.style.color = 'rgba(255,255,255,0.4)';
+    fetch('/api/subscribe', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Shopify-Storefront-Access-Token': SHOPIFY_CONFIG.storefrontToken
-        },
-        body: JSON.stringify({ query: query, variables: variables })
-    }).then(function(r) { return r.json(); });
-}
-
-function shopifyCheckout(cartItems) {
-    var lines = cartItems.map(function(item) {
-        var vid = item.shopifyVariantId;
-        if (!vid) return null;
-        return { merchandiseId: vid, quantity: item.qty || 1 };
-    }).filter(Boolean);
-    if (lines.length === 0) return Promise.reject(new Error('No Shopify variants mapped'));
-    var query = 'mutation cartCreate($input: CartInput!) { cartCreate(input: $input) { cart { id checkoutUrl } userErrors { field message } } }';
-    return shopifyFetch(query, { input: { lines: lines, attributes: [{ key: 'source', value: 'inryoku-p3' }] } }).then(function(data) {
-        if (data.data && data.data.cartCreate && data.data.cartCreate.cart) {
-            return data.data.cartCreate.cart.checkoutUrl;
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success || data.ok) {
+            status.textContent = '\u2713 \u767B\u9332\u5B8C\u4E86\u3002\u30C9\u30ED\u30C3\u30D7\u6642\u306B\u304A\u77E5\u3089\u305B\u3057\u307E\u3059';
+            status.style.color = 'rgba(100,255,150,0.6)';
+            input.value = '';
+        } else {
+            status.textContent = '\u2715 ' + (data.message || 'Error');
+            status.style.color = 'rgba(255,100,100,0.6)';
         }
-        var errors = data.data && data.data.cartCreate && data.data.cartCreate.userErrors;
-        throw new Error(errors && errors.length ? errors[0].message : 'Cart creation failed');
+    })
+    .catch(function() {
+        status.textContent = '\u2715 \u63A5\u7D9A\u30A8\u30E9\u30FC\u3002\u3082\u3046\u4E00\u5EA6\u304A\u8A66\u3057\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
     });
 }
 
-// ── CART state (localStorage 永続化) ──
-window.CART = (function() {
-    var KEY = 'inryoku_cart_v1';
-    var items = [];
-    try { items = JSON.parse(localStorage.getItem(KEY) || '[]') || []; } catch(e) { items = []; }
-    function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch(e) {} updateBadge(); }
-    function updateBadge() {
-        var b = document.getElementById('cart-badge');
-        if (!b) return;
-        var n = count();
-        b.textContent = n;
-        b.style.display = n > 0 ? 'flex' : 'none';
+// ═══ CONTACT FORM ═══
+function toggleContact() {
+    var wrap = document.getElementById('contact-form-wrap');
+    var arrow = document.getElementById('contact-arrow');
+    if (!wrap) return;
+    if (wrap.style.display === 'none') {
+        wrap.style.display = 'block';
+        if (arrow) arrow.textContent = '\u25B2';
+    } else {
+        wrap.style.display = 'none';
+        if (arrow) arrow.textContent = '\u25BC';
     }
-    function count() { return items.reduce(function(s, i) { return s + (i.qty || 1); }, 0); }
-    function total() { return items.reduce(function(s, i) { return s + i.price * (i.qty || 1); }, 0); }
-    function add(id, size, price, name, shopifyVariantId) {
-        var existing = items.find(function(i) { return i.id === id && i.size === size; });
-        if (existing) existing.qty = (existing.qty || 1) + 1;
-        else items.push({ id: id, size: size, price: price, name: name, qty: 1, shopifyVariantId: shopifyVariantId || '' });
-        save();
+}
+
+function submitContact() {
+    var name = document.getElementById('contact-name');
+    var email = document.getElementById('contact-email');
+    var message = document.getElementById('contact-message');
+    var status = document.getElementById('contact-status');
+    if (!name || !email || !message || !status) return;
+    if (!name.value.trim() || !email.value.trim() || !message.value.trim()) {
+        status.textContent = '\u2715 \u5168\u3066\u306E\u9805\u76EE\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
+        return;
     }
-    function remove(idx) { items.splice(idx, 1); save(); }
-    function clear() { items = []; save(); }
-    return { get items() { return items; }, count: count, total: total, add: add, remove: remove, clear: clear, _updateBadge: updateBadge };
-})();
-
-// ── 右上コントロール (cart / mute / BGM) ──
-function createTopRightControls() {
-    if (document.getElementById('top-right-controls')) return;
-    var wrap = document.createElement('div');
-    wrap.id = 'top-right-controls';
-    wrap.style.cssText = 'position:fixed;top:16px;right:16px;z-index:1000;display:flex;gap:8px;opacity:0;transition:opacity 1.2s ease;pointer-events:none;';
-
-    // Cart
-    var cart = document.createElement('button');
-    cart.id = 'cart-icon';
-    cart.className = 'tr-ctrl-btn';
-    cart.setAttribute('aria-label', 'Cart');
-    cart.innerHTML = '<span style="font-size:18px;">🛒</span><span id="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#ff0055;color:#fff;font-size:9px;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-family:\'Press Start 2P\',monospace;padding:0 4px;">0</span>';
-    cart.addEventListener('click', function() { showCartDrawer(); });
-    wrap.appendChild(cart);
-
-    // Mute
-    var mute = document.createElement('button');
-    mute.id = 'mute-btn';
-    mute.className = 'tr-ctrl-btn';
-    mute.setAttribute('aria-label', 'Mute');
-    mute.innerHTML = window._inryokuMuted ? '🔇' : '🔊';
-    mute.addEventListener('click', function() {
-        window._inryokuMuted = !window._inryokuMuted;
-        mute.innerHTML = window._inryokuMuted ? '🔇' : '🔊';
-        if (window._p6bgm) window._p6bgm.muted = !!window._inryokuMuted;
+    status.textContent = 'SENDING...';
+    status.style.color = 'rgba(255,255,255,0.4)';
+    fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: name.value.trim(),
+            email: email.value.trim(),
+            message: message.value.trim()
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success || data.ok) {
+            status.textContent = '\u2713 \u9001\u4FE1\u5B8C\u4E86\u3002\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059';
+            status.style.color = 'rgba(100,255,150,0.6)';
+            name.value = ''; email.value = ''; message.value = '';
+        } else {
+            status.textContent = '\u2715 ' + (data.message || 'Error');
+            status.style.color = 'rgba(255,100,100,0.6)';
+        }
+    })
+    .catch(function() {
+        status.textContent = '\u2715 \u63A5\u7D9A\u30A8\u30E9\u30FC\u3002\u3082\u3046\u4E00\u5EA6\u304A\u8A66\u3057\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
     });
-    wrap.appendChild(mute);
-
-    // BGM trigger (Jupiter toggle — 将来 BGM_TRACKS 切替用)
-    var bgm = document.createElement('button');
-    bgm.id = 'bgm-btn';
-    bgm.className = 'tr-ctrl-btn';
-    bgm.setAttribute('aria-label', 'BGM');
-    bgm.innerHTML = '♪';
-    bgm.addEventListener('click', function() {
-        if (!window._p6bgm) return;
-        if (window._p6bgm.paused) { window._p6bgm.play().catch(function(){}); bgm.style.opacity = '1'; }
-        else { window._p6bgm.pause(); bgm.style.opacity = '0.5'; }
-    });
-    wrap.appendChild(bgm);
-
-    document.body.appendChild(wrap);
-    // Fade in
-    setTimeout(function() { wrap.style.opacity = '1'; wrap.style.pointerEvents = 'auto'; }, 2000);
-    // Initial badge
-    if (window.CART && window.CART._updateBadge) setTimeout(window.CART._updateBadge, 50);
 }
 
-// ── カートドロワー ──
-function showCartDrawer() {
-    var existing = document.getElementById('cart-drawer');
-    if (existing) { existing.remove(); return; }
-    var CART = window.CART;
-    var drawer = document.createElement('div');
-    drawer.id = 'cart-drawer';
-    function render() {
-        if (CART.items.length === 0) {
-            return '<div class="cart-drawer-header"><span class="cart-drawer-title">CART</span><button class="cart-drawer-close" id="cd-close">✕</button></div><div class="cart-empty">カートは空です</div>';
+// ═══ THEME SWITCHER ═���═
+function setTheme(themeName) {
+    var canvas = document.getElementById('p6-canvas');
+    var existingOverlay = document.getElementById('theme-grid-overlay');
+
+    // テーマボタンのアクティブ状態更新
+    document.querySelectorAll('.theme-btn').forEach(function(btn) {
+        if (btn.dataset.theme === themeName) {
+            btn.style.borderColor = 'rgba(255,255,255,0.6)';
+            btn.style.background = 'rgba(255,255,255,0.12)';
+        } else {
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            btn.style.background = 'rgba(255,255,255,0.05)';
         }
-        var itemsHTML = CART.items.map(function(item, idx) {
-            return '<div class="cart-item"><div class="cart-item-info"><div class="cart-item-name">' + item.name + '</div><div class="cart-item-meta">' + item.size + ' × ' + item.qty + '</div></div><div class="cart-item-right"><div class="cart-item-price">¥' + (item.price * item.qty).toLocaleString() + '</div><button class="cart-item-remove" data-idx="' + idx + '">✕</button></div></div>';
-        }).join('');
-        return '<div class="cart-drawer-header"><span class="cart-drawer-title">CART (' + CART.count() + ')</span><button class="cart-drawer-close" id="cd-close">✕</button></div><div class="cart-items">' + itemsHTML + '</div><div class="cart-footer"><div class="cart-total"><span>TOTAL</span><span>¥' + CART.total().toLocaleString() + '</span></div><button class="cart-checkout-btn" id="cd-checkout">CHECKOUT</button><div class="cart-stripe-note">Secure Checkout</div></div>';
+    });
+
+    // CRTグリッドオーバーレイ除去
+    if (existingOverlay) existingOverlay.remove();
+
+    if (themeName === 'singularity') {
+        // デフォルト: パーティクル表示
+        if (canvas) { canvas.style.opacity = '1'; canvas.style.transition = 'opacity 1s ease'; }
+    } else if (themeName === 'void') {
+        // 純黒背景: パーティクル非表示
+        if (canvas) { canvas.style.transition = 'opacity 1s ease'; canvas.style.opacity = '0'; }
+    } else if (themeName === 'grid') {
+        // CRTグ��ッドオーバーレイ
+        if (canvas) { canvas.style.opacity = '1'; canvas.style.transition = 'opacity 1s ease'; }
+        var overlay = document.createElement('div');
+        overlay.id = 'theme-grid-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:1;pointer-events:none;' +
+            'background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,255,0.03) 2px,rgba(0,255,255,0.03) 4px),' +
+            'repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(0,255,255,0.03) 2px,rgba(0,255,255,0.03) 4px);' +
+            'mix-blend-mode:screen;opacity:0;transition:opacity 1s ease;';
+        document.body.appendChild(overlay);
+        requestAnimationFrame(function() { overlay.style.opacity = '1'; });
     }
-    drawer.innerHTML = render();
-    document.body.appendChild(drawer);
-    setTimeout(function() { drawer.classList.add('cart-drawer-open'); }, 10);
-
-    function closeDrawer() { drawer.classList.remove('cart-drawer-open'); setTimeout(function() { drawer.remove(); }, 300); }
-
-    drawer.addEventListener('click', function(e) {
-        if (e.target.id === 'cd-close') closeDrawer();
-        if (e.target.classList.contains('cart-item-remove')) {
-            var idx = parseInt(e.target.dataset.idx);
-            CART.remove(idx);
-            drawer.innerHTML = render();
-        }
-        if (e.target.id === 'cd-checkout') {
-            if (CART.items.length === 0) return;
-            var btn = e.target;
-            btn.textContent = 'PROCESSING...';
-            btn.disabled = true;
-            var hasShopify = CART.items.some(function(item) { return !!item.shopifyVariantId; });
-            var done = function() { btn.textContent = 'CHECKOUT'; btn.disabled = false; };
-            if (hasShopify && SHOPIFY_CONFIG.storeDomain && SHOPIFY_CONFIG.storefrontToken) {
-                shopifyCheckout(CART.items)
-                    .then(function(url) { window.location.href = url; })
-                    .catch(function(err) { alert('Checkout error: ' + err.message); done(); });
-            } else {
-                fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: CART.items }) })
-                    .then(function(r) { return r.json(); })
-                    .then(function(data) { if (data.url) window.location.href = data.url; else { alert(data.error || 'Checkout not ready yet'); done(); } })
-                    .catch(function(err) { alert('Checkout error: ' + err.message); done(); });
-            }
-        }
-    });
-    function onEsc(e) { if (e.key === 'Escape') { closeDrawer(); window.removeEventListener('keydown', onEsc); } }
-    window.addEventListener('keydown', onEsc);
+    window._inryokuTheme = themeName;
+    console.log('[Theme] switched to: ' + themeName);
 }
-
-// spawnBigBang は復元版では独立関数。ここでは軽量スタブを用意（詳細演出は既存の初期化で上書きされる想定）
-if (typeof window.spawnBigBang === 'undefined') {
-    window.spawnBigBang = function(x, y, count) {
-        count = count || 10;
-        for (var i = 0; i < count; i++) {
-            var p = document.createElement('div');
-            p.style.cssText = 'position:fixed;left:' + x + 'px;top:' + y + 'px;width:4px;height:4px;border-radius:50%;background:hsl(' + (Math.random() * 360) + ',100%,60%);pointer-events:none;z-index:99999;transition:all .6s cubic-bezier(.1,.6,.3,1);';
-            document.body.appendChild(p);
-            var ang = Math.random() * Math.PI * 2;
-            var r = 40 + Math.random() * 60;
-            requestAnimationFrame(function(el, dx, dy) {
-                return function() { el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; el.style.opacity = '0'; };
-            }(p, Math.cos(ang) * r, Math.sin(ang) * r)());
-            setTimeout(function(el) { return function() { el.remove(); }; }(p), 700);
-        }
-    };
-}
-
-// 既存の renderPhase3 後に createTopRightControls を確実に呼ぶ
-// (renderPhase3 内で呼ぶより安全なため、フェーズ完了後に hookup)
-(function() {
-    var orig = window.renderPhase3 || renderPhase3;
-    window.renderPhase3 = function() {
-        var r = orig.apply(this, arguments);
-        setTimeout(createTopRightControls, 100);
-        return r;
-    };
-})();
+window._inryokuTheme = 'singularity';
