@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>inryokü - 101% TRUTH</title>
+  <meta name="description" content="RGB = Black. CMY = White. You = Rainbow. 101% TRUTH — The Source.">
+  <meta property="og:title" content="inryokü — 101% TRUTH">
+  <meta property="og:description" content="EXIT is just the beginning. ENTER the next dimension.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="enter_hoodie.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #root {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas:not(#mini-sq-cv) {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .phase-1 {
+      background: #808080;
+      padding: 40px 20px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .phase-1 center {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .phase-2 {
+      background: #ebebeb;
+      position: relative;
+    }
+
+    .phase-3 {
+      background: #0a0a0a;
+      position: relative;
+    }
+
+    .phase-4 {
+      background: #111;
+      position: relative;
+    }
+
+    .phase-5 {
+      background: #000;
+      position: relative;
+    }
+
+    .phase-6 {
+      background: transparent;
+      position: relative;
+    }
+
+    .web2-header {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .web2-title {
+      font-size: clamp(20px, 5vw, 36px);
+      color: #333;
+    }
+
+    .web2-subtitle {
+      font-size: clamp(12px, 3vw, 16px);
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .web2-description {
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .web2-button,
+    .phase-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #FFF;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .2);
+      touch-action: manipulation;
+    }
+
+    .flash-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .flash-header {
+      position: absolute;
+      top: 15px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .flash-logo {
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: bold;
+      color: #DDD;
+    }
+
+    .flash-logo-accent {
+      color: #FF1493;
+    }
+
+    .flash-panel {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 12px;
+      padding: 15px 20px;
+      z-index: 10;
+      text-align: center;
+      max-width: 90%;
+      pointer-events: none;
+      color: #CCC;
+    }
+
+    .flash-panel-header {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .flash-text {
+      font-size: 13px;
+      margin: 3px 0;
+      color: #AAA;
+    }
+
+    .convergence-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .convergence-title {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      font-size: clamp(18px, 4vw, 32px);
+      pointer-events: none;
+    }
+
+    .analog-text {
+      color: #FFF;
+      font-weight: bold;
+    }
+
+    .plus-symbol {
+      color: #808080;
+      margin: 0 10px;
+    }
+
+    .digital-text {
+      color: #808080;
+      font-weight: bold;
+    }
+
+    .convergence-subtitle {
+      position: absolute;
+      top: 70px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      color: #666;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .passcode-screen {
+      position: absolute;
+      inset: 0;
+      background: #808080;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .passcode-box {
+      text-align: center;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .passcode-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #000;
+      margin-bottom: 20px;
+      font-family: 'Courier New';
+    }
+
+    .passcode-label {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+      font-family: 'Courier New';
+    }
+
+    .passcode-input {
+      font-family: 'Courier New';
+      font-size: 32px;
+      padding: 15px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+      border: 3px solid #000;
+      background: #FFF;
+      color: #000;
+      letter-spacing: 10px;
+      border-radius: 0;
+    }
+
+    .passcode-btn {
+      margin-top: 15px;
+      padding: 12px 40px;
+      font-family: 'Courier New';
+      font-size: 18px;
+      font-weight: bold;
+      background: #000;
+      color: #FFF;
+      border: 3px solid #FFF;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .passcode-hint {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+      font-family: 'Courier New';
+    }
+
+    .passcode-error {
+      margin-top: 10px;
+      font-size: 14px;
+      min-height: 20px;
+      font-family: 'Courier New';
+    }
+
+    .selection-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      gap: 20px;
+    }
+
+    .selection-title {
+      color: #FFF;
+      font-size: clamp(18px, 4vw, 28px);
+      font-family: 'Courier New';
+      text-align: center;
+    }
+
+    .selection-subtitle {
+      color: #555;
+      font-size: 14px;
+      font-family: 'Courier New';
+      text-align: center;
+    }
+
+    .selection-choices {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .choice-card {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      cursor: pointer;
+      border: 2px solid #333;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color .3s, transform .3s;
+      touch-action: manipulation;
+    }
+
+    .choice-card:hover {
+      transform: scale(1.05);
+      border-color: #FFF;
+    }
+
+    .choice-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .choice-label {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      font-family: 'Courier New';
+    }
+
+    .choice-sublabel {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      font-family: 'Courier New';
+      color: #666;
+    }
+
+    .loading-container {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-content {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading-logo {
+      width: clamp(80px, 20vw, 150px);
+      margin-bottom: 20px;
+    }
+
+    .loading-title {
+      color: #0F0;
+      font-family: 'Courier New';
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .loading-bar-container {
+      width: clamp(200px, 60vw, 400px);
+      height: 20px;
+      background: #111;
+      border: 1px solid #0F0;
+      border-radius: 10px;
+      overflow: visible;
+      margin: 0 auto;
+    }
+
+    .loading-bar {
+      height: 100%;
+      width: 0;
+      background: #0F0;
+      border-radius: 10px;
+      transition: width .1s;
+    }
+
+    .loading-percentage {
+      color: #0F0;
+      font-family: 'Courier New';
+      font-size: 24px;
+      margin-top: 15px;
+    }
+
+    #door-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .door-left,
+    .door-right {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: #000;
+      transition: transform 1.5s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .door-left {
+      left: 0;
+    }
+
+    .door-right {
+      right: 0;
+    }
+
+    .door-left.open {
+      transform: translateX(-100%);
+    }
+
+    .door-right.open {
+      transform: translateX(100%);
+    }
+
+    .door-crack {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background: transparent;
+      transform: translateX(-50%);
+      transition: all .5s;
+    }
+
+    .door-crack.active {
+      background: #FFF;
+      box-shadow: 0 0 30px #FFF, 0 0 60px #FFF, 0 0 100px #FF0, 0 0 150px #F0F, 0 0 200px #0FF;
+      width: 4px;
+    }
+
+    .door-light {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, .9), transparent);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 1s;
+    }
+
+    .door-light.active {
+      width: 300px;
+      height: 300px;
+    }
+
+    #door-overlay.whiteout {
+      background: #FFF;
+      transition: background 1s;
+    }
+
+    .singularity-content {
+      position: relative;
+      z-index: 10;
+      padding: 20px 20px;
+      overflow-y: auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hologram-logo {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .brand-name {
+      font-size: clamp(48px, 10vw, 96px);
+      font-weight: bold;
+      letter-spacing: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: logoGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes logoGlow {
+
+      0%,
+      100% {
+        text-shadow:
+          0 0 10px rgba(255, 255, 255, 0.3),
+          0 0 30px rgba(255, 255, 255, 0.2),
+          0 0 60px rgba(255, 255, 255, 0.1);
+        transform: scale(1.0);
+      }
+
+      50% {
+        text-shadow:
+          0 0 20px rgba(255, 255, 255, 0.5),
+          0 0 50px rgba(255, 255, 255, 0.3),
+          0 0 100px rgba(255, 255, 255, 0.15),
+          0 0 150px rgba(255, 255, 255, 0.05);
+        transform: scale(1.02);
+      }
+    }
+
+    .logo-icon {
+      display: block;
+      margin: 16px auto 0 auto;
+      width: clamp(80px, 12vw, 140px);
+      height: auto;
+      opacity: 0.95;
+      position: relative;
+      z-index: 10;
+      animation: iconGlow 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+      mix-blend-mode: screen;
+    }
+
+    /* Glassmorphism共通 */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes iconGlow {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        transform: scale(1.0);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.2));
+        transform: scale(1.03);
+      }
+    }
+
+    .brand-char {
+      display: inline-block;
+      text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
+      animation: charPulse 2s ease-in-out infinite;
+    }
+
+    .brand-char:nth-child(1) {
+      color: #808080;
+      animation-delay: 0s;
+    }
+
+    .brand-char:nth-child(2) {
+      color: #FF0000;
+      animation-delay: .14s;
+    }
+
+    .brand-char:nth-child(3) {
+      color: #00FF00;
+      animation-delay: .28s;
+    }
+
+    .brand-char:nth-child(4) {
+      color: #0044FF;
+      animation-delay: .42s;
+    }
+
+    .brand-char:nth-child(5) {
+      color: #00FFFF;
+      animation-delay: .57s;
+    }
+
+    .brand-char:nth-child(6) {
+      color: #FF00FF;
+      animation-delay: .71s;
+    }
+
+    .brand-char:nth-child(7) {
+      color: #FFFF00;
+      animation-delay: .85s;
+    }
+
+    @keyframes charPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        filter: brightness(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+        filter: brightness(1.8);
+      }
+    }
+
+    .brand-truth {
+      color: #555;
+      font-size: clamp(11px, 2vw, 15px);
+      letter-spacing: 4px;
+      text-align: center;
+      margin-top: 8px;
+      font-family: 'Courier New';
+    }
+
+    .prism-line {
+      width: 300px;
+      height: 2px;
+      background: linear-gradient(90deg, #808080, #F00, #0F0, #00F, #0FF, #F0F, #FF0);
+      margin: 10px auto;
+    }
+
+    .item-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .item-card {
+      width: 180px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      cursor: pointer;
+      transition: border-color .3s, transform .3s;
+      touch-action: manipulation;
+    }
+
+    .item-card:hover {
+      border-color: #555;
+      transform: translateY(-4px);
+    }
+
+    .item-thumb {
+      width: 100%;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .item-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .item-card:hover .item-thumb-img {
+      transform: scale(1.08);
+    }
+
+    .item-info {
+      padding: 12px;
+      text-align: center;
+    }
+
+    .item-name {
+      color: #EEE;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .item-price {
+      color: #999;
+      font-size: 12px;
+      margin-top: 4px;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .philosophy-window {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      width: clamp(260px, 75vw, 400px);
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .window-titlebar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #222;
+      padding: 6px 10px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .window-title {
+      color: #AAA;
+      font-size: 12px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .window-controls button {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #444;
+      background: #333;
+      color: #AAA;
+      font-size: 10px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    .window-content {
+      padding: 15px;
+      color: #CCC;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .sutra-text {
+      color: #FFD700;
+      margin-bottom: 10px;
+    }
+
+    .sutra-translation {
+      color: #888;
+      font-style: italic;
+    }
+
+    .binary-footer {
+      text-align: center;
+      color: #333;
+      font-size: 12px;
+      padding: 20px 0;
+      font-family: 'Courier New';
+    }
+
+    /* Bolero player */
+    #bolero-player {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, .8);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color .3s;
+    }
+
+    #bolero-player:hover {
+      border-color: #808080;
+    }
+
+    #bolero-btn {
+      background: none;
+      border: none;
+      color: #808080;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    #bolero-label {
+      color: #666;
+      font-size: 11px;
+      font-family: 'Courier New';
+    }
+
+    .coming-soon-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .coming-soon-modal.modal-visible {
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+    }
+
+    .modal-content {
+      position: relative;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 90%;
+      width: 380px;
+      text-align: center;
+      color: #FFF;
+    }
+
+    .modal-content h2 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #F0F, #0FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .modal-content p {
+      margin: 8px 0;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .modal-close-btn {
+      margin-top: 20px;
+      padding: 10px 28px;
+      background: transparent;
+      border: 2px solid #FFF;
+      color: #FFF;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 20px;
+    }
+
+    /* ─── Product Modal ──────────────────────────────────── */
+    .product-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      padding: 20px;
+    }
+
+    .product-modal.modal-visible {
+      opacity: 1;
+    }
+
+    .product-modal .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .product-detail {
+      position: relative;
+      max-width: 780px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: rgba(18, 18, 22, 0.95);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 0;
+      animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .product-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.6);
+      color: #aaa;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .product-close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .product-detail-inner {
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+    }
+
+    .product-image-wrap {
+      flex: 1;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px 0 0 20px;
+    }
+
+    .product-detail-img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .product-info-wrap {
+      flex: 1;
+      padding: 36px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .product-title {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .product-price-tag {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 24px;
+      font-weight: 300;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .product-desc {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 14px;
+      color: #aaa;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .product-specs {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 12px;
+      color: #666;
+      margin: 0;
+    }
+
+    .product-color {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    .size-selector {
+      margin-top: 4px;
+    }
+
+    .size-label {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11px;
+      color: #666;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .size-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .size-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: #999;
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .size-btn:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+    }
+
+    .size-btn.selected {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .add-to-cart-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 16px 24px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-top: 8px;
+    }
+
+    .add-to-cart-btn:hover {
+      background: #e0e0e0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+    }
+
+    .add-to-cart-btn:active {
+      transform: translateY(0);
+    }
+
+    .cart-btn-text {
+      text-transform: uppercase;
+    }
+
+    .cart-btn-price {
+      opacity: 0.6;
+    }
+
+    .stripe-badge {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* ─── Mobile Product Modal ──────────────────────────── */
+    @media (max-width: 640px) {
+      .product-detail-inner {
+        flex-direction: column;
+      }
+
+      .product-image-wrap {
+        border-radius: 20px 20px 0 0;
+        min-height: 200px;
+        padding: 20px;
+      }
+
+      .product-info-wrap {
+        padding: 24px 20px;
+      }
+
+      .product-detail {
+        max-height: 95vh;
+        border-radius: 16px;
+      }
+    }
+
+    @media(max-width:768px) {
+      .phase-1 {
+        padding: 20px 10px;
+      }
+
+      .selection-choices {
+        gap: 16px;
+      }
+
+      .choice-card {
+        width: 155px;
+        height: 155px;
+      }
+
+      .item-card {
+        width: 160px;
+      }
+
+      .item-thumb {
+        height: 140px;
+      }
+
+      .brand-name {
+        letter-spacing: 3px;
+      }
+    }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <script>
+    // モバイル判定 → P3（パーティクルユニバース + ECショップ）へ直行
+    // P0-P2はデスクトップ専用体験
+    (function() {
+      // モバイル判定: UA文字列のみ（MacBook/デスクトップは絶対にスキップしない）
+      var ua = navigator.userAgent;
+      var isMobileUA = /Android|iPhone|iPod/.test(ua);
+      // iPad は requestDesktopSite でデスクトップUAを送るので除外
+      // 画面幅・タッチ判定は使わない（MacBookのトラックパッドが誤判定するため）
+      console.log('[MOBILE-CHECK] ua=' + ua.substring(0, 60) + ' isMobile=' + isMobileUA + ' w=' + window.innerWidth);
+      if (isMobileUA) {
+        window.location.replace('p3_test.html' + window.location.search);
+      }
+    })();
+  </script>
+  <canvas id="three-canvas"
+    style="position:fixed;top:0;left:0;z-index:0;pointer-events:auto;width:100%;height:100%;display:none;"></canvas>
+  <div id="root" style="position:relative;z-index:1;"></div>
+  <!-- Three.js UMD (global THREE) for p5p6.js Phase 5 WebGL -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="p1_code_for_claude.js"></script>
+  <script>
+    // ═══ P0→P1→P2→P3 通しフロー起動 ═══
+    // P0/P1はrenderPhase1()に内包されている（P0 Welcome → ENTER → P1ローディング）
+    renderPhase1();
+
+    // P1完了 → P2スクリプト読み込み+起動
+    window.addEventListener('inryoku:p1complete', function() {
+      console.log('[FLOW] P1 complete → loading P2');
+      var s = document.createElement('script');
+      s.src = 'p2_code_for_claude.js';
+      s.onload = function() {
+        console.log('[FLOW] P2 loaded → starting P2');
+        renderPhase2();
+      };
+      document.body.appendChild(s);
+    });
+
+    // P2完了 → P3スクリプト読み込み+起動
+    window.addEventListener('inryoku:p2complete', function() {
+      console.log('[FLOW] P2 complete → loading P3');
+      var s = document.createElement('script');
+      s.src = 'p3_code_for_claude.js';
+      s.onload = function() {
+        console.log('[FLOW] P3 loaded → starting P3');
+        renderPhase3();
+      };
+      document.body.appendChild(s);
+    });
+  </script>
+</body>
+
+</html>
