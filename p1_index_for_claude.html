@@ -2,16 +2,28 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>inryokü - Phase 1</title>
   <meta name="description" content="RGB = Black. CMY = White. You = Rainbow. 101% TRUTH — The Source.">
+  <!-- OGP -->
+  <meta property="og:title" content="inryokü — 50% → 101%">
+  <meta property="og:description" content="Grey contains every color. You just have to look.">
+  <meta property="og:image" content="/inryoku_logo_icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="inryokü — 50% → 101%">
+  <meta name="twitter:description" content="Grey contains every color. You just have to look.">
+  <meta name="twitter:image" content="/inryoku_logo_icon.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/inryoku_logo_icon.png">
+  <link rel="apple-touch-icon" href="/inryoku_logo_icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <!-- P3 スタイル -->
-  <link rel="stylesheet" href="p3_styles.css">
+  <link rel="stylesheet" href="p3_styles.css?v=20260405onebit1">
 
   <!-- Three.js 0.160.0 CDN (UMD版: グローバルTHREEオブジェクト) -->
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
@@ -38,30 +50,52 @@
   </style>
 </head>
 <body>
+  <script>
+    if (/iPhone|Android|iPad.*Mobile/i.test(navigator.userAgent)) { window.location.href = '/p3_test.html'; }
+  </script>
   <div id="root"></div>
 
   <!-- P1コード -->
-  <script src="p1_code_for_claude.js"></script>
+  <script src="p1_code_for_claude.js?v=20260405onebit1"></script>
   <!-- P2コード（P1完了後に起動） -->
-  <script src="p2_code_for_claude.js"></script>
+  <script src="p2_code_for_claude.js?v=20260405onebit1"></script>
   <!-- P3コード（P2完了後に起動） -->
-  <script src="p3_code_for_claude.js"></script>
+  <script src="p3_code_for_claude.js?v=20260405onebit1"></script>
 
   <script>
-    // P1開始
-    renderPhase1();
+    // モバイル検出: P0/P1/P2をスキップしてP3直行
+    var __inryokuMobile = (function() {
+        var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                       || (window.innerWidth < 768 && 'ontouchstart' in window);
+        if (isMobile) {
+            // P3のスクリプトは既に<script>タグで読み込み済み
+            // DOMContentLoaded後にrenderPhase3()を直接呼ぶ
+            document.addEventListener('DOMContentLoaded', function() {
+                renderPhase3();
+            });
+        }
+        return isMobile;
+    })();
 
-    // P1完了 → P2起動
-    window.addEventListener('inryoku:p1complete', () => {
-      console.log('✅ P1 complete — starting P2');
-      renderPhase2();
-    });
+    if (!__inryokuMobile) {
+        // デスクトップ: テスト用P3直行
+        renderPhase3();
+        /* P0→P1→P2→P3 フルシーケンス（本番用）
+        renderPhase1();
 
-    // P2完了 → P3起動
-    window.addEventListener('inryoku:p2complete', () => {
-      console.log('✅ P2 complete — starting P3');
-      renderPhase3();
-    });
+        // P1完了 → P2起動
+        window.addEventListener('inryoku:p1complete', () => {
+          console.log('✅ P1 complete — starting P2');
+          renderPhase2();
+        });
+
+        // P2完了 → P3起動
+        window.addEventListener('inryoku:p2complete', () => {
+          console.log('✅ P2 complete — starting P3');
+          renderPhase3();
+        });
+        */
+    }
   </script>
 </body>
 </html>

@@ -496,7 +496,8 @@ const server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent(req.url.split('?')[0]);
     let filePath = path.resolve(path.join(__dirname, urlPath));
     if (filePath.endsWith('/') || filePath === __dirname) {
-        filePath = path.join(__dirname, 'index.html');
+        // Step2 検証中: P3単体で開く（2026-04-17）。戻す時は 'index.html' に。
+        filePath = path.join(__dirname, 'p3_test.html');
     }
 
     // セキュリティ: ディレクトリトラバーサル防止（resolve後に再チェック）

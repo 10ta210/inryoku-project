@@ -1,0 +1,338 @@
+<h2>コンパクトUI — 8案比較</h2>
+<p class="subtitle">宇宙を主役にしたまま、商品をどう見せるか</p>
+
+<div class="cards">
+
+  <!-- Option D: Bottom Bar -->
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:15%;left:20%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:25%;left:75%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:40%;left:55%;box-shadow:0 0 6px #ff0;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:60%;left:85%;box-shadow:0 0 6px #0f0;"></div>
+      </div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);">
+        <svg viewBox="0 0 400 480" style="width:140px;height:168px;filter:drop-shadow(0 0 20px rgba(255,255,255,0.1));">
+          <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+          <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+          <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);border-top:1px solid rgba(138,180,248,0.3);padding:12px 20px;display:flex;align-items:center;gap:16px;">
+        <div style="width:40px;height:40px;background:#111;border:1px solid #333;border-radius:4px;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 400 480" style="width:30px;height:36px;"><path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#444" stroke-width="2"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:'Courier New',monospace;font-size:11px;color:#808080;letter-spacing:2px;">QR T — SPREAD THE SIGNAL</div>
+          <div style="font-family:'Courier New',monospace;font-size:9px;color:#555;margin-top:2px;">Bella+Canvas 3001 · ¥1,400</div>
+        </div>
+        <div style="padding:8px 16px;border:1px solid #444;color:#808080;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;cursor:pointer;">EQUIP</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>D: ボトムバー型</h3>
+      <p>Spotifyミニプレーヤー風。宇宙全画面、下にスリムバー。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ 宇宙が主役 · ✓ 邪魔しない</div>
+    </div>
+  </div>
+
+  <!-- Option F: Corner HUD -->
+  <div class="card" data-choice="f" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:15%;left:20%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:45%;left:75%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:60%;left:35%;box-shadow:0 0 6px #ff0;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:25%;left:55%;box-shadow:0 0 6px #0f0;"></div>
+      </div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
+        <svg viewBox="0 0 400 480" style="width:200px;height:240px;filter:drop-shadow(0 0 30px rgba(255,255,255,0.08));">
+          <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+          <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+          <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div style="position:absolute;top:16px;left:16px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#808080;letter-spacing:2px;">QR T</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#555;margin-top:3px;">SIGNAL ARMOR</div>
+      </div>
+      <div style="position:absolute;top:16px;right:16px;text-align:right;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#ff6b6b;">ATK +101</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#4ecdc4;margin-top:3px;">DEF +50</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#ffcc00;margin-top:3px;">SPL SPREAD∞</div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;">
+        <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:#ffcc00;">¥1,400</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#444;margin-top:4px;">★★★ LEGENDARY</div>
+      </div>
+      <div style="position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <div style="display:flex;gap:3px;">
+          <div style="padding:2px 6px;border:1px solid #333;font-family:'Press Start 2P',monospace;font-size:7px;color:#555;">S</div>
+          <div style="padding:2px 6px;border:1px solid #555;font-family:'Press Start 2P',monospace;font-size:7px;color:#888;background:rgba(255,255,255,0.05);">M</div>
+          <div style="padding:2px 6px;border:1px solid #333;font-family:'Press Start 2P',monospace;font-size:7px;color:#555;">L</div>
+        </div>
+        <div style="padding:4px 12px;border:1px solid #4a6fa5;font-family:'Press Start 2P',monospace;font-size:7px;color:#8ab4f8;cursor:pointer;">▶ EQUIP</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>F: コーナーHUD型</h3>
+      <p>四隅にステータス散らす。中央は商品のみ。圧迫感ゼロ。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ ゲーム感最強 · ✓ 宇宙見える</div>
+    </div>
+  </div>
+
+  <!-- Option H: Terminal CLI -->
+  <div class="card" data-choice="h" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:15%;left:20%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:45%;left:75%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:30%;left:50%;box-shadow:0 0 6px #ff0;"></div>
+      </div>
+      <div style="position:absolute;top:45%;left:50%;transform:translate(-50%,-55%);">
+        <svg viewBox="0 0 400 480" style="width:160px;height:192px;filter:drop-shadow(0 0 20px rgba(255,255,255,0.08));">
+          <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+          <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+          <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:rgba(0,0,0,0.9);border-top:1px solid #333;font-family:'Courier New',monospace;">
+        <div style="font-size:9px;color:#555;margin-bottom:4px;">inryokü@universe:~/store$</div>
+        <div style="font-size:11px;color:#0f0;">cat qr_tee.info</div>
+        <div style="font-size:10px;color:#808080;margin-top:6px;line-height:1.6;">
+          name: QR T — SPREAD THE SIGNAL<br>
+          cost: ¥1,400 | material: Bella+Canvas 3001<br>
+          size: [S] [<span style="color:#fff;">M</span>] [L] [XL] | stock: ∞
+        </div>
+        <div style="font-size:9px;color:#555;margin-top:6px;">inryokü@universe:~/store$ <span style="color:#0f0;">buy --size M</span><span style="color:#0f0;">█</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>H: ターミナル型</h3>
+      <p>CLIで商品情報表示。「cat qr_tee.info」「buy --size M」。コード美学の極み。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ 世界観完璧 · ✓ ユニーク · ✓ コンパクト</div>
+    </div>
+  </div>
+
+  <!-- Option I: Trading Card -->
+  <div class="card" data-choice="i" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:12%;left:30%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:55%;left:80%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:35%;left:15%;box-shadow:0 0 6px #0f0;"></div>
+      </div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-2deg);width:220px;">
+        <div style="border:3px solid #c0a040;border-radius:12px;background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);padding:3px;box-shadow:0 0 30px rgba(192,160,64,0.3);">
+          <div style="border:1px solid rgba(192,160,64,0.3);border-radius:9px;padding:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#c0a040;">QR T</div>
+              <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#ffcc00;">★★★</div>
+            </div>
+            <div style="background:#0a0a1a;border:2px solid rgba(192,160,64,0.2);border-radius:4px;padding:12px;text-align:center;">
+              <svg viewBox="0 0 400 480" style="width:100px;height:120px;">
+                <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+                <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+                <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+                <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+                <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+              </svg>
+            </div>
+            <div style="margin-top:8px;padding:3px 8px;background:rgba(192,160,64,0.1);border-radius:3px;font-family:'Press Start 2P',monospace;font-size:5px;color:#808080;text-align:center;letter-spacing:2px;">SIGNAL ARMOR — LEGENDARY</div>
+            <div style="margin-top:8px;font-family:'Courier New',monospace;font-size:8px;color:#666;line-height:1.5;border:1px solid rgba(192,160,64,0.15);border-radius:3px;padding:6px;">
+              Wear it. Get scanned. Spread the universe. Each QR links to YOUR unique portal.
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:8px;font-family:'Press Start 2P',monospace;font-size:7px;">
+              <span style="color:#ff6b6b;">ATK +101</span>
+              <span style="color:#4ecdc4;">DEF +50</span>
+              <span style="color:#ffcc00;">¥1,400</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-family:'Press Start 2P',monospace;font-size:6px;color:#333;">SWIPE FOR NEXT CARD</div>
+    </div>
+    <div class="card-body">
+      <h3>I: トレーディングカード型</h3>
+      <p>金枠ホロカード。スワイプで切り替え。コレクター心くすぐる。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ 所有欲 · ✓ RPG感 · ✓ 適度サイズ</div>
+    </div>
+  </div>
+
+  <!-- Option J: Vending Machine -->
+  <div class="card" data-choice="j" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:10%;left:20%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:50%;left:85%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:65%;left:10%;box-shadow:0 0 6px #0f0;"></div>
+      </div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:260px;">
+        <div style="background:#111;border:2px solid #333;border-radius:8px;overflow:hidden;box-shadow:0 0 40px rgba(0,255,0,0.1);">
+          <div style="background:#0a0a0a;border-bottom:1px solid #222;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#0f0;text-shadow:0 0 6px rgba(0,255,0,0.5);">A1: QR T</div>
+            <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#0f0;text-shadow:0 0 6px rgba(0,255,0,0.5);">¥1,400</div>
+          </div>
+          <div style="padding:16px;text-align:center;background:linear-gradient(180deg,#0a0a0a,#111);">
+            <svg viewBox="0 0 400 480" style="width:100px;height:120px;filter:drop-shadow(0 0 15px rgba(0,255,0,0.1));">
+              <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+              <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+              <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+              <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+              <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            </svg>
+          </div>
+          <div style="padding:8px 12px;border-top:1px solid #222;display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;gap:3px;">
+              <div style="width:22px;height:18px;background:#1a1a1a;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:8px;color:#555;">S</div>
+              <div style="width:22px;height:18px;background:#222;border:1px solid #0f0;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:8px;color:#0f0;">M</div>
+              <div style="width:22px;height:18px;background:#1a1a1a;border:1px solid #333;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:8px;color:#555;">L</div>
+            </div>
+            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1a3a1a,#0a2a0a);border:2px solid #0f0;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 12px rgba(0,255,0,0.3);">
+              <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#0f0;">GO</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>J: 自販機型</h3>
+      <p>宇宙に浮かぶ自販機。緑LED。GOボタンで購入。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ ユニーク · ✓ わかりやすい · ✓ レトロ</div>
+    </div>
+  </div>
+
+  <!-- Option K: Scan/Decode -->
+  <div class="card" data-choice="k" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:18%;left:35%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#f0f;border-radius:50%;top:60%;left:75%;box-shadow:0 0 6px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:40%;left:10%;box-shadow:0 0 6px #ff0;"></div>
+      </div>
+      <div style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);">
+        <div style="position:relative;width:180px;height:220px;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;top:0;left:0;width:20px;height:20px;border-top:2px solid #0ff;border-left:2px solid #0ff;"></div>
+          <div style="position:absolute;top:0;right:0;width:20px;height:20px;border-top:2px solid #0ff;border-right:2px solid #0ff;"></div>
+          <div style="position:absolute;bottom:0;left:0;width:20px;height:20px;border-bottom:2px solid #0ff;border-left:2px solid #0ff;"></div>
+          <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;border-bottom:2px solid #0ff;border-right:2px solid #0ff;"></div>
+          <div style="position:absolute;top:30%;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,#0ff,transparent);box-shadow:0 0 8px #0ff;"></div>
+          <svg viewBox="0 0 400 480" style="width:140px;height:168px;">
+            <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+            <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+            <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <div style="margin-top:8px;text-align:center;">
+          <div style="font-family:'Courier New',monospace;font-size:9px;color:#0ff;text-shadow:0 0 4px rgba(0,255,255,0.5);">OBJECT IDENTIFIED</div>
+          <div style="font-family:'Courier New',monospace;font-size:11px;color:#808080;margin-top:4px;letter-spacing:2px;">QR T — ¥1,400</div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+            <div style="padding:3px 10px;border:1px solid #333;font-family:monospace;font-size:8px;color:#555;">S</div>
+            <div style="padding:3px 10px;border:1px solid #0ff;font-family:monospace;font-size:8px;color:#0ff;">M</div>
+            <div style="padding:3px 10px;border:1px solid #333;font-family:monospace;font-size:8px;color:#555;">L</div>
+          </div>
+          <div style="margin-top:8px;padding:4px 16px;border:1px solid rgba(0,255,255,0.3);font-family:'Courier New',monospace;font-size:8px;color:#0ff;cursor:pointer;display:inline-block;">ACQUIRE</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>K: スキャン/デコード型</h3>
+      <p>角ブラケットでスキャン風。解析結果として情報表示。SF感。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ SF感最高 · ✓ 世界観合う</div>
+    </div>
+  </div>
+
+  <!-- Option G: Mini Card RPG -->
+  <div class="card" data-choice="g" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:12%;left:25%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:55%;left:70%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:30%;left:50%;box-shadow:0 0 6px #ff0;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:75%;left:15%;box-shadow:0 0 6px #0f0;"></div>
+      </div>
+      <div style="position:absolute;top:50%;left:35%;transform:translate(-50%,-50%);">
+        <svg viewBox="0 0 400 480" style="width:160px;height:192px;filter:drop-shadow(0 0 25px rgba(255,255,255,0.08));">
+          <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+          <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+          <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div style="position:absolute;bottom:20px;right:16px;width:180px;border:2px solid #8ec0ff;background:linear-gradient(180deg, #1a3a6a 0%, #1e4488 100%);border-radius:4px;box-shadow:0 0 20px rgba(100,160,255,0.4);overflow:hidden;">
+        <div style="padding:5px 8px;border-bottom:1px solid rgba(138,192,255,0.3);background:rgba(100,160,255,0.1);">
+          <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#a0d0ff;letter-spacing:1px;display:flex;justify-content:space-between;">
+            <span>⚔ ITEM</span><span>1/2 ▶</span>
+          </div>
+        </div>
+        <div style="padding:8px;">
+          <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:#fff;">QR T</div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:5px;color:#ffcc00;margin-top:2px;">★★★ LEGENDARY</div>
+          <div style="display:flex;gap:8px;margin-top:6px;font-family:'Press Start 2P',monospace;font-size:6px;">
+            <span style="color:#ff6b6b;">ATK+101</span>
+            <span style="color:#4ecdc4;">DEF+50</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+            <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#ffcc00;">¥1,400</div>
+            <div style="padding:3px 8px;border:1px solid #6aa0e0;font-family:'Press Start 2P',monospace;font-size:6px;color:#a0d0ff;cursor:pointer;">EQUIP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>G: ミニRPGカード型</h3>
+      <p>今のRPGを1/3に。右下に控えめに浮かぶ。服は大きく。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ RPG感キープ · ✓ バランス良い</div>
+    </div>
+  </div>
+
+  <!-- Option E: Floating Tag -->
+  <div class="card" data-choice="e" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:0;min-height:400px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:10%;left:30%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#f0f;border-radius:50%;top:50%;left:80%;box-shadow:0 0 6px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:70%;left:20%;box-shadow:0 0 6px #ff0;"></div>
+      </div>
+      <div style="position:absolute;top:50%;left:45%;transform:translate(-50%,-50%);">
+        <svg viewBox="0 0 400 480" style="width:180px;height:216px;filter:drop-shadow(0 0 30px rgba(255,255,255,0.08));">
+          <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+          <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+          <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div style="position:absolute;top:38%;right:12%;">
+        <div style="position:absolute;left:-60px;top:20px;width:50px;border-top:1px dashed rgba(128,128,128,0.3);"></div>
+        <div style="background:rgba(0,0,0,0.7);border:1px solid rgba(128,128,128,0.3);border-radius:6px;padding:10px 14px;backdrop-filter:blur(8px);">
+          <div style="font-family:'Courier New',monospace;font-size:10px;color:#808080;letter-spacing:2px;">QR T</div>
+          <div style="font-family:'Courier New',monospace;font-size:16px;color:#666;margin-top:4px;">¥1,400</div>
+          <div style="font-family:'Courier New',monospace;font-size:7px;color:#444;margin-top:4px;">TAP TO EXPAND ↗</div>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#808080;"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:#333;"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>E: フローティングタグ型</h3>
+      <p>値札だけ。タップで展開。超ミニマル。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ 超ミニマル · ✓ 宇宙感最強</div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center;color:#666;margin-top:24px;font-size:13px;">クリックして選んでください。ミックスもOK。</p>

@@ -2,54 +2,352 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>inryokü — P2 Test</title>
-
-  <!-- Three.js 0.160.0 CDN (UMD) -->
+  <title>P2 Grid Style Test — A/B/C</title>
   <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
-
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      width: 100%; height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: 'Courier New', monospace;
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Courier New',monospace; }
+    #controls {
+      position:fixed; top:20px; right:20px; z-index:100;
+      display:flex; flex-direction:column; gap:8px;
     }
-    #root { width: 100%; height: 100%; }
-
-    /* テスト用バッジ */
-    #test-badge {
-      position: fixed;
-      top: 10px;
-      right: 12px;
-      z-index: 9999;
-      font-size: 10px;
-      color: #0f0;
-      opacity: 0.45;
-      pointer-events: none;
-      letter-spacing: 2px;
+    .btn {
+      width:48px; height:48px; border-radius:6px; border:1px solid #333;
+      background:rgba(0,0,0,0.7); color:#555; font-family:'Courier New',monospace;
+      font-size:13px; font-weight:bold; letter-spacing:1px; cursor:pointer;
+      transition:all 0.2s;
+    }
+    .btn:hover { border-color:#0f8; color:#0f8; }
+    .btn.active { border-color:#0f8; color:#0f8; background:rgba(0,255,136,0.08); box-shadow:0 0 12px rgba(0,255,136,0.3); }
+    #label {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+      color:#333; font-size:11px; letter-spacing:3px; text-transform:uppercase;
+      pointer-events:none;
     }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <div id="test-badge">P2 TEST</div>
+<div id="controls">
+  <button class="btn active" id="btnA" onclick="setGrid('A')">A</button>
+  <button class="btn"        id="btnB" onclick="setGrid('B')">B</button>
+  <button class="btn"        id="btnC" onclick="setGrid('C')">C</button>
+</div>
+<div id="label">A — フロアグリッド (Tron-style floor)</div>
 
-  <script src="p2_code_for_claude.js"></script>
+<script>
+'use strict';
 
-  <script>
-    // P2 直接起動 (P1/BSODをスキップ)
-    renderPhase2();
+const W = window.innerWidth, H = window.innerHeight;
 
-    window.addEventListener('inryoku:p2complete', () => {
-      console.log('✅ P2 complete — P3 transition would fire here');
-    });
-  </script>
+const renderer = new THREE.WebGLRenderer({ antialias:false, alpha:false });
+renderer.setPixelRatio(0.5);
+renderer.setSize(W, H);
+renderer.setClearColor(0x000000, 1);
+renderer.domElement.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;';
+document.body.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 150);
+camera.position.set(0, 0, 8);
+const scene = new THREE.Scene();
+let globalTime = 0;
+
+// ── Particles ──
+const COUNT = 6000;
+const bLocalPos = new Float32Array(COUNT*4*3);
+const bUv       = new Float32Array(COUNT*4*2);
+const bWPos     = new Float32Array(COUNT*4*3);
+const bId       = new Float32Array(COUNT*4);
+const bIdx      = new Uint32Array(COUNT*6);
+const bSize     = new Float32Array(COUNT*4);
+const QV = [[-0.5,-0.5],[0.5,-0.5],[0.5,0.5],[-0.5,0.5]];
+const QU = [[0,0],[1,0],[1,1],[0,1]];
+
+function rand(a,b){ return a+Math.random()*(b-a); }
+function randNormal(mean,std){
+  const u1=Math.random()+1e-10, u2=Math.random();
+  return mean+std*Math.sqrt(-2*Math.log(u1))*Math.cos(6.28318*u2);
+}
+function randSize(){
+  const r=Math.random();
+  if(r<0.05) return 3.0+Math.random()*2.0;
+  if(r<0.20) return 1.5+Math.random()*0.8;
+  return 0.5+Math.random()*0.7;
+}
+for(let i=0;i<COUNT;i++){
+  const wx=Math.max(-22,Math.min(22,randNormal(0,9)));
+  const wy=Math.max(-16,Math.min(16,randNormal(0,6.5)));
+  const wz=rand(-80,5);
+  const sz=randSize();
+  for(let v=0;v<4;v++){
+    const vi=i*4+v;
+    bLocalPos[vi*3]=QV[v][0]; bLocalPos[vi*3+1]=QV[v][1]; bLocalPos[vi*3+2]=0;
+    bUv[vi*2]=QU[v][0]; bUv[vi*2+1]=QU[v][1];
+    bWPos[vi*3]=wx; bWPos[vi*3+1]=wy; bWPos[vi*3+2]=wz;
+    bId[vi]=i; bSize[vi]=sz;
+  }
+  const ii=i*6, vi=i*4;
+  bIdx[ii]=vi; bIdx[ii+1]=vi+1; bIdx[ii+2]=vi+2;
+  bIdx[ii+3]=vi; bIdx[ii+4]=vi+2; bIdx[ii+5]=vi+3;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(bLocalPos,3));
+pGeo.setAttribute('uv',       new THREE.BufferAttribute(bUv,2));
+pGeo.setAttribute('aWPos',    new THREE.BufferAttribute(bWPos,3));
+pGeo.setAttribute('aId',      new THREE.BufferAttribute(bId,1));
+pGeo.setAttribute('aSize',    new THREE.BufferAttribute(bSize,1));
+pGeo.setIndex(new THREE.BufferAttribute(bIdx,1));
+
+const pVert = `
+precision mediump float;
+attribute vec3  aWPos;
+attribute float aId;
+attribute float aSize;
+uniform   float u_time;
+varying   vec2  vUv;
+varying   float vDepth;
+varying   float vIsOne;
+varying   float vColorId;
+float h(float n){ return fract(sin(mod(n,97.)*127.1)*43758.5); }
+float vnoise(vec3 p){
+  vec3 i=floor(p); vec3 f=fract(p); f=f*f*(3.-2.*f);
+  float n=i.x+i.y*57.+i.z*113.;
+  return mix(mix(mix(h(n),h(n+1.),f.x),mix(h(n+57.),h(n+58.),f.x),f.y),
+             mix(mix(h(n+113.),h(n+114.),f.x),mix(h(n+170.),h(n+171.),f.x),f.y),f.z);
+}
+void main(){
+  vUv=uv; vColorId=h(aId*13.7+3.3);
+  float seed=h(aId*7.3+1.1); float t=u_time*0.09;
+  float dx=(vnoise(vec3(seed*8.+t,seed*3.,seed*5.))-0.5)*3.2;
+  float dy=(vnoise(vec3(seed*6.,seed*9.+t*0.8,seed))-0.5)*2.6;
+  float dz=(vnoise(vec3(seed*4.,seed*7.,seed*11.+t*0.6))-0.5)*2.0;
+  vec3 wp=aWPos+vec3(dx,dy,dz);
+  float iv=0.5+h(aId*3.7+1.)*2.5;
+  float ph=mod(u_time*0.8+h(aId)*100.,iv*2.);
+  vIsOne=step(iv,ph);
+  vec4 mvPos=modelViewMatrix*vec4(wp,1.0);
+  float d01=clamp((-mvPos.z-3.)/85.,0.,1.);
+  vDepth=d01;
+  float sc=mix(0.26,0.012,d01)*aSize*(1.0+smoothstep(0.18,0.0,d01)*0.6);
+  gl_Position=projectionMatrix*(mvPos+vec4(position.xy*sc,0.,0.));
+}`;
+
+const pFrag = `
+precision mediump float;
+uniform float u_density;
+varying vec2  vUv;
+varying float vDepth;
+varying float vIsOne;
+varying float vColorId;
+float draw0(vec2 p){
+  float dOut=length(p/vec2(0.65,1.05));
+  float dIn=length(p/vec2(0.30,0.52));
+  return smoothstep(0.95,0.85,dOut)*smoothstep(0.88,0.98,dIn);
+}
+float draw1(vec2 p){
+  float stem=step(abs(p.x),0.13)*step(abs(p.y),1.1);
+  float base=step(abs(p.y+1.02),0.11)*step(abs(p.x),0.33);
+  float serif=step(abs(p.y-0.88),0.11)*step(p.x,0.08)*step(-0.27,p.x);
+  return max(max(stem,base),serif);
+}
+void main(){
+  vec2 uv2=vUv-0.5;
+  float gd=length(uv2*2.0);
+  float nearB=smoothstep(0.22,0.0,vDepth);
+  float farB=smoothstep(0.72,1.0,vDepth);
+  float haloMid=exp(-gd*gd*1.7);
+  float haloSoft=exp(-gd*gd*0.65);
+  float haloSharp=exp(-gd*gd*5.5);
+  float halo=nearB*haloSoft*0.40+haloMid*0.72+farB*haloSharp*0.9;
+  float shapeVis=smoothstep(0.75,0.10,vDepth)*(1.0-nearB*0.85);
+  vec2 p=uv2*vec2(2.0,2.8);
+  float shape=mix(draw0(p),draw1(p),vIsOne);
+  float total=halo*0.62+shape*shapeVis*0.92;
+  float fog=exp(-vDepth*4.8)+farB*exp(-gd*gd*0.9)*0.05;
+  vec3 emerald=vec3(0.314,0.784,0.471);
+  vec3 teal=vec3(0.000,0.808,0.820);
+  vec3 magenta=vec3(0.780,0.000,0.680);
+  vec3 baseCol;
+  if(vColorId<0.04){ baseCol=magenta; }
+  else if(vColorId<0.68){ baseCol=emerald; }
+  else { baseCol=mix(emerald,teal,(vColorId-0.68)/0.32); }
+  float alpha=total*fog*u_density;
+  if(alpha<0.003) discard;
+  gl_FragColor=vec4(baseCol*alpha,alpha);
+}`;
+
+const pUniforms = { u_time:{value:0}, u_density:{value:2.5} };
+const pMat = new THREE.ShaderMaterial({
+  vertexShader:pVert, fragmentShader:pFrag, uniforms:pUniforms,
+  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending
+});
+scene.add(new THREE.Mesh(pGeo, pMat));
+
+// ──────────────────────────────────────────────
+//  GRID A — フロアグリッド (Tron水平面)
+// ──────────────────────────────────────────────
+function makeGridA() {
+  const verts = [];
+  const SIZE = 60, STEP = 3;
+  for (let x = -SIZE; x <= SIZE; x += STEP) {
+    verts.push(x, -12, -80,  x, -12, 5);
+  }
+  for (let z = -80; z <= 5; z += STEP) {
+    verts.push(-SIZE, -12, z,  SIZE, -12, z);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+  const mat = new THREE.LineBasicMaterial({
+    color:0x004433, transparent:true, opacity:0.45,
+    blending:THREE.AdditiveBlending, depthWrite:false
+  });
+
+  // アクセント (明るいライン)
+  const acVerts = [];
+  for (let x = -SIZE; x <= SIZE; x += STEP*4) {
+    acVerts.push(x, -12, -80,  x, -12, 5);
+  }
+  for (let z = -80; z <= 5; z += STEP*4) {
+    acVerts.push(-SIZE, -12, z,  SIZE, -12, z);
+  }
+  const acGeo = new THREE.BufferGeometry();
+  acGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(acVerts), 3));
+  const acMat = new THREE.LineBasicMaterial({
+    color:0x00ff88, transparent:true, opacity:0.15,
+    blending:THREE.AdditiveBlending, depthWrite:false
+  });
+
+  const g = new THREE.Group();
+  g.add(new THREE.LineSegments(geo, mat));
+  g.add(new THREE.LineSegments(acGeo, acMat));
+  g.visible = false;
+  return g;
+}
+
+// ──────────────────────────────────────────────
+//  GRID B — 無限空間グリッド (3D全方位格子)
+// ──────────────────────────────────────────────
+function makeGridB() {
+  const verts = [];
+  const R = 22, STEP = 5;
+
+  // X方向ライン (Y×Z格子)
+  for (let y = -R; y <= R; y += STEP) {
+    for (let z = -70; z <= 5; z += STEP) {
+      verts.push(-R*3, y, z,  R*3, y, z);
+    }
+  }
+  // Y方向ライン (X×Z格子)
+  for (let x = -R; x <= R; x += STEP) {
+    for (let z = -70; z <= 5; z += STEP) {
+      verts.push(x, -R*2, z,  x, R*2, z);
+    }
+  }
+  // Z方向ライン (X×Y格子)
+  for (let x = -R; x <= R; x += STEP) {
+    for (let y = -R; y <= R; y += STEP) {
+      verts.push(x, y, -80,  x, y, 5);
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+  const mat = new THREE.LineBasicMaterial({
+    color:0x001133, transparent:true, opacity:0.4,
+    blending:THREE.AdditiveBlending, depthWrite:false
+  });
+  const g = new THREE.Group();
+  g.add(new THREE.LineSegments(geo, mat));
+  g.visible = false;
+  return g;
+}
+
+// ──────────────────────────────────────────────
+//  GRID C — 遠景ガイドライン (放射収束線)
+// ──────────────────────────────────────────────
+function makeGridC() {
+  const VP_Z = -180; // 消失点Z
+  const NEAR_Z = 6;
+  const verts = [];
+
+  // 水平放射線 (N本)
+  const NH = 20;
+  for (let i = 0; i <= NH; i++) {
+    const t = i / NH;
+    const x = (t - 0.5) * 80;
+    verts.push(x, 0, NEAR_Z,  0, 0, VP_Z);
+  }
+  // 垂直放射線
+  const NV = 12;
+  for (let i = 0; i <= NV; i++) {
+    const t = i / NV;
+    const y = (t - 0.5) * 40;
+    verts.push(0, y, NEAR_Z,  0, 0, VP_Z);
+  }
+  // 四隅
+  [[-40,-20],[40,-20],[40,20],[-40,20]].forEach(([cx,cy]) => {
+    verts.push(cx, cy, NEAR_Z,  0, 0, VP_Z);
+  });
+
+  // 深度クロスライン (距離マーカー)
+  [-8,-18,-32,-52,-80].forEach(z => {
+    const frac = (z - NEAR_Z) / (VP_Z - NEAR_Z);
+    const hw = 40 * frac, hh = 20 * frac;
+    verts.push(-hw,-hh,z,  hw,-hh,z);
+    verts.push(-hw, hh,z,  hw, hh,z);
+    verts.push(-hw,-hh,z, -hw, hh,z);
+    verts.push( hw,-hh,z,  hw, hh,z);
+  });
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+  const mat = new THREE.LineBasicMaterial({
+    color:0x0033aa, transparent:true, opacity:0.5,
+    blending:THREE.AdditiveBlending, depthWrite:false
+  });
+  const g = new THREE.Group();
+  g.add(new THREE.LineSegments(geo, mat));
+  g.visible = false;
+  return g;
+}
+
+const gridA = makeGridA();
+const gridB = makeGridB();
+const gridC = makeGridC();
+scene.add(gridA); scene.add(gridB); scene.add(gridC);
+
+const LABELS = {
+  A: 'A — フロアグリッド (Tron-style floor)',
+  B: 'B — 無限空間グリッド (3D lattice)',
+  C: 'C — 遠景ガイドライン (収束線)'
+};
+
+function setGrid(id) {
+  gridA.visible = (id === 'A');
+  gridB.visible = (id === 'B');
+  gridC.visible = (id === 'C');
+  ['A','B','C'].forEach(x => {
+    document.getElementById('btn'+x).classList.toggle('active', x===id);
+  });
+  document.getElementById('label').textContent = LABELS[id];
+}
+setGrid('A');
+
+// ── Render loop ──
+let lastTime = performance.now();
+(function loop(){
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  globalTime += dt;
+
+  camera.position.z = 8.0 + Math.sin(globalTime * 0.28) * 0.18;
+  camera.fov = 60 + Math.sin(globalTime * 0.13) * 2.2;
+  camera.updateProjectionMatrix();
+
+  pUniforms.u_time.value = globalTime;
+  renderer.render(scene, camera);
+})();
+</script>
 </body>
 </html>

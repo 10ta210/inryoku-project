@@ -1,0 +1,166 @@
+<h2>商品の見せ方 — 3案比較</h2>
+<p class="subtitle">inryokü ECショップ: 黒Tシャツを宇宙の中でどう見せるか</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:20px;min-height:400px;position:relative;overflow:hidden;">
+      <!-- Stars background -->
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:15%;left:20%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:25%;left:75%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:60%;left:85%;box-shadow:0 0 6px #ff0;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:80%;left:15%;box-shadow:0 0 6px #0f0;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#fff;border-radius:50%;top:45%;left:50%;box-shadow:0 0 4px #fff;"></div>
+        <div style="position:absolute;width:1px;height:1px;background:#00f;border-radius:50%;top:70%;left:60%;box-shadow:0 0 4px #00f;"></div>
+      </div>
+
+      <!-- Full screen product -->
+      <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;">
+        <!-- T-shirt mockup -->
+        <div style="width:200px;height:240px;position:relative;">
+          <svg viewBox="0 0 400 480" style="width:100%;height:100%;filter:drop-shadow(0 0 30px rgba(128,128,128,0.2));">
+            <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+            <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+            <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <text x="200" y="265" text-anchor="middle" font-family="monospace" font-size="8" fill="#555">SCAN ME</text>
+          </svg>
+        </div>
+        <!-- Info below -->
+        <div style="text-align:center;margin-top:16px;">
+          <div style="font-family:'Courier New',monospace;font-size:11px;color:#808080;letter-spacing:4px;">QR T — SPREAD THE SIGNAL</div>
+          <div style="font-family:'Courier New',monospace;font-size:16px;color:#666;margin-top:8px;">¥1,400</div>
+          <div style="margin-top:12px;padding:8px 24px;border:1px solid #333;color:#555;font-family:monospace;font-size:10px;letter-spacing:2px;cursor:pointer;">ADD TO CART</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: フルスクリーン没入型</h3>
+      <p>商品がパーティクル宇宙の中央にドーンと浮かぶ。左右スワイプで切り替え。商品が宇宙の一部になる。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ インパクト大 · ✓ 世界観統一 · △ 情報量少ない</div>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:20px;min-height:400px;position:relative;overflow:hidden;">
+      <!-- Stars -->
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:10%;left:30%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#f0f;border-radius:50%;top:50%;left:80%;box-shadow:0 0 6px #f0f;"></div>
+        <div style="position:absolute;width:1px;height:1px;background:#fff;border-radius:50%;top:30%;left:60%;box-shadow:0 0 3px #fff;"></div>
+      </div>
+
+      <!-- Split layout: left product, right info -->
+      <div style="position:relative;z-index:2;display:flex;gap:24px;align-items:center;justify-content:center;height:100%;">
+        <!-- Left: T-shirt -->
+        <div style="flex:0 0 160px;">
+          <svg viewBox="0 0 400 480" style="width:160px;height:192px;filter:drop-shadow(0 0 20px rgba(128,128,128,0.15));">
+            <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+            <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+            <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+            <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <!-- Right: Info panel (glass card) -->
+        <div style="flex:0 0 200px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:24px;backdrop-filter:blur(10px);">
+          <div style="font-family:'Courier New',monospace;font-size:10px;color:#808080;letter-spacing:3px;margin-bottom:4px;">01 / 02</div>
+          <div style="font-family:'Courier New',monospace;font-size:13px;color:#808080;letter-spacing:3px;line-height:1.6;">QR T<br>SPREAD THE SIGNAL</div>
+          <div style="font-family:'Courier New',monospace;font-size:18px;color:#666;margin-top:12px;">¥1,400</div>
+          <div style="font-family:monospace;font-size:9px;color:#444;margin-top:8px;line-height:1.8;">
+            Bella+Canvas 3001<br>
+            Premium Soft Cotton<br>
+            Your unique QR code
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <div style="width:28px;height:28px;border:1px solid #333;color:#555;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;cursor:pointer;">S</div>
+            <div style="width:28px;height:28px;border:1px solid #555;color:#888;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;cursor:pointer;background:rgba(255,255,255,0.05);">M</div>
+            <div style="width:28px;height:28px;border:1px solid #333;color:#555;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;cursor:pointer;">L</div>
+            <div style="width:28px;height:28px;border:1px solid #333;color:#555;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:9px;cursor:pointer;">XL</div>
+          </div>
+          <div style="margin-top:16px;padding:10px;border:1px solid #444;text-align:center;color:#666;font-family:monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all 0.3s;">ADD TO CART</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: 横分割 — 商品 + 情報パネル</h3>
+      <p>左にTシャツ、右にガラスカードで商品情報。サイズ選択・カート追加もその場で完結。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ 情報量多い · ✓ すぐ買える · △ 宇宙感やや薄れる</div>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#000;padding:20px;min-height:400px;position:relative;overflow:hidden;">
+      <!-- Stars -->
+      <div style="position:absolute;inset:0;">
+        <div style="position:absolute;width:2px;height:2px;background:#0ff;border-radius:50%;top:8%;left:15%;box-shadow:0 0 6px #0ff;"></div>
+        <div style="position:absolute;width:3px;height:3px;background:#f0f;border-radius:50%;top:20%;left:85%;box-shadow:0 0 8px #f0f;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#0f0;border-radius:50%;top:65%;left:10%;box-shadow:0 0 6px #0f0;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:#ff0;border-radius:50%;top:75%;left:90%;box-shadow:0 0 6px #ff0;"></div>
+      </div>
+
+      <!-- Terminal/Win95 style product display -->
+      <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;height:100%;">
+        <!-- Win95 window -->
+        <div style="width:320px;border:2px solid #808080;background:#000;">
+          <!-- Title bar -->
+          <div style="background:linear-gradient(to right, #0a246a, #a6b8e8);padding:3px 6px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-family:'MS Sans Serif',Arial,sans-serif;font-size:11px;color:#fff;font-weight:bold;">inryokü_store.exe</span>
+            <div style="display:flex;gap:2px;">
+              <div style="width:14px;height:14px;background:#c0c0c0;border:1px outset #fff;display:flex;align-items:center;justify-content:center;font-size:9px;">_</div>
+              <div style="width:14px;height:14px;background:#c0c0c0;border:1px outset #fff;display:flex;align-items:center;justify-content:center;font-size:9px;">×</div>
+            </div>
+          </div>
+          <!-- Content -->
+          <div style="padding:16px;display:flex;gap:16px;">
+            <!-- T-shirt small -->
+            <div style="flex:0 0 120px;">
+              <svg viewBox="0 0 400 480" style="width:120px;height:144px;">
+                <path d="M 90,80 L 50,110 L 30,170 L 70,180 L 90,130 L 90,380 C 90,400 100,410 120,410 L 280,410 C 300,410 310,400 310,380 L 310,130 L 330,180 L 370,170 L 350,110 L 310,80 C 290,65 260,55 240,55 C 225,70 210,78 200,78 C 190,78 175,70 160,55 C 140,55 110,65 90,80 Z" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+                <rect x="155" y="150" width="90" height="90" fill="#111" rx="4"/>
+                <rect x="163" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+                <rect x="215" y="158" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+                <rect x="163" y="210" width="22" height="22" fill="none" stroke="#808080" stroke-width="2.5"/>
+              </svg>
+            </div>
+            <!-- Info -->
+            <div style="flex:1;font-family:'MS Sans Serif',Arial,monospace;">
+              <div style="color:#0f0;font-size:11px;font-family:'Courier New',monospace;">> QR_T.exe</div>
+              <div style="color:#808080;font-size:10px;margin-top:6px;font-family:'Courier New',monospace;line-height:1.8;">
+                SPREAD THE SIGNAL<br>
+                ─────────────<br>
+                PRICE: ¥1,400<br>
+                MATERIAL: Bella+Canvas<br>
+                TYPE: Premium Cotton
+              </div>
+              <div style="display:flex;gap:4px;margin-top:10px;">
+                <div style="padding:2px 8px;background:#c0c0c0;border:2px outset #fff;font-size:10px;color:#000;cursor:pointer;font-family:'MS Sans Serif',Arial,sans-serif;">S</div>
+                <div style="padding:2px 8px;background:#c0c0c0;border:2px inset #808080;font-size:10px;color:#000;cursor:pointer;font-family:'MS Sans Serif',Arial,sans-serif;">M</div>
+                <div style="padding:2px 8px;background:#c0c0c0;border:2px outset #fff;font-size:10px;color:#000;cursor:pointer;font-family:'MS Sans Serif',Arial,sans-serif;">L</div>
+                <div style="padding:2px 8px;background:#c0c0c0;border:2px outset #fff;font-size:10px;color:#000;cursor:pointer;font-family:'MS Sans Serif',Arial,sans-serif;">XL</div>
+              </div>
+              <div style="margin-top:12px;padding:4px 16px;background:#c0c0c0;border:2px outset #fff;text-align:center;font-size:11px;color:#000;cursor:pointer;font-family:'MS Sans Serif',Arial,sans-serif;">EXECUTE ORDER</div>
+            </div>
+          </div>
+          <!-- Status bar -->
+          <div style="background:#c0c0c0;border-top:1px solid #808080;padding:2px 6px;font-family:'MS Sans Serif',Arial,sans-serif;font-size:10px;color:#000;">
+            Ready — 2 items available | ◀ 01/02 ▶
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C: Win95ウィンドウ型</h3>
+      <p>inryokü_store.exeウィンドウが宇宙に浮かぶ。Win95 UIのベベルボーダー・タイトルバー。P1のWin95世界観と統一。</p>
+      <div style="color:#888;font-size:12px;margin-top:8px;">✓ 世界観最強 · ✓ ユニーク · △ 少しレトロすぎ？</div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center;color:#666;margin-top:24px;font-size:13px;">クリックして選んでください。ターミナルでも回答OK。</p>

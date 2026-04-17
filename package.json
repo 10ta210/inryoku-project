@@ -1,0 +1,17 @@
+{
+  "name": "inryoku-antigravity",
+  "version": "1.0.0",
+  "description": "inryokü — RGB=Black, CMY=White, You=Rainbow",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "canvas": "^3.2.3",
+    "qrcode": "^1.5.4"
+  }
+}

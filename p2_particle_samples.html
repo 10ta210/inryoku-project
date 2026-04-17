@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>P2 Particle Design Samples — トリック</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; color:#fff; font-family:'Courier New',monospace; overflow-x:hidden; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; padding:2px; }
+.cell { position:relative; aspect-ratio:4/3; overflow:hidden; border:1px solid #222; }
+.cell canvas { width:100%; height:100%; display:block; }
+.label { position:absolute; bottom:8px; left:8px; font-size:11px; color:#0f0; text-shadow:0 0 6px #0f0; z-index:1; pointer-events:none; }
+.label b { font-size:14px; color:#fff; display:block; margin-bottom:2px; }
+h1 { text-align:center; padding:10px; font-size:16px; color:#0ff; letter-spacing:4px; }
+</style>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+</head><body>
+<h1>P2 PARTICLE SAMPLES — TRICK STYLE</h1>
+<div class="grid" id="grid"></div>
+<script>
+const W=400, H=300, COUNT=1200;
+
+// ═══════════════════════════════════════
+// 6つのデザインパターン
+// ═══════════════════════════════════════
+const designs = [
+
+// ── A: グリッチレイン ──
+// マトリックス風の縦流れ + グリッチで横にテレポート
+{
+  name: 'A: Glitch Rain',
+  desc: 'マトリックス風落下 + グリッチテレポート',
+  vert: `
+precision mediump float;
+attribute vec3 aPos;
+attribute float aId;
+uniform float u_time;
+varying vec2 vUv;
+varying float vGlitch;
+varying float vCol;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+void main(){
+  vUv = uv; vCol = h(aId*7.7);
+  float seed = h(aId*3.3);
+  vec3 wp = aPos;
+  // 列にスナップした落下
+  float col = floor(aPos.x * 3.0) / 3.0;
+  wp.x = col + sin(seed*100.0)*0.08;
+  float fall = mod(u_time * (0.8 + seed*1.5) + seed*50.0, 14.0) - 7.0;
+  wp.y = fall;
+  // グリッチ: ランダムに横テレポート
+  float gt = fract(u_time*0.3 + seed*77.0);
+  vGlitch = step(0.96, gt);
+  if(vGlitch > 0.5) wp.x += (h(floor(u_time*8.0+aId))-0.5)*4.0;
+  vec4 mv = modelViewMatrix * vec4(wp,1.0);
+  float sc = mix(0.18, 0.03, clamp((-mv.z-3.)/60.,0.,1.));
+  gl_Position = projectionMatrix * (mv + vec4(position.xy*sc,0.,0.));
+}`,
+  frag: `
+precision mediump float;
+varying vec2 vUv;
+varying float vGlitch;
+varying float vCol;
+uniform float u_time;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+// 0と1をSDF描画
+float draw01(vec2 p, float isOne){
+  if(isOne > 0.5){
+    float s = smoothstep(0.12,0.02,abs(p.x)) * smoothstep(0.9,0.6,abs(p.y));
+    float d = length(p-vec2(0,0.75));
+    return max(s, smoothstep(0.22,0.06,d));
+  } else {
+    float d = length(p/vec2(0.8,1.0));
+    return smoothstep(0.85,0.55,d)*smoothstep(0.3,0.5,d);
+  }
+}
+void main(){
+  vec2 uv2 = (vUv-0.5)*2.5;
+  float gd = length(uv2);
+  float isOne = step(0.5, fract(u_time*0.5+vCol*99.0));
+  float shape = draw01(uv2, isOne);
+  float halo = exp(-gd*gd*1.5);
+  // グリッチ時は赤くフラッシュ
+  vec3 col = mix(vec3(0.1,1.0,0.3), vec3(1.0,0.1,0.2), vGlitch);
+  // 深度フェード（尾を引くトレイル風）
+  float trail = exp(-max(0.0, uv2.y+0.3)*2.0);
+  float alpha = (halo*0.5 + shape*0.8) * mix(1.0, trail, 0.4);
+  if(alpha<0.01) discard;
+  gl_FragColor = vec4(col*alpha, alpha);
+}`
+},
+
+// ── B: ホログラムグリッド ──
+// 浮遊するコード文字がホログラムのように虹色に揺れる
+{
+  name: 'B: Hologram Grid',
+  desc: 'ホログラム風虹色シフト + グリッド配置',
+  vert: `
+precision mediump float;
+attribute vec3 aPos;
+attribute float aId;
+uniform float u_time;
+varying vec2 vUv;
+varying float vHue;
+varying float vDepth;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+void main(){
+  vUv = uv;
+  float seed = h(aId*5.5);
+  vec3 wp = aPos;
+  // ゆっくり浮遊
+  wp.y += sin(u_time*0.3+seed*10.0)*0.5;
+  wp.x += cos(u_time*0.2+seed*8.0)*0.3;
+  // ホログラム: 視点角度で虹色が変化
+  vHue = fract(seed + u_time*0.05 + wp.y*0.1);
+  vec4 mv = modelViewMatrix * vec4(wp,1.0);
+  vDepth = clamp((-mv.z-3.)/70.,0.,1.);
+  float sc = mix(0.22, 0.02, vDepth);
+  gl_Position = projectionMatrix * (mv + vec4(position.xy*sc,0.,0.));
+}`,
+  frag: `
+precision mediump float;
+varying vec2 vUv;
+varying float vHue;
+varying float vDepth;
+uniform float u_time;
+vec3 hsv(float h,float s,float v){
+  vec3 c=clamp(abs(mod(h*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.);
+  return v*mix(vec3(1),c,s);
+}
+void main(){
+  vec2 uv2 = (vUv-0.5)*2.5;
+  float gd = length(uv2);
+  // スキャンライン効果
+  float scan = 0.85 + 0.15*sin(uv2.y*40.0 + u_time*5.0);
+  // ホログラム虹色
+  vec3 col = hsv(vHue + uv2.x*0.2, 0.7, 1.0);
+  // エッジが光る四角形
+  vec2 ap = abs(uv2);
+  float box = smoothstep(0.95,0.85, max(ap.x,ap.y));
+  float edge = smoothstep(0.85,0.75, max(ap.x,ap.y)) - box;
+  float halo = exp(-gd*gd*1.2);
+  float alpha = (halo*0.3 + edge*1.2 + box*0.15) * scan;
+  alpha *= exp(-vDepth*3.0);
+  // ちらつき
+  alpha *= 0.7 + 0.3*sin(u_time*3.0+vHue*20.0);
+  if(alpha<0.01) discard;
+  gl_FragColor = vec4(col*alpha, alpha);
+}`
+},
+
+// ── C: ニューラルネットワーク ──
+// ノード同士が光の線で繋がるネットワーク感
+{
+  name: 'C: Neural Net',
+  desc: 'ニューロン + シナプス発火パルス',
+  vert: `
+precision mediump float;
+attribute vec3 aPos;
+attribute float aId;
+uniform float u_time;
+varying vec2 vUv;
+varying float vPulse;
+varying float vType;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+void main(){
+  vUv = uv;
+  float seed = h(aId*3.3);
+  vType = step(0.7, seed); // 30%がシナプス（小さい高速）
+  vec3 wp = aPos;
+  // ノード: ゆっくり浮遊
+  if(vType < 0.5){
+    wp.x += sin(u_time*0.15+seed*20.0)*0.8;
+    wp.y += cos(u_time*0.12+seed*15.0)*0.6;
+  } else {
+    // シナプス: 2点間を高速往復
+    float phase = u_time*2.0 + seed*6.28;
+    float t = sin(phase)*0.5+0.5;
+    vec3 a = vec3(h(aId*11.0)*8.0-4.0, h(aId*13.0)*6.0-3.0, h(aId*17.0)*4.0-2.0);
+    vec3 b = vec3(h(aId*19.0)*8.0-4.0, h(aId*23.0)*6.0-3.0, h(aId*29.0)*4.0-2.0);
+    wp = mix(a, b, t);
+  }
+  vPulse = sin(u_time*4.0 + seed*30.0)*0.5+0.5;
+  vec4 mv = modelViewMatrix * vec4(wp,1.0);
+  float baseSize = vType > 0.5 ? 0.06 : 0.16;
+  float sc = mix(baseSize, 0.01, clamp((-mv.z-3.)/60.,0.,1.));
+  gl_Position = projectionMatrix * (mv + vec4(position.xy*sc,0.,0.));
+}`,
+  frag: `
+precision mediump float;
+varying vec2 vUv;
+varying float vPulse;
+varying float vType;
+uniform float u_time;
+void main(){
+  vec2 uv2 = (vUv-0.5)*2.0;
+  float gd = length(uv2);
+  vec3 col;
+  float alpha;
+  if(vType < 0.5){
+    // ノード: 円形 + 脈動リング
+    float core = exp(-gd*gd*8.0);
+    float ring = exp(-abs(gd-0.7)*8.0) * vPulse;
+    col = mix(vec3(0.2,0.5,1.0), vec3(0.0,1.0,0.8), vPulse);
+    alpha = core*0.9 + ring*0.6;
+  } else {
+    // シナプス: 小さい光点 + トレイル
+    float dot = exp(-gd*gd*12.0);
+    col = vec3(1.0, 0.8, 0.2) * (0.5+vPulse*0.5);
+    alpha = dot;
+  }
+  if(alpha<0.01) discard;
+  gl_FragColor = vec4(col*alpha, alpha);
+}`
+},
+
+// ── D: バイナリ崩壊 ──
+// 0/1が崩壊してピクセルダストになる。トリック感重視
+{
+  name: 'D: Binary Decay',
+  desc: '0/1が崩壊 → ピクセルダストに分解',
+  vert: `
+precision mediump float;
+attribute vec3 aPos;
+attribute float aId;
+uniform float u_time;
+varying vec2 vUv;
+varying float vDecay;
+varying float vSeed;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+void main(){
+  vUv = uv;
+  vSeed = h(aId*7.7);
+  vec3 wp = aPos;
+  // 崩壊サイクル: 組み立て→静止→崩壊→散乱
+  float cycle = mod(u_time*0.15 + vSeed*3.0, 4.0);
+  if(cycle < 1.5){
+    vDecay = 0.0; // 完全体
+    wp.x += sin(u_time*0.2+vSeed*10.0)*0.2;
+    wp.y += cos(u_time*0.15+vSeed*8.0)*0.15;
+  } else if(cycle < 2.5){
+    float t = (cycle-1.5)/1.0;
+    vDecay = t*t;
+    // 崩壊: ピクセルが散る
+    float angle = h(aId*31.0+floor(u_time*2.0))*6.28;
+    float dist = vDecay * (1.0+vSeed*3.0);
+    wp.x += cos(angle)*dist;
+    wp.y += sin(angle)*dist - vDecay*vDecay*2.0; // 重力
+  } else {
+    float t = (cycle-2.5)/1.5;
+    vDecay = max(0.0, 1.0-t*t);
+    // 再構築: 元の位置に戻る
+    float angle = h(aId*31.0)*6.28;
+    float dist = vDecay * (1.0+vSeed*3.0);
+    wp.x += cos(angle)*dist*0.3;
+    wp.y += sin(angle)*dist*0.3;
+  }
+  vec4 mv = modelViewMatrix * vec4(wp,1.0);
+  float sc = mix(0.18, 0.02, clamp((-mv.z-3.)/60.,0.,1.));
+  // 崩壊中は小さくなる
+  sc *= 1.0 - vDecay*0.6;
+  gl_Position = projectionMatrix * (mv + vec4(position.xy*sc,0.,0.));
+}`,
+  frag: `
+precision mediump float;
+varying vec2 vUv;
+varying float vDecay;
+varying float vSeed;
+uniform float u_time;
+void main(){
+  vec2 uv2 = (vUv-0.5)*2.5;
+  float gd = length(uv2);
+  // 崩壊度で形がピクセルに分解
+  float shape;
+  if(vDecay < 0.1){
+    // 完全体: 0/1
+    float isOne = step(0.5, fract(vSeed*99.0+u_time*0.3));
+    if(isOne > 0.5){
+      shape = smoothstep(0.12,0.02,abs(uv2.x))*smoothstep(0.9,0.5,abs(uv2.y));
+    } else {
+      float d = length(uv2/vec2(0.7,1.0));
+      shape = smoothstep(0.9,0.55,d)*smoothstep(0.25,0.5,d);
+    }
+  } else {
+    // ピクセルダスト: 四角い粒
+    vec2 pix = floor(uv2*3.0)/3.0;
+    float pixD = length(uv2-pix-0.167);
+    shape = smoothstep(0.15,0.05, pixD);
+  }
+  float halo = exp(-gd*gd*1.5);
+  // 色: 崩壊するとRGB分離
+  vec3 col;
+  float seg = vSeed * 6.0;
+  if(seg<1.0) col=vec3(1.0,0.1,0.15);
+  else if(seg<2.0) col=vec3(0.1,1.0,0.4);
+  else if(seg<3.0) col=vec3(0.15,0.3,1.0);
+  else if(seg<4.0) col=vec3(0.0,0.9,1.0);
+  else if(seg<5.0) col=vec3(1.0,0.0,0.85);
+  else col=vec3(1.0,0.95,0.0);
+  // 崩壊中: 色が白く飛ぶ
+  col = mix(col, vec3(1.0), vDecay*0.5);
+  float alpha = (halo*0.4 + shape*0.8) * (1.0 - vDecay*0.3);
+  if(alpha<0.01) discard;
+  gl_FragColor = vec4(col*alpha, alpha);
+}`
+},
+
+// ── E: ワイヤーフレームコード ──
+// パーティクルが線で繋がってワイヤーフレーム構造を形成
+{
+  name: 'E: Wireframe Code',
+  desc: '六角形グリッド + データフロー',
+  vert: `
+precision mediump float;
+attribute vec3 aPos;
+attribute float aId;
+uniform float u_time;
+varying vec2 vUv;
+varying float vEdge;
+varying float vFlow;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+void main(){
+  vUv = uv;
+  float seed = h(aId*3.3);
+  vec3 wp = aPos;
+  // 六角形グリッドにスナップ
+  float hexSize = 1.2;
+  float row = floor(wp.y / (hexSize*0.866));
+  float off = mod(row, 2.0) * hexSize * 0.5;
+  float col = floor((wp.x+off) / hexSize);
+  wp.x = col*hexSize - off + sin(u_time*0.3+seed*5.0)*0.15;
+  wp.y = row*hexSize*0.866 + cos(u_time*0.25+seed*7.0)*0.1;
+  // エッジ粒子 vs ノード粒子
+  vEdge = step(0.6, seed);
+  // データフロー: 波が伝播
+  vFlow = sin(u_time*2.0 - length(wp.xy)*0.8 + seed*3.0)*0.5+0.5;
+  vec4 mv = modelViewMatrix * vec4(wp,1.0);
+  float sc = mix(vEdge>0.5?0.08:0.2, 0.015, clamp((-mv.z-3.)/60.,0.,1.));
+  gl_Position = projectionMatrix * (mv + vec4(position.xy*sc,0.,0.));
+}`,
+  frag: `
+precision mediump float;
+varying vec2 vUv;
+varying float vEdge;
+varying float vFlow;
+uniform float u_time;
+void main(){
+  vec2 uv2 = (vUv-0.5)*2.0;
+  float gd = length(uv2);
+  vec3 col;
+  float alpha;
+  if(vEdge < 0.5){
+    // ノード: 六角形
+    vec2 ap = abs(uv2);
+    float hex = max(ap.x*0.866+ap.y*0.5, ap.y);
+    float hexShape = smoothstep(0.85,0.7, hex);
+    float hexEdge = smoothstep(0.7,0.6, hex) - hexShape;
+    col = mix(vec3(0.0,0.3,0.6), vec3(0.0,1.0,0.8), vFlow);
+    alpha = hexEdge*1.5 + hexShape*0.15 + exp(-gd*gd*2.0)*0.2*vFlow;
+  } else {
+    // エッジ: 光の粒が流れる
+    float dot = exp(-gd*gd*10.0);
+    col = vec3(0.3,0.8,1.0) * (0.4+vFlow*0.6);
+    alpha = dot * (0.3+vFlow*0.7);
+  }
+  if(alpha<0.01) discard;
+  gl_FragColor = vec4(col*alpha, alpha);
+}`
+},
+
+// ── F: イリュージョン ──
+// 遠近法トリック: パーティクルが奥行き方向に無限に続くように見せる
+{
+  name: 'F: Depth Illusion',
+  desc: '奥行き錯視 + モアレパターン',
+  vert: `
+precision mediump float;
+attribute vec3 aPos;
+attribute float aId;
+uniform float u_time;
+varying vec2 vUv;
+varying float vRing;
+varying float vDepthZ;
+float h(float n){ return fract(sin(n*127.1)*43758.5); }
+void main(){
+  vUv = uv;
+  float seed = h(aId*3.3);
+  vec3 wp = aPos;
+  // 同心円状に配置（トンネル感）
+  float angle = seed * 6.2832 + u_time * (0.1 + seed*0.15);
+  float radius = 0.5 + h(aId*11.0) * 3.5;
+  float depth = mod(h(aId*17.0)*20.0 + u_time*(0.5+seed*0.8), 20.0);
+  wp.x = cos(angle) * radius;
+  wp.y = sin(angle) * radius;
+  wp.z = -depth;
+  vRing = fract(depth * 0.3);
+  vDepthZ = depth / 20.0;
+  vec4 mv = modelViewMatrix * vec4(wp,1.0);
+  float sc = mix(0.25, 0.005, vDepthZ);
+  gl_Position = projectionMatrix * (mv + vec4(position.xy*sc,0.,0.));
+}`,
+  frag: `
+precision mediump float;
+varying vec2 vUv;
+varying float vRing;
+varying float vDepthZ;
+uniform float u_time;
+void main(){
+  vec2 uv2 = (vUv-0.5)*2.0;
+  float gd = length(uv2);
+  // モアレリング
+  float ring1 = sin(gd*15.0 + u_time*2.0)*0.5+0.5;
+  float ring2 = sin(gd*23.0 - u_time*1.5)*0.5+0.5;
+  float moire = ring1 * ring2;
+  // 色: 深度で変化
+  vec3 col = mix(vec3(1.0,0.2,0.5), vec3(0.2,0.5,1.0), vDepthZ);
+  col = mix(col, vec3(1.0), moire*0.3);
+  float halo = exp(-gd*gd*2.0);
+  float alpha = halo * (0.4 + moire*0.4) * (1.0-vDepthZ*0.8);
+  if(alpha<0.01) discard;
+  gl_FragColor = vec4(col*alpha, alpha);
+}`
+}
+];
+
+// ═══════════════════════════════════════
+// レンダリング
+// ═══════════════════════════════════════
+const grid = document.getElementById('grid');
+const renderers = [];
+
+designs.forEach((d, idx) => {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.innerHTML = '<b>'+d.name+'</b>'+d.desc;
+  cell.appendChild(label);
+  grid.appendChild(cell);
+
+  const renderer = new THREE.WebGLRenderer({ antialias:false, alpha:false });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(0.75);
+  renderer.setClearColor(0x000000);
+  cell.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, W/H, 0.1, 100);
+  camera.position.z = 8;
+
+  // パーティクル生成
+  const quadVerts = new Float32Array([-1,-1,0, 1,-1,0, 1,1,0, -1,1,0]);
+  const quadUvs = new Float32Array([0,0, 1,0, 1,1, 0,1]);
+  const quadIdx = new Uint16Array([0,1,2, 0,2,3]);
+
+  const bPos = new Float32Array(COUNT*3);
+  const bId = new Float32Array(COUNT);
+  for(let i=0; i<COUNT; i++){
+    bPos[i*3] = (Math.random()-0.5)*10;
+    bPos[i*3+1] = (Math.random()-0.5)*8;
+    bPos[i*3+2] = (Math.random()-0.5)*6;
+    bId[i] = i;
+  }
+  const geo = new THREE.InstancedBufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(quadVerts,3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(quadUvs,2));
+  geo.setIndex(new THREE.BufferAttribute(quadIdx,1));
+  geo.setAttribute('aPos', new THREE.InstancedBufferAttribute(bPos,3));
+  geo.setAttribute('aId', new THREE.InstancedBufferAttribute(bId,1));
+  geo.instanceCount = COUNT;
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { u_time:{value:0} },
+    vertexShader: d.vert,
+    fragmentShader: d.frag,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  scene.add(new THREE.Mesh(geo, mat));
+
+  renderers.push({ renderer, scene, camera, mat });
+});
+
+const clock = new THREE.Clock();
+(function loop(){
+  const t = clock.getElapsedTime();
+  renderers.forEach(r => {
+    r.mat.uniforms.u_time.value = t;
+    r.renderer.render(r.scene, r.camera);
+  });
+  requestAnimationFrame(loop);
+})();
+</script>
+</body></html>

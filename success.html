@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORDER CONFIRMED — inryoku</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* CSS particle field (no Canvas 2D) */
+        .particle-field {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .p {
+            position: absolute;
+            border-radius: 50%;
+            animation: pFloat var(--dur) ease-in-out infinite alternate, pPulse var(--pulse) ease-in-out infinite;
+            opacity: var(--a);
+            box-shadow: 0 0 calc(var(--s) * 3) currentColor;
+        }
+
+        @keyframes pFloat {
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(var(--dx), var(--dy)); }
+        }
+        @keyframes pPulse {
+            0%, 100% { opacity: var(--a); }
+            50%      { opacity: calc(var(--a) * 1.6); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
+            gap: 28px;
+        }
+
+        .check-ring {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            opacity: 0;
+        }
+        .check-ring.show {
+            animation: fadeScale 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        .check-ring svg { width: 80px; height: 80px; }
+        .check-circle {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 1.5;
+        }
+        .check-path {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.7);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 36;
+            stroke-dashoffset: 36;
+        }
+        .check-ring.show .check-path {
+            animation: drawCheck 0.5s 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 0.25em;
+            color: rgba(255, 255, 255, 0.75);
+            opacity: 0;
+        }
+        h1.show { animation: fadeUp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 0.12em;
+            opacity: 0;
+        }
+        .subtitle.show { animation: fadeUp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+        .back-link { margin-top: 12px; opacity: 0; }
+        .back-link.show { animation: fadeUp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        .back-link a {
+            color: rgba(255, 255, 255, 0.25);
+            text-decoration: none;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transition: color 0.4s ease, border-color 0.4s ease;
+        }
+        .back-link a:hover {
+            color: rgba(255, 255, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeScale {
+            from { opacity: 0; transform: scale(0.8); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="particle-field" id="pf"></div>
+
+<div class="content">
+    <div class="check-ring" id="el-check">
+        <svg viewBox="0 0 80 80">
+            <circle class="check-circle" cx="40" cy="40" r="36" />
+            <path class="check-path" d="M26 40 L36 50 L54 32" />
+        </svg>
+    </div>
+    <h1 id="el-title">ORDER CONFIRMED</h1>
+    <p class="subtitle" id="el-subtitle">あなたの宇宙は、また少し広がった</p>
+    <div class="back-link" id="el-link">
+        <a href="/p3_test.html">BACK TO UNIVERSE</a>
+    </div>
+</div>
+
+<script>
+(function () {
+    var COLORS = ['#FF0000','#00FF00','#0044FF','#00FFFF','#FF00FF','#FFFF00'];
+    var field = document.getElementById('pf');
+    var COUNT = 60;
+
+    for (var i = 0; i < COUNT; i++) {
+        var dot = document.createElement('div');
+        dot.className = 'p';
+        var size = (Math.random() * 3 + 1).toFixed(1);
+        var color = COLORS[i % 6];
+        var alpha = (Math.random() * 0.3 + 0.08).toFixed(2);
+        var dur = (Math.random() * 20 + 15).toFixed(1);
+        var pulse = (Math.random() * 4 + 2).toFixed(1);
+        var dx = ((Math.random() - 0.5) * 60).toFixed(0);
+        var dy = ((Math.random() - 0.5) * 60).toFixed(0);
+        dot.style.cssText =
+            'width:' + size + 'px;height:' + size + 'px;' +
+            'left:' + (Math.random() * 100).toFixed(1) + '%;' +
+            'top:' + (Math.random() * 100).toFixed(1) + '%;' +
+            'color:' + color + ';background:' + color + ';' +
+            '--a:' + alpha + ';--dur:' + dur + 's;--pulse:' + pulse + 's;' +
+            '--dx:' + dx + 'px;--dy:' + dy + 'px;--s:' + size + 'px;' +
+            'animation-delay:-' + (Math.random() * 20).toFixed(1) + 's,-' + (Math.random() * 4).toFixed(1) + 's;';
+        field.appendChild(dot);
+    }
+
+    // Sequential fade-in
+    var seq = [
+        { el: 'el-check',    delay: 300 },
+        { el: 'el-title',    delay: 900 },
+        { el: 'el-subtitle', delay: 1500 },
+        { el: 'el-link',     delay: 2100 },
+    ];
+    seq.forEach(function (item) {
+        setTimeout(function () {
+            document.getElementById(item.el).classList.add('show');
+        }, item.delay);
+    });
+})();
+</script>
+
+</body>
+</html>

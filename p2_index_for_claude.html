@@ -14,6 +14,8 @@
   <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
   <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
 
+  <link rel="stylesheet" href="p3_styles.css">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -29,15 +31,16 @@
   <div id="root"></div>
 
   <script src="p2_code_for_claude.js"></script>
+  <script src="p3_code_for_claude.js"></script>
 
   <script>
     // P2 スタンドアロン起動
     renderPhase2();
 
-    // P2完了イベントリスナー（P3遷移用）
+    // P2完了 → P3起動
     window.addEventListener('inryoku:p2complete', () => {
-      console.log('✅ P2 complete — ready for P3 transition');
-      // renderPhase3();
+      console.log('✅ P2 complete — starting P3');
+      renderPhase3();
     });
   </script>
 </body>
