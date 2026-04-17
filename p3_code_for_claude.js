@@ -376,12 +376,14 @@ function init3DLogoSphere() {
     canvas.style.cssText = imgEl.style.cssText;
     canvas.className = 'logo-sphere logo-sphere-3d';
     canvas.style.position = 'absolute';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
+    /* 2026-04-18: シェルのキャンドル位置（上部中央、シェル幅の45%相当）に配置 */
+    canvas.style.top = '18%';
+    canvas.style.left = '27.5%';
+    canvas.style.width = '45%';
     canvas.style.height = 'auto';
     canvas.style.aspectRatio = '1';
     canvas.style.zIndex = '3';
+    canvas.style.pointerEvents = 'none';
 
     // Three.jsセットアップ（ロゴ専用の小さなレンダラー）
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
