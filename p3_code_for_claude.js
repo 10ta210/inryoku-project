@@ -351,6 +351,155 @@ async function shopifyCheckout(cartItems) {
     }
 }
 
+// ═══ 3Dホログラムロゴ球体 ═══
+function init3DLogoSphere() {
+    if (typeof THREE === 'undefined') { console.warn('[3DLogo] Three.js required'); return; }
+
+    // .logo-sphere img要素を見つけてcanvasに置き換え
+    var logoSphereImg = document.querySelector('.logo-sphere');
+    if (!logoSphereImg) { console.warn('[3DLogo] .logo-sphere not found'); return; }
+
+    var parent = logoSphereImg.parentElement;
+    var rect = logoSphereImg.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height, 120);
+
+    // WebGLRenderer（alpha:true で背景透過）
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(size, size);
+    renderer.setClearColor(0x000000, 0);
+    renderer.domElement.className = 'logo-sphere logo-sphere-3d';
+    renderer.domElement.style.cssText = logoSphereImg.style.cssText || '';
+
+    // imgをcanvasに置き換え
+    logoSphereImg.style.display = 'none';
+    parent.insertBefore(renderer.domElement, logoSphereImg.nextSibling);
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.2);
+    camera.lookAt(0, 0, 0);
+
+    // SphereGeometry(1, 64, 64) + カスタムShaderMaterial
+    var geo = new THREE.SphereGeometry(1, 64, 64);
+    var mat = new THREE.ShaderMaterial({
+        uniforms: {
+            u_time: { value: 0.0 },
+            u_morph: { value: 0.0 }
+        },
+        vertexShader: [
+            'varying vec3 vNormal;',
+            'varying vec3 vPosition;',
+            'varying vec3 vViewDir;',
+            'uniform float u_time;',
+            'uniform float u_morph;',
+            'void main() {',
+            '    vNormal = normalize(normalMatrix * normal);',
+            '    vPosition = position;',
+            '    // 微脈動',
+            '    float pulse = 1.0 + 0.02 * sin(u_time * 1.5) * u_morph;',
+            '    vec3 pos = position * pulse;',
+            '    vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);',
+            '    vViewDir = normalize(-mvPos.xyz);',
+            '    gl_Position = projectionMatrix * mvPos;',
+            '}'
+        ].join('\n'),
+        fragmentShader: [
+            'varying vec3 vNormal;',
+            'varying vec3 vPosition;',
+            'varying vec3 vViewDir;',
+            'uniform float u_time;',
+            'uniform float u_morph;',
+            '',
+            'void main() {',
+            '    vec3 N = normalize(vNormal);',
+            '    vec3 V = normalize(vViewDir);',
+            '',
+            '    // ニュートンリング: r^2 proportional to n*lambda*R',
+            '    float r2 = dot(vPosition.xy, vPosition.xy);',
+            '    float R = 2.0; // ring curvature',
+            '',
+            '    // 6波長（RGBCMY）のニュートンリング干渉',
+            '    float lambdaR = 0.620;',
+            '    float lambdaG = 0.530;',
+            '    float lambdaB = 0.470;',
+            '    float lambdaC = 0.500;',
+            '    float lambdaM = 0.550;',
+            '    float lambdaY = 0.580;',
+            '',
+            '    float phase = r2 / R + u_time * 0.3;',
+            '    float ringR = 0.5 + 0.5 * cos(6.2832 * phase / lambdaR);',
+            '    float ringG = 0.5 + 0.5 * cos(6.2832 * phase / lambdaG);',
+            '    float ringB = 0.5 + 0.5 * cos(6.2832 * phase / lambdaB);',
+            '    float ringC = 0.5 + 0.5 * cos(6.2832 * phase / lambdaC);',
+            '    float ringM = 0.5 + 0.5 * cos(6.2832 * phase / lambdaM);',
+            '    float ringY = 0.5 + 0.5 * cos(6.2832 * phase / lambdaY);',
+            '',
+            '    // RGBCMY合成',
+            '    vec3 newtonColor = vec3(',
+            '        ringR * 0.5 + ringM * 0.25 + ringY * 0.25,',
+            '        ringG * 0.5 + ringC * 0.25 + ringY * 0.25,',
+            '        ringB * 0.5 + ringC * 0.25 + ringM * 0.25',
+            '    );',
+            '',
+            '    // フレネル反射（RGBCMY 6色）',
+            '    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);',
+            '    vec3 fresnelColorR = vec3(1.0, 0.0, 0.0) * pow(fresnel, 2.5);',
+            '    vec3 fresnelColorG = vec3(0.0, 1.0, 0.0) * pow(fresnel, 2.8);',
+            '    vec3 fresnelColorB = vec3(0.0, 0.0, 1.0) * pow(fresnel, 3.0);',
+            '    vec3 fresnelColorC = vec3(0.0, 1.0, 1.0) * pow(fresnel, 2.6);',
+            '    vec3 fresnelColorM = vec3(1.0, 0.0, 1.0) * pow(fresnel, 2.4);',
+            '    vec3 fresnelColorY = vec3(1.0, 1.0, 0.0) * pow(fresnel, 2.2);',
+            '    vec3 fresnelTotal = (fresnelColorR + fresnelColorG + fresnelColorB + fresnelColorC + fresnelColorM + fresnelColorY) * 0.35;',
+            '',
+            '    // 内部グロー',
+            '    float innerGlow = pow(max(dot(N, V), 0.0), 1.5) * 0.4;',
+            '    vec3 glowColor = vec3(0.5, 0.6, 0.7) * innerGlow;',
+            '',
+            '    // グレー→虹の観測エフェクト（morph=0でグレー、morph=1で虹色）',
+            '    vec3 grey = vec3(0.5);',
+            '    vec3 rainbow = newtonColor * 0.6 + fresnelTotal + glowColor;',
+            '    vec3 finalColor = mix(grey, rainbow, u_morph);',
+            '',
+            '    // 全体の明るさ',
+            '    float alpha = 0.85 + fresnel * 0.15;',
+            '    gl_FragColor = vec4(finalColor, alpha * u_morph);',
+            '}'
+        ].join('\n'),
+        transparent: true,
+        side: THREE.FrontSide
+    });
+
+    var sphere = new THREE.Mesh(geo, mat);
+    scene.add(sphere);
+
+    var startTime = performance.now();
+    var morphTarget = 1.0;
+
+    function animate3DLogo() {
+        if (!renderer.domElement.parentNode) return; // removed from DOM
+        requestAnimationFrame(animate3DLogo);
+
+        var elapsed = (performance.now() - startTime) / 1000;
+        mat.uniforms.u_time.value = elapsed;
+
+        // morph: 0→1 over 2 seconds (ease-out)
+        var morphProg = Math.min(elapsed / 2.0, 1.0);
+        mat.uniforms.u_morph.value = 1.0 - Math.pow(1.0 - morphProg, 3);
+
+        // Y軸ゆっくり回転
+        sphere.rotation.y = elapsed * 0.3;
+        // 微小な傾き揺れ
+        sphere.rotation.x = Math.sin(elapsed * 0.5) * 0.1;
+
+        renderer.render(scene, camera);
+    }
+
+    animate3DLogo();
+    console.log('[3DLogo] Hologram sphere initialized');
+    window._logoSphere3D = { renderer: renderer, scene: scene, sphere: sphere, mat: mat };
+}
+
 // ═══ PHASE 6 メインエントリー ═══
 function renderPhase3() {
     currentPhase = 3;
@@ -386,37 +535,78 @@ function renderPhase3() {
     document.body.style.background = '#000';
     document.body.style.overflow = 'hidden';
 
-    // ── BGM: Holst - Jupiter (The Bringer of Jollity) ──
-    // Public domain recording from Wikimedia Commons
+    // ── BGMセレクタ（複数曲対応） ──
+    const BGM_TRACKS = [
+        { id:'jupiter', name:'Jupiter', emoji:'\u2643', url:'https://archive.org/download/Holst-ThePlanets/Jupiter.mp3' },
+        { id:'newworld', name:'\u65B0\u4E16\u754C \u7B2C2\u697D\u7AE0', emoji:'\uD83C\uDF0D', url:'https://archive.org/download/DvorakSymphonyNo.9fromTheNewWorld/02_Largo.mp3' },
+        { id:'bolero', name:'Bol\u00E9ro', emoji:'\uD83E\uDD41', url:'https://archive.org/download/ravel-bolero/RAVEL_BOLERO.mp3' },
+        { id:'gstring', name:'G\u7DDA\u4E0A\u306E\u30A2\u30EA\u30A2', emoji:'\uD83C\uDFBB', url:'https://archive.org/download/Bach-airOnTheGString/LaMusicaClasicaMasRelajanteDelMundo-Bach-AirOnTheGString.mp3' },
+        { id:'clairdelune', name:'\u6708\u306E\u5149', emoji:'\uD83C\uDF19', url:'https://archive.org/download/ClairDeLunedebussy/2009-03-30-clairdelune.mp3' },
+        { id:'gymnopedie', name:'Gymnop\u00E9die No.1', emoji:'\uD83C\uDF43', url:'https://archive.org/download/GymnopedieNo.1/Gymnopedie%20No.1.mp3' },
+        { id:'gnossienne', name:'Gnossienne', emoji:'\uD83D\uDD2E', url:'https://archive.org/download/ThreeGnossiennesErikSatie/gnossiennes.mp3' }
+    ];
+    window._bgmTracks = BGM_TRACKS;
+    window._bgmCurrentId = 'jupiter';
+
     let p6bgm = null;
-    try {
-        p6bgm = new Audio('https://upload.wikimedia.org/wikipedia/commons/a/a0/Holst_The_Planets_Jupiter.ogg');
-        p6bgm.loop = true;
-        p6bgm.volume = 0;
-        p6bgm.crossOrigin = 'anonymous';
-        if (window._inryokuMuted) p6bgm.muted = true;
-        const playPromise = p6bgm.play();
-        if (playPromise) {
-            playPromise.catch(() => {
-                // Autoplay blocked — play on first interaction
-                const resumeBGM = () => {
-                    p6bgm.play().catch(() => { });
-                    document.removeEventListener('click', resumeBGM);
-                    document.removeEventListener('touchstart', resumeBGM);
-                };
-                document.addEventListener('click', resumeBGM, { once: true });
-                document.addEventListener('touchstart', resumeBGM, { once: true });
-            });
+    function initBGM(trackId) {
+        const track = BGM_TRACKS.find(t => t.id === trackId) || BGM_TRACKS[0];
+        try {
+            const audio = new Audio(track.url);
+            audio.loop = true;
+            audio.volume = 0;
+            audio.crossOrigin = 'anonymous';
+            if (window._inryokuMuted) audio.muted = true;
+            const playPromise = audio.play();
+            if (playPromise) {
+                playPromise.catch(() => {
+                    const resumeBGM = () => {
+                        audio.play().catch(() => { });
+                        document.removeEventListener('click', resumeBGM);
+                        document.removeEventListener('touchstart', resumeBGM);
+                    };
+                    document.addEventListener('click', resumeBGM, { once: true });
+                    document.addEventListener('touchstart', resumeBGM, { once: true });
+                });
+            }
+            // Fade in over 3 seconds
+            let fadeVol = 0;
+            const fadeIn = setInterval(() => {
+                fadeVol += 0.01;
+                if (fadeVol >= 0.7) { fadeVol = 0.7; clearInterval(fadeIn); }
+                if (audio) audio.volume = fadeVol;
+            }, 30);
+            return audio;
+        } catch (e) { console.warn('BGM load failed:', e); return null; }
+    }
+
+    function switchBGM(newTrackId) {
+        if (newTrackId === window._bgmCurrentId && p6bgm) return;
+        window._bgmCurrentId = newTrackId;
+        // Fade out current
+        if (p6bgm) {
+            const old = p6bgm;
+            let vol = old.volume;
+            const fadeOut = setInterval(() => {
+                vol -= 0.02;
+                if (vol <= 0) { vol = 0; clearInterval(fadeOut); old.pause(); old.src = ''; }
+                try { old.volume = vol; } catch(e) { clearInterval(fadeOut); }
+            }, 30);
         }
-        // Fade in over 3 seconds
-        let fadeVol = 0;
-        const fadeIn = setInterval(() => {
-            fadeVol += 0.01;
-            if (fadeVol >= 0.7) { fadeVol = 0.7; clearInterval(fadeIn); }
-            if (p6bgm) p6bgm.volume = fadeVol;
-        }, 30);
-    } catch (e) { console.warn('BGM load failed:', e); }
-    // Store reference for cleanup
+        // Start new
+        p6bgm = initBGM(newTrackId);
+        window._p6bgm = p6bgm;
+        // Update selector button label
+        const track = BGM_TRACKS.find(t => t.id === newTrackId);
+        const selectorBtn = document.getElementById('bgm-selector-btn');
+        if (selectorBtn && track) selectorBtn.textContent = '\u266A';
+        // Close popup
+        const popup = document.getElementById('bgm-popup');
+        if (popup) popup.style.display = 'none';
+    }
+    window.switchBGM = switchBGM;
+
+    p6bgm = initBGM('jupiter');
     window._p6bgm = p6bgm;
 
     const root = document.getElementById('root');
@@ -453,6 +643,12 @@ function renderPhase3() {
         \uD83D\uDED2
         <span id="cart-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ff3366;color:#fff;font-size:11px;font-weight:700;border-radius:50%;width:20px;height:20px;align-items:center;justify-content:center;">0</span>
     </div>
+    <!-- BGM selector button -->
+    <div id="bgm-selector-btn" style="position:fixed;top:16px;right:136px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform 0.2s ease;">\u266A</div>
+    <!-- BGM popup menu -->
+    <div id="bgm-popup" style="display:none;position:fixed;top:72px;right:136px;z-index:10001;pointer-events:auto;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:8px 0;min-width:220px;">
+        ${BGM_TRACKS.map(t => '<div class="bgm-track-item" data-track="' + t.id + '" style="padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.2s;color:rgba(255,255,255,0.7);font-size:13px;font-family:monospace;" onmouseenter="this.style.background=\'rgba(255,255,255,0.08)\'" onmouseleave="this.style.background=\'transparent\'"><span style="font-size:18px;">' + t.emoji + '</span><span>' + t.name + '</span></div>').join('')}
+    </div>
     <!-- Mute button -->
     <div id="mute-btn" style="position:fixed;top:16px;right:76px;z-index:9999;pointer-events:auto;cursor:pointer;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.2s ease;">${muteIcon}</div>
     <div class="singularity-content" style="position:relative;z-index:5;pointer-events:auto;">
@@ -478,7 +674,60 @@ function renderPhase3() {
           </div>
         </div>
 
+        <!-- Email signup -->
+        <div id="email-signup" style="opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;padding:20px;">
+          <h3 style="font-family:monospace;color:rgba(255,255,255,0.6);letter-spacing:3px;font-size:12px;">DROP NOTIFICATION</h3>
+          <p style="color:rgba(255,255,255,0.3);font-size:11px;margin:8px 0;">\u65B0\u4F5C\u30FB\u9650\u5B9A\u30C9\u30ED\u30C3\u30D7\u306E\u901A\u77E5\u3092\u53D7\u3051\u53D6\u308B</p>
+          <div style="display:flex;gap:0;max-width:400px;margin:12px auto;">
+            <input id="email-input" type="email" placeholder="your@email.com" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-right:none;color:#fff;font-size:13px;outline:none;border-radius:4px 0 0 4px;">
+            <button id="email-submit" onclick="submitEmail()" style="padding:10px 20px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:16px;border-radius:0 4px 4px 0;">\u2192</button>
+          </div>
+          <div id="email-status" style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:8px;"></div>
+        </div>
+
+        <!-- Contact form (toggle) -->
+        <div id="contact-section" style="opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;padding:10px 20px;">
+          <div id="contact-toggle" onclick="toggleContact()" style="cursor:pointer;font-family:monospace;color:rgba(255,255,255,0.4);letter-spacing:3px;font-size:12px;padding:10px;user-select:none;">CONTACT <span id="contact-arrow">\u25BC</span></div>
+          <div id="contact-form-wrap" style="display:none;max-width:400px;margin:12px auto;background:rgba(255,255,255,0.03);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:20px;">
+            <input id="contact-name" type="text" placeholder="Name" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:13px;outline:none;margin-bottom:10px;border-radius:4px;">
+            <input id="contact-email" type="email" placeholder="Email" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:13px;outline:none;margin-bottom:10px;border-radius:4px;">
+            <textarea id="contact-message" placeholder="Message" rows="4" style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:13px;outline:none;resize:vertical;margin-bottom:10px;border-radius:4px;font-family:inherit;"></textarea>
+            <button onclick="submitContact()" style="width:100%;padding:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:13px;font-family:monospace;letter-spacing:2px;border-radius:4px;">SEND</button>
+            <div id="contact-status" style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Theme switcher -->
+        <div id="theme-switcher" style="opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;padding:10px;">
+          <span style="font-family:monospace;color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:2px;">THEME</span>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+            <button class="theme-btn" data-theme="singularity" onclick="setTheme('singularity')" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;transition:all 0.3s ease;" title="Singularity">\u2726</button>
+            <button class="theme-btn" data-theme="void" onclick="setTheme('void')" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;transition:all 0.3s ease;" title="Void">\u2610</button>
+            <button class="theme-btn" data-theme="grid" onclick="setTheme('grid')" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px;transition:all 0.3s ease;" title="Grid">\u229E</button>
+          </div>
+        </div>
+
     </div>`;
+
+    // ── BGMセレクタボタンのイベント ──
+    const bgmSelectorBtn = document.getElementById('bgm-selector-btn');
+    const bgmPopup = document.getElementById('bgm-popup');
+    if (bgmSelectorBtn && bgmPopup) {
+        bgmSelectorBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgmPopup.style.display = bgmPopup.style.display === 'none' ? 'block' : 'none';
+        });
+        bgmPopup.querySelectorAll('.bgm-track-item').forEach(item => {
+            item.addEventListener('click', () => {
+                switchBGM(item.dataset.track);
+            });
+        });
+        // ポップアップ外クリックで閉じる
+        document.addEventListener('click', () => {
+            bgmPopup.style.display = 'none';
+        });
+        bgmPopup.addEventListener('click', (e) => e.stopPropagation());
+    }
 
     // ── ミュートボタンのイベント ──
     const muteBtn = document.getElementById('mute-btn');
@@ -496,19 +745,12 @@ function renderPhase3() {
     document.head.appendChild(carouselStyle);
 
 
-    // ── Bolero プレーヤー ──
-    const boleroEl = document.createElement('div');
-    boleroEl.id = 'bolero-player';
-    boleroEl.innerHTML = `
-        <button id="bolero-btn">▶</button>
-        <span id="bolero-label">BOLERO (Ravel)</span>`;
-    document.body.appendChild(boleroEl);
+    // ── 旧Boleroプレーヤーは削除済み。BGMセレクタに統合 ──
 
     console.log('[Phase 3] DOM setup complete, initializing particle universe...');
     // 同期呼び出し（rAFだとバックグラウンドタブや競合で不発になるケースがある）
     try {
         initParticleUniverse();
-        initBoleroPlayer();
         console.log('[Phase 3] Particle universe initialized successfully');
     } catch(e) {
         console.error('[Phase 3] initParticleUniverse error:', e);
@@ -547,10 +789,15 @@ function initBrandParticleReveal() {
 
     // ═══════════════════════════════════════════
     //  STEP 1: 球体コアが光って実体化（0ms〜）
+    //  → 3Dホログラムロゴ球体を初期化
     // ═══════════════════════════════════════════
     if (logoSphere) {
         logoSphere.style.filter = 'drop-shadow(0 0 60px rgba(255,255,255,1)) drop-shadow(0 0 100px rgba(0,255,255,0.9)) brightness(2.5)';
     }
+    // 3Dホログラム球体を起動（imgをThree.js canvasに置き換え）
+    setTimeout(function() {
+        init3DLogoSphere();
+    }, 100);
     setTimeout(function() {
         if (logoSphere) {
             logoSphere.style.transition = 'opacity 0.6s ease';
@@ -730,6 +977,15 @@ function initBrandParticleReveal() {
         setTimeout(function() {
             var itemGrid = document.querySelector('.item-grid');
             if (itemGrid) itemGrid.style.opacity = '1';
+            // メール登録・コンタクト・テーマ切替を遅延表示
+            setTimeout(function() {
+                var emailSignup = document.getElementById('email-signup');
+                var contactSection = document.getElementById('contact-section');
+                var themeSwitcher = document.getElementById('theme-switcher');
+                if (emailSignup) { emailSignup.style.opacity = '1'; emailSignup.style.pointerEvents = 'auto'; }
+                if (contactSection) { contactSection.style.opacity = '1'; contactSection.style.pointerEvents = 'auto'; }
+                if (themeSwitcher) { themeSwitcher.style.opacity = '1'; themeSwitcher.style.pointerEvents = 'auto'; }
+            }, 1200);
         }, 800);
     }, allDoneTime);
 }
@@ -2395,44 +2651,10 @@ function playDivineSound() { if (!iac()) return; const n = audioContext.currentT
 function playWaterSplashSound() { if (!iac()) return; const n = audioContext.currentTime; const o = audioContext.createOscillator(), g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination); o.frequency.value = 280; o.type = 'sine'; g.gain.setValueAtTime(.13, n); g.gain.exponentialRampToValueAtTime(.01, n + .28); o.start(n); o.stop(n + .28); }
 function playGlitchSound() { if (!iac()) return; const n = audioContext.currentTime; const bs = audioContext.sampleRate * .5, nb = audioContext.createBuffer(1, bs, audioContext.sampleRate), out = nb.getChannelData(0); for (let i = 0; i < bs; i++)out[i] = Math.random() * 2 - 1; const s = audioContext.createBufferSource(); s.buffer = nb; const g = audioContext.createGain(), f = audioContext.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3000; f.Q.value = 10; s.connect(f); f.connect(g); g.connect(audioContext.destination); g.gain.setValueAtTime(.18, n); g.gain.exponentialRampToValueAtTime(.01, n + .5); s.start(n); }
 
-// ═══ BOLERO (Ravel) ═══
-let boleroPlaying = false, boleroNodes = [], boleroInterval = null;
-function initBoleroPlayer() {
-    const btn = document.getElementById('bolero-btn'), lbl = document.getElementById('bolero-label'); if (!btn) return;
-    btn.addEventListener('click', () => { if (!boleroPlaying) { startBolero(); btn.textContent = '⏸'; } else { stopBolero(); btn.textContent = '▶'; } boleroPlaying = !boleroPlaying; });
-}
-function startBolero() {
-    if (!iac()) return;
-    const themeA = [[261.63, .5], [261.63, .25], [293.66, .25], [261.63, .25], [233.08, .25], [261.63, .5], [261.63, .25], [293.66, .25], [261.63, .25], [311.13, .5], [293.66, .5], [261.63, .25], [293.66, .25], [349.23, .25], [329.63, .25], [293.66, .5], [261.63, .5], [220.00, .25], [246.94, .25], [261.63, 1.0]];
-    const themeB = [[392.00, .5], [349.23, .25], [329.63, .25], [293.66, .5], [261.63, .5], [293.66, .25], [329.63, .25], [349.23, .25], [392.00, .25], [440.00, .5], [392.00, .5], [349.23, .5], [329.63, .25], [293.66, .75], [261.63, .5], [293.66, .25], [329.63, .25], [261.63, .25], [293.66, .25], [261.63, 1.0]];
-    const snare = [0, 1.5, 2, 3, 4, 4.5, 5, 6, 7, 7.5];
-    const bpm = 76, bl = 60 / bpm; let mt = audioContext.currentTime + .1, mc = 0;
-    function pm() {
-        if (!boleroPlaying) return;
-        const theme = mc % 4 < 2 ? themeA : themeB, vol = .04 + Math.min(.18, mc * .006);
-        let tOff = mt;
-        theme.forEach(([freq, dur]) => {
-            const o = audioContext.createOscillator(), g2 = audioContext.createGain(), filt = audioContext.createBiquadFilter();
-            filt.type = 'bandpass'; filt.frequency.value = freq * 2; filt.Q.value = 2;
-            o.type = mc < 8 ? 'sine' : mc < 16 ? 'triangle' : 'sawtooth'; o.frequency.value = freq;
-            g2.gain.setValueAtTime(0, tOff); g2.gain.linearRampToValueAtTime(vol, tOff + .02); g2.gain.linearRampToValueAtTime(vol * .7, tOff + dur * bl - .05); g2.gain.linearRampToValueAtTime(0, tOff + dur * bl);
-            o.connect(filt); filt.connect(g2); g2.connect(audioContext.destination); o.start(tOff); o.stop(tOff + dur * bl + .01);
-            boleroNodes.push(o); tOff += dur * bl;
-        });
-        const md = 8 * bl;
-        snare.forEach(beat => {
-            const st = mt + beat * bl;
-            const buf = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * .08), audioContext.sampleRate);
-            const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++)d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * .3));
-            const src = audioContext.createBufferSource(); src.buffer = buf;
-            const sg = audioContext.createGain(); sg.gain.setValueAtTime(.08 + Math.min(.25, mc * .008), st); sg.gain.exponentialRampToValueAtTime(.001, st + .08);
-            src.connect(sg); sg.connect(audioContext.destination); src.start(st); boleroNodes.push(src);
-        });
-        mt += md; mc++; boleroInterval = setTimeout(pm, (md - .2) * 1000);
-    }
-    pm();
-}
-function stopBolero() { if (boleroInterval) clearTimeout(boleroInterval); boleroNodes.forEach(n => { try { n.stop(); } catch (e) { } }); boleroNodes = []; }
+// ═══ 旧BOLERO (Ravel) — BGMセレクタに統合済み。関数は互換性のため空で残す ═══
+function initBoleroPlayer() { /* removed — BGM selector handles all tracks */ }
+function startBolero() { }
+function stopBolero() { }
 
 // ═══ SKIP TO SHOP ═══
 function skipToShop() {
@@ -2445,3 +2667,133 @@ function skipToShop() {
 function vibrate(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e) {}
 }
+
+// ═══ EMAIL SIGNUP ═══
+function submitEmail() {
+    var input = document.getElementById('email-input');
+    var status = document.getElementById('email-status');
+    if (!input || !status) return;
+    var email = input.value.trim();
+    if (!email || !email.includes('@')) {
+        status.textContent = '\u2715 \u6709\u52B9\u306A\u30E1\u30FC\u30EB\u30A2\u30C9\u30EC\u30B9\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
+        return;
+    }
+    status.textContent = 'SENDING...';
+    status.style.color = 'rgba(255,255,255,0.4)';
+    fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success || data.ok) {
+            status.textContent = '\u2713 \u767B\u9332\u5B8C\u4E86\u3002\u30C9\u30ED\u30C3\u30D7\u6642\u306B\u304A\u77E5\u3089\u305B\u3057\u307E\u3059';
+            status.style.color = 'rgba(100,255,150,0.6)';
+            input.value = '';
+        } else {
+            status.textContent = '\u2715 ' + (data.message || 'Error');
+            status.style.color = 'rgba(255,100,100,0.6)';
+        }
+    })
+    .catch(function() {
+        status.textContent = '\u2715 \u63A5\u7D9A\u30A8\u30E9\u30FC\u3002\u3082\u3046\u4E00\u5EA6\u304A\u8A66\u3057\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
+    });
+}
+
+// ═══ CONTACT FORM ═══
+function toggleContact() {
+    var wrap = document.getElementById('contact-form-wrap');
+    var arrow = document.getElementById('contact-arrow');
+    if (!wrap) return;
+    if (wrap.style.display === 'none') {
+        wrap.style.display = 'block';
+        if (arrow) arrow.textContent = '\u25B2';
+    } else {
+        wrap.style.display = 'none';
+        if (arrow) arrow.textContent = '\u25BC';
+    }
+}
+
+function submitContact() {
+    var name = document.getElementById('contact-name');
+    var email = document.getElementById('contact-email');
+    var message = document.getElementById('contact-message');
+    var status = document.getElementById('contact-status');
+    if (!name || !email || !message || !status) return;
+    if (!name.value.trim() || !email.value.trim() || !message.value.trim()) {
+        status.textContent = '\u2715 \u5168\u3066\u306E\u9805\u76EE\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
+        return;
+    }
+    status.textContent = 'SENDING...';
+    status.style.color = 'rgba(255,255,255,0.4)';
+    fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: name.value.trim(),
+            email: email.value.trim(),
+            message: message.value.trim()
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success || data.ok) {
+            status.textContent = '\u2713 \u9001\u4FE1\u5B8C\u4E86\u3002\u3042\u308A\u304C\u3068\u3046\u3054\u3056\u3044\u307E\u3059';
+            status.style.color = 'rgba(100,255,150,0.6)';
+            name.value = ''; email.value = ''; message.value = '';
+        } else {
+            status.textContent = '\u2715 ' + (data.message || 'Error');
+            status.style.color = 'rgba(255,100,100,0.6)';
+        }
+    })
+    .catch(function() {
+        status.textContent = '\u2715 \u63A5\u7D9A\u30A8\u30E9\u30FC\u3002\u3082\u3046\u4E00\u5EA6\u304A\u8A66\u3057\u304F\u3060\u3055\u3044';
+        status.style.color = 'rgba(255,100,100,0.6)';
+    });
+}
+
+// ═══ THEME SWITCHER ═���═
+function setTheme(themeName) {
+    var canvas = document.getElementById('p6-canvas');
+    var existingOverlay = document.getElementById('theme-grid-overlay');
+
+    // テーマボタンのアクティブ状態更新
+    document.querySelectorAll('.theme-btn').forEach(function(btn) {
+        if (btn.dataset.theme === themeName) {
+            btn.style.borderColor = 'rgba(255,255,255,0.6)';
+            btn.style.background = 'rgba(255,255,255,0.12)';
+        } else {
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            btn.style.background = 'rgba(255,255,255,0.05)';
+        }
+    });
+
+    // CRTグリッドオーバーレイ除去
+    if (existingOverlay) existingOverlay.remove();
+
+    if (themeName === 'singularity') {
+        // デフォルト: パーティクル表示
+        if (canvas) { canvas.style.opacity = '1'; canvas.style.transition = 'opacity 1s ease'; }
+    } else if (themeName === 'void') {
+        // 純黒背景: パーティクル非表示
+        if (canvas) { canvas.style.transition = 'opacity 1s ease'; canvas.style.opacity = '0'; }
+    } else if (themeName === 'grid') {
+        // CRTグ��ッドオーバーレイ
+        if (canvas) { canvas.style.opacity = '1'; canvas.style.transition = 'opacity 1s ease'; }
+        var overlay = document.createElement('div');
+        overlay.id = 'theme-grid-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:1;pointer-events:none;' +
+            'background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,255,0.03) 2px,rgba(0,255,255,0.03) 4px),' +
+            'repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(0,255,255,0.03) 2px,rgba(0,255,255,0.03) 4px);' +
+            'mix-blend-mode:screen;opacity:0;transition:opacity 1s ease;';
+        document.body.appendChild(overlay);
+        requestAnimationFrame(function() { overlay.style.opacity = '1'; });
+    }
+    window._inryokuTheme = themeName;
+    console.log('[Theme] switched to: ' + themeName);
+}
+window._inryokuTheme = 'singularity';
