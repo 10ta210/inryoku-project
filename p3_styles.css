@@ -452,12 +452,12 @@
       cursor: grabbing;
     }
     .carousel-scene {
-      /* 2026-04-17: カードサイズ UP */
-      width: 200px;
-      height: 280px;
+      /* 2026-04-17: カードサイズ調整（UP→中） */
+      width: 140px;
+      height: 200px;
       margin: 0 auto;
       position: relative;
-      perspective: 1000px;
+      perspective: 900px;
       transform-style: preserve-3d;
     }
     .carousel-ring {
@@ -469,8 +469,8 @@
     }
     .carousel-item {
       position: absolute;
-      /* 2026-04-17: カード90→180px */
-      width: 180px;
+      /* 2026-04-17: 180→120px に調整 */
+      width: 120px;
       left: 10px;
       top: 0;
       transform-style: preserve-3d;

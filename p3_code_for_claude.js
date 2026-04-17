@@ -792,7 +792,7 @@ function renderPhase3() {
           <div class="carousel-ring" id="carousel-ring">
             ${PRODUCTS.map((p, i) => {
               var angle = (360 / PRODUCTS.length) * i;
-              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(360px);">
+              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(240px);">
                 <div class="product-card-img">
                   <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;color:rgba(255,255,255,0.15);font-family:monospace;\\'>${p.name.charAt(0)}</div>'">
                 </div>
@@ -1265,7 +1265,7 @@ function initStoreGrid() {
             ring.style.transform = 'rotateY(' + dest + 'deg)';
             // カードを前に出す
             var angle = (360 / count) * idx;
-            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(420px) scale(1.15)';
+            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(290px) scale(1.15)';
             card.style.filter = 'brightness(1.4)';
             card.style.zIndex = '20';
         });
@@ -1277,7 +1277,7 @@ function initStoreGrid() {
             // カードを元に戻す
             var idx = parseInt(card.dataset.idx);
             var angle = (360 / count) * idx;
-            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(360px) scale(1)';
+            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(240px) scale(1)';
             card.style.filter = '';
             card.style.zIndex = '';
         });
