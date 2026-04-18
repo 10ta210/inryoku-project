@@ -686,7 +686,7 @@ function renderPhase3() {
     // 全曲 Wikimedia Commons パブリックドメイン
     // 全曲パブリックドメイン — Internet Archive MP3（Safari/全ブラウザ対応）
     const BGM_TRACKS = [
-        { id: 'jupiter',    name: 'Jupiter',           emoji: '♃', url: 'https://archive.org/download/Holst-ThePlanets/Jupiter.mp3' },
+        { id: 'jupiter',    name: 'Jupiter',           emoji: '♃', url: 'vendor/jupiter.mp3' },
         { id: 'newworld',   name: '新世界 第2楽章',     emoji: '🌍', url: 'https://archive.org/download/DvorakSymphonyNo.9fromTheNewWorld/02_Largo.mp3' },
         { id: 'bolero',     name: 'Boléro',            emoji: '🥁', url: 'https://archive.org/download/ravel-bolero/RAVEL_BOLERO.mp3' },
         { id: 'gstring',    name: 'G線上のアリア',      emoji: '🎻', url: 'https://archive.org/download/Bach-airOnTheGString/LaMusicaClasicaMasRelajanteDelMundo-Bach-AirOnTheGString.mp3' },

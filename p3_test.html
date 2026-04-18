@@ -4,10 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>inryokü — P3 Test</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- 2026-04-19: Chrome 環境で外部 CDN が Block されるケース対策 — 全部ローカル配信 -->
+  <style>
+    @font-face {
+      font-family: 'Press Start 2P';
+      font-style: normal;
+      font-weight: 400;
+      src: url('vendor/fonts/press-start-2p.woff2') format('woff2');
+    }
+  </style>
 
-  <!-- Three.js 0.160.0 UMD -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <!-- Three.js 0.160.0 UMD — ローカルホスト -->
+  <script src="vendor/three.min.js"></script>
   <!-- 2026-04-17: 0.160 では examples/js/ が廃止され404で 5秒近く遅延するため削除
        Bloom効果はシェーダー内で補償済み -->
   <!--

@@ -3,3 +3,4 @@
 node_modules/
 *.mov
 *.mp4
+vendor/jupiter.mp3
