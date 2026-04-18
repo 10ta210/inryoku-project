@@ -39,9 +39,10 @@
 
     .brand-name {
       font-family: 'Press Start 2P', monospace;
-      font-size: clamp(28px, 6vw, 56px);
+      /* 2026-04-19: サイズ調整 — もう少し大きく目立つように */
+      font-size: clamp(22px, 4.2vw, 40px);
       font-weight: normal;
-      letter-spacing: 12px;
+      letter-spacing: 8px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -457,12 +458,12 @@
       cursor: grabbing;
     }
     .carousel-scene {
-      /* 2026-04-17: カードサイズ調整（UP→中） */
-      width: 140px;
-      height: 200px;
+      /* 2026-04-19: カード高さ up - height 200→260 + width 140→160 */
+      width: 160px;
+      height: 260px;
       margin: 0 auto;
       position: relative;
-      perspective: 900px;
+      perspective: 1000px;
       transform-style: preserve-3d;
     }
     .carousel-ring {
@@ -474,8 +475,8 @@
     }
     .carousel-item {
       position: absolute;
-      /* 2026-04-17: 180→120px に調整 */
-      width: 120px;
+      /* 2026-04-19: 120→140px に調整 (高さUPに合わせて幅も少し広く) */
+      width: 140px;
       left: 10px;
       top: 0;
       transform-style: preserve-3d;
