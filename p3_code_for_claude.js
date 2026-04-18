@@ -2001,7 +2001,11 @@ function initBrandParticleReveal() {
 function initParticleUniverse() {
     if (typeof THREE === 'undefined') { console.error('[P3] Three.js required'); return; }
 
-    const W = window.innerWidth, H = window.innerHeight;
+    // 2026-04-19: 初期化時に window が 0x0 になるケース（iframe/タブ初期）対策
+    // 0 の場合はフォールバックサイズで初期化し、初回リサイズで正しくなる
+    let W = window.innerWidth || document.documentElement.clientWidth || 1280;
+    let H = window.innerHeight || document.documentElement.clientHeight || 720;
+    if (W < 2 || H < 2) { W = 1280; H = 720; }
     document.querySelectorAll('body > canvas:not(#p6-canvas)').forEach(c => c.remove());
     const existing = document.getElementById('p6-canvas');
     if (existing) existing.remove();
@@ -2398,13 +2402,17 @@ void main() {
 
     // ── リサイズ ──
     const onR6 = () => {
-        const nw = window.innerWidth, nh = window.innerHeight;
+        const nw = window.innerWidth || document.documentElement.clientWidth;
+        const nh = window.innerHeight || document.documentElement.clientHeight;
+        if (nw < 2 || nh < 2) return;
         renderer6.setSize(nw, nh);
         camera6.aspect = nw / nh;
         camera6.updateProjectionMatrix();
         if (composer6) composer6.setSize(nw, nh);
     };
     window.addEventListener('resize', onR6);
+    // 2026-04-19: 初期化時に 0x0 だった場合に備え数回リサイズを試みる
+    [100, 500, 1500, 3000].forEach(function(ms) { setTimeout(onR6, ms); });
 
     // ═══════════════════════════════════════════════════════════════
     //  ORGANIC DRIFT — 滑らかに漂う光のプランクトン

@@ -35,10 +35,30 @@
   <div id="root"></div>
   <div id="test-badge">P3 TEST</div>
 
-  <script src="p3_code_for_claude.js?v=20260417r3"></script>
+  <script>
+    // 2026-04-19: P3単体テスト時は初期ミュートを OFF にして BGM が聞こえるように
+    window._inryokuMuted = false;
+  </script>
+  <script src="p3_code_for_claude.js?v=20260419r1"></script>
   <script>
     // P3 直接起動 (P1/P2をスキップ)
     renderPhase3();
+    // 初回クリック/タッチで BGM 再生再開（ブラウザの自動再生ポリシー対策）
+    (function(){
+      function kick(){
+        if (window._p6bgm) {
+          window._p6bgm.muted = !!window._inryokuMuted;
+          var pr = window._p6bgm.play();
+          if (pr && pr.catch) pr.catch(function(){});
+        }
+        document.removeEventListener('click', kick);
+        document.removeEventListener('touchstart', kick);
+        document.removeEventListener('keydown', kick);
+      }
+      document.addEventListener('click', kick, { once: true });
+      document.addEventListener('touchstart', kick, { once: true });
+      document.addEventListener('keydown', kick, { once: true });
+    })();
   </script>
 </body>
 </html>
