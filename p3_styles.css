@@ -314,6 +314,10 @@
       display: inline-block;
       text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
       animation: charFloat 4s ease-in-out infinite, charGlow 3s ease-in-out infinite;
+      /* 2026-04-19: ピクセルフォント強制 (Chrome で消えていたため) */
+      font-family: 'Press Start 2P', monospace !important;
+      -webkit-font-smoothing: none !important;
+      -moz-osx-font-smoothing: unset !important;
       position: relative;
       /* 2026-04-17: ピクセルフォント強制 */
       font-family: 'Press Start 2P', monospace !important;
