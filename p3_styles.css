@@ -16,26 +16,26 @@
     .singularity-content {
       position: relative;
       z-index: 10;
-      padding: 40px 20px;
+      padding: 56px 20px;
       overflow-y: auto;
       min-height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* 2026-04-19 再修正: safe center — 内容が viewport 収まる時は中央、超過時は start から
-         これで真ん中に寄せつつ、オーバーフロー時にロゴが飛ばない */
       justify-content: safe center;
-      gap: 28px;
+      /* 2026-04-19: 各セクション間の余白を増やして息を持たせる */
+      gap: 56px;
     }
 
     .hologram-logo {
       text-align: center;
       margin-top: 0;
-      /* 2026-04-17: ブランド名とロゴ楕円の間隔を詰める */
+      /* 2026-04-19: ブランド名と楕円が被らないよう余白調整 */
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 20px;
+      padding-bottom: 20px;
     }
 
     .brand-name {
