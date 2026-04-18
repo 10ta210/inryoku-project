@@ -16,15 +16,16 @@
     .singularity-content {
       position: relative;
       z-index: 10;
-      padding: 32px 20px 64px;
+      padding: 40px 20px;
       overflow-y: auto;
       min-height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* 2026-04-17 修正: center だと高さ制限超過でロゴが viewport 上に飛ぶ */
-      justify-content: flex-start;
-      gap: 24px;
+      /* 2026-04-19 再修正: safe center — 内容が viewport 収まる時は中央、超過時は start から
+         これで真ん中に寄せつつ、オーバーフロー時にロゴが飛ばない */
+      justify-content: safe center;
+      gap: 28px;
     }
 
     .hologram-logo {
@@ -441,7 +442,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-top: 400px;
+      /* 2026-04-19: 400px の空白削除 (真ん中寄せに調整) */
+      margin-top: 0;
     }
 
     /* ═══ 3D Carousel — Merry-go-round ═══ */
@@ -1275,7 +1277,7 @@
 /* ── Footer ── */
 .site-footer {
     position: relative; z-index: 10;
-    margin-top: 60px; text-align: center;
+    margin-top: 0; text-align: center;
 }
 /* ── 最小化状態 ── */
 .site-footer--mini .footer-toggle {
@@ -1664,7 +1666,8 @@
 /* ── Email Signup ── */
 .email-signup {
     text-align: center;
-    margin-top: 40px;
+    /* 2026-04-19: gap利用のため個別 margin-top 削除 */
+    margin-top: 0;
     padding: 0 20px;
     position: relative;
 }
@@ -1775,7 +1778,7 @@
    ══════════════════════════════════════════════ */
 .contact-form {
     text-align: center;
-    margin-top: 30px;
+    margin-top: 0;
     padding: 0 20px;
 }
 .contact-toggle {
@@ -1848,7 +1851,7 @@
    ══════════════════════════════════════════════ */
 .theme-switcher {
     text-align: center;
-    margin-top: 30px;
+    margin-top: 0;
     padding: 0 20px;
 }
 .theme-label {
