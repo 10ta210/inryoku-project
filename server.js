@@ -618,7 +618,12 @@ const server = http.createServer((req, res) => {
         const mime = MIME[ext] || 'application/octet-stream';
         res.writeHead(200, {
             'Content-Type': mime,
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
+            // 2026-04-19: Chrome の memory cache を無効化するため Pragma/Expires も追加
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Last-Modified': stats.mtime.toUTCString(),
+            'ETag': '"' + stats.mtimeMs + '-' + stats.size + '"'
         });
         fs.createReadStream(filePath).pipe(res);
     });
