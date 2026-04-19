@@ -2214,6 +2214,8 @@ void main() {
     // 2026-04-19: 破損前の元サイズに戻す（480→280, min 1.4→0.5）
     gl_PointSize = aSize * sizeBreath * (280.0 / -mvPos.z);
     gl_PointSize = max(gl_PointSize, 0.5);
+    // 2026-04-20: カメラ至近の粒子が巨大化する問題を抑制（視界を塞ぐ巨大ボール対策）
+    gl_PointSize = min(gl_PointSize, 40.0);
     gl_Position = projectionMatrix * mvPos;
 }
 `,
