@@ -8,7 +8,15 @@
 const http = require('http');
 const fs   = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const PORT = process.env.PORT || 3000;
+
+// gzip対象MIME（テキスト系のみ）
+const GZIP_MIMES = new Set([
+    'text/html','text/css','text/plain','text/xml',
+    'application/javascript','application/json','application/xml',
+    'image/svg+xml','font/woff','font/woff2'
+]);
 
 // ── セキュリティ定数 ──
 const MAX_BODY_SIZE = 1024 * 50; // 50KB — POST bodyの上限
@@ -663,16 +671,26 @@ p{font-size:13px;margin-bottom:12px;letter-spacing:0.02em}
 
         const ext = path.extname(filePath).toLowerCase();
         const mime = MIME[ext] || 'application/octet-stream';
-        res.writeHead(200, {
+        const acceptEnc = String(req.headers['accept-encoding'] || '');
+        const canGzip = GZIP_MIMES.has(mime) && /\bgzip\b/.test(acceptEnc);
+        const headers = {
             'Content-Type': mime,
             // 2026-04-19: Chrome の memory cache を無効化するため Pragma/Expires も追加
             'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
             'Pragma': 'no-cache',
             'Expires': '0',
             'Last-Modified': stats.mtime.toUTCString(),
-            'ETag': '"' + stats.mtimeMs + '-' + stats.size + '"'
-        });
-        fs.createReadStream(filePath).pipe(res);
+            'ETag': '"' + stats.mtimeMs + '-' + stats.size + '"',
+            'Vary': 'Accept-Encoding'
+        };
+        if (canGzip) {
+            headers['Content-Encoding'] = 'gzip';
+            res.writeHead(200, headers);
+            fs.createReadStream(filePath).pipe(zlib.createGzip({ level: 6 })).pipe(res);
+        } else {
+            res.writeHead(200, headers);
+            fs.createReadStream(filePath).pipe(res);
+        }
     });
 });
 
