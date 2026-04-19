@@ -9,6 +9,28 @@ const http = require('http');
 const fs   = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const crypto = require('crypto');
+
+// メアドから個人色 (personal grey) を生成
+function generateGreyColor(email) {
+    const hash = crypto.createHash('sha256').update(email).digest('hex');
+    // hash の最初の6文字を HEX として使用、ただし中間グレー寄りに寄せる
+    const r = parseInt(hash.substring(0, 2), 16);
+    const g = parseInt(hash.substring(2, 4), 16);
+    const b = parseInt(hash.substring(4, 6), 16);
+    // グレー寄りに調整: 彩度を下げる（中間値に近づける）
+    const mid = (r + g + b) / 3;
+    const mix = 0.5; // 0=原色, 1=完全グレー
+    const nr = Math.round(r * (1 - mix) + mid * mix);
+    const ng = Math.round(g * (1 - mix) + mid * mix);
+    const nb = Math.round(b * (1 - mix) + mid * mix);
+    return '#' + [nr, ng, nb].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+// セキュアなランダムトークン生成
+function generateToken() {
+    return crypto.randomBytes(32).toString('hex');
+}
 const PORT = process.env.PORT || 3000;
 
 // gzip対象MIME（テキスト系のみ）
@@ -547,13 +569,167 @@ const server = http.createServer((req, res) => {
             }
 
             const number = db.subscribers.length + 1; // 入団番号
-            db.subscribers.push({ email, number, created: new Date().toISOString() });
+            const token = generateToken();
+            const greyColor = generateGreyColor(email);
+            const record = {
+                email,
+                number,
+                token,
+                greyColor,
+                bio: '',
+                isArtist: false,
+                isPublic: false,
+                created: new Date().toISOString()
+            };
+            db.subscribers.push(record);
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
             res.writeHead(200, {'Content-Type':'application/json'});
-            res.end(JSON.stringify({ success: true, message: 'subscribed', number }));
+            res.end(JSON.stringify({
+                success: true, message: 'subscribed',
+                number, token, greyColor
+            }));
         });
         return;
+    }
+
+    // ── GET /api/grey/:number — Grey 公開プロフィール取得 ──
+    {
+        const m = req.method === 'GET' && /^\/api\/grey\/(\d+)$/.exec(req.url);
+        if (m) {
+            const num = parseInt(m[1], 10);
+            const dbPath = path.join(__dirname, 'data', 'subscribers.json');
+            ensureDataDir();
+            let db;
+            try { db = JSON.parse(fs.readFileSync(dbPath, 'utf8')); } catch(e) { db = { subscribers: [] }; }
+            const s = db.subscribers.find(x => x.number === num);
+            if (!s) {
+                res.writeHead(404, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'grey not found' }));
+            }
+            // 公開プロフィールは bio/greyColor/number/isArtist/created のみ
+            // isPublic=false なら 404（秘密のGrey）
+            if (!s.isPublic) {
+                res.writeHead(404, {'Content-Type':'application/json'});
+                return res.end(JSON.stringify({ error: 'private grey' }));
+            }
+            res.writeHead(200, {'Content-Type':'application/json'});
+            res.end(JSON.stringify({
+                number: s.number,
+                greyColor: s.greyColor,
+                bio: s.bio || '',
+                isArtist: !!s.isArtist,
+                created: s.created
+            }));
+            return;
+        }
+    }
+
+    // ── POST /api/grey/:number/update — プロフィール編集 (要 token) ──
+    {
+        const m = req.method === 'POST' && /^\/api\/grey\/(\d+)\/update$/.exec(req.url);
+        if (m) {
+            const num = parseInt(m[1], 10);
+            readBody(req, res, MAX_BODY_SIZE, (body) => {
+                let parsed;
+                try { parsed = JSON.parse(body); } catch(e) {
+                    res.writeHead(400, {'Content-Type':'application/json'});
+                    return res.end(JSON.stringify({ error: 'invalid JSON' }));
+                }
+                const token = (parsed.token || '').trim();
+                if (!token) {
+                    res.writeHead(401, {'Content-Type':'application/json'});
+                    return res.end(JSON.stringify({ error: 'token required' }));
+                }
+                const dbPath = path.join(__dirname, 'data', 'subscribers.json');
+                let db;
+                try { db = JSON.parse(fs.readFileSync(dbPath, 'utf8')); } catch(e) { db = { subscribers: [] }; }
+                const s = db.subscribers.find(x => x.number === num);
+                if (!s) {
+                    res.writeHead(404, {'Content-Type':'application/json'});
+                    return res.end(JSON.stringify({ error: 'grey not found' }));
+                }
+                if (s.token !== token) {
+                    res.writeHead(403, {'Content-Type':'application/json'});
+                    return res.end(JSON.stringify({ error: 'invalid token' }));
+                }
+                // 更新可能フィールド
+                if (typeof parsed.bio === 'string') s.bio = parsed.bio.slice(0, 200);
+                if (typeof parsed.isArtist === 'boolean') s.isArtist = parsed.isArtist;
+                if (typeof parsed.isPublic === 'boolean') s.isPublic = parsed.isPublic;
+                s.updated = new Date().toISOString();
+                fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+                res.writeHead(200, {'Content-Type':'application/json'});
+                res.end(JSON.stringify({
+                    success: true,
+                    number: s.number,
+                    greyColor: s.greyColor,
+                    bio: s.bio,
+                    isArtist: !!s.isArtist,
+                    isPublic: !!s.isPublic
+                }));
+            });
+            return;
+        }
+    }
+
+    // ── GET /grey/:number — 公開プロフィール HTML ページ ──
+    {
+        const m = req.method === 'GET' && /^\/grey\/(\d+)\/?$/.exec(req.url);
+        if (m) {
+            const num = parseInt(m[1], 10);
+            const dbPath = path.join(__dirname, 'data', 'subscribers.json');
+            ensureDataDir();
+            let db;
+            try { db = JSON.parse(fs.readFileSync(dbPath, 'utf8')); } catch(e) { db = { subscribers: [] }; }
+            const s = db.subscribers.find(x => x.number === num);
+            res.writeHead(s && s.isPublic ? 200 : 404, {'Content-Type': 'text/html; charset=utf-8'});
+            if (!s || !s.isPublic) {
+                return res.end(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Grey #${String(num).padStart(4,'0')} — not found</title><style>body{background:#0a0a0a;color:rgba(255,255,255,0.4);font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}a{color:rgba(255,255,255,0.3);border-bottom:1px solid rgba(255,255,255,0.1);text-decoration:none;font-size:11px;letter-spacing:0.15em;padding-bottom:2px}</style></head><body><h1 style="font-size:48px;font-weight:200;color:rgba(255,255,255,0.2)">#${String(num).padStart(4,'0')}</h1><p>this grey is not public</p><a href="/">← back</a></body></html>`);
+            }
+            const padded = String(s.number).padStart(4, '0');
+            const bio = (s.bio || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+            return res.end(`<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grey #${padded} — inryokü</title>
+<meta property="og:title" content="Grey #${padded}">
+<meta property="og:description" content="${bio || 'a Grey observes the 50%.'}">
+<meta property="og:type" content="profile">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:#fff;font-family:'SF Mono','Courier New',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.card{max-width:420px;width:100%;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:36px 32px;background:linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0));backdrop-filter:blur(8px)}
+.num{font-size:48px;font-weight:200;letter-spacing:0.05em;color:#fff;margin-bottom:8px}
+.label{font-size:10px;letter-spacing:0.3em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:24px}
+.color-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;font-size:11px;letter-spacing:0.12em}
+.swatch{width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,0.15)}
+.bio{font-size:13px;line-height:1.7;color:rgba(255,255,255,0.75);margin-top:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);white-space:pre-wrap}
+.artist{display:inline-block;margin-top:16px;padding:4px 10px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;font-size:10px;letter-spacing:0.2em}
+.footer{margin-top:32px;font-size:10px;color:rgba(255,255,255,0.3);display:flex;justify-content:space-between}
+a{color:rgba(255,255,255,0.4);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.15)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="num">#${padded}</div>
+  <div class="label">Grey</div>
+  <div class="color-row">
+    <div class="swatch" style="background:${s.greyColor}"></div>
+    <span>personal grey: ${s.greyColor}</span>
+  </div>
+  ${s.isArtist ? '<span class="artist">ARTIST</span>' : ''}
+  ${bio ? `<div class="bio">${bio}</div>` : ''}
+  <div class="footer">
+    <span>registered ${(s.created || '').substring(0, 10)}</span>
+    <a href="/">inryokü</a>
+  </div>
+</div>
+</body>
+</html>`);
+        }
     }
 
     // ── GET /api/subscribers — 登録者一覧（管理用・要認証） ──

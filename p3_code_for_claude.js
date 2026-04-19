@@ -984,20 +984,84 @@ function renderPhase3() {
     document.body.appendChild(bgmBtn);
     document.body.appendChild(bgmMenu);
 
-    // ── Email Signup / 入団 ──
+    // ── Email Signup / Grey 入団 ──
     const emailSignup = document.createElement('div');
     emailSignup.className = 'email-signup';
     emailSignup.id = 'email-signup';
     emailSignup.style.cssText = 'opacity:0;transition:opacity 1.2s ease;';
-    // 既に入団済みなら番号表示のみ
+
     var savedNum = localStorage.getItem('inryoku.uchujin_number');
-    if (savedNum) {
+    var savedToken = localStorage.getItem('inryoku.uchujin_token');
+    var savedColor = localStorage.getItem('inryoku.uchujin_color');
+    var savedBio = localStorage.getItem('inryoku.uchujin_bio') || '';
+    var savedArtist = localStorage.getItem('inryoku.uchujin_artist') === '1';
+    var savedPublic = localStorage.getItem('inryoku.uchujin_public') === '1';
+
+    function renderGreyProfile() {
+        var num = localStorage.getItem('inryoku.uchujin_number');
+        var color = localStorage.getItem('inryoku.uchujin_color') || '#808080';
+        var bio = localStorage.getItem('inryoku.uchujin_bio') || '';
+        var isArtist = localStorage.getItem('inryoku.uchujin_artist') === '1';
+        var isPublic = localStorage.getItem('inryoku.uchujin_public') === '1';
+        var padded = String(num).padStart(4, '0');
         emailSignup.innerHTML = `
             ${buildParticles()}
             <div class="email-signup-label">you are Grey</div>
-            <div class="email-signup-sub" style="font-size:22px;letter-spacing:0.25em;color:rgba(255,255,255,0.75);margin-top:8px;">#${String(savedNum).padStart(4,'0')}</div>
-            <div class="email-signup-sub" style="margin-top:12px;">観測を続けてください</div>
+            <div class="email-signup-sub" style="font-size:22px;letter-spacing:0.25em;color:rgba(255,255,255,0.8);margin-top:8px;">#${padded}</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;font-size:10px;letter-spacing:0.2em;color:rgba(255,255,255,0.5);">
+              <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:${color};border:1px solid rgba(255,255,255,0.2);"></span>
+              <span>personal grey ${color}</span>
+            </div>
+            <div style="margin-top:20px;">
+              <textarea id="grey-bio" maxlength="200" placeholder="bio (optional, max 200 chars)" style="width:100%;max-width:320px;min-height:60px;padding:8px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:rgba(255,255,255,0.8);font-family:inherit;font-size:11px;letter-spacing:0.05em;resize:vertical;box-sizing:border-box;">${bio.replace(/</g, '&lt;')}</textarea>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:14px;justify-content:center;font-size:10px;letter-spacing:0.15em;color:rgba(255,255,255,0.55);">
+              <label style="cursor:pointer;"><input type="checkbox" id="grey-artist" ${isArtist ? 'checked' : ''} style="margin-right:6px;vertical-align:middle;"> artist</label>
+              <label style="cursor:pointer;"><input type="checkbox" id="grey-public" ${isPublic ? 'checked' : ''} style="margin-right:6px;vertical-align:middle;"> public (/grey/${padded})</label>
+            </div>
+            <div style="margin-top:14px;">
+              <button id="grey-save" class="email-signup-btn" style="padding:6px 18px;font-size:10px;letter-spacing:0.2em;">SAVE</button>
+            </div>
+            <div class="email-signup-status" id="grey-save-status" style="margin-top:8px;"></div>
         `;
+
+        var saveBtn = document.getElementById('grey-save');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                var token = localStorage.getItem('inryoku.uchujin_token');
+                var num = localStorage.getItem('inryoku.uchujin_number');
+                var newBio = (document.getElementById('grey-bio').value || '').slice(0, 200);
+                var newArtist = document.getElementById('grey-artist').checked;
+                var newPublic = document.getElementById('grey-public').checked;
+                var st = document.getElementById('grey-save-status');
+                st.textContent = 'saving…';
+                st.style.color = 'rgba(255,255,255,0.4)';
+                fetch('/api/grey/' + num + '/update', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ token: token, bio: newBio, isArtist: newArtist, isPublic: newPublic })
+                }).then(function(r) { return r.json(); })
+                  .then(function(data) {
+                      if (data.success) {
+                          localStorage.setItem('inryoku.uchujin_bio', newBio);
+                          localStorage.setItem('inryoku.uchujin_artist', newArtist ? '1' : '0');
+                          localStorage.setItem('inryoku.uchujin_public', newPublic ? '1' : '0');
+                          st.textContent = '✓ saved';
+                          st.style.color = 'rgba(100,255,150,0.6)';
+                      } else {
+                          st.textContent = data.error || 'error';
+                          st.style.color = 'rgba(255,100,100,0.6)';
+                      }
+                  }).catch(function() {
+                      st.textContent = 'network error';
+                      st.style.color = 'rgba(255,100,100,0.6)';
+                  });
+            });
+        }
+    }
+
+    if (savedNum && savedToken) {
+        renderGreyProfile();
     } else {
         emailSignup.innerHTML = `
             ${buildParticles()}
@@ -1048,12 +1112,20 @@ function renderPhase3() {
                     spawnBigBang(er.left + er.width / 2, er.top + er.height / 2, 30);
                 }
                 var num = data && data.number ? ' #' + String(data.number).padStart(4, '0') : '';
-                // 入団番号を永続化（次回アクセス時に badge 表示）
+                // 入団番号・token・色を永続化
                 if (data && data.number) {
-                    try { localStorage.setItem('inryoku.uchujin_number', String(data.number)); } catch(e) {}
+                    try {
+                        localStorage.setItem('inryoku.uchujin_number', String(data.number));
+                        if (data.token)     localStorage.setItem('inryoku.uchujin_token', data.token);
+                        if (data.greyColor) localStorage.setItem('inryoku.uchujin_color', data.greyColor);
+                    } catch(e) {}
                 }
                 status.textContent = '✓ welcome, Grey' + num;
                 status.style.color = 'rgba(100,255,150,0.6)';
+                // 1.5秒後にプロフィール編集画面に切替
+                setTimeout(function() {
+                    try { renderGreyProfile(); } catch(e) {}
+                }, 1500);
                 input.disabled = true;
                 emailSubmitBtn.disabled = true;
                 input.style.opacity = '0.4';
