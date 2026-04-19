@@ -75,12 +75,19 @@ const GELATO_CONFIG = {
     enabled: false  // 司さんが API キー設定後に true に
 };
 
+// Gelato productUid テンプレートから size を展開
+function gelatoBuildUid(template, size) {
+    if (!template || !size) return null;
+    return template.replace('{size}', size.toLowerCase());
+}
+
 function gelatoCreateOrder(cartItems, shipping) {
     if (!GELATO_CONFIG.enabled) return Promise.reject(new Error('Gelato not configured'));
     var items = cartItems.map(function(it) {
         var p = PRODUCTS.find(function(x) { return x.id === it.id; });
+        var uid = p && p.gelato_product ? gelatoBuildUid(p.gelato_product, it.size) : null;
         return {
-            productUid: p && p.gelato_product ? p.gelato_product : null,
+            productUid: uid,
             size: it.size,
             quantity: it.qty || 1,
             printFile: p && p.image ? (location.origin + '/' + p.image) : null
@@ -146,7 +153,7 @@ const PRODUCTS = [
         details: 'Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Washed Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
         isQRT: false,
         shopifyVariants: {} // { 'S': 'gid://shopify/ProductVariant/xxx', 'M': 'gid://...', ... }
     },
@@ -160,7 +167,7 @@ const PRODUCTS = [
         details: 'Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Washed Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -174,7 +181,7 @@ const PRODUCTS = [
         details: 'Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Heather Grey',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -188,7 +195,7 @@ const PRODUCTS = [
         details: 'Heavyweight 450gsm · Ultra Oversized · DTF Print (50+ washes)',
         sizes: ['M', 'L', 'XL', '2XL', '3XL'],
         color: 'Washed Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -202,7 +209,7 @@ const PRODUCTS = [
         details: '200gsm · Regular Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -216,7 +223,7 @@ const PRODUCTS = [
         details: '200gsm · Regular Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -230,7 +237,7 @@ const PRODUCTS = [
         details: '220gsm · Regular Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -244,7 +251,7 @@ const PRODUCTS = [
         details: '220gsm · Regular Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -258,7 +265,7 @@ const PRODUCTS = [
         details: '360gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Washed Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_sweatshirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_champion_s1049',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -272,7 +279,7 @@ const PRODUCTS = [
         details: '360gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Washed Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_sweatshirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_champion_s1049',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -286,7 +293,7 @@ const PRODUCTS = [
         details: '180gsm · Regular Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL'],
         color: 'Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_t-shirt_gsc_tank-top_gcu_unisex_gqa_prm_gsi_{size}_gco_black_gpr_4-0_comfort-colours_9360',
         isQRT: false,
         shopifyVariants: {}
     },
@@ -300,7 +307,7 @@ const PRODUCTS = [
         details: '180gsm · Regular Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL'],
         color: 'Black',
-        gelato_product: 'bella_canvas_3001',
+        gelato_product: 'apparel_product_gca_t-shirt_gsc_tank-top_gcu_unisex_gqa_prm_gsi_{size}_gco_black_gpr_4-0_comfort-colours_9360',
         isQRT: false,
         shopifyVariants: {}
     }
