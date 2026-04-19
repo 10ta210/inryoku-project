@@ -1,97 +1,94 @@
-# inryokü — デプロイ状況 (2026-04-19)
+# inryokü — デプロイ状況 (2026-04-19 最新)
 
-## 🌐 公開URL
+## 🌐 本番URL
 **https://inryoku-project-production-f827.up.railway.app/**
 
-Railway上で稼働中。スマホ・PC問わずアクセス可能。
+スマホ・PC・タブレット全部アクセス可能。PWA対応（iOSホーム画面追加可）。
 
 ---
 
-## ✅ 動いてる機能（本番検証済）
+## ✅ 完全稼働中
 
-| API | エンドポイント | 状態 |
+| 機能 | 状態 |
+|---|---|
+| P3 (ECショップUI) | ✅ |
+| 粒子宇宙 (15000+星座網) | ✅ コア非ホログラム・強化済 |
+| カルーセル商品棚 (12品) | ✅ モバイル対応済 |
+| OSテーマ×カードスキン連動 | ✅ Cosmos/macOS/Win95 |
+| Konami easter egg | ✅ os9/imacg3/apple2 解放 |
+| メール登録 /api/subscribe | ✅ |
+| お問い合わせ /api/contact | ✅ |
+| Gelato API /api/gelato/order | ✅ キー有効 |
+| AIチャット /api/chat | ✅ Groq |
+| BGMメニュー | ✅ |
+| SEO/OG/Twitter Card | ✅ |
+| JSON-LD (Organization + WebSite) | ✅ |
+| sitemap.xml / robots.txt | ✅ |
+| manifest.json (PWA) | ✅ |
+| favicon / apple-touch-icon | ✅ |
+| 404 BSOD風ページ | ✅ "REALITY NOT FOUND" |
+| preload最適化 | ✅ 初回描画高速化 |
+| _dev/prompts/docs 非公開化 | ✅ |
+
+## ⚠️ 人力必要（司さん）
+
+| 項目 | やること | 時間 |
 |---|---|---|
-| ホーム (P3) | `GET /` | HTTP 200 ✅ |
-| メール登録 | `POST /api/subscribe` | `{"success":true}` ✅ |
-| お問い合わせ | `POST /api/contact` | `{"ok":true}` ✅ |
-| Gelato 注文 | `POST /api/gelato/order` | Gelato API応答 ✅ (キー有効) |
-| AIチャット | `POST /api/chat` | Groq API連携 ✅ |
-
-## ⚠️ 未完了（司さんの判断必要）
-
-| 項目 | 問題 | 必要作業 |
-|---|---|---|
-| Shopify Checkout | Storefront Tokenが無効 (UNAUTHORIZED) | 新トークン発行 or Shopify直接cart URL方式に変更 |
-| 商品のShopify登録 | 12商品すべて`shopifyVariants: {}` 空 | Gelato App → 商品1つ作成で自動同期 |
-| Gelato productUID | 全商品`bella_canvas_3001` 統一 | hoodie/tee/tank等それぞれ正しいUID必要 |
+| Gelato商品登録 | 画像2枚upload → Multiple products | 30秒×2 |
+| Shopify variant GID | 自動同期後、俺が取得→埋込 | 待つだけ |
+| Shopify Storefront Token | Dev Dashboard で シークレットローテーション | 1分 |
+| Railway有料化 | Upgrade plan（Trial 残 20日 / $5） | 5分 |
+| GA4 ID取得 | analytics.google.com 登録→ID置換 | 10分 |
+| 独自ドメイン | お名前.com/Cloudflare → Railway接続 | 30分 |
 
 ---
 
-## 🔑 保存済みキー（`.env` + Railway環境変数）
+## 🔑 環境変数（Railway + ローカル .env）
 
 | 変数 | 状態 |
 |---|---|
-| `GROQ_API_KEY` | ✅ 有効 |
-| `SHOPIFY_STORE_DOMAIN` | ✅ `0xi10h-x1.myshopify.com` (= inryokü) |
-| `SHOPIFY_STOREFRONT_TOKEN` | ❌ 無効 (再発行必要) |
-| `GELATO_API_KEY` | ✅ 新規作成済 (前キー削除+再作成) |
-| `ADMIN_API_KEY` | ✅ 64文字ランダム生成 |
-| `NODE_ENV` | ✅ `production` |
-| `PORT` | ✅ `3000` |
+| `GROQ_API_KEY` | ✅ |
+| `SHOPIFY_STORE_DOMAIN` | ✅ `0xi10h-x1.myshopify.com` |
+| `SHOPIFY_STOREFRONT_TOKEN` | ⚠️ 無効 (Client IDを誤設定していた) |
+| `GELATO_API_KEY` | ✅ 新規発行済 |
+| `ADMIN_API_KEY` | ✅ |
+| `NODE_ENV` | ✅ production |
+| `PORT` | ✅ 3000 |
 
----
-
-## 📦 GitHub
+## 📦 Git/デプロイ
 - Repo: https://github.com/10ta210/inryoku-project
-- 最新push: `c005a74` (2026-04-19)
-- Personal Access Token 発行済 (90日、Mac Keychain保存)
-- Railway連携済み：mainブランチに push するたび自動デプロイ
+- PAT: 90日有効（Mac Keychain保存、2026-07-18まで）
+- Railway: mainブランチpush→自動再デプロイ
+- 最新commit: `de714e7`
 
----
+## 🎨 UI改善実装済
+- UI#3: OSテーマ×カードスキン連動 ✅
+- UI#4: Konamiイースターエッグ ✅
+- **保留** UI#1 フォーカスモード扇展開（既存カルーセル壊す恐れ）
+- **保留** UI#2 カード直購入（既存モーダル壊す恐れ）
 
-## 🎯 次にやるべきこと（2時間以内で可能）
-
-### 🥇 最優先: Shopify商品1つ作成
-**経路**: Gelato Dashboard → Product catalog → 「Create product」
-1. Product type: T-shirt (Bella+Canvas 3001)
-2. デザイン画像アップロード
-3. 商品名: 「ENTER TEE」等
-4. 価格設定
-5. Save → 「Publish to Shopify」
-→ Shopify側にも自動反映、variant GID生成される
-
-### 🥈 variant GID取得→p3コードに埋め込み
-```js
-// p3_code_for_claude.js 内
-shopifyVariants: {
-  'S': 'gid://shopify/ProductVariant/...',
-  'M': 'gid://shopify/ProductVariant/...',
-  ...
-}
+## 📂 ディレクトリ構成
+```
+inryoku/
+├── p3_test.html (public entry)
+├── p3_code_for_claude.js / p3_styles.css
+├── server.js
+├── public/ (product mockups)
+├── vendor/ (three.js, fonts)
+├── prompts/ (Claude prompts ← 非公開)
+├── _dev/ (design demos ← 非公開)
+├── docs/ (internal docs ← 非公開)
+└── data/ (subscribers.json ← 非公開)
 ```
 
-### 🥉 Shopify Storefront Token 再発行
-inryoku-storefront (Dev Dashboard app) → Settings → シークレットのローテーション
+## 🧠 俺のスタンス (memoryに保存済)
+- caveman talk / 3文以内
+- ブラウザは司のChrome直操作 (claude-in-chromeで)
+- file upload以外全部自律
+- 承認なしでpush・デプロイ・ファイル編集OK
+
+## 📱 新セッション始め方
+`/prompts/AUTORUN.md` のMASTER PROMPTコピペ → Claude貼り付け → 「続き」
 
 ---
-
-## 🚨 Gotchas
-
-1. **Railway Trial**: `21 days or $5.00 left` — 近いうちに有料化必要
-2. **GitHub PAT**: 90日有効 (2026-07-18まで)
-3. **Gelato Key**: Rotation不要、ずっと有効
-4. **Shopifyストア通貨**: inryokü は Store=JPY, Billing=EUR になってる → JPY統一推奨
-5. **Railway Private URL**: `inryoku-project.railway.internal` (内部通信用、ユーザーアクセス不可)
-
----
-
-## 📱 スマホから遠隔操作
-
-**閲覧系**:
-- サイト: https://inryoku-project-production-f827.up.railway.app/
-- GitHub: https://github.com/10ta210/inryoku-project (GitHubモバイルアプリ推奨)
-- Railway: https://railway.com/dashboard
-
-**編集系（スマホ）**:
-- GitHubで直接ファイル編集 → commit → Railway自動再デプロイ
-- もしくはclaude.ai/code でClaude Codeをブラウザ版で起動して会話継続
+最終更新: 2026-04-19 23:30 JST
