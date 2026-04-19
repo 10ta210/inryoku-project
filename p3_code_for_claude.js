@@ -397,7 +397,7 @@ function init3DLogoSphere() {
 
     // Three.jsセットアップ（ロゴ専用の小さなレンダラー）
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(size * 2, size * 2);
+    renderer.setSize(candleSize * 2, candleSize * 2);
     renderer.setClearColor(0x000000, 0);  // 透明背景
     renderer.setPixelRatio(1);
 
