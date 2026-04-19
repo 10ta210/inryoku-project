@@ -826,8 +826,8 @@ function renderPhase3() {
                 <span class="brand-char" style="color:#808080;opacity:0;">i</span><span class="brand-char" style="color:#FF0000;opacity:0;">n</span><span class="brand-char" style="color:#00FF00;opacity:0;">r</span><span class="brand-char" style="color:#0044FF;opacity:0;">y</span><span class="brand-char" style="color:#00FFFF;opacity:0;">o</span><span class="brand-char" style="color:#FF00FF;opacity:0;">k</span><span class="brand-char" style="color:#FFFF00;opacity:0;">ü</span>
             </div>
             <div class="logo-holo-wrap" id="bb-logo" style="cursor:pointer;opacity:0;">
-                <img src="logo_shell.webp" alt="" class="logo-shell" style="opacity:0;">
-                <img src="logo_sphere.webp" alt="" class="logo-sphere" style="opacity:0;animation:none;">
+                <img src="logo_shell.png" alt="" class="logo-shell" style="opacity:0;">
+                <img src="logo_sphere.png" alt="" class="logo-sphere" style="opacity:0;animation:none;">
                 <div class="holo-scanlines"></div>
                 <div class="holo-overlay"></div>
                 <div class="holo-scanline"></div>
