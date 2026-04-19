@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü — observe</title>
+<meta name="description" content="grey holds every color. observe the 50% → 101%.">
+<meta property="og:title" content="inryokü — observe">
+<meta property="og:description" content="grey holds every color.">
+<meta property="og:image" content="/inryoku_og.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="/inryoku_logo_icon.png">
+<link rel="apple-touch-icon" href="/inryoku_logo_icon.png">
+<link rel="manifest" href="/manifest.json">
+<style>
+/* ────────────────────────────────────────────
+   inryokü — Claude's vision
+   minimal. silent. observation-first.
+──────────────────────────────────────────── */
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root {
+  --bg: #0a0a0a;
+  --grey: #808080;
+  --fg: rgba(255,255,255,0.85);
+  --dim: rgba(255,255,255,0.35);
+  --faint: rgba(255,255,255,0.12);
+}
+html,body{background:var(--bg);color:var(--fg);font-family:'IBM Plex Mono','Courier New',monospace;font-weight:300;}
+body{
+  min-height:100vh;
+  cursor:crosshair;
+  overflow-x:hidden;
+  /* rainbow only appears where you look (cursor) */
+}
+
+/* cursor-tracked rainbow spot */
+.rainbow-spot{
+  position:fixed;
+  pointer-events:none;
+  width:500px; height:500px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle,
+    rgba(255,0,255,0.10) 0%,
+    rgba(0,255,255,0.08) 20%,
+    rgba(255,255,0,0.06) 40%,
+    transparent 70%);
+  mix-blend-mode:screen;
+  filter:blur(30px);
+  z-index:1;
+  transition: opacity 1.5s ease;
+  opacity:0;
+}
+body.observing .rainbow-spot { opacity: 1; }
+
+/* grid of philosophical panels, stacked, read one at a time */
+main{
+  position:relative;
+  z-index:2;
+  max-width:880px;
+  margin:0 auto;
+  padding: 20vh 32px 30vh;
+}
+
+section{
+  min-height:80vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding: 12vh 0;
+  border-top: 1px solid var(--faint);
+}
+section:first-child{border-top:none}
+
+.tag{
+  font-size:10px;
+  letter-spacing:0.4em;
+  color:var(--dim);
+  margin-bottom:24px;
+  text-transform:uppercase;
+}
+
+h1,h2{
+  font-family:'IBM Plex Mono','Courier New',monospace;
+  font-weight:300;
+  line-height:1.2;
+  letter-spacing:-0.01em;
+}
+h1{font-size: clamp(36px, 8vw, 96px);}
+h2{font-size: clamp(24px, 5vw, 56px); margin-bottom:24px;}
+
+p{
+  font-size: clamp(14px, 1.8vw, 18px);
+  line-height:1.9;
+  letter-spacing:0.02em;
+  color:var(--fg);
+  max-width:62ch;
+}
+p + p{ margin-top: 1.5em; }
+
+.dim{color:var(--dim)}
+.big{font-size: clamp(18px, 2.4vw, 24px); line-height:1.7;}
+
+/* tiny header at top-left */
+.brand{
+  position:fixed;
+  top:24px; left:28px;
+  font-size:10px;
+  letter-spacing:0.4em;
+  color:var(--dim);
+  z-index:10;
+  mix-blend-mode:difference;
+}
+.nav{
+  position:fixed;
+  top:24px; right:28px;
+  font-size:10px;
+  letter-spacing:0.3em;
+  color:var(--dim);
+  z-index:10;
+  display:flex; gap: 20px;
+  mix-blend-mode:difference;
+}
+.nav a{color:inherit;text-decoration:none;border-bottom:1px solid transparent;padding-bottom:3px;}
+.nav a:hover{border-color:var(--dim)}
+
+/* footer */
+footer{
+  border-top:1px solid var(--faint);
+  padding: 60px 32px 80px;
+  text-align:center;
+  color:var(--dim);
+  font-size:10px;
+  letter-spacing:0.25em;
+}
+footer .links{display:flex;gap:28px;justify-content:center;margin-top:16px}
+footer a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--faint);padding-bottom:2px;}
+
+/* observer signup - tiny, almost hidden */
+.observer-box{
+  margin-top:40px;
+  padding:20px 24px;
+  border:1px solid var(--faint);
+  border-radius:4px;
+  max-width:440px;
+}
+.observer-box .tag{margin-bottom:12px}
+.observer-box input{
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--faint);
+  color:var(--fg);
+  font-family:inherit;
+  font-size:14px;
+  padding:8px 0;
+  width:calc(100% - 40px);
+  outline:none;
+  letter-spacing:0.02em;
+}
+.observer-box input:focus{border-color:var(--dim)}
+.observer-box button{
+  background:transparent;
+  border:none;
+  color:var(--fg);
+  font-family:inherit;
+  font-size:14px;
+  cursor:pointer;
+  padding:8px 4px;
+  margin-left:4px;
+}
+.observer-box button:hover{color:var(--grey)}
+.obs-status{margin-top:10px;font-size:10px;letter-spacing:0.15em;color:var(--dim);min-height:1em}
+
+/* single product — hidden until observed */
+.sole-product{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:24px;
+  padding: 10vh 0;
+  opacity:0;
+  transition: opacity 2.5s ease;
+}
+.sole-product.revealed{opacity:1}
+.sole-product img{
+  max-width:300px;
+  width:100%;
+  opacity:0.85;
+  filter:grayscale(0.3) brightness(0.95);
+  transition: filter 1s ease, opacity 1s ease;
+}
+.sole-product:hover img{filter:grayscale(0) brightness(1.05);opacity:1}
+.sole-product .name{
+  font-size:12px;
+  letter-spacing:0.3em;
+  color:var(--dim);
+}
+.sole-product .price{
+  font-size:11px;
+  letter-spacing:0.2em;
+  color:var(--dim);
+}
+.sole-product a{
+  display:inline-block;
+  margin-top:8px;
+  padding:10px 22px;
+  border:1px solid var(--faint);
+  color:var(--fg);
+  text-decoration:none;
+  font-size:10px;
+  letter-spacing:0.3em;
+  transition: border-color 0.4s, color 0.4s;
+}
+.sole-product a:hover{border-color:var(--fg);color:#fff}
+
+/* reveal-on-scroll */
+.reveal{opacity:0;transform:translateY(12px);transition:opacity 1.5s ease, transform 1.5s ease}
+.reveal.visible{opacity:1;transform:none}
+
+/* sentinel dot — a tiny grey circle that pulses. click to unfold */
+.sentinel{
+  position:fixed;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%);
+  width:8px; height:8px;
+  border-radius:50%;
+  background:var(--grey);
+  box-shadow:0 0 20px rgba(128,128,128,0.4);
+  z-index:10;
+  animation: pulse 4s ease-in-out infinite;
+  mix-blend-mode:difference;
+}
+@keyframes pulse{
+  0%,100%{transform:translateX(-50%) scale(1);opacity:0.5}
+  50%{transform:translateX(-50%) scale(1.4);opacity:1}
+}
+
+/* mobile */
+@media (max-width: 600px) {
+  body{cursor:auto}
+  .rainbow-spot{display:none}
+  .brand,.nav{top:16px}
+  .brand{left:16px}
+  .nav{right:16px;gap:12px;font-size:9px}
+  main{padding:14vh 20px 20vh}
+  section{min-height:70vh;padding:8vh 0}
+}
+</style>
+</head>
+<body>
+
+<div class="brand">inryokü</div>
+<nav class="nav">
+  <a href="/">shop</a>
+  <a href="#observe">observe</a>
+</nav>
+
+<div class="rainbow-spot" id="rainbow"></div>
+
+<main>
+
+  <section class="reveal">
+    <h1>
+      grey holds<br>
+      every color.
+    </h1>
+    <p class="dim big" style="margin-top:40px">
+      ——
+    </p>
+  </section>
+
+  <section class="reveal">
+    <span class="tag">01 — reality</span>
+    <h2>reality is grey.</h2>
+    <p>
+      RGB mixed together makes white.<br>
+      CMY mixed together makes black.<br>
+      everything in between is grey.
+    </p>
+    <p class="dim">
+      we live at the middle. 50%.
+    </p>
+  </section>
+
+  <section class="reveal">
+    <span class="tag">02 — observation</span>
+    <h2>observe, and the rainbow appears.</h2>
+    <p>
+      grey is not the absence of color.<br>
+      it is every color, folded in.
+    </p>
+    <p>
+      to see it, you have to look — not at the grey,<br>
+      but at what it contains.
+    </p>
+    <p class="dim">
+      the rainbow was always there.<br>
+      you just weren't observing.
+    </p>
+  </section>
+
+  <section class="reveal">
+    <span class="tag">03 — 101%</span>
+    <h2>beyond full.</h2>
+    <p>
+      we don't go from 50% to 100%.<br>
+      100% is a ceiling someone else invented.
+    </p>
+    <p>
+      we go from 50% to 101%.<br>
+      we pass through the ceiling.
+    </p>
+    <p class="dim">
+      inryokü = the pressure that lifts.
+    </p>
+  </section>
+
+  <section class="reveal" id="observe">
+    <span class="tag">04 — become grey</span>
+    <h2>you are welcome here.</h2>
+    <p>
+      a Grey is a person who has decided to observe.<br>
+      no account. no password.<br>
+      just a number and a shade that is yours.
+    </p>
+
+    <div class="observer-box">
+      <div class="tag">Grey になる</div>
+      <input type="email" id="obs-email" placeholder="your transmission address" autocomplete="email">
+      <button id="obs-submit">→</button>
+      <div class="obs-status" id="obs-status"></div>
+    </div>
+
+    <p class="dim" style="margin-top:28px;font-size:12px;">
+      after registration, a profile unfolds at<br>
+      <span style="color:var(--fg)">/grey/#0042</span> — yours to define.
+    </p>
+  </section>
+
+  <section class="reveal">
+    <span class="tag">05 — object</span>
+    <h2>one object, for now.</h2>
+    <p>
+      inryokü makes few things, slowly.<br>
+      each piece is a wearable statement, not a season.
+    </p>
+    <div class="sole-product revealed" id="sole-product">
+      <img src="public/enter_hoodie.png" alt="ENTER HOODIE">
+      <div class="name">ENTER HOODIE</div>
+      <div class="price">¥12,800</div>
+      <a href="/">enter the shop →</a>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <span class="tag">06 — philosophy</span>
+    <h2>why grey.</h2>
+    <p>
+      the world wants you to pick a side.<br>
+      black or white. success or failure. 0 or 1.
+    </p>
+    <p>
+      grey is the refusal of that frame.<br>
+      grey is the space where both exist at once.
+    </p>
+    <p class="dim">
+      to wear grey is to say:<br>
+      i reserve the right to see everything.
+    </p>
+  </section>
+
+  <section class="reveal" style="border-top:none">
+    <h2 style="font-size:clamp(32px, 6vw, 64px)">
+      observe the 50%.<br>
+      find the 101%.
+    </h2>
+    <p class="dim" style="margin-top:40px;font-size:12px;letter-spacing:0.25em">
+      inryokü<br>
+      2026 —
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  inryokü · grey since 2026<br>
+  <div class="links">
+    <a href="/">shop</a>
+    <a href="/legal.html">legal</a>
+    <a href="/privacy.html">privacy</a>
+    <a href="/returns.html">returns</a>
+  </div>
+</footer>
+
+<div class="sentinel" title="observe"></div>
+
+<script>
+/* ──────────────────────────────────────────
+   cursor → rainbow spot follows
+────────────────────────────────────────── */
+(function() {
+  var spot = document.getElementById('rainbow');
+  var lastMove = Date.now();
+  var idle = null;
+  document.addEventListener('mousemove', function(e) {
+    spot.style.left = e.clientX + 'px';
+    spot.style.top  = e.clientY + 'px';
+    document.body.classList.add('observing');
+    lastMove = Date.now();
+    clearTimeout(idle);
+    idle = setTimeout(function() { document.body.classList.remove('observing'); }, 2000);
+  });
+})();
+
+/* ──────────────────────────────────────────
+   reveal on scroll
+────────────────────────────────────────── */
+(function() {
+  var revs = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.15 });
+  revs.forEach(function(r) { io.observe(r); });
+})();
+
+/* ──────────────────────────────────────────
+   observer signup
+────────────────────────────────────────── */
+(function() {
+  var btn = document.getElementById('obs-submit');
+  var input = document.getElementById('obs-email');
+  var status = document.getElementById('obs-status');
+  function submit() {
+    var em = (input.value || '').trim();
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+      status.textContent = 'invalid transmission address';
+      return;
+    }
+    status.textContent = 'transmitting…';
+    fetch('/api/subscribe', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: em })
+    }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.number) {
+          try {
+            localStorage.setItem('inryoku.uchujin_number', String(data.number));
+            if (data.token)     localStorage.setItem('inryoku.uchujin_token', data.token);
+            if (data.greyColor) localStorage.setItem('inryoku.uchujin_color', data.greyColor);
+          } catch(e) {}
+          status.innerHTML = 'you are Grey #' + String(data.number).padStart(4, '0') + ' · ' + (data.greyColor || '');
+          input.disabled = true;
+        } else {
+          status.textContent = data.error || 'error';
+        }
+      }).catch(function() {
+        status.textContent = 'network silence';
+      });
+  }
+  if (btn) btn.addEventListener('click', submit);
+  if (input) input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') submit();
+  });
+})();
+
+/* ──────────────────────────────────────────
+   sentinel dot — click scrolls down
+────────────────────────────────────────── */
+document.querySelector('.sentinel').addEventListener('click', function() {
+  window.scrollBy({ top: window.innerHeight * 0.9, behavior: 'smooth' });
+});
+</script>
+</body>
+</html>
