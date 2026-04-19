@@ -39,6 +39,12 @@ inryokü続き。/Users/10ta210/Desktop/inryoku。最大自律で頑張って。
 - SNS投稿・公開メッセージ送信
 - DB全削除・破壊的操作
 
+## Codex コラボ
+司がChatGPT Plus課金済。`codex exec "..."` で対話。
+- デザイン/哲学判断 → codexに質問→意見→俺が実装
+- コード・ツール操作は俺主担当
+- 結果報告: "codexはX、俺はYを実装"
+
 ## 今日のタスク（司が何も言わなくても勝手に進める順）
 1. Gelato商品12品目（画像upload だけ司に頼む）
 2. Shopify variant GID 取得 → コード埋込
