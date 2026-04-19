@@ -623,16 +623,16 @@ const server = http.createServer((req, res) => {
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>404 — reality not found — inryokü</title>
+<title>404 — 現実が見つかりません — inryokü</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0000aa;color:#fff;font-family:'Courier New',Courier,monospace;min-height:100vh;padding:40px 20px;overflow-x:hidden;line-height:1.6}
+body{background:#0000aa;color:#fff;font-family:'MS Gothic','Hiragino Kaku Gothic ProN','Courier New',monospace;min-height:100vh;padding:40px 20px;overflow-x:hidden;line-height:1.7}
 .bsod{max-width:720px;margin:0 auto;padding-top:40px}
 .sad{font-size:64px;line-height:1;margin-bottom:24px;letter-spacing:-0.02em}
 h1{font-size:22px;font-weight:400;margin-bottom:20px;letter-spacing:0.05em}
-p{font-size:13px;margin-bottom:14px;letter-spacing:0.02em}
-.err{font-size:11px;margin-top:40px;border-top:1px solid rgba(255,255,255,0.3);padding-top:14px}
+p{font-size:13px;margin-bottom:12px;letter-spacing:0.02em}
+.err{font-size:11px;margin-top:36px;border-top:1px solid rgba(255,255,255,0.3);padding-top:14px}
 .err b{font-weight:700}
 .back{display:inline-block;margin-top:36px;padding:8px 18px;border:1px solid #fff;color:#fff;text-decoration:none;font-size:12px;letter-spacing:0.2em}
 .back:hover{background:#fff;color:#0000aa}
@@ -643,19 +643,19 @@ p{font-size:13px;margin-bottom:14px;letter-spacing:0.02em}
 <body>
 <div class="bsod">
 <div class="sad">:(</div>
-<h1>REALITY NOT FOUND</h1>
-<p>Your observation triggered a URL that does not exist in this universe.</p>
-<p>Grey contains every color. But this page was never observed.</p>
-<p>We're collecting some error info, and then we'll restart for you.</p>
-<p>0% complete <span class="blink">_</span></p>
+<h1>現実が見つかりません</h1>
+<p>あなたの観測は、この宇宙に存在しないURLを起動しました。</p>
+<p>グレーの中には全ての色がある。しかしこのページは、まだ誰にも観測されなかった。</p>
+<p>エラー情報を収集しています。その後、現実を再起動します。</p>
+<p>0% 完了 <span class="blink">_</span></p>
 <div class="err">
-<p>For more information about this issue and possible fixes, visit:</p>
-<p><b>https://inryoku.com/50-percent</b></p>
-<p>If you call a support person, give them this info:</p>
-<p>Stop code: <b>OBSERVER_NOT_DETECTED</b></p>
-<p>What failed: <b>reality.dll — 50% coherence lost</b></p>
+<p>詳細情報・復旧手順は下記を参照してください:</p>
+<p><b>inryoku.com/50-percent</b></p>
+<p>サポートに連絡する場合は以下を伝えてください:</p>
+<p>停止コード: <b>OBSERVER_NOT_DETECTED</b>（観測者未検出）</p>
+<p>障害箇所: <b>reality.dll — 50% 一貫性喪失</b></p>
 </div>
-<a class="back" href="/">← RETURN TO UNIVERSE</a>
+<a class="back" href="/">← 宇宙へ戻る</a>
 </div>
 </body>
 </html>`);
