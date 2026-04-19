@@ -2391,7 +2391,8 @@ void main() {
                 depthFade = depthFade * depthFade;
                 // 微かな明滅（星座の瞬き）+ 音楽で脈動
                 float twinkle = 0.7 + 0.3 * sin(uTime * 0.8 + vDepth * 0.05) + uAudioEnergy * 0.4;
-                float alpha = depthFade * twinkle * 0.8;
+                // 2026-04-19: 0.8→1.3 星座の繋がり視認性アップ
+                float alpha = depthFade * twinkle * 1.3;
                 gl_FragColor = vec4(vColor * (0.6 + depthFade * 0.4 + uAudioEnergy * 0.3), alpha);
             }
         `,
@@ -2419,7 +2420,7 @@ void main() {
         }
 
         let lineIdx = 0;
-        const CONNECT_DIST = 70;
+        const CONNECT_DIST = 110;  // 2026-04-19: 70→110 視認性UP
 
         for (let a = 0; a < nearby.length && lineIdx < MAX_LINES; a++) {
             const ia = nearby[a];
@@ -2633,7 +2634,8 @@ void main() {
     }
 
     // ── Logo Click Easter Egg: RGBCMY Explosion ──
-    (function() {
+    // 2026-04-19: 司さん要望により無効化（Big Bang本編で十分）
+    if (false) (function() {
         var _eggColors = ['#FF0000', '#00FF00', '#0044FF', '#00FFFF', '#FF00FF', '#FFFF00'];
         var _eggCooldown = false;
         var _eggLogoEl = document.getElementById('bb-logo');
