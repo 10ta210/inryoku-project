@@ -607,6 +607,14 @@ const server = http.createServer((req, res) => {
     if (basename === '.env' || basename === '.gitignore' || filePath.startsWith(path.join(__dirname, 'data'))) {
         res.writeHead(403); return res.end('Forbidden');
     }
+    // 開発用ディレクトリ・プロンプト・ドキュメントをブロック（公開しない）
+    if (filePath.startsWith(path.join(__dirname, '_dev')) ||
+        filePath.startsWith(path.join(__dirname, 'prompts')) ||
+        filePath.startsWith(path.join(__dirname, 'docs')) ||
+        filePath.startsWith(path.join(__dirname, '.superpowers')) ||
+        filePath.startsWith(path.join(__dirname, '.claude'))) {
+        res.writeHead(404); return res.end('Not Found');
+    }
 
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
