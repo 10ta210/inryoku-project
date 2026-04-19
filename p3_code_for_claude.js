@@ -1329,8 +1329,29 @@ function initStoreGrid() {
         }, 60);
     }
 
-    // ── ホバーで停止 + そのカードだけ前に出る（メリーゴーランド単純版）──
+    // ── ホバー/タップで前に出る + クリック(2回目)でモーダル ──
     var isHovering = false;
+    var activeCard = null; // 現在前に出てるカード (mobile tap用)
+    function bringCardForward(card, idx) {
+        var targetAngle = -(360 / count) * idx;
+        var diff = targetAngle - currentAngle;
+        diff = ((diff % 360) + 540) % 360 - 180;
+        var dest = currentAngle + diff;
+        ring.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+        currentAngle = dest;
+        ring.style.transform = 'rotateY(' + dest + 'deg)';
+        var angle = (360 / count) * idx;
+        // 2026-04-20: scale 1.15→1.08 でロゴに被らない
+        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(290px) scale(1.08)';
+        card.style.filter = 'brightness(1.4)';
+        card.style.zIndex = '20';
+    }
+    function resetCard(card, idx) {
+        var angle = (360 / count) * idx;
+        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(240px) scale(1)';
+        card.style.filter = '';
+        card.style.zIndex = '';
+    }
     items.forEach(function(card) {
         card.style.cursor = 'pointer';
         card.style.transition = 'filter 0.3s ease, transform 0.4s cubic-bezier(0.23,1,0.32,1)';
@@ -1338,37 +1359,41 @@ function initStoreGrid() {
         card.addEventListener('mouseenter', function() {
             isHovering = true;
             velocity = 0;
-            var idx = parseInt(card.dataset.idx);
-            var targetAngle = -(360 / count) * idx;
-            var diff = targetAngle - currentAngle;
-            diff = ((diff % 360) + 540) % 360 - 180;
-            var dest = currentAngle + diff;
-            ring.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
-            currentAngle = dest;
-            ring.style.transform = 'rotateY(' + dest + 'deg)';
-            var angle = (360 / count) * idx;
-            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(290px) scale(1.15)';
-            card.style.filter = 'brightness(1.4)';
-            card.style.zIndex = '20';
+            bringCardForward(card, parseInt(card.dataset.idx));
         });
 
         card.addEventListener('mouseleave', function() {
             isHovering = false;
             ring.style.transition = 'none';
-            var idx = parseInt(card.dataset.idx);
-            var angle = (360 / count) * idx;
-            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(240px) scale(1)';
-            card.style.filter = '';
-            card.style.zIndex = '';
+            resetCard(card, parseInt(card.dataset.idx));
         });
 
         card.addEventListener('click', function(e) {
             if (isDragging || dragMoved) return;
-            spawnBigBang(e.clientX, e.clientY, 15);
             var idx = parseInt(card.dataset.idx);
+            // 2段階タップ: 1回目で前に出す、2回目でモーダル
+            if (activeCard !== card) {
+                // 前の選択を戻す
+                if (activeCard) resetCard(activeCard, parseInt(activeCard.dataset.idx));
+                activeCard = card;
+                velocity = 0;
+                bringCardForward(card, idx);
+                spawnBigBang(e.clientX, e.clientY, 8);
+                return;
+            }
+            // 2回目タップ: モーダル
+            spawnBigBang(e.clientX, e.clientY, 15);
             showProductModal(idx);
         });
     });
+    // カルーセル外タップでactiveCard解除
+    document.addEventListener('click', function(e) {
+        if (!activeCard) return;
+        if (!activeCard.contains(e.target)) {
+            resetCard(activeCard, parseInt(activeCard.dataset.idx));
+            activeCard = null;
+        }
+    }, true);
 
     // ── メインループ（自動回転 + 慣性 + 正面検出） ──
     function tick() {

@@ -59,7 +59,8 @@
       /* 2026-04-20: ロゴが小さすぎ司さんに指摘 → 100→140px */
       width: clamp(90px, 12vw, 140px);
       position: relative;
-      z-index: 10;
+      /* 2026-04-20: カード拡大時もロゴが見えるよう最前面 */
+      z-index: 30;
     }
 
     /* ── ラッパーに3Dパースペクティブ ── */
@@ -479,9 +480,9 @@
     }
     .carousel-item {
       position: absolute;
-      /* 2026-04-19: 120→140px に調整 (高さUPに合わせて幅も少し広く) */
-      width: 140px;
-      left: 10px;
+      /* 2026-04-20: 司要望により 140→110px に縮小 */
+      width: 110px;
+      left: 25px;
       top: 0;
       transform-style: preserve-3d;
       backface-visibility: hidden;
