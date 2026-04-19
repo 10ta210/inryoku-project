@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /data/
+Disallow: /prompts/
+Disallow: /.env
+Disallow: /card-demo.html
+Disallow: /design-options.html
+Disallow: /mac-skins-demo.html
+Disallow: /p1_index_for_claude.html
+Disallow: /p2_index_for_claude.html
+Disallow: /p2_test.html
+Disallow: /p3_test.html
+
+Sitemap: https://inryoku-project-production-f827.up.railway.app/sitemap.xml
