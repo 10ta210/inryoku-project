@@ -1329,64 +1329,37 @@ function initStoreGrid() {
         }, 60);
     }
 
-    // ── ホバー＝フォーカスモード：中央+隣接が扇状に広がる ──
+    // ── ホバーで停止 + そのカードだけ前に出る（メリーゴーランド単純版）──
     var isHovering = false;
-    var focusIdleTimer = null;
-    function applyFocusTransforms(focusIdx) {
-        // 中央＋両隣±1＋±2 を手前に扇状展開
-        items.forEach(function(item, i) {
-            var angle = (360 / count) * i;
-            // focusIdx からの距離（±方向で最短）
-            var diff = ((i - focusIdx) % count + count) % count;
-            if (diff > count / 2) diff -= count;
-            var absDiff = Math.abs(diff);
-            var z = 240, scale = 1, bright = '';
-            if (absDiff === 0)       { z = 320; scale = 1.18; bright = 'brightness(1.4)'; }
-            else if (absDiff === 1)  { z = 280; scale = 1.02; bright = 'brightness(1.1)'; }
-            else if (absDiff === 2)  { z = 255; scale = 0.9;  bright = 'brightness(0.85)'; }
-            item.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + z + 'px) scale(' + scale + ')';
-            if (bright) item.style.filter = bright;
-            item.style.zIndex = absDiff === 0 ? '20' : (absDiff === 1 ? '15' : '');
-        });
-    }
-    function resetCarouselTransforms() {
-        items.forEach(function(item, i) {
-            var angle = (360 / count) * i;
-            item.style.transform = 'rotateY(' + angle + 'deg) translateZ(240px) scale(1)';
-            item.style.filter = '';
-            item.style.zIndex = '';
-        });
-    }
     items.forEach(function(card) {
         card.style.cursor = 'pointer';
-        card.style.transition = 'filter 0.4s ease, transform 0.55s cubic-bezier(0.22,1,0.36,1)';
+        card.style.transition = 'filter 0.3s ease, transform 0.4s cubic-bezier(0.23,1,0.32,1)';
 
         card.addEventListener('mouseenter', function() {
             isHovering = true;
             velocity = 0;
-            clearTimeout(focusIdleTimer);
-
             var idx = parseInt(card.dataset.idx);
-            // ホバーしたカードを正面に回転
             var targetAngle = -(360 / count) * idx;
             var diff = targetAngle - currentAngle;
             diff = ((diff % 360) + 540) % 360 - 180;
             var dest = currentAngle + diff;
-            ring.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1)';
+            ring.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
             currentAngle = dest;
             ring.style.transform = 'rotateY(' + dest + 'deg)';
-            // 扇状展開
-            applyFocusTransforms(idx);
+            var angle = (360 / count) * idx;
+            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(290px) scale(1.15)';
+            card.style.filter = 'brightness(1.4)';
+            card.style.zIndex = '20';
         });
 
         card.addEventListener('mouseleave', function() {
             isHovering = false;
-            // 3秒無操作でリセット（すぐ戻すのではなく余韻を残す）
-            clearTimeout(focusIdleTimer);
-            focusIdleTimer = setTimeout(function() {
-                ring.style.transition = 'none';
-                resetCarouselTransforms();
-            }, 3000);
+            ring.style.transition = 'none';
+            var idx = parseInt(card.dataset.idx);
+            var angle = (360 / count) * idx;
+            card.style.transform = 'rotateY(' + angle + 'deg) translateZ(240px) scale(1)';
+            card.style.filter = '';
+            card.style.zIndex = '';
         });
 
         card.addEventListener('click', function(e) {
@@ -2127,7 +2100,8 @@ function initParticleUniverse() {
     //  15000 RGBCMY+White 星 — 呼吸する宇宙
     // ═══════════════════════════════════════════════════════════════
     const isMobile = W < 768;
-    const N = isMobile ? 3000 : 8000;
+    // 2026-04-20: 粒子多すぎ問題により削減 (mob 3000→2000, desk 8000→4500)
+    const N = isMobile ? 2000 : 4500;
 
     const positions = new Float32Array(N * 3);
     const colors = new Float32Array(N * 3);

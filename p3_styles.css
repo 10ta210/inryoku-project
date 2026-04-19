@@ -56,7 +56,8 @@
       display: block;
       /* 2026-04-17: ブランド名直下にピッタリ付ける */
       margin: 0 auto;
-      width: clamp(60px, 8vw, 100px);
+      /* 2026-04-20: ロゴが小さすぎ司さんに指摘 → 100→140px */
+      width: clamp(90px, 12vw, 140px);
       position: relative;
       z-index: 10;
     }
