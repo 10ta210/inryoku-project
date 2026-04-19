@@ -1515,7 +1515,8 @@
       perspective: 600px;
     }
     .carousel-item {
-      width: 80px;
+      /* 2026-04-19: モバイルでも商品名が全部見えるように幅UP 80→130 */
+      width: 130px;
       left: 5px;
     }
     .item-grid {
@@ -1524,8 +1525,13 @@
     .product-card-img {
       border-radius: 12px;
     }
-    .product-card-name { font-size: 8px; }
-    .product-card-price { font-size: 8px; }
+    .product-card-name {
+      font-size: 9px;
+      white-space: normal;    /* 長い名前の改行を許可 */
+      word-break: normal;
+      line-height: 1.3;
+    }
+    .product-card-price { font-size: 9px; }
     /* モバイル: 問い合わせ・メール */
     .contact-input, .contact-textarea {
       font-size: 16px; /* iOS zoom防止 */

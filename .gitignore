@@ -6,3 +6,4 @@ data/
 *.mp4
 vendor/jupiter.mp3
 *.broken_backup
+*.reference.js
