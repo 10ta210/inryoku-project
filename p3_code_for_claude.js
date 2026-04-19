@@ -1124,15 +1124,83 @@ function renderPhase3() {
     var scContentForTheme = document.querySelector('.singularity-content');
     if (scContentForTheme) { scContentForTheme.appendChild(themeSwitcher); }
 
-    // テーマ切替ロジック
+    // テーマ切替ロジック（カードスキンも連動）
+    var THEME_SKIN_MAP = { cosmos: 'glass', mac: 'mac-system1', win95: 'win95' };
+    function applyThemeSkin(theme) {
+        document.body.setAttribute('data-theme', theme);
+        var skin = THEME_SKIN_MAP[theme] || 'glass';
+        // 全カードの data-skin 属性更新
+        document.querySelectorAll('.carousel-item').forEach(function(c) {
+            c.classList.remove('mac-system1','mac-os9','mac-imacg3','mac-apple2','win95-skin');
+            if (skin === 'mac-system1') c.classList.add('mac-system1');
+            if (skin === 'win95') c.classList.add('win95-skin');
+        });
+        // イースターエッグ解放済みスキンがあれば優先
+        var layers = JSON.parse(localStorage.getItem('inryoku.layers') || '[]');
+        if (layers.length && theme === 'mac') {
+            var active = layers[layers.length - 1];
+            document.querySelectorAll('.carousel-item').forEach(function(c) {
+                c.classList.remove('mac-system1');
+                c.classList.add('mac-' + active);
+            });
+        }
+    }
     themeSwitcher.querySelectorAll('.theme-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var theme = btn.dataset.theme;
-            document.body.setAttribute('data-theme', theme);
+            applyThemeSkin(theme);
             themeSwitcher.querySelectorAll('.theme-btn').forEach(function(b) { b.classList.remove('theme-btn--active'); });
             btn.classList.add('theme-btn--active');
         });
     });
+
+    // ── イースターエッグ: Konami Code → レイヤー解放 ──
+    (function setupEasterEggs() {
+        var KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
+        var progress = 0;
+        var LAYERS = ['os9', 'imacg3', 'apple2'];
+        function showToast(msg) {
+            var t = document.createElement('div');
+            t.textContent = msg;
+            t.style.cssText = 'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#000;color:#0f0;padding:10px 18px;border:1px solid #0f0;font-family:monospace;font-size:11px;letter-spacing:0.15em;z-index:9999;opacity:0;transition:opacity .4s;';
+            document.body.appendChild(t);
+            requestAnimationFrame(function() { t.style.opacity = '1'; });
+            setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 500); }, 3500);
+        }
+        function unlockLayer(name) {
+            var layers = JSON.parse(localStorage.getItem('inryoku.layers') || '[]');
+            if (layers.indexOf(name) !== -1) return;
+            layers.push(name);
+            localStorage.setItem('inryoku.layers', JSON.stringify(layers));
+            var messages = { os9: '// observer detected: layer 1', imacg3: '// you saw the grey: layer 2', apple2: '// 101%: the origin' };
+            showToast(messages[name] || '// layer unlocked');
+            // スキン即時反映
+            document.querySelectorAll('.carousel-item').forEach(function(c) {
+                c.classList.remove('mac-system1','mac-os9','mac-imacg3','mac-apple2');
+                c.classList.add('mac-' + name);
+            });
+            document.body.setAttribute('data-theme', 'mac');
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.code === KONAMI[progress]) {
+                progress++;
+                if (progress === KONAMI.length) {
+                    progress = 0;
+                    var layers = JSON.parse(localStorage.getItem('inryoku.layers') || '[]');
+                    // 未解放レイヤーを順次解放
+                    for (var i = 0; i < LAYERS.length; i++) {
+                        if (layers.indexOf(LAYERS[i]) === -1) {
+                            unlockLayer(LAYERS[i]);
+                            return;
+                        }
+                    }
+                    showToast('// all layers already unlocked');
+                }
+            } else {
+                progress = 0;
+            }
+        });
+    })();
 
     // ── フッター（最小化 — クリックで展開） ──
     const footer = document.createElement('footer');
