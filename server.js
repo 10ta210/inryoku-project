@@ -546,11 +546,12 @@ const server = http.createServer((req, res) => {
                 return res.end(JSON.stringify({ error: 'already subscribed' }));
             }
 
-            db.subscribers.push({ email, created: new Date().toISOString() });
+            const number = db.subscribers.length + 1; // 入団番号
+            db.subscribers.push({ email, number, created: new Date().toISOString() });
             fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 
             res.writeHead(200, {'Content-Type':'application/json'});
-            res.end(JSON.stringify({ success: true, message: 'subscribed' }));
+            res.end(JSON.stringify({ success: true, message: 'subscribed', number }));
         });
         return;
     }

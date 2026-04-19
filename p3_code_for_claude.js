@@ -991,8 +991,8 @@ function renderPhase3() {
     emailSignup.style.cssText = 'opacity:0;transition:opacity 1.2s ease;';
     emailSignup.innerHTML = `
         ${buildParticles()}
-        <div class="email-signup-label">DROP NOTIFICATION</div>
-        <div class="email-signup-sub">新作・限定ドロップの通知を受け取る</div>
+        <div class="email-signup-label">うちゅうじんになる</div>
+        <div class="email-signup-sub">50% → 101% を観測する者たちへ</div>
         <div class="email-signup-row">
             <input type="email" id="email-input" placeholder="your@email.com" class="email-signup-input">
             <button id="email-submit" class="email-signup-btn">→</button>
@@ -1029,14 +1029,15 @@ function renderPhase3() {
                 if (!res.ok) throw new Error('登録に失敗しました');
                 return res.json();
             })
-            .then(function() {
+            .then(function(data) {
                 // メール欄中心からビッグバン
                 var emailEl = document.getElementById('email-signup');
                 if (emailEl) {
                     var er = emailEl.getBoundingClientRect();
                     spawnBigBang(er.left + er.width / 2, er.top + er.height / 2, 30);
                 }
-                status.textContent = '✓ 登録完了';
+                var num = data && data.number ? ' #' + String(data.number).padStart(4, '0') : '';
+                status.textContent = '✓ welcome, うちゅうじん' + num;
                 status.style.color = 'rgba(100,255,150,0.6)';
                 input.disabled = true;
                 emailSubmitBtn.disabled = true;
