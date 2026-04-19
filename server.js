@@ -610,8 +610,47 @@ const server = http.createServer((req, res) => {
 
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
-            res.writeHead(404, {'Content-Type': 'text/html'});
-            return res.end(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>404 — inryoku</title><style>*{margin:0;padding:0}body{background:#0a0a0a;color:rgba(255,255,255,0.4);font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}h1{font-size:48px;font-weight:200;color:rgba(255,255,255,0.15)}p{font-size:13px;letter-spacing:0.1em}a{color:rgba(255,255,255,0.3);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.1);font-size:11px;letter-spacing:0.15em}a:hover{color:rgba(255,255,255,0.7)}</style></head><body><h1>404</h1><p>this page doesn't exist yet</p><a href="/">← BACK TO UNIVERSE</a></body></html>`);
+            res.writeHead(404, {'Content-Type': 'text/html; charset=utf-8'});
+            return res.end(`<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>404 — reality not found — inryokü</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0000aa;color:#fff;font-family:'Courier New',Courier,monospace;min-height:100vh;padding:40px 20px;overflow-x:hidden;line-height:1.6}
+.bsod{max-width:720px;margin:0 auto;padding-top:40px}
+.sad{font-size:64px;line-height:1;margin-bottom:24px;letter-spacing:-0.02em}
+h1{font-size:22px;font-weight:400;margin-bottom:20px;letter-spacing:0.05em}
+p{font-size:13px;margin-bottom:14px;letter-spacing:0.02em}
+.err{font-size:11px;margin-top:40px;border-top:1px solid rgba(255,255,255,0.3);padding-top:14px}
+.err b{font-weight:700}
+.back{display:inline-block;margin-top:36px;padding:8px 18px;border:1px solid #fff;color:#fff;text-decoration:none;font-size:12px;letter-spacing:0.2em}
+.back:hover{background:#fff;color:#0000aa}
+.blink{animation:blink 1.2s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+</style>
+</head>
+<body>
+<div class="bsod">
+<div class="sad">:(</div>
+<h1>REALITY NOT FOUND</h1>
+<p>Your observation triggered a URL that does not exist in this universe.</p>
+<p>Grey contains every color. But this page was never observed.</p>
+<p>We're collecting some error info, and then we'll restart for you.</p>
+<p>0% complete <span class="blink">_</span></p>
+<div class="err">
+<p>For more information about this issue and possible fixes, visit:</p>
+<p><b>https://inryoku.com/50-percent</b></p>
+<p>If you call a support person, give them this info:</p>
+<p>Stop code: <b>OBSERVER_NOT_DETECTED</b></p>
+<p>What failed: <b>reality.dll — 50% coherence lost</b></p>
+</div>
+<a class="back" href="/">← RETURN TO UNIVERSE</a>
+</div>
+</body>
+</html>`);
         }
 
         const ext = path.extname(filePath).toLowerCase();
