@@ -994,14 +994,14 @@ function renderPhase3() {
     if (savedNum) {
         emailSignup.innerHTML = `
             ${buildParticles()}
-            <div class="email-signup-label">you are うちゅうじん</div>
+            <div class="email-signup-label">you are Grey</div>
             <div class="email-signup-sub" style="font-size:22px;letter-spacing:0.25em;color:rgba(255,255,255,0.75);margin-top:8px;">#${String(savedNum).padStart(4,'0')}</div>
             <div class="email-signup-sub" style="margin-top:12px;">観測を続けてください</div>
         `;
     } else {
         emailSignup.innerHTML = `
             ${buildParticles()}
-            <div class="email-signup-label">うちゅうじんになる</div>
+            <div class="email-signup-label">Grey になる</div>
             <div class="email-signup-sub">50% → 101% を観測する者たちへ</div>
             <div class="email-signup-row">
                 <input type="email" id="email-input" placeholder="your@email.com" class="email-signup-input">
@@ -1052,7 +1052,7 @@ function renderPhase3() {
                 if (data && data.number) {
                     try { localStorage.setItem('inryoku.uchujin_number', String(data.number)); } catch(e) {}
                 }
-                status.textContent = '✓ welcome, うちゅうじん' + num;
+                status.textContent = '✓ welcome, Grey' + num;
                 status.style.color = 'rgba(100,255,150,0.6)';
                 input.disabled = true;
                 emailSubmitBtn.disabled = true;
