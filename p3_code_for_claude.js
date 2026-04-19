@@ -984,21 +984,32 @@ function renderPhase3() {
     document.body.appendChild(bgmBtn);
     document.body.appendChild(bgmMenu);
 
-    // ── Email Signup ──
+    // ── Email Signup / 入団 ──
     const emailSignup = document.createElement('div');
     emailSignup.className = 'email-signup';
     emailSignup.id = 'email-signup';
     emailSignup.style.cssText = 'opacity:0;transition:opacity 1.2s ease;';
-    emailSignup.innerHTML = `
-        ${buildParticles()}
-        <div class="email-signup-label">うちゅうじんになる</div>
-        <div class="email-signup-sub">50% → 101% を観測する者たちへ</div>
-        <div class="email-signup-row">
-            <input type="email" id="email-input" placeholder="your@email.com" class="email-signup-input">
-            <button id="email-submit" class="email-signup-btn">→</button>
-        </div>
-        <div class="email-signup-status" id="email-status"></div>
-    `;
+    // 既に入団済みなら番号表示のみ
+    var savedNum = localStorage.getItem('inryoku.uchujin_number');
+    if (savedNum) {
+        emailSignup.innerHTML = `
+            ${buildParticles()}
+            <div class="email-signup-label">you are うちゅうじん</div>
+            <div class="email-signup-sub" style="font-size:22px;letter-spacing:0.25em;color:rgba(255,255,255,0.75);margin-top:8px;">#${String(savedNum).padStart(4,'0')}</div>
+            <div class="email-signup-sub" style="margin-top:12px;">観測を続けてください</div>
+        `;
+    } else {
+        emailSignup.innerHTML = `
+            ${buildParticles()}
+            <div class="email-signup-label">うちゅうじんになる</div>
+            <div class="email-signup-sub">50% → 101% を観測する者たちへ</div>
+            <div class="email-signup-row">
+                <input type="email" id="email-input" placeholder="your@email.com" class="email-signup-input">
+                <button id="email-submit" class="email-signup-btn">→</button>
+            </div>
+            <div class="email-signup-status" id="email-status"></div>
+        `;
+    }
     const scContentForEmail = document.querySelector('.singularity-content');
     if (scContentForEmail) { scContentForEmail.appendChild(emailSignup); }
 
@@ -1037,6 +1048,10 @@ function renderPhase3() {
                     spawnBigBang(er.left + er.width / 2, er.top + er.height / 2, 30);
                 }
                 var num = data && data.number ? ' #' + String(data.number).padStart(4, '0') : '';
+                // 入団番号を永続化（次回アクセス時に badge 表示）
+                if (data && data.number) {
+                    try { localStorage.setItem('inryoku.uchujin_number', String(data.number)); } catch(e) {}
+                }
                 status.textContent = '✓ welcome, うちゅうじん' + num;
                 status.style.color = 'rgba(100,255,150,0.6)';
                 input.disabled = true;
