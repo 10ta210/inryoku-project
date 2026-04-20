@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>inryokü — pattern gallery (20 samples)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0a;color:rgba(255,255,255,0.7);font-family:'IBM Plex Mono','SF Mono',monospace;padding:40px 20px;min-height:100vh}
+h1{font-size:14px;letter-spacing:0.3em;color:rgba(255,255,255,0.9);margin-bottom:8px;text-align:center;font-weight:300}
+p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:50px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:30px;max-width:1400px;margin:0 auto}
+.tile{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:20px;display:flex;flex-direction:column;align-items:center}
+.tile svg{width:200px;height:240px;background:#000;border-radius:4px}
+.tag{font-size:9px;letter-spacing:0.3em;color:rgba(255,255,255,0.3);margin-top:14px;text-transform:uppercase}
+.name{font-size:11px;letter-spacing:0.1em;color:rgba(255,255,255,0.85);margin-top:6px;font-weight:400;text-align:center}
+.desc{font-size:9px;line-height:1.6;color:rgba(255,255,255,0.4);margin-top:8px;text-align:center;letter-spacing:0.02em;max-width:200px}
+
+/* T-shirt silhouette template */
+.tshirt-bg{fill:#202020;stroke:rgba(255,255,255,0.15);stroke-width:1}
+</style>
+</head>
+<body>
+
+<h1>inryokü — 20 pattern samples</h1>
+<p class="sub">grey × RGBCMY / 各デザインは Tシャツ前面プリント想定</p>
+
+<div class="grid">
+
+<!-- ═══ tshirt template as reuse ═══ -->
+<!-- shape: width 200, height 240. neckline at top, sleeves slightly visible. Print area is roughly x:50-150, y:60-180 (100x120 box) -->
+
+<!-- 01 HIDDEN RAINBOW (moiré) -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <defs>
+    <clipPath id="tee01"><path d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/></clipPath>
+  </defs>
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g clip-path="url(#tee01)">
+    <rect x="50" y="70" width="100" height="120" fill="#6d6d6d"/>
+    <!-- fine RGBCMY stripes -->
+    <g opacity="0.6">
+    <rect x="50" y="70" width="100" height="2" fill="#ff0000"/>
+    <rect x="50" y="78" width="100" height="2" fill="#00ff00"/>
+    <rect x="50" y="86" width="100" height="2" fill="#0044ff"/>
+    <rect x="50" y="94" width="100" height="2" fill="#00ffff"/>
+    <rect x="50" y="102" width="100" height="2" fill="#ff00ff"/>
+    <rect x="50" y="110" width="100" height="2" fill="#ffff00"/>
+    <rect x="50" y="118" width="100" height="2" fill="#ff0000"/>
+    <rect x="50" y="126" width="100" height="2" fill="#00ff00"/>
+    <rect x="50" y="134" width="100" height="2" fill="#0044ff"/>
+    <rect x="50" y="142" width="100" height="2" fill="#00ffff"/>
+    <rect x="50" y="150" width="100" height="2" fill="#ff00ff"/>
+    <rect x="50" y="158" width="100" height="2" fill="#ffff00"/>
+    <rect x="50" y="166" width="100" height="2" fill="#ff0000"/>
+    <rect x="50" y="174" width="100" height="2" fill="#00ff00"/>
+    <rect x="50" y="182" width="100" height="2" fill="#0044ff"/>
+    </g>
+  </g>
+</svg>
+<div class="tag">01</div>
+<div class="name">hidden rainbow</div>
+<div class="desc">遠くグレー、近づくと細線虹</div>
+</div>
+
+<!-- 02 VENN DIAGRAM -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g opacity="0.85" style="mix-blend-mode:screen">
+    <!-- RGB circles -->
+    <circle cx="85" cy="110" r="22" fill="#ff0000" opacity="0.8"/>
+    <circle cx="115" cy="110" r="22" fill="#00ff00" opacity="0.8"/>
+    <circle cx="100" cy="135" r="22" fill="#0044ff" opacity="0.8"/>
+  </g>
+  <g transform="translate(0, 40)" opacity="0.85" style="mix-blend-mode:multiply">
+    <!-- CMY circles offset -->
+    <circle cx="85" cy="120" r="20" fill="#00ffff" opacity="0.5"/>
+    <circle cx="115" cy="120" r="20" fill="#ff00ff" opacity="0.5"/>
+    <circle cx="100" cy="140" r="20" fill="#ffff00" opacity="0.5"/>
+  </g>
+  <text x="100" y="180" text-anchor="middle" fill="#808080" font-size="6" letter-spacing="2" font-family="monospace">GREY = ∩</text>
+</svg>
+<div class="tag">02</div>
+<div class="name">venn diagram</div>
+<div class="desc">RGB ∩ CMY = grey</div>
+</div>
+
+<!-- 03 SPECTRUM COLLAPSE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g>
+    <rect x="55" y="100" width="90" height="30" fill="#808080"/>
+    <rect x="55" y="100" width="12" height="30" fill="#ff0000"/>
+    <rect x="67" y="100" width="12" height="30" fill="#ffff00"/>
+    <rect x="79" y="100" width="12" height="30" fill="#00ff00"/>
+    <rect x="91" y="100" width="12" height="30" fill="#808080"/>
+    <rect x="103" y="100" width="12" height="30" fill="#00ffff"/>
+    <rect x="115" y="100" width="12" height="30" fill="#0044ff"/>
+    <rect x="127" y="100" width="12" height="30" fill="#ff00ff"/>
+    <text x="100" y="160" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="6" letter-spacing="2" font-family="monospace">grey collapses</text>
+  </g>
+</svg>
+<div class="tag">03</div>
+<div class="name">spectrum collapse</div>
+<div class="desc">grey矩形 が 端から分裂</div>
+</div>
+
+<!-- 04 THERMOCHROMIC -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <defs>
+    <radialGradient id="thermo">
+      <stop offset="0%" stop-color="#ff0055" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#ffff00" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#00ffff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#808080" stop-opacity="0.3"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="130" r="45" fill="url(#thermo)"/>
+  <text x="100" y="200" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6" letter-spacing="2" font-family="monospace">36.5°C → rainbow</text>
+</svg>
+<div class="tag">04</div>
+<div class="name">thermochromic</div>
+<div class="desc">体温で色出現</div>
+</div>
+
+<!-- 05 UV FLUORESCENT -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <!-- simulated UV glow -->
+  <g filter="url(#glow05)">
+    <text x="100" y="115" text-anchor="middle" fill="#00ffff" font-size="18" letter-spacing="3" font-family="monospace" font-weight="bold">INRYOKU</text>
+    <text x="100" y="135" text-anchor="middle" fill="#ff00ff" font-size="8" letter-spacing="2" font-family="monospace">50% → 101%</text>
+    <circle cx="100" cy="160" r="12" stroke="#ffff00" stroke-width="1.5" fill="none"/>
+  </g>
+  <defs>
+    <filter id="glow05"><feGaussianBlur stdDeviation="1"/></filter>
+  </defs>
+  <text x="100" y="200" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="6" letter-spacing="2" font-family="monospace">invisible → UV only</text>
+</svg>
+<div class="tag">05</div>
+<div class="name">UV fluorescent</div>
+<div class="desc">ブラックライトで発光</div>
+</div>
+
+<!-- 06 HOLOGRAM ANGLE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <defs>
+    <linearGradient id="holo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/>
+      <stop offset="20%" stop-color="#ffff00"/>
+      <stop offset="40%" stop-color="#00ff00"/>
+      <stop offset="60%" stop-color="#00ffff"/>
+      <stop offset="80%" stop-color="#ff00ff"/>
+      <stop offset="100%" stop-color="#ff0000"/>
+    </linearGradient>
+  </defs>
+  <rect x="60" y="90" width="80" height="60" fill="url(#holo)" opacity="0.8"/>
+  <rect x="60" y="90" width="80" height="60" fill="#333" opacity="0.4"/>
+</svg>
+<div class="tag">06</div>
+<div class="name">hologram lenticular</div>
+<div class="desc">角度で色変化</div>
+</div>
+
+<!-- 07 MOIRE INTERFERENCE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <defs>
+    <pattern id="blk" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="1.5" fill="#000"/><rect y="1.5" width="3" height="1.5" fill="#fff"/></pattern>
+    <pattern id="rgbcmy" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(8)">
+      <rect width="4" height="1" fill="#ff0000" opacity="0.7"/>
+      <rect y="1" width="4" height="1" fill="#00ff00" opacity="0.7"/>
+      <rect y="2" width="4" height="1" fill="#0044ff" opacity="0.7"/>
+      <rect y="3" width="4" height="1" fill="#ffff00" opacity="0.7"/>
+    </pattern>
+  </defs>
+  <rect x="55" y="80" width="90" height="100" fill="url(#blk)"/>
+  <rect x="55" y="80" width="90" height="100" fill="url(#rgbcmy)" opacity="0.6"/>
+</svg>
+<div class="tag">07</div>
+<div class="name">moiré interference</div>
+<div class="desc">距離で色浮かぶ</div>
+</div>
+
+<!-- 08 PIXEL NOISE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g id="noise">
+    <!-- generate 12x12 grid of grey/colored pixels -->
+    <script type="application/xml"></script>
+  </g>
+  <g>
+  <!-- Manual grid -->
+  <!-- row 0 -->
+  <g>
+    <!-- use 12x12 rects -->
+  </g>
+  </g>
+  <!-- static noise grid generated inline -->
+  <g fill-opacity="0.9">
+    <!-- Each 7x7 -->
+  </g>
+  <!-- simplified: scatter rectangles -->
+  <g>
+    <rect x="55" y="80" width="90" height="100" fill="#444"/>
+    <rect x="58" y="83" width="6" height="6" fill="#ff0000"/>
+    <rect x="90" y="95" width="6" height="6" fill="#00ff00"/>
+    <rect x="120" y="100" width="6" height="6" fill="#0044ff"/>
+    <rect x="70" y="115" width="6" height="6" fill="#00ffff"/>
+    <rect x="105" y="130" width="6" height="6" fill="#ff00ff"/>
+    <rect x="75" y="140" width="6" height="6" fill="#ffff00"/>
+    <rect x="130" y="160" width="6" height="6" fill="#ff0000"/>
+    <rect x="85" y="160" width="6" height="6" fill="#00ffff"/>
+    <rect x="115" y="165" width="6" height="6" fill="#00ff00"/>
+    <rect x="95" y="175" width="6" height="6" fill="#ff00ff"/>
+    <rect x="65" y="170" width="6" height="6" fill="#ffff00"/>
+  </g>
+</svg>
+<div class="tag">08</div>
+<div class="name">pixel noise</div>
+<div class="desc">TV砂嵐風、RGBCMY混在</div>
+</div>
+
+<!-- 09 PRISM SPECTRUM -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <!-- grey beam entering -->
+  <line x1="55" y1="125" x2="90" y2="125" stroke="#aaa" stroke-width="1.5"/>
+  <!-- prism triangle -->
+  <polygon points="90,100 90,150 120,125" fill="none" stroke="#ccc" stroke-width="1"/>
+  <!-- rainbow beams exiting -->
+  <g stroke-width="1.2" opacity="0.9">
+    <line x1="120" y1="125" x2="160" y2="100" stroke="#ff0000"/>
+    <line x1="120" y1="125" x2="162" y2="110" stroke="#ffff00"/>
+    <line x1="120" y1="125" x2="163" y2="120" stroke="#00ff00"/>
+    <line x1="120" y1="125" x2="163" y2="130" stroke="#00ffff"/>
+    <line x1="120" y1="125" x2="162" y2="140" stroke="#0044ff"/>
+    <line x1="120" y1="125" x2="160" y2="150" stroke="#ff00ff"/>
+  </g>
+</svg>
+<div class="tag">09</div>
+<div class="name">prism spectrum</div>
+<div class="desc">grey光 → 虹分光</div>
+</div>
+
+<!-- 10 DOT MATRIX (bayer dither) -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g>
+    <!-- grid of dots -->
+  </g>
+  <g>
+    <!-- 20x20 grid of 3px dots -->
+    <g transform="translate(55,90)">
+      <g>
+        <!-- Generate via pattern -->
+      </g>
+    </g>
+    <defs>
+      <pattern id="dots10" width="7" height="7" patternUnits="userSpaceOnUse">
+        <circle cx="3.5" cy="3.5" r="1.5" fill="#fff"/>
+      </pattern>
+      <pattern id="dotsC" width="14" height="14" patternUnits="userSpaceOnUse">
+        <circle cx="3.5" cy="3.5" r="1.5" fill="#ff0000"/>
+        <circle cx="10.5" cy="3.5" r="1.5" fill="#00ff00"/>
+        <circle cx="3.5" cy="10.5" r="1.5" fill="#0044ff"/>
+        <circle cx="10.5" cy="10.5" r="1.5" fill="#ffff00"/>
+      </pattern>
+    </defs>
+    <rect x="55" y="80" width="90" height="100" fill="url(#dots10)"/>
+    <rect x="55" y="80" width="90" height="100" fill="url(#dotsC)" opacity="0.5" mix-blend-mode="screen"/>
+  </g>
+</svg>
+<div class="tag">10</div>
+<div class="name">dot matrix</div>
+<div class="desc">Bayerドット + RGBCMY</div>
+</div>
+
+<!-- 11 iNRYOKU TYPOGRAPHY -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g font-family="IBM Plex Mono, monospace" font-size="16" font-weight="400" letter-spacing="2">
+    <text x="60" y="130" fill="#808080">i</text>
+    <text x="72" y="130" fill="#ff0000">n</text>
+    <text x="84" y="130" fill="#00ff00">r</text>
+    <text x="96" y="130" fill="#0044ff">y</text>
+    <text x="108" y="130" fill="#00ffff">o</text>
+    <text x="120" y="130" fill="#ff00ff">k</text>
+    <text x="132" y="130" fill="#ffff00">ü</text>
+  </g>
+  <text x="100" y="155" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6" letter-spacing="3" font-family="monospace">each letter = a color</text>
+</svg>
+<div class="tag">11</div>
+<div class="name">iNRYOKU typography</div>
+<div class="desc">命名そのものが哲学</div>
+</div>
+
+<!-- 12 CLOCK -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <circle cx="100" cy="130" r="40" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+  <g transform="translate(100,130)">
+    <!-- 6 color markers -->
+    <circle cx="0" cy="-35" r="4" fill="#ff0000"/>
+    <circle cx="30" cy="-17" r="4" fill="#ffff00"/>
+    <circle cx="30" cy="17" r="4" fill="#00ff00"/>
+    <circle cx="0" cy="35" r="4" fill="#00ffff"/>
+    <circle cx="-30" cy="17" r="4" fill="#0044ff"/>
+    <circle cx="-30" cy="-17" r="4" fill="#ff00ff"/>
+    <!-- grey needle -->
+    <line x1="0" y1="0" x2="0" y2="-25" stroke="#808080" stroke-width="2"/>
+    <circle cx="0" cy="0" r="3" fill="#808080"/>
+  </g>
+</svg>
+<div class="tag">12</div>
+<div class="name">6-color clock</div>
+<div class="desc">時計針が色を指す</div>
+</div>
+
+<!-- 13 FRACTURE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <rect x="55" y="80" width="90" height="100" fill="#606060"/>
+  <!-- crack lines -->
+  <g stroke-width="1.5">
+    <line x1="80" y1="90" x2="100" y2="110" stroke="#ff0000"/>
+    <line x1="100" y1="110" x2="120" y2="100" stroke="#ffff00"/>
+    <line x1="100" y1="110" x2="95" y2="140" stroke="#00ff00"/>
+    <line x1="95" y1="140" x2="130" y2="150" stroke="#00ffff"/>
+    <line x1="95" y1="140" x2="75" y2="165" stroke="#0044ff"/>
+    <line x1="130" y1="150" x2="135" y2="175" stroke="#ff00ff"/>
+  </g>
+  <g fill="none" stroke-width="0.5" opacity="0.5">
+    <polygon points="80,90 100,110 110,95" stroke="#ff0000"/>
+    <polygon points="100,110 120,100 115,125 95,140" stroke="#ffff00"/>
+  </g>
+</svg>
+<div class="tag">13</div>
+<div class="name">fracture</div>
+<div class="desc">grey破片 + 虹ヒビ</div>
+</div>
+
+<!-- 14 ECG GRID -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g stroke="rgba(255,255,255,0.1)" stroke-width="0.4">
+    <line x1="55" y1="100" x2="145" y2="100"/>
+    <line x1="55" y1="120" x2="145" y2="120"/>
+    <line x1="55" y1="140" x2="145" y2="140"/>
+    <line x1="55" y1="160" x2="145" y2="160"/>
+  </g>
+  <polyline points="55,130 65,130 68,110 72,150 76,130 85,130 90,130 95,100 98,160 102,130 120,130 125,90 128,170 132,130 145,130" fill="none" stroke="#808080" stroke-width="1.5"/>
+  <circle cx="72" cy="150" r="2.5" fill="#ff0000"/>
+  <circle cx="95" cy="100" r="2.5" fill="#00ff00"/>
+  <circle cx="98" cy="160" r="2.5" fill="#0044ff"/>
+  <circle cx="125" cy="90" r="2.5" fill="#ffff00"/>
+  <circle cx="128" cy="170" r="2.5" fill="#ff00ff"/>
+</svg>
+<div class="tag">14</div>
+<div class="name">ECG glitch</div>
+<div class="desc">心電図 grey + 虹ピーク</div>
+</div>
+
+<!-- 15 QR-STYLE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g>
+    <rect x="70" y="90" width="60" height="60" fill="#e0e0e0"/>
+    <!-- QR-like pattern -->
+    <g fill="#0a0a0a">
+      <rect x="74" y="94" width="12" height="12"/>
+      <rect x="114" y="94" width="12" height="12"/>
+      <rect x="74" y="134" width="12" height="12"/>
+      <rect x="77" y="97" width="6" height="6" fill="#e0e0e0"/>
+      <rect x="117" y="97" width="6" height="6" fill="#e0e0e0"/>
+      <rect x="77" y="137" width="6" height="6" fill="#e0e0e0"/>
+      <!-- modules -->
+      <rect x="92" y="94" width="4" height="4"/>
+      <rect x="100" y="100" width="4" height="4"/>
+      <rect x="96" y="108" width="4" height="4"/>
+      <rect x="104" y="112" width="4" height="4"/>
+      <rect x="92" y="120" width="4" height="4"/>
+      <rect x="100" y="128" width="4" height="4"/>
+      <rect x="108" y="120" width="4" height="4"/>
+      <rect x="96" y="132" width="4" height="4"/>
+      <rect x="104" y="138" width="4" height="4"/>
+    </g>
+    <!-- corner accents in color -->
+    <rect x="92" y="94" width="4" height="4" fill="#ff0000"/>
+    <rect x="108" y="120" width="4" height="4" fill="#00ff00"/>
+    <rect x="96" y="132" width="4" height="4" fill="#0044ff"/>
+  </g>
+  <text x="100" y="175" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6" letter-spacing="2" font-family="monospace">scan → 哲学配信</text>
+</svg>
+<div class="tag">15</div>
+<div class="name">QR reveal</div>
+<div class="desc">スキャンで詩/曲再生</div>
+</div>
+
+<!-- 16 MOLECULE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g stroke-width="1">
+    <!-- central grey atom -->
+    <circle cx="100" cy="130" r="6" fill="#808080"/>
+    <!-- bonds -->
+    <line x1="100" y1="130" x2="75" y2="105" stroke="#ff0000"/>
+    <line x1="100" y1="130" x2="125" y2="105" stroke="#00ff00"/>
+    <line x1="100" y1="130" x2="75" y2="155" stroke="#0044ff"/>
+    <line x1="100" y1="130" x2="125" y2="155" stroke="#00ffff"/>
+    <line x1="100" y1="130" x2="100" y2="95" stroke="#ff00ff"/>
+    <line x1="100" y1="130" x2="100" y2="170" stroke="#ffff00"/>
+    <!-- outer atoms -->
+    <circle cx="75" cy="105" r="4" fill="#ff0000"/>
+    <circle cx="125" cy="105" r="4" fill="#00ff00"/>
+    <circle cx="75" cy="155" r="4" fill="#0044ff"/>
+    <circle cx="125" cy="155" r="4" fill="#00ffff"/>
+    <circle cx="100" cy="95" r="4" fill="#ff00ff"/>
+    <circle cx="100" cy="170" r="4" fill="#ffff00"/>
+  </g>
+  <text x="100" y="195" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6" letter-spacing="2" font-family="monospace">inryokü — C6H(RGBCMY)</text>
+</svg>
+<div class="tag">16</div>
+<div class="name">molecule</div>
+<div class="desc">grey原子 + 6色結合</div>
+</div>
+
+<!-- 17 KALEIDOSCOPE -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <g transform="translate(100,130)">
+    <g opacity="0.9">
+      <polygon points="0,0 30,-15 30,-5" fill="#ff0000"/>
+      <polygon points="0,0 30,-5 30,15" fill="#ffff00" transform="rotate(60)"/>
+      <polygon points="0,0 30,-5 30,15" fill="#00ff00" transform="rotate(120)"/>
+      <polygon points="0,0 30,-5 30,15" fill="#00ffff" transform="rotate(180)"/>
+      <polygon points="0,0 30,-5 30,15" fill="#0044ff" transform="rotate(240)"/>
+      <polygon points="0,0 30,-5 30,15" fill="#ff00ff" transform="rotate(300)"/>
+    </g>
+    <circle cx="0" cy="0" r="4" fill="#808080"/>
+  </g>
+</svg>
+<div class="tag">17</div>
+<div class="name">kaleidoscope</div>
+<div class="desc">6分割 × 虹の破片</div>
+</div>
+
+<!-- 18 TAROT -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <rect x="68" y="78" width="64" height="92" fill="#1a1a1a" stroke="#808080" stroke-width="0.8"/>
+  <!-- 6 color dots around center figure -->
+  <circle cx="82" cy="92" r="2.5" fill="#ff0000"/>
+  <circle cx="118" cy="92" r="2.5" fill="#00ff00"/>
+  <circle cx="78" cy="124" r="2.5" fill="#0044ff"/>
+  <circle cx="122" cy="124" r="2.5" fill="#ffff00"/>
+  <circle cx="82" cy="156" r="2.5" fill="#ff00ff"/>
+  <circle cx="118" cy="156" r="2.5" fill="#00ffff"/>
+  <!-- central figure (simplified) -->
+  <circle cx="100" cy="124" r="12" fill="none" stroke="#808080" stroke-width="0.8"/>
+  <text x="100" y="128" text-anchor="middle" fill="#808080" font-size="10" font-family="serif">0</text>
+  <text x="100" y="188" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="6" letter-spacing="3" font-family="serif">THE GREY</text>
+</svg>
+<div class="tag">18</div>
+<div class="name">tarot "the grey"</div>
+<div class="desc">0番タロット風</div>
+</div>
+
+<!-- 19 BSOD -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <rect x="55" y="80" width="90" height="110" fill="#0000aa"/>
+  <text x="60" y="96" fill="#fff" font-size="14" font-family="monospace" font-weight="bold">:(</text>
+  <text x="60" y="115" fill="#fff" font-size="6" font-family="monospace">REALITY NOT</text>
+  <text x="60" y="123" fill="#fff" font-size="6" font-family="monospace">FOUND</text>
+  <text x="60" y="140" fill="#ff0000" font-size="5" font-family="monospace">r: observer</text>
+  <text x="60" y="148" fill="#00ff00" font-size="5" font-family="monospace">g: missing</text>
+  <text x="60" y="156" fill="#00ccff" font-size="5" font-family="monospace">b: 50% lost</text>
+  <text x="60" y="172" fill="#ffff00" font-size="5" font-family="monospace">0x808080</text>
+  <text x="60" y="180" fill="#ff00ff" font-size="5" font-family="monospace">retry = _</text>
+</svg>
+<div class="tag">19</div>
+<div class="name">BSOD grey</div>
+<div class="desc">Win エラー画面 + 虹コード</div>
+</div>
+
+<!-- 20 WEATHER MAP -->
+<div class="tile">
+<svg viewBox="0 0 200 240">
+  <path class="tshirt-bg" d="M60 40 L80 30 L120 30 L140 40 L170 60 L160 80 L140 75 L140 210 L60 210 L60 75 L40 80 L30 60 Z"/>
+  <!-- contour lines grey -->
+  <g stroke="#606060" stroke-width="0.6" fill="none" opacity="0.7">
+    <ellipse cx="100" cy="130" rx="35" ry="25"/>
+    <ellipse cx="100" cy="130" rx="28" ry="18"/>
+    <ellipse cx="100" cy="130" rx="20" ry="12"/>
+    <ellipse cx="100" cy="130" rx="12" ry="7"/>
+  </g>
+  <!-- observation points -->
+  <g>
+    <circle cx="70" cy="110" r="2.5" fill="#ff0000"/>
+    <circle cx="135" cy="115" r="2.5" fill="#00ff00"/>
+    <circle cx="130" cy="150" r="2.5" fill="#0044ff"/>
+    <circle cx="72" cy="152" r="2.5" fill="#00ffff"/>
+    <circle cx="100" cy="90" r="2.5" fill="#ff00ff"/>
+    <circle cx="100" cy="175" r="2.5" fill="#ffff00"/>
+  </g>
+  <text x="100" y="200" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6" letter-spacing="2" font-family="monospace">6 observers</text>
+</svg>
+<div class="tag">20</div>
+<div class="name">weather contour</div>
+<div class="desc">等圧線 grey + 観測地点</div>
+</div>
+
+</div>
+
+<p style="text-align:center;margin-top:60px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.2em">
+  20/20 patterns · inryokü pattern exploration · 2026-04
+</p>
+
+</body>
+</html>
