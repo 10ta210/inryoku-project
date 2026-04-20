@@ -2,324 +2,275 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>inryokü — GREY complementary fold</title>
+<title>inryokü — 7-layer GREY</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:rgba(255,255,255,0.7);font-family:'IBM Plex Mono','SF Mono',monospace;padding:40px 20px;min-height:100vh}
 h1{font-size:14px;letter-spacing:0.3em;color:rgba(255,255,255,0.9);margin-bottom:8px;text-align:center;font-weight:300}
 p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:20px;max-width:780px;margin-left:auto;margin-right:auto;line-height:1.7}
-.theory{max-width:680px;margin:20px auto 60px;padding:24px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:11px;line-height:2;letter-spacing:0.05em;background:#111}
-.theory code{color:#fff;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(420px, 1fr));gap:40px;max-width:1400px;margin:0 auto}
+.theory{max-width:640px;margin:20px auto 60px;padding:24px 28px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:11px;line-height:2.1;letter-spacing:0.05em;background:#111}
+.theory b{color:#fff;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(460px, 1fr));gap:40px;max-width:1400px;margin:0 auto}
 .tile{background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:40px 30px;display:flex;flex-direction:column;align-items:center}
-.tile svg{width:100%;height:220px;background:#000;border-radius:4px}
+.tile svg{width:100%;height:260px;background:#000;border-radius:4px}
+.tile.white-bg svg{background:#fff}
 .tag{font-size:10px;letter-spacing:0.35em;color:rgba(255,255,255,0.35);margin-top:22px;text-transform:uppercase}
 .name{font-size:13px;letter-spacing:0.12em;color:rgba(255,255,255,0.95);margin-top:8px;text-align:center;font-weight:500}
-.desc{font-size:10px;line-height:1.7;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;letter-spacing:0.02em;max-width:340px}
-.white-bg{background:#fff}
+.desc{font-size:10px;line-height:1.7;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;letter-spacing:0.02em;max-width:380px}
 </style>
 </head>
 <body>
 
-<h1>inryokü — GREY fold</h1>
-<p class="sub">補色の畳み込み / 各文字 = RGB原色(光) + CMY補色(影)</p>
+<h1>inryokü — 7-layer fold</h1>
+<p class="sub">GREY に 7レイヤー: 上 RGB(光) / 中 GREY(50%) / 下 CMY(影)</p>
 
 <div class="theory">
-  <code>G</code> = R (光 / top) + C (影 / bottom) → 重なると grey<br>
-  <code>R</code> = G (光 / top) + M (影 / bottom) → 重なると grey<br>
-  <code>E</code> = B (光 / top) + Y (影 / bottom) → 重なると grey<br>
-  <code>Y</code> = 全6色が observed(観測)された状態 = 50% → 101%
+  <b>層1:</b> RED (光)<br>
+  <b>層2:</b> GREEN (光)<br>
+  <b>層3:</b> BLUE (光)<br>
+  <b>層4:</b> GREY ——— 50% ———<br>
+  <b>層5:</b> CYAN (影)<br>
+  <b>層6:</b> MAGENTA (影)<br>
+  <b>層7:</b> YELLOW (影)
 </div>
 
 <div class="grid">
 
-<!-- A. 水平分割 -->
+<!-- A. 基本形: 水平7層 -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
+<svg viewBox="0 0 460 260">
   <defs>
-    <clipPath id="topA"><rect x="0" y="0" width="440" height="110"/></clipPath>
-    <clipPath id="botA"><rect x="0" y="110" width="440" height="110"/></clipPath>
-    <linearGradient id="yA" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="18%" stop-color="#ffff00"/>
-      <stop offset="36%" stop-color="#00ff00"/>
-      <stop offset="54%" stop-color="#00ffff"/>
-      <stop offset="72%" stop-color="#0044ff"/>
-      <stop offset="100%" stop-color="#ff00ff"/>
+    <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"      stop-color="#ff0000"/>
+      <stop offset="14.28%"  stop-color="#ff0000"/>
+      <stop offset="14.29%"  stop-color="#00ff00"/>
+      <stop offset="28.56%"  stop-color="#00ff00"/>
+      <stop offset="28.57%"  stop-color="#0044ff"/>
+      <stop offset="42.84%"  stop-color="#0044ff"/>
+      <stop offset="42.85%"  stop-color="#808080"/>
+      <stop offset="57.14%"  stop-color="#808080"/>
+      <stop offset="57.15%"  stop-color="#00ffff"/>
+      <stop offset="71.42%"  stop-color="#00ffff"/>
+      <stop offset="71.43%"  stop-color="#ff00ff"/>
+      <stop offset="85.70%"  stop-color="#ff00ff"/>
+      <stop offset="85.71%"  stop-color="#ffff00"/>
+      <stop offset="100%"    stop-color="#ffff00"/>
     </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
-    <g clip-path="url(#topA)">
-      <text x="30" y="145" fill="#ff0000">G</text>
-      <text x="130" y="145" fill="#00ff00">R</text>
-      <text x="230" y="145" fill="#0044ff">E</text>
-    </g>
-    <g clip-path="url(#botA)">
-      <text x="30" y="145" fill="#00ffff">G</text>
-      <text x="130" y="145" fill="#ff00ff">R</text>
-      <text x="230" y="145" fill="#ffff00">E</text>
-    </g>
-    <text x="330" y="145" fill="url(#yA)">Y</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="180" font-weight="800" letter-spacing="4" fill="url(#gA)">
+    <text x="30" y="190">GREY</text>
   </g>
 </svg>
 <div class="tag">A</div>
-<div class="name">horizontal fold</div>
+<div class="name">hard 7-band</div>
 <div class="desc">
-  G,R,E を上下で補色分割。Y だけ 6色グラデ。
-  <br><span style="opacity:0.6">基本形・推奨</span>
+  7色が帯状に境界くっきり<br>
+  <span style="opacity:0.6">基本形・最も論理的</span>
 </div>
 </div>
 
-<!-- B. 垂直分割 -->
+<!-- B. グラデーション版: スムーズ -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
+<svg viewBox="0 0 460 260">
   <defs>
-    <clipPath id="leftB"><rect x="0" y="0" width="220" height="220"/></clipPath>
-    <clipPath id="rightB"><rect x="220" y="0" width="220" height="220"/></clipPath>
-    <radialGradient id="yB">
-      <stop offset="0%" stop-color="#808080"/>
-      <stop offset="30%" stop-color="#ff00ff"/>
-      <stop offset="50%" stop-color="#00ffff"/>
-      <stop offset="70%" stop-color="#ffff00"/>
-      <stop offset="100%" stop-color="#ff0000"/>
-    </radialGradient>
+    <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"     stop-color="#ff0000"/>
+      <stop offset="16.6%"  stop-color="#00ff00"/>
+      <stop offset="33.3%"  stop-color="#0044ff"/>
+      <stop offset="50%"    stop-color="#808080"/>
+      <stop offset="66.6%"  stop-color="#00ffff"/>
+      <stop offset="83.3%"  stop-color="#ff00ff"/>
+      <stop offset="100%"   stop-color="#ffff00"/>
+    </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
-    <text x="30" y="145" fill="#ff0000">G</text>
-    <text x="130" y="145" fill="#00ff00">R</text>
-    <text x="230" y="145" fill="#0044ff">E</text>
-    <text x="330" y="145" fill="url(#yB)">Y</text>
-    <!-- Overlay complement shadows on lower half -->
-    <g opacity="0.85" style="mix-blend-mode:multiply">
-      <text x="32" y="148" fill="#00ffff">G</text>
-      <text x="132" y="148" fill="#ff00ff">R</text>
-      <text x="232" y="148" fill="#ffff00">E</text>
-    </g>
+  <g font-family="'IBM Plex Mono', monospace" font-size="180" font-weight="800" letter-spacing="4" fill="url(#gB)">
+    <text x="30" y="190">GREY</text>
   </g>
 </svg>
 <div class="tag">B</div>
-<div class="name">offset overlay</div>
-<div class="desc">RGB文字に補色影を微ズレで重ね印刷する版</div>
+<div class="name">smooth gradient</div>
+<div class="desc">7色が滑らかに溶ける版（境界なし）</div>
 </div>
 
-<!-- C. Y = 6色ボックス -->
+<!-- C. 極太 -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
+<svg viewBox="0 0 460 260">
   <defs>
-    <clipPath id="topC"><rect x="0" y="0" width="440" height="110"/></clipPath>
-    <clipPath id="botC"><rect x="0" y="110" width="440" height="110"/></clipPath>
+    <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/><stop offset="14.28%" stop-color="#ff0000"/>
+      <stop offset="14.29%" stop-color="#00ff00"/><stop offset="28.56%" stop-color="#00ff00"/>
+      <stop offset="28.57%" stop-color="#0044ff"/><stop offset="42.84%" stop-color="#0044ff"/>
+      <stop offset="42.85%" stop-color="#808080"/><stop offset="57.14%" stop-color="#808080"/>
+      <stop offset="57.15%" stop-color="#00ffff"/><stop offset="71.42%" stop-color="#00ffff"/>
+      <stop offset="71.43%" stop-color="#ff00ff"/><stop offset="85.70%" stop-color="#ff00ff"/>
+      <stop offset="85.71%" stop-color="#ffff00"/><stop offset="100%" stop-color="#ffff00"/>
+    </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
-    <g clip-path="url(#topC)">
-      <text x="30" y="145" fill="#ff0000">G</text>
-      <text x="130" y="145" fill="#00ff00">R</text>
-      <text x="230" y="145" fill="#0044ff">E</text>
-    </g>
-    <g clip-path="url(#botC)">
-      <text x="30" y="145" fill="#00ffff">G</text>
-      <text x="130" y="145" fill="#ff00ff">R</text>
-      <text x="230" y="145" fill="#ffff00">E</text>
-    </g>
-  </g>
-  <!-- Y letter built from 6 color circles -->
-  <g transform="translate(365, 110)">
-    <circle cx="-15" cy="-30" r="11" fill="#ff0000"/>
-    <circle cx="15" cy="-30" r="11" fill="#00ff00"/>
-    <circle cx="-15" cy="0" r="11" fill="#0044ff"/>
-    <circle cx="15" cy="0" r="11" fill="#00ffff"/>
-    <circle cx="0" cy="30" r="11" fill="#ff00ff"/>
-    <circle cx="0" cy="52" r="11" fill="#ffff00"/>
+  <g font-family="'Arial Black', sans-serif" font-size="200" font-weight="900" letter-spacing="-4" fill="url(#gC)">
+    <text x="20" y="200">GREY</text>
   </g>
 </svg>
 <div class="tag">C</div>
-<div class="name">Y = 6 observed colors</div>
-<div class="desc">Y 文字が 6 個の色円で構成される「観測された6色」</div>
+<div class="name">heavy / Arial Black</div>
+<div class="desc">極太フォント (プリント映え)</div>
 </div>
 
-<!-- D. 水平分割 + グレーライン -->
+<!-- D. 50%線が中央で強調 -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
+<svg viewBox="0 0 460 260">
   <defs>
-    <clipPath id="topD"><rect x="0" y="0" width="440" height="105"/></clipPath>
-    <clipPath id="botD"><rect x="0" y="115" width="440" height="105"/></clipPath>
-    <linearGradient id="yD" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="18%" stop-color="#ffff00"/>
-      <stop offset="36%" stop-color="#00ff00"/>
-      <stop offset="54%" stop-color="#00ffff"/>
-      <stop offset="72%" stop-color="#0044ff"/>
-      <stop offset="100%" stop-color="#ff00ff"/>
+    <clipPath id="clipD">
+      <text x="30" y="190" font-family="'IBM Plex Mono', monospace" font-size="180" font-weight="800" letter-spacing="4">GREY</text>
+    </clipPath>
+    <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/><stop offset="14.28%" stop-color="#ff0000"/>
+      <stop offset="14.29%" stop-color="#00ff00"/><stop offset="28.56%" stop-color="#00ff00"/>
+      <stop offset="28.57%" stop-color="#0044ff"/><stop offset="42.84%" stop-color="#0044ff"/>
+      <stop offset="42.85%" stop-color="#b0b0b0"/><stop offset="57.14%" stop-color="#b0b0b0"/>
+      <stop offset="57.15%" stop-color="#00ffff"/><stop offset="71.42%" stop-color="#00ffff"/>
+      <stop offset="71.43%" stop-color="#ff00ff"/><stop offset="85.70%" stop-color="#ff00ff"/>
+      <stop offset="85.71%" stop-color="#ffff00"/><stop offset="100%" stop-color="#ffff00"/>
     </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
-    <g clip-path="url(#topD)">
-      <text x="30" y="145" fill="#ff0000">G</text>
-      <text x="130" y="145" fill="#00ff00">R</text>
-      <text x="230" y="145" fill="#0044ff">E</text>
-    </g>
-    <g clip-path="url(#botD)">
-      <text x="30" y="145" fill="#00ffff">G</text>
-      <text x="130" y="145" fill="#ff00ff">R</text>
-      <text x="230" y="145" fill="#ffff00">E</text>
-    </g>
-    <text x="330" y="145" fill="url(#yD)">Y</text>
+  <g clip-path="url(#clipD)">
+    <rect x="0" y="0" width="460" height="260" fill="url(#gD)"/>
+    <!-- grey strip highlighted -->
+    <rect x="0" y="111" width="460" height="38" fill="#b0b0b0"/>
   </g>
-  <!-- 50% line -->
-  <line x1="30" y1="110" x2="400" y2="110" stroke="#808080" stroke-width="1" stroke-dasharray="2,3" opacity="0.7"/>
-  <text x="220" y="200" text-anchor="middle" fill="rgba(128,128,128,0.7)" font-size="8" letter-spacing="4" font-family="monospace">50% LINE</text>
+  <!-- outline -->
+  <text x="30" y="190" font-family="'IBM Plex Mono', monospace" font-size="180" font-weight="800" letter-spacing="4" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1">GREY</text>
 </svg>
 <div class="tag">D</div>
-<div class="name">with 50% line</div>
-<div class="desc">分割線に grey 破線（境界 = 50%）を明示</div>
+<div class="name">grey 中央強調</div>
+<div class="desc">真ん中の grey 層を明るくして「50%の中心」を強調</div>
 </div>
 
-<!-- E. 白背景版 (印刷再現) -->
-<div class="tile">
-<svg viewBox="0 0 440 220" class="white-bg">
-  <rect width="440" height="220" fill="#fff"/>
+<!-- E. 白背景版 (印刷用) -->
+<div class="tile white-bg">
+<svg viewBox="0 0 460 260">
   <defs>
-    <clipPath id="topE"><rect x="0" y="0" width="440" height="110"/></clipPath>
-    <clipPath id="botE"><rect x="0" y="110" width="440" height="110"/></clipPath>
-    <linearGradient id="yE" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="18%" stop-color="#ffff00"/>
-      <stop offset="36%" stop-color="#00aa00"/>
-      <stop offset="54%" stop-color="#00aaaa"/>
-      <stop offset="72%" stop-color="#0044ff"/>
-      <stop offset="100%" stop-color="#aa00aa"/>
+    <linearGradient id="gE" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ee0000"/><stop offset="14.28%" stop-color="#ee0000"/>
+      <stop offset="14.29%" stop-color="#00aa00"/><stop offset="28.56%" stop-color="#00aa00"/>
+      <stop offset="28.57%" stop-color="#0033cc"/><stop offset="42.84%" stop-color="#0033cc"/>
+      <stop offset="42.85%" stop-color="#808080"/><stop offset="57.14%" stop-color="#808080"/>
+      <stop offset="57.15%" stop-color="#00aaaa"/><stop offset="71.42%" stop-color="#00aaaa"/>
+      <stop offset="71.43%" stop-color="#aa00aa"/><stop offset="85.70%" stop-color="#aa00aa"/>
+      <stop offset="85.71%" stop-color="#cc9900"/><stop offset="100%" stop-color="#cc9900"/>
     </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
-    <g clip-path="url(#topE)">
-      <text x="30" y="145" fill="#ee0000">G</text>
-      <text x="130" y="145" fill="#00aa00">R</text>
-      <text x="230" y="145" fill="#0033cc">E</text>
-    </g>
-    <g clip-path="url(#botE)">
-      <text x="30" y="145" fill="#00aaaa">G</text>
-      <text x="130" y="145" fill="#cc00cc">R</text>
-      <text x="230" y="145" fill="#dd9900">E</text>
-    </g>
-    <text x="330" y="145" fill="url(#yE)">Y</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="180" font-weight="800" letter-spacing="4" fill="url(#gE)">
+    <text x="30" y="190">GREY</text>
   </g>
 </svg>
 <div class="tag">E</div>
-<div class="name">on white (for prints)</div>
-<div class="desc">白背景 = 白Tシャツ用。CMY色を印刷向けに調整</div>
+<div class="name">on white (印刷用)</div>
+<div class="desc">白Tシャツ用 CMY調整</div>
 </div>
 
-<!-- F. オーバーラップで grey 生成 -->
+<!-- F. 各層の色がラベル表示 -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
-  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
-    <!-- RGB letters at normal position -->
-    <g opacity="0.85" style="mix-blend-mode:screen">
-      <text x="30" y="120" fill="#ff0000">G</text>
-      <text x="130" y="120" fill="#00ff00">R</text>
-      <text x="230" y="120" fill="#0044ff">E</text>
-      <text x="330" y="120" fill="#ff0000">Y</text>
-    </g>
-    <!-- CMY letters shifted down -->
-    <g opacity="0.85" style="mix-blend-mode:screen">
-      <text x="30" y="165" fill="#00ffff">G</text>
-      <text x="130" y="165" fill="#ff00ff">R</text>
-      <text x="230" y="165" fill="#ffff00">E</text>
-      <text x="330" y="165" fill="#00ffff">Y</text>
-    </g>
+<svg viewBox="0 0 460 260">
+  <defs>
+    <linearGradient id="gF" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/><stop offset="14.28%" stop-color="#ff0000"/>
+      <stop offset="14.29%" stop-color="#00ff00"/><stop offset="28.56%" stop-color="#00ff00"/>
+      <stop offset="28.57%" stop-color="#0044ff"/><stop offset="42.84%" stop-color="#0044ff"/>
+      <stop offset="42.85%" stop-color="#808080"/><stop offset="57.14%" stop-color="#808080"/>
+      <stop offset="57.15%" stop-color="#00ffff"/><stop offset="71.42%" stop-color="#00ffff"/>
+      <stop offset="71.43%" stop-color="#ff00ff"/><stop offset="85.70%" stop-color="#ff00ff"/>
+      <stop offset="85.71%" stop-color="#ffff00"/><stop offset="100%" stop-color="#ffff00"/>
+    </linearGradient>
+  </defs>
+  <g font-family="'IBM Plex Mono', monospace" font-size="160" font-weight="800" letter-spacing="4" fill="url(#gF)">
+    <text x="50" y="180">GREY</text>
+  </g>
+  <!-- side labels -->
+  <g font-family="'IBM Plex Mono', monospace" font-size="9" letter-spacing="2" fill="rgba(255,255,255,0.55)">
+    <text x="410" y="52">R</text>
+    <text x="410" y="86">G</text>
+    <text x="410" y="120">B</text>
+    <text x="400" y="154">—</text>
+    <text x="410" y="188">C</text>
+    <text x="410" y="222">M</text>
+    <text x="410" y="256">Y</text>
   </g>
 </svg>
 <div class="tag">F</div>
-<div class="name">displaced complements</div>
-<div class="desc">RGB文字 + CMY文字 を上下にずらして2重配置（重なるとgrey）</div>
+<div class="name">with stratum labels</div>
+<div class="desc">各層のRGBCMY表記を右に配置</div>
 </div>
 
-<!-- G. 極太版 -->
+<!-- G. 高解像度 / 印刷入稿サイズ相当 -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
+<svg viewBox="0 0 920 520">
   <defs>
-    <clipPath id="topG"><rect x="0" y="0" width="440" height="110"/></clipPath>
-    <clipPath id="botG"><rect x="0" y="110" width="440" height="110"/></clipPath>
-    <linearGradient id="yG" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="20%" stop-color="#ffff00"/>
-      <stop offset="40%" stop-color="#00ff00"/>
-      <stop offset="60%" stop-color="#00ffff"/>
-      <stop offset="80%" stop-color="#0044ff"/>
-      <stop offset="100%" stop-color="#ff00ff"/>
+    <linearGradient id="gG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/><stop offset="14.28%" stop-color="#ff0000"/>
+      <stop offset="14.29%" stop-color="#00ff00"/><stop offset="28.56%" stop-color="#00ff00"/>
+      <stop offset="28.57%" stop-color="#0044ff"/><stop offset="42.84%" stop-color="#0044ff"/>
+      <stop offset="42.85%" stop-color="#808080"/><stop offset="57.14%" stop-color="#808080"/>
+      <stop offset="57.15%" stop-color="#00ffff"/><stop offset="71.42%" stop-color="#00ffff"/>
+      <stop offset="71.43%" stop-color="#ff00ff"/><stop offset="85.70%" stop-color="#ff00ff"/>
+      <stop offset="85.71%" stop-color="#ffff00"/><stop offset="100%" stop-color="#ffff00"/>
     </linearGradient>
   </defs>
-  <g font-family="'Arial Black', 'IBM Plex Mono', monospace" font-size="150" font-weight="900" letter-spacing="-2">
-    <g clip-path="url(#topG)">
-      <text x="20" y="150" fill="#ff0000">G</text>
-      <text x="125" y="150" fill="#00ff00">R</text>
-      <text x="230" y="150" fill="#0044ff">E</text>
-    </g>
-    <g clip-path="url(#botG)">
-      <text x="20" y="150" fill="#00ffff">G</text>
-      <text x="125" y="150" fill="#ff00ff">R</text>
-      <text x="230" y="150" fill="#ffff00">E</text>
-    </g>
-    <text x="335" y="150" fill="url(#yG)">Y</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="360" font-weight="800" letter-spacing="10" fill="url(#gG)">
+    <text x="50" y="380">GREY</text>
   </g>
 </svg>
 <div class="tag">G</div>
-<div class="name">heavy / Arial Black</div>
-<div class="desc">極太フォントで面積最大化 (Tシャツプリント向き)</div>
+<div class="name">print-res (hi)</div>
+<div class="desc">印刷入稿用 高解像度</div>
 </div>
 
-<!-- H. セリフ版 -->
+<!-- H. small inryokü signature -->
 <div class="tile">
-<svg viewBox="0 0 440 220">
+<svg viewBox="0 0 460 260">
   <defs>
-    <clipPath id="topH"><rect x="0" y="0" width="440" height="110"/></clipPath>
-    <clipPath id="botH"><rect x="0" y="110" width="440" height="110"/></clipPath>
-    <linearGradient id="yH" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="20%" stop-color="#ffff00"/>
-      <stop offset="40%" stop-color="#00ff00"/>
-      <stop offset="60%" stop-color="#00ffff"/>
-      <stop offset="80%" stop-color="#0044ff"/>
-      <stop offset="100%" stop-color="#ff00ff"/>
+    <linearGradient id="gH" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/><stop offset="14.28%" stop-color="#ff0000"/>
+      <stop offset="14.29%" stop-color="#00ff00"/><stop offset="28.56%" stop-color="#00ff00"/>
+      <stop offset="28.57%" stop-color="#0044ff"/><stop offset="42.84%" stop-color="#0044ff"/>
+      <stop offset="42.85%" stop-color="#808080"/><stop offset="57.14%" stop-color="#808080"/>
+      <stop offset="57.15%" stop-color="#00ffff"/><stop offset="71.42%" stop-color="#00ffff"/>
+      <stop offset="71.43%" stop-color="#ff00ff"/><stop offset="85.70%" stop-color="#ff00ff"/>
+      <stop offset="85.71%" stop-color="#ffff00"/><stop offset="100%" stop-color="#ffff00"/>
     </linearGradient>
   </defs>
-  <g font-family="Georgia, serif" font-size="130" font-weight="700" letter-spacing="0">
-    <g clip-path="url(#topH)">
-      <text x="40" y="145" fill="#ff0000">G</text>
-      <text x="140" y="145" fill="#00ff00">R</text>
-      <text x="240" y="145" fill="#0044ff">E</text>
-    </g>
-    <g clip-path="url(#botH)">
-      <text x="40" y="145" fill="#00ffff">G</text>
-      <text x="140" y="145" fill="#ff00ff">R</text>
-      <text x="240" y="145" fill="#ffff00">E</text>
-    </g>
-    <text x="340" y="145" fill="url(#yH)">Y</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="150" font-weight="800" letter-spacing="4" fill="url(#gH)">
+    <text x="55" y="175">GREY</text>
+  </g>
+  <g font-family="'IBM Plex Mono', monospace" font-size="11" letter-spacing="4" fill="rgba(255,255,255,0.5)">
+    <text x="55" y="220">inryokü — 50% → 101%</text>
   </g>
 </svg>
 <div class="tag">H</div>
-<div class="name">serif variant</div>
-<div class="desc">Georgia 風 セリフ体。格調高く</div>
+<div class="name">+ signature</div>
+<div class="desc">ブランド名のキャプション付き</div>
 </div>
 
 </div>
 
-<div style="max-width:780px;margin:60px auto 40px;padding:28px;border:1px solid rgba(255,255,255,0.15);border-radius:10px;background:#111;font-size:12px;line-height:1.9;letter-spacing:0.05em">
-  <div style="font-size:10px;letter-spacing:0.3em;color:rgba(255,255,255,0.5);margin-bottom:14px">CONCEPT</div>
+<div style="max-width:680px;margin:80px auto 40px;padding:32px;border:1px solid rgba(255,255,255,0.15);border-radius:10px;background:#111;font-size:12px;line-height:2;letter-spacing:0.03em">
+  <div style="font-size:10px;letter-spacing:0.3em;color:rgba(255,255,255,0.5);margin-bottom:18px">WHY 7 LAYERS?</div>
   <p>
-    <b>G, R, E</b> の3文字はそれぞれ <b>RGB原色（光）</b> と <b>CMY補色（影）</b> を
-    水平線で畳み込む。観測者の目で合成されると「grey」が現れる。
+    1. <b>光</b>が上から差し込む（R → G → B）<br>
+    2. <b>grey</b>が現実・中央・50%<br>
+    3. <b>影</b>が下に沈む（C → M → Y）
   </p>
-  <p style="margin-top:12px;">
-    <b>Y</b> だけが 6 色すべてを同時に見せる。<br>
-    これは「50%のgreyから、101%の観測へ」到達した最終状態。
+  <p style="margin-top:14px;">
+    見る者の視線で:<br>
+    <span style="opacity:0.6">上を見れば光、下を見れば影、中心に留まれば grey。</span>
   </p>
-  <p style="margin-top:12px;opacity:0.55;">
-    G (light R + pigment C) → R (light G + pigment M) → E (light B + pigment Y) → Y (observed all)
+  <p style="margin-top:14px;">
+    どこを観測するかで見える色が変わる。<br>
+    これが <b>50% → 101%</b> の構造そのもの。
   </p>
 </div>
 
 <p style="text-align:center;margin-top:40px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.2em">
-  inryokü · GREY complementary fold · 8 variations
+  inryokü · 7-layer GREY fold · 8 variations
 </p>
 
 </body>
