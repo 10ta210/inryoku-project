@@ -2,92 +2,244 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>inryokü — GREY typography samples</title>
+<title>inryokü — GREY complementary fold</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:rgba(255,255,255,0.7);font-family:'IBM Plex Mono','SF Mono',monospace;padding:40px 20px;min-height:100vh}
 h1{font-size:14px;letter-spacing:0.3em;color:rgba(255,255,255,0.9);margin-bottom:8px;text-align:center;font-weight:300}
-p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:50px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:30px;max-width:1400px;margin:0 auto}
-.tile{background:#111;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:30px 20px;display:flex;flex-direction:column;align-items:center}
-.tile svg{width:100%;height:180px;background:#000;border-radius:4px}
-.tag{font-size:9px;letter-spacing:0.3em;color:rgba(255,255,255,0.3);margin-top:16px;text-transform:uppercase}
-.name{font-size:12px;letter-spacing:0.1em;color:rgba(255,255,255,0.9);margin-top:6px;text-align:center}
-.desc{font-size:10px;line-height:1.6;color:rgba(255,255,255,0.4);margin-top:8px;text-align:center;letter-spacing:0.02em;max-width:260px}
+p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:20px;max-width:780px;margin-left:auto;margin-right:auto;line-height:1.7}
+.theory{max-width:680px;margin:20px auto 60px;padding:24px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:11px;line-height:2;letter-spacing:0.05em;background:#111}
+.theory code{color:#fff;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(420px, 1fr));gap:40px;max-width:1400px;margin:0 auto}
+.tile{background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:40px 30px;display:flex;flex-direction:column;align-items:center}
+.tile svg{width:100%;height:220px;background:#000;border-radius:4px}
+.tag{font-size:10px;letter-spacing:0.35em;color:rgba(255,255,255,0.35);margin-top:22px;text-transform:uppercase}
+.name{font-size:13px;letter-spacing:0.12em;color:rgba(255,255,255,0.95);margin-top:8px;text-align:center;font-weight:500}
+.desc{font-size:10px;line-height:1.7;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;letter-spacing:0.02em;max-width:340px}
+.white-bg{background:#fff}
 </style>
 </head>
 <body>
 
-<h1>inryokü — GREY typography</h1>
-<p class="sub">「GREY」の各文字を RGBCMY で配色 / 全20パターン</p>
+<h1>inryokü — GREY fold</h1>
+<p class="sub">補色の畳み込み / 各文字 = RGB原色(光) + CMY補色(影)</p>
+
+<div class="theory">
+  <code>G</code> = R (光 / top) + C (影 / bottom) → 重なると grey<br>
+  <code>R</code> = G (光 / top) + M (影 / bottom) → 重なると grey<br>
+  <code>E</code> = B (光 / top) + Y (影 / bottom) → 重なると grey<br>
+  <code>Y</code> = 全6色が observed(観測)された状態 = 50% → 101%
+</div>
 
 <div class="grid">
 
-<!-- 01 RGB + Y -->
+<!-- A. 水平分割 -->
 <div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <text x="40" y="120" fill="#ff0000">G</text>
-    <text x="120" y="120" fill="#00ff00">R</text>
-    <text x="200" y="120" fill="#0044ff">E</text>
-    <text x="280" y="120" fill="#ffff00">Y</text>
-  </g>
-</svg>
-<div class="tag">01</div>
-<div class="name">RGB + Y</div>
-<div class="desc">G=red R=green E=blue Y=yellow</div>
-</div>
-
-<!-- 02 CMY + R -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <text x="40" y="120" fill="#00ffff">G</text>
-    <text x="120" y="120" fill="#ff00ff">R</text>
-    <text x="200" y="120" fill="#ffff00">E</text>
-    <text x="280" y="120" fill="#ff0000">Y</text>
-  </g>
-</svg>
-<div class="tag">02</div>
-<div class="name">CMY + R</div>
-<div class="desc">cyan magenta yellow + red</div>
-</div>
-
-<!-- 03 rainbow 4step -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <text x="40" y="120" fill="#ff0000">G</text>
-    <text x="120" y="120" fill="#ffff00">R</text>
-    <text x="200" y="120" fill="#00ff00">E</text>
-    <text x="280" y="120" fill="#0044ff">Y</text>
-  </g>
-</svg>
-<div class="tag">03</div>
-<div class="name">rainbow 4step</div>
-<div class="desc">赤→黄→緑→青 段階</div>
-</div>
-
-<!-- 04 alternating RGB↔CMY -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <text x="40" y="120" fill="#ff0000">G</text>
-    <text x="120" y="120" fill="#00ffff">R</text>
-    <text x="200" y="120" fill="#00ff00">E</text>
-    <text x="280" y="120" fill="#ff00ff">Y</text>
-  </g>
-</svg>
-<div class="tag">04</div>
-<div class="name">alternating 補色</div>
-<div class="desc">R⇄C, G⇄M 交互</div>
-</div>
-
-<!-- 05 horizontal rainbow gradient -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
+<svg viewBox="0 0 440 220">
   <defs>
-    <linearGradient id="rainbow5" x1="0" y1="0" x2="1" y2="0">
+    <clipPath id="topA"><rect x="0" y="0" width="440" height="110"/></clipPath>
+    <clipPath id="botA"><rect x="0" y="110" width="440" height="110"/></clipPath>
+    <linearGradient id="yA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/>
+      <stop offset="18%" stop-color="#ffff00"/>
+      <stop offset="36%" stop-color="#00ff00"/>
+      <stop offset="54%" stop-color="#00ffff"/>
+      <stop offset="72%" stop-color="#0044ff"/>
+      <stop offset="100%" stop-color="#ff00ff"/>
+    </linearGradient>
+  </defs>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
+    <g clip-path="url(#topA)">
+      <text x="30" y="145" fill="#ff0000">G</text>
+      <text x="130" y="145" fill="#00ff00">R</text>
+      <text x="230" y="145" fill="#0044ff">E</text>
+    </g>
+    <g clip-path="url(#botA)">
+      <text x="30" y="145" fill="#00ffff">G</text>
+      <text x="130" y="145" fill="#ff00ff">R</text>
+      <text x="230" y="145" fill="#ffff00">E</text>
+    </g>
+    <text x="330" y="145" fill="url(#yA)">Y</text>
+  </g>
+</svg>
+<div class="tag">A</div>
+<div class="name">horizontal fold</div>
+<div class="desc">
+  G,R,E を上下で補色分割。Y だけ 6色グラデ。
+  <br><span style="opacity:0.6">基本形・推奨</span>
+</div>
+</div>
+
+<!-- B. 垂直分割 -->
+<div class="tile">
+<svg viewBox="0 0 440 220">
+  <defs>
+    <clipPath id="leftB"><rect x="0" y="0" width="220" height="220"/></clipPath>
+    <clipPath id="rightB"><rect x="220" y="0" width="220" height="220"/></clipPath>
+    <radialGradient id="yB">
+      <stop offset="0%" stop-color="#808080"/>
+      <stop offset="30%" stop-color="#ff00ff"/>
+      <stop offset="50%" stop-color="#00ffff"/>
+      <stop offset="70%" stop-color="#ffff00"/>
+      <stop offset="100%" stop-color="#ff0000"/>
+    </radialGradient>
+  </defs>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
+    <text x="30" y="145" fill="#ff0000">G</text>
+    <text x="130" y="145" fill="#00ff00">R</text>
+    <text x="230" y="145" fill="#0044ff">E</text>
+    <text x="330" y="145" fill="url(#yB)">Y</text>
+    <!-- Overlay complement shadows on lower half -->
+    <g opacity="0.85" style="mix-blend-mode:multiply">
+      <text x="32" y="148" fill="#00ffff">G</text>
+      <text x="132" y="148" fill="#ff00ff">R</text>
+      <text x="232" y="148" fill="#ffff00">E</text>
+    </g>
+  </g>
+</svg>
+<div class="tag">B</div>
+<div class="name">offset overlay</div>
+<div class="desc">RGB文字に補色影を微ズレで重ね印刷する版</div>
+</div>
+
+<!-- C. Y = 6色ボックス -->
+<div class="tile">
+<svg viewBox="0 0 440 220">
+  <defs>
+    <clipPath id="topC"><rect x="0" y="0" width="440" height="110"/></clipPath>
+    <clipPath id="botC"><rect x="0" y="110" width="440" height="110"/></clipPath>
+  </defs>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
+    <g clip-path="url(#topC)">
+      <text x="30" y="145" fill="#ff0000">G</text>
+      <text x="130" y="145" fill="#00ff00">R</text>
+      <text x="230" y="145" fill="#0044ff">E</text>
+    </g>
+    <g clip-path="url(#botC)">
+      <text x="30" y="145" fill="#00ffff">G</text>
+      <text x="130" y="145" fill="#ff00ff">R</text>
+      <text x="230" y="145" fill="#ffff00">E</text>
+    </g>
+  </g>
+  <!-- Y letter built from 6 color circles -->
+  <g transform="translate(365, 110)">
+    <circle cx="-15" cy="-30" r="11" fill="#ff0000"/>
+    <circle cx="15" cy="-30" r="11" fill="#00ff00"/>
+    <circle cx="-15" cy="0" r="11" fill="#0044ff"/>
+    <circle cx="15" cy="0" r="11" fill="#00ffff"/>
+    <circle cx="0" cy="30" r="11" fill="#ff00ff"/>
+    <circle cx="0" cy="52" r="11" fill="#ffff00"/>
+  </g>
+</svg>
+<div class="tag">C</div>
+<div class="name">Y = 6 observed colors</div>
+<div class="desc">Y 文字が 6 個の色円で構成される「観測された6色」</div>
+</div>
+
+<!-- D. 水平分割 + グレーライン -->
+<div class="tile">
+<svg viewBox="0 0 440 220">
+  <defs>
+    <clipPath id="topD"><rect x="0" y="0" width="440" height="105"/></clipPath>
+    <clipPath id="botD"><rect x="0" y="115" width="440" height="105"/></clipPath>
+    <linearGradient id="yD" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/>
+      <stop offset="18%" stop-color="#ffff00"/>
+      <stop offset="36%" stop-color="#00ff00"/>
+      <stop offset="54%" stop-color="#00ffff"/>
+      <stop offset="72%" stop-color="#0044ff"/>
+      <stop offset="100%" stop-color="#ff00ff"/>
+    </linearGradient>
+  </defs>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
+    <g clip-path="url(#topD)">
+      <text x="30" y="145" fill="#ff0000">G</text>
+      <text x="130" y="145" fill="#00ff00">R</text>
+      <text x="230" y="145" fill="#0044ff">E</text>
+    </g>
+    <g clip-path="url(#botD)">
+      <text x="30" y="145" fill="#00ffff">G</text>
+      <text x="130" y="145" fill="#ff00ff">R</text>
+      <text x="230" y="145" fill="#ffff00">E</text>
+    </g>
+    <text x="330" y="145" fill="url(#yD)">Y</text>
+  </g>
+  <!-- 50% line -->
+  <line x1="30" y1="110" x2="400" y2="110" stroke="#808080" stroke-width="1" stroke-dasharray="2,3" opacity="0.7"/>
+  <text x="220" y="200" text-anchor="middle" fill="rgba(128,128,128,0.7)" font-size="8" letter-spacing="4" font-family="monospace">50% LINE</text>
+</svg>
+<div class="tag">D</div>
+<div class="name">with 50% line</div>
+<div class="desc">分割線に grey 破線（境界 = 50%）を明示</div>
+</div>
+
+<!-- E. 白背景版 (印刷再現) -->
+<div class="tile">
+<svg viewBox="0 0 440 220" class="white-bg">
+  <rect width="440" height="220" fill="#fff"/>
+  <defs>
+    <clipPath id="topE"><rect x="0" y="0" width="440" height="110"/></clipPath>
+    <clipPath id="botE"><rect x="0" y="110" width="440" height="110"/></clipPath>
+    <linearGradient id="yE" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/>
+      <stop offset="18%" stop-color="#ffff00"/>
+      <stop offset="36%" stop-color="#00aa00"/>
+      <stop offset="54%" stop-color="#00aaaa"/>
+      <stop offset="72%" stop-color="#0044ff"/>
+      <stop offset="100%" stop-color="#aa00aa"/>
+    </linearGradient>
+  </defs>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
+    <g clip-path="url(#topE)">
+      <text x="30" y="145" fill="#ee0000">G</text>
+      <text x="130" y="145" fill="#00aa00">R</text>
+      <text x="230" y="145" fill="#0033cc">E</text>
+    </g>
+    <g clip-path="url(#botE)">
+      <text x="30" y="145" fill="#00aaaa">G</text>
+      <text x="130" y="145" fill="#cc00cc">R</text>
+      <text x="230" y="145" fill="#dd9900">E</text>
+    </g>
+    <text x="330" y="145" fill="url(#yE)">Y</text>
+  </g>
+</svg>
+<div class="tag">E</div>
+<div class="name">on white (for prints)</div>
+<div class="desc">白背景 = 白Tシャツ用。CMY色を印刷向けに調整</div>
+</div>
+
+<!-- F. オーバーラップで grey 生成 -->
+<div class="tile">
+<svg viewBox="0 0 440 220">
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="6">
+    <!-- RGB letters at normal position -->
+    <g opacity="0.85" style="mix-blend-mode:screen">
+      <text x="30" y="120" fill="#ff0000">G</text>
+      <text x="130" y="120" fill="#00ff00">R</text>
+      <text x="230" y="120" fill="#0044ff">E</text>
+      <text x="330" y="120" fill="#ff0000">Y</text>
+    </g>
+    <!-- CMY letters shifted down -->
+    <g opacity="0.85" style="mix-blend-mode:screen">
+      <text x="30" y="165" fill="#00ffff">G</text>
+      <text x="130" y="165" fill="#ff00ff">R</text>
+      <text x="230" y="165" fill="#ffff00">E</text>
+      <text x="330" y="165" fill="#00ffff">Y</text>
+    </g>
+  </g>
+</svg>
+<div class="tag">F</div>
+<div class="name">displaced complements</div>
+<div class="desc">RGB文字 + CMY文字 を上下にずらして2重配置（重なるとgrey）</div>
+</div>
+
+<!-- G. 極太版 -->
+<div class="tile">
+<svg viewBox="0 0 440 220">
+  <defs>
+    <clipPath id="topG"><rect x="0" y="0" width="440" height="110"/></clipPath>
+    <clipPath id="botG"><rect x="0" y="110" width="440" height="110"/></clipPath>
+    <linearGradient id="yG" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ff0000"/>
       <stop offset="20%" stop-color="#ffff00"/>
       <stop offset="40%" stop-color="#00ff00"/>
@@ -96,310 +248,78 @@ p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align
       <stop offset="100%" stop-color="#ff00ff"/>
     </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="url(#rainbow5)">
-    <text x="40" y="120">GREY</text>
-  </g>
-</svg>
-<div class="tag">05</div>
-<div class="name">horizontal gradient</div>
-<div class="desc">文字全体を虹で横断</div>
-</div>
-
-<!-- 06 vertical 2-color per letter -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <linearGradient id="vg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff0000"/><stop offset="1" stop-color="#ff00ff"/></linearGradient>
-    <linearGradient id="vg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff00"/><stop offset="1" stop-color="#ffff00"/></linearGradient>
-    <linearGradient id="vg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0044ff"/><stop offset="1" stop-color="#00ffff"/></linearGradient>
-    <linearGradient id="vg4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff00ff"/><stop offset="1" stop-color="#ff0000"/></linearGradient>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <text x="40" y="120" fill="url(#vg1)">G</text>
-    <text x="120" y="120" fill="url(#vg2)">R</text>
-    <text x="200" y="120" fill="url(#vg3)">E</text>
-    <text x="280" y="120" fill="url(#vg4)">Y</text>
-  </g>
-</svg>
-<div class="tag">06</div>
-<div class="name">vertical gradient</div>
-<div class="desc">縦2色グラデ各文字</div>
-</div>
-
-<!-- 07 RGB chromatic -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" style="mix-blend-mode:screen">
-    <text x="36" y="120" fill="#ff0000">GREY</text>
-    <text x="40" y="120" fill="#00ff00">GREY</text>
-    <text x="44" y="120" fill="#0044ff">GREY</text>
-  </g>
-</svg>
-<div class="tag">07</div>
-<div class="name">RGB chromatic</div>
-<div class="desc">RGB ずらし重ね（光学収差）</div>
-</div>
-
-<!-- 08 CMY chromatic -->
-<div class="tile">
-<svg viewBox="0 0 400 180" style="background:#fff">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" style="mix-blend-mode:multiply">
-    <text x="36" y="120" fill="#00ffff">GREY</text>
-    <text x="40" y="120" fill="#ff00ff">GREY</text>
-    <text x="44" y="120" fill="#ffff00">GREY</text>
-  </g>
-</svg>
-<div class="tag">08</div>
-<div class="name">CMY chromatic (白背景)</div>
-<div class="desc">印刷版ズレ / CMY 重ね</div>
-</div>
-
-<!-- 09 6-layer rainbow -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" opacity="0.85" style="mix-blend-mode:screen">
-    <text x="34" y="120" fill="#ff0000">GREY</text>
-    <text x="37" y="120" fill="#ffff00">GREY</text>
-    <text x="40" y="120" fill="#00ff00">GREY</text>
-    <text x="43" y="120" fill="#00ffff">GREY</text>
-    <text x="46" y="120" fill="#0044ff">GREY</text>
-    <text x="49" y="120" fill="#ff00ff">GREY</text>
-  </g>
-</svg>
-<div class="tag">09</div>
-<div class="name">6層 overlay</div>
-<div class="desc">RGBCMY 全6色重ね</div>
-</div>
-
-<!-- 10 horizontal stripe fill -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <pattern id="stripes10" x="0" y="0" width="100" height="12" patternUnits="userSpaceOnUse">
-      <rect width="100" height="2" y="0" fill="#ff0000"/>
-      <rect width="100" height="2" y="2" fill="#ffff00"/>
-      <rect width="100" height="2" y="4" fill="#00ff00"/>
-      <rect width="100" height="2" y="6" fill="#00ffff"/>
-      <rect width="100" height="2" y="8" fill="#0044ff"/>
-      <rect width="100" height="2" y="10" fill="#ff00ff"/>
-    </pattern>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="url(#stripes10)">
-    <text x="40" y="120">GREY</text>
-  </g>
-</svg>
-<div class="tag">10</div>
-<div class="name">horizontal stripes</div>
-<div class="desc">文字内部に6色水平縞</div>
-</div>
-
-<!-- 11 vertical stripes -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <pattern id="stripes11" x="0" y="0" width="12" height="100" patternUnits="userSpaceOnUse">
-      <rect width="2" height="100" x="0" fill="#ff0000"/>
-      <rect width="2" height="100" x="2" fill="#ffff00"/>
-      <rect width="2" height="100" x="4" fill="#00ff00"/>
-      <rect width="2" height="100" x="6" fill="#00ffff"/>
-      <rect width="2" height="100" x="8" fill="#0044ff"/>
-      <rect width="2" height="100" x="10" fill="#ff00ff"/>
-    </pattern>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="url(#stripes11)">
-    <text x="40" y="120">GREY</text>
-  </g>
-</svg>
-<div class="tag">11</div>
-<div class="name">vertical stripes</div>
-<div class="desc">文字内部に6色垂直縞</div>
-</div>
-
-<!-- 12 top/bottom split -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <clipPath id="top12"><rect x="0" y="0" width="400" height="92"/></clipPath>
-    <clipPath id="bot12"><rect x="0" y="92" width="400" height="88"/></clipPath>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <g clip-path="url(#top12)">
-      <text x="40" y="120" fill="#ff0000">G</text>
-      <text x="120" y="120" fill="#00ff00">R</text>
-      <text x="200" y="120" fill="#0044ff">E</text>
-      <text x="280" y="120" fill="#ffff00">Y</text>
+  <g font-family="'Arial Black', 'IBM Plex Mono', monospace" font-size="150" font-weight="900" letter-spacing="-2">
+    <g clip-path="url(#topG)">
+      <text x="20" y="150" fill="#ff0000">G</text>
+      <text x="125" y="150" fill="#00ff00">R</text>
+      <text x="230" y="150" fill="#0044ff">E</text>
     </g>
-    <g clip-path="url(#bot12)">
-      <text x="40" y="120" fill="#00ffff">G</text>
-      <text x="120" y="120" fill="#ff00ff">R</text>
-      <text x="200" y="120" fill="#ffff00">E</text>
-      <text x="280" y="120" fill="#ff0000">Y</text>
+    <g clip-path="url(#botG)">
+      <text x="20" y="150" fill="#00ffff">G</text>
+      <text x="125" y="150" fill="#ff00ff">R</text>
+      <text x="230" y="150" fill="#ffff00">E</text>
     </g>
+    <text x="335" y="150" fill="url(#yG)">Y</text>
   </g>
 </svg>
-<div class="tag">12</div>
-<div class="name">top/bottom split</div>
-<div class="desc">上下で別カラーセット</div>
+<div class="tag">G</div>
+<div class="name">heavy / Arial Black</div>
+<div class="desc">極太フォントで面積最大化 (Tシャツプリント向き)</div>
 </div>
 
-<!-- 13 color outline, grey fill -->
+<!-- H. セリフ版 -->
 <div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="#808080" stroke-width="3">
-    <text x="40" y="120" stroke="#ff0000">G</text>
-    <text x="120" y="120" stroke="#00ff00">R</text>
-    <text x="200" y="120" stroke="#0044ff">E</text>
-    <text x="280" y="120" stroke="#ffff00">Y</text>
-  </g>
-</svg>
-<div class="tag">13</div>
-<div class="name">color outline / grey fill</div>
-<div class="desc">文字中はgrey、縁が色</div>
-</div>
-
-<!-- 14 grey outline, color fill -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" stroke="#606060" stroke-width="2">
-    <text x="40" y="120" fill="#ff0000">G</text>
-    <text x="120" y="120" fill="#00ff00">R</text>
-    <text x="200" y="120" fill="#0044ff">E</text>
-    <text x="280" y="120" fill="#ffff00">Y</text>
-  </g>
-</svg>
-<div class="tag">14</div>
-<div class="name">grey outline / color fill</div>
-<div class="desc">中が色、縁取りgrey</div>
-</div>
-
-<!-- 15 white text + rainbow glow -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
+<svg viewBox="0 0 440 220">
   <defs>
-    <filter id="glow15" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3"/></filter>
+    <clipPath id="topH"><rect x="0" y="0" width="440" height="110"/></clipPath>
+    <clipPath id="botH"><rect x="0" y="110" width="440" height="110"/></clipPath>
+    <linearGradient id="yH" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff0000"/>
+      <stop offset="20%" stop-color="#ffff00"/>
+      <stop offset="40%" stop-color="#00ff00"/>
+      <stop offset="60%" stop-color="#00ffff"/>
+      <stop offset="80%" stop-color="#0044ff"/>
+      <stop offset="100%" stop-color="#ff00ff"/>
+    </linearGradient>
   </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" filter="url(#glow15)" opacity="0.9">
-    <text x="40" y="120" fill="#ff0000">G</text>
-    <text x="120" y="120" fill="#00ff00">R</text>
-    <text x="200" y="120" fill="#0044ff">E</text>
-    <text x="280" y="120" fill="#ff00ff">Y</text>
-  </g>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="#fff">
-    <text x="40" y="120">GREY</text>
-  </g>
-</svg>
-<div class="tag">15</div>
-<div class="name">neon glow</div>
-<div class="desc">白文字 + カラーグロー</div>
-</div>
-
-<!-- 16 RGB shadow stack -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <text x="48" y="128" fill="#ff0000" opacity="0.7">GREY</text>
-    <text x="45" y="125" fill="#00ff00" opacity="0.7">GREY</text>
-    <text x="42" y="122" fill="#0044ff" opacity="0.7">GREY</text>
-    <text x="40" y="120" fill="#ffffff">GREY</text>
-  </g>
-</svg>
-<div class="tag">16</div>
-<div class="name">RGB 階段影</div>
-<div class="desc">白文字 + RGB 斜め影 3層</div>
-</div>
-
-<!-- 17 RGBCMY speckle fill -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <pattern id="speckle17" width="6" height="6" patternUnits="userSpaceOnUse">
-      <rect width="6" height="6" fill="#808080"/>
-      <rect width="1" height="1" x="1" y="1" fill="#ff0000"/>
-      <rect width="1" height="1" x="4" y="2" fill="#00ff00"/>
-      <rect width="1" height="1" x="2" y="4" fill="#0044ff"/>
-      <rect width="1" height="1" x="5" y="5" fill="#ffff00"/>
-    </pattern>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="url(#speckle17)">
-    <text x="40" y="120">GREY</text>
-  </g>
-</svg>
-<div class="tag">17</div>
-<div class="name">grey speckle</div>
-<div class="desc">grey地にRGBCMYノイズ</div>
-</div>
-
-<!-- 18 RGB subpixel -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <pattern id="pix18" width="6" height="6" patternUnits="userSpaceOnUse">
-      <rect width="2" height="6" x="0" fill="#ff0000"/>
-      <rect width="2" height="6" x="2" fill="#00ff00"/>
-      <rect width="2" height="6" x="4" fill="#0044ff"/>
-    </pattern>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8" fill="url(#pix18)">
-    <text x="40" y="120">GREY</text>
-  </g>
-</svg>
-<div class="tag">18</div>
-<div class="name">RGB subpixel</div>
-<div class="desc">液晶サブピクセル風構造</div>
-</div>
-
-<!-- 19 top color / bottom grey -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <clipPath id="ht19"><rect x="0" y="0" width="400" height="85"/></clipPath>
-    <clipPath id="hb19"><rect x="0" y="85" width="400" height="95"/></clipPath>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <g clip-path="url(#ht19)">
-      <text x="40" y="120" fill="#ff0000">G</text>
-      <text x="120" y="120" fill="#00ff00">R</text>
-      <text x="200" y="120" fill="#0044ff">E</text>
-      <text x="280" y="120" fill="#ffff00">Y</text>
+  <g font-family="Georgia, serif" font-size="130" font-weight="700" letter-spacing="0">
+    <g clip-path="url(#topH)">
+      <text x="40" y="145" fill="#ff0000">G</text>
+      <text x="140" y="145" fill="#00ff00">R</text>
+      <text x="240" y="145" fill="#0044ff">E</text>
     </g>
-    <g clip-path="url(#hb19)">
-      <text x="40" y="120" fill="#808080">GREY</text>
+    <g clip-path="url(#botH)">
+      <text x="40" y="145" fill="#00ffff">G</text>
+      <text x="140" y="145" fill="#ff00ff">R</text>
+      <text x="240" y="145" fill="#ffff00">E</text>
     </g>
+    <text x="340" y="145" fill="url(#yH)">Y</text>
   </g>
 </svg>
-<div class="tag">19</div>
-<div class="name">top color / bottom grey</div>
-<div class="desc">上半分カラー 下grey</div>
-</div>
-
-<!-- 20 grey top / color bottom -->
-<div class="tile">
-<svg viewBox="0 0 400 180">
-  <defs>
-    <clipPath id="rt20"><rect x="0" y="0" width="400" height="85"/></clipPath>
-    <clipPath id="rb20"><rect x="0" y="85" width="400" height="95"/></clipPath>
-  </defs>
-  <g font-family="'IBM Plex Mono', monospace" font-size="100" font-weight="700" letter-spacing="8">
-    <g clip-path="url(#rt20)">
-      <text x="40" y="120" fill="#808080">GREY</text>
-    </g>
-    <g clip-path="url(#rb20)">
-      <text x="40" y="120" fill="#ff0000">G</text>
-      <text x="120" y="120" fill="#00ff00">R</text>
-      <text x="200" y="120" fill="#0044ff">E</text>
-      <text x="280" y="120" fill="#ffff00">Y</text>
-    </g>
-  </g>
-</svg>
-<div class="tag">20</div>
-<div class="name">top grey / bottom color</div>
-<div class="desc">上grey 下カラー</div>
+<div class="tag">H</div>
+<div class="name">serif variant</div>
+<div class="desc">Georgia 風 セリフ体。格調高く</div>
 </div>
 
 </div>
 
-<p style="text-align:center;margin-top:60px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.2em">
-  inryokü · GREY × RGBCMY typography · 20/20
+<div style="max-width:780px;margin:60px auto 40px;padding:28px;border:1px solid rgba(255,255,255,0.15);border-radius:10px;background:#111;font-size:12px;line-height:1.9;letter-spacing:0.05em">
+  <div style="font-size:10px;letter-spacing:0.3em;color:rgba(255,255,255,0.5);margin-bottom:14px">CONCEPT</div>
+  <p>
+    <b>G, R, E</b> の3文字はそれぞれ <b>RGB原色（光）</b> と <b>CMY補色（影）</b> を
+    水平線で畳み込む。観測者の目で合成されると「grey」が現れる。
+  </p>
+  <p style="margin-top:12px;">
+    <b>Y</b> だけが 6 色すべてを同時に見せる。<br>
+    これは「50%のgreyから、101%の観測へ」到達した最終状態。
+  </p>
+  <p style="margin-top:12px;opacity:0.55;">
+    G (light R + pigment C) → R (light G + pigment M) → E (light B + pigment Y) → Y (observed all)
+  </p>
+</div>
+
+<p style="text-align:center;margin-top:40px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.2em">
+  inryokü · GREY complementary fold · 8 variations
 </p>
 
 </body>
