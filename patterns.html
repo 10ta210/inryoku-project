@@ -135,10 +135,17 @@ body::after{
   text-shadow:0 0 4px rgba(174,224,168,0.5);
   margin-top:6px;
 }
-.tagline em{
-  color:#ff6a6a;
+.tagline .rainbow{
   font-style:normal;
-  text-shadow:0 0 6px rgba(255,106,106,0.6);
+  font-weight:bold;
+  background:linear-gradient(90deg,
+    #FF0000 0%, #FFFF00 20%, #00FF00 40%,
+    #00FFFF 60%, #0000FF 80%, #FF00FF 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  text-shadow: 0 0 8px rgba(255,255,255,0.2);
+  filter: drop-shadow(0 0 4px rgba(255,200,200,0.35));
 }
 
 .wm{
@@ -221,34 +228,33 @@ body::after{
                 font-family="'Archivo Black', 'Arial Black', sans-serif"
                 font-size="210" font-weight="900" letter-spacing="-6"
                 fill="white">inryoku</text>
-          <!-- umlaut dots = circles (not squares) above the final u -->
-          <circle cx="615" cy="108" r="11" fill="white"/>
-          <circle cx="648" cy="108" r="11" fill="white"/>
+          <!-- umlaut dots = circles above the last u -->
+          <circle cx="765" cy="108" r="12" fill="white"/>
+          <circle cx="800" cy="108" r="12" fill="white"/>
         </mask>
       </defs>
 
-      <!-- 6-channel CMYRGB stripes — tuned to cover full letter height evenly -->
+      <!-- 6-channel pure CMYRGB stripes — tuned to cover full letter height -->
       <g filter="url(#glow)">
-        <!-- stripes cover whole letter y-range (approx 110–300) no white gaps -->
         <g mask="url(#letters)">
-          <rect x="0" y="90"  width="860" height="36" fill="#3BBFD0"/>  <!-- C -->
-          <rect x="0" y="126" width="860" height="36" fill="#C23E9E"/>  <!-- M -->
-          <rect x="0" y="162" width="860" height="36" fill="#EFC93B"/>  <!-- Y -->
-          <rect x="0" y="198" width="860" height="36" fill="#E0403F"/>  <!-- R -->
-          <rect x="0" y="234" width="860" height="36" fill="#3FB76A"/>  <!-- G -->
-          <rect x="0" y="270" width="860" height="50" fill="#3B63D4"/>  <!-- B -->
+          <rect x="0" y="90"  width="860" height="36" fill="#00FFFF"/>  <!-- C pure -->
+          <rect x="0" y="126" width="860" height="36" fill="#FF00FF"/>  <!-- M pure -->
+          <rect x="0" y="162" width="860" height="36" fill="#FFFF00"/>  <!-- Y pure -->
+          <rect x="0" y="198" width="860" height="36" fill="#FF0000"/>  <!-- R pure -->
+          <rect x="0" y="234" width="860" height="36" fill="#00FF00"/>  <!-- G pure -->
+          <rect x="0" y="270" width="860" height="50" fill="#0000FF"/>  <!-- B pure -->
         </g>
       </g>
 
-      <!-- '引力' cornerstone — grey (= inryoku = attraction) -->
-      <g filter="url(#glow)" transform="translate(640,292) rotate(-1)">
-        <text font-family="'Noto Sans JP','Hiragino Sans',sans-serif"
-              font-size="92" font-weight="900" letter-spacing="-4"
-              fill="#9a9a9a" opacity="0.95">引力</text>
-        <text font-family="'Noto Sans JP','Hiragino Sans',sans-serif"
-              font-size="92" font-weight="900" letter-spacing="-4"
-              fill="none" stroke="#d8d8d8" stroke-width="1.2" opacity="0.7"
-              transform="translate(-2,-1)">引力</text>
+      <!-- '42' cornerstone — grey -->
+      <g filter="url(#glow)" transform="translate(660,300) rotate(-1)">
+        <text font-family="'Archivo Black', 'Arial Black', sans-serif"
+              font-size="120" font-weight="900" letter-spacing="-4"
+              fill="#808080" opacity="0.95">42</text>
+        <text font-family="'Archivo Black', 'Arial Black', sans-serif"
+              font-size="120" font-weight="900" letter-spacing="-4"
+              fill="none" stroke="#cfcfcf" stroke-width="1.2" opacity="0.7"
+              transform="translate(-2,-1)">42</text>
       </g>
 
       <!-- Japanese sub-label bottom-left -->
@@ -264,7 +270,7 @@ body::after{
   <div class="bottom">
     <div class="loading-label">Saving Observations..</div>
     <div class="progress"></div>
-    <div class="tagline">'50% → <em>101%</em>'</div>
+    <div class="tagline">'50% → <span class="rainbow">101%</span>'</div>
   </div>
 
   <!-- watermark -->
