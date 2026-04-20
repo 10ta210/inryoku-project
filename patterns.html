@@ -3,686 +3,279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>inryokü — GREY / Kirlian edge studies</title>
+<title>inryokü — CRT 84</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=IBM+Plex+Serif:ital,wght@0,200;0,300;0,400&family=Fraunces:opsz,wght@9..144,200;9..144,300;9..144,400;9..144,500&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=VT323&family=Archivo+Black&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --ink: #0a0a0a;
-  --paper: #f6f3ec;
-  --lt: rgba(255,255,255,0.88);
-  --lt-mute: rgba(255,255,255,0.44);
-  --lt-faint: rgba(255,255,255,0.22);
-  --dk: rgba(10,10,10,0.88);
-  --dk-mute: rgba(10,10,10,0.5);
-  --hair-lt: rgba(255,255,255,0.12);
-  --hair-dk: rgba(10,10,10,0.12);
-
-  --r: hsl(0,   66%, 52%);
-  --y: hsl(60,  66%, 52%);
-  --g: hsl(120, 66%, 52%);
-  --c: hsl(180, 66%, 52%);
-  --b: hsl(240, 66%, 52%);
-  --m: hsl(300, 66%, 52%);
-
-  --rp: #C2303A;
-  --yp: #C2BA30;
-  --gp: #30C239;
-  --cp: #30BAC2;
-  --bp: #3A30C2;
-  --mp: #C230BA;
-}
-
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
-  background:var(--ink);color:var(--lt);
-  font-family:'IBM Plex Mono',ui-monospace,monospace;
-  -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
+  background:#050505;
+  color:#c7f2c7;
+  font-family:'VT323','IBM Plex Mono',monospace;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  overflow-x:hidden;
 }
-body{min-height:100vh;padding:80px 36px 140px}
+body{
+  padding:40px 24px 80px;
+  display:flex;flex-direction:column;align-items:center;gap:48px;
+}
 
-header.mast{
-  max-width:1320px;margin:0 auto 72px;
-  display:grid;grid-template-columns:1fr auto;align-items:end;gap:32px;
-  border-bottom:1px solid var(--hair-lt);padding-bottom:28px;
+/* — ambient CRT vignette on body — */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:radial-gradient(ellipse at center,
+    transparent 30%,
+    rgba(0,0,0,0.4) 75%,
+    rgba(0,0,0,0.85) 100%);
 }
-.mast h1{
-  font-family:'Fraunces',serif;font-style:italic;font-weight:300;
-  font-size:clamp(28px,3.4vw,46px);letter-spacing:-0.015em;color:var(--lt);
-  line-height:1;
-}
-.mast .meta{
-  text-align:right;font-size:10px;letter-spacing:0.28em;
-  color:var(--lt-mute);line-height:1.9;text-transform:uppercase;
-}
-.mast .meta b{color:var(--lt);font-weight:400}
 
-.preamble{
-  max-width:720px;margin:0 auto 80px;
-  font-family:'IBM Plex Serif',serif;font-weight:300;
-  font-size:15px;line-height:1.85;color:var(--lt-mute);text-align:center;
+/* — global scanlines — */
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:49;
+  background:repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0.35) 0px,
+    rgba(0,0,0,0.35) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode:multiply;
 }
-.preamble b{color:var(--lt);font-weight:400;font-style:italic}
 
-.specimens{max-width:1320px;margin:0 auto;display:grid;gap:72px}
-.specimen{
-  display:grid;grid-template-columns:1fr 1fr;gap:1px;
-  background:var(--hair-lt);border:1px solid var(--hair-lt);
-  border-radius:2px;overflow:hidden;
+/* ────── CRT SCREEN ────── */
+.crt{
+  position:relative;
+  width:100%;
+  max-width:860px;
+  aspect-ratio: 4/5;
+  border:2px solid #4af06a;
+  box-shadow:
+    0 0 0 1px #111 inset,
+    0 0 28px rgba(74,240,106,0.45),
+    0 0 80px rgba(74,240,106,0.15);
+  padding:38px 42px 44px;
+  background:
+    radial-gradient(ellipse at center, #0a1008 0%, #030503 80%);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  filter:contrast(1.05) saturate(1.1);
 }
-.frame{
-  position:relative;padding:56px 48px 64px;min-height:360px;
-  display:flex;flex-direction:column;justify-content:center;align-items:center;
+
+.crt::before{  /* inner scanlines denser */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    rgba(255,255,255,0.03) 0px,
+    rgba(255,255,255,0.03) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  mix-blend-mode:overlay;
+}
+.crt::after{ /* soft inner vignette */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%);
+}
+
+/* terminal header lines */
+.term-line{
+  font-family:'VT323','IBM Plex Mono',monospace;
+  font-size:28px;
+  line-height:1.35;
+  color:#4af06a;
+  text-shadow: 0 0 6px rgba(74,240,106,0.6), 0 0 18px rgba(74,240,106,0.3);
+  letter-spacing:0.02em;
+}
+.term-line .v{ color:#d8e0e8; text-shadow: 0 0 5px rgba(200,200,200,0.45); }
+.term-line .r{ color:#ff4d5a; text-shadow: 0 0 6px rgba(255,77,90,0.55); }
+
+/* title / logotype */
+.logo-stage{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;
+  margin:-10px 0;
+}
+.logo-svg{ width:100%; height:auto; display:block; }
+
+/* bottom section */
+.bottom{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  margin-top:auto;
+}
+
+.loading-label{
+  font-family:'VT323',monospace;
+  color:#d8e0e8;
+  font-size:26px;
+  letter-spacing:0.05em;
+  text-shadow:0 0 6px rgba(200,200,200,0.5);
+}
+
+.progress{
+  width:58%;
+  height:20px;
+  border:2px solid #4af06a;
+  box-shadow:0 0 10px rgba(74,240,106,0.4);
+  position:relative;
+  background:#080;
   overflow:hidden;
 }
-.frame.dark{background:var(--ink);color:var(--lt)}
-.frame.light{background:var(--paper);color:var(--dk)}
-
-.frame::before,.frame::after{
-  content:"";position:absolute;width:14px;height:14px;
-  border:1px solid currentColor;opacity:0.2;
-}
-.frame::before{top:16px;left:16px;border-right:0;border-bottom:0}
-.frame::after{bottom:16px;right:16px;border-left:0;border-top:0}
-
-.frame .caption{
-  position:absolute;top:18px;right:22px;
-  font-size:9px;letter-spacing:0.32em;font-weight:500;
-  text-transform:uppercase;opacity:0.55;
-}
-.frame .mode{
-  position:absolute;bottom:18px;left:22px;
-  font-size:8.5px;letter-spacing:0.3em;text-transform:uppercase;opacity:0.4;
+.progress::before{
+  content:"";position:absolute;inset:0;
+  background:transparent;
 }
 
-.logo-svg{width:100%;max-width:540px;height:auto;display:block}
+.tagline{
+  color:#aee0a8;
+  font-size:24px;
+  font-family:'VT323',monospace;
+  letter-spacing:0.04em;
+  text-shadow:0 0 4px rgba(174,224,168,0.5);
+  margin-top:6px;
+}
+.tagline em{
+  color:#ff6a6a;
+  font-style:normal;
+  text-shadow:0 0 6px rgba(255,106,106,0.6);
+}
 
-.annotation{
-  grid-column:1/-1;background:var(--ink);
-  padding:28px 48px 34px;
-  display:grid;grid-template-columns:80px 1.1fr 2fr 1fr;gap:36px;
-  align-items:start;border-top:1px solid var(--hair-lt);
-  font-size:10.5px;line-height:1.75;letter-spacing:0.04em;
+.wm{
+  position:absolute;bottom:26px;right:30px;
+  font-family:'VT323',monospace;font-size:22px;
+  color:#4af06a;letter-spacing:0.08em;
+  opacity:0.85;text-shadow:0 0 5px rgba(74,240,106,0.5);
 }
-.annotation .num{
-  font-family:'Fraunces',serif;font-weight:300;font-size:46px;
-  letter-spacing:-0.03em;color:var(--lt);line-height:0.9;
+.wm .glyph{
+  display:inline-block;border:1.5px solid currentColor;
+  padding:1px 6px; margin-right:4px; border-radius:1px;
 }
-.annotation .title{
-  font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:400;
-  font-size:16px;color:var(--lt);margin-bottom:6px;
-}
-.annotation .kind{
-  text-transform:uppercase;letter-spacing:0.28em;font-size:9px;color:var(--lt-mute);
-}
-.annotation p{color:var(--lt-mute)}
-.annotation .mini{
-  font-size:9.5px;letter-spacing:0.08em;
-  color:var(--lt-faint);line-height:2;
-}
-.annotation .mini span{display:block}
-.annotation .mini b{color:var(--lt);font-weight:500}
 
-@media (max-width:820px){
-  body{padding:40px 18px 80px}
-  .specimen{grid-template-columns:1fr}
-  .frame{min-height:300px;padding:40px 28px 48px}
-  .annotation{grid-template-columns:1fr;gap:14px;padding:22px 28px 28px}
-  .mast{grid-template-columns:1fr;gap:12px;align-items:start}
-  .mast .meta{text-align:left}
+/* — tiny bar group above logo like reference 2 — */
+
+/* sub-label (Japanese) */
+.jp-label{
+  font-family:'Noto Sans JP', sans-serif;
+  font-weight:500;
+  font-size:22px;
+  color:#d8e0e8;
+  letter-spacing:0.06em;
+  text-shadow:0 0 6px rgba(200,200,200,0.4);
+  position:absolute;
+  left:0;
+  bottom:0;
+  line-height:1;
 }
+
+/* alt tile container */
+.alt{
+  width:100%;max-width:860px;text-align:center;
+  color:#6aa86a;font-family:'IBM Plex Mono', monospace;
+  font-size:10px;letter-spacing:0.35em;opacity:0.65;text-transform:uppercase;
+}
+
+/* — caption below crt — */
+.caption{
+  width:100%;max-width:860px;padding:18px 24px;
+  border:1px solid rgba(74,240,106,0.22);
+  background:rgba(20,30,18,0.35);
+  color:#a8d4a8;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;letter-spacing:0.12em;line-height:1.9;
+  text-align:center;
+}
+.caption b{ color:#e6f9e6; }
 </style>
 </head>
 <body>
 
-<header class="mast">
-  <h1>GREY — eight Kirlian studies.</h1>
-  <div class="meta">
-    <div><b>inryokü</b> / logotype vol. 04</div>
-    <div>archive · 2026 — spring</div>
-    <div>6-channel offset / chromatic edge</div>
-  </div>
-</header>
+<!-- ═══════════════════════════════════════════════
+     inryokü · CRT 84  — Google-84 homage
+═══════════════════════════════════════════════ -->
+<div class="alt">inryokü · CRT 84 / vol. 05</div>
 
-<p class="preamble">
-  Kirlian discharge, extended. A crisp GREY word at the centre, surrounded by
-  the <b>six channels offset around it</b> — an electric corona that is both
-  optical and philosophical. Variations differ in direction, intensity, blur,
-  and typographic voice. Eight attempts at the same instinct.
-</p>
+<section class="crt">
 
-<main class="specimens">
+  <!-- terminal lines -->
+  <div class="term-line">&gt; Today's observer:&nbsp;&nbsp;<span class="v">司 岡崎</span></div>
+  <div class="term-line">&gt; Observations committed:&nbsp;&nbsp;<span class="r">101</span></div>
 
+  <!-- logo -->
+  <div class="logo-stage">
+    <svg class="logo-svg" viewBox="0 0 860 420" xmlns="http://www.w3.org/2000/svg" aria-label="inryokü 84 retro logotype" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1.4" result="b1"/>
+          <feGaussianBlur stdDeviation="6"   result="b2"/>
+          <feMerge>
+            <feMergeNode in="b2"/>
+            <feMergeNode in="b1"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <mask id="letters">
+          <rect width="860" height="420" fill="black"/>
+          <!-- "inryokü" at a size that actually fits within viewBox -->
+          <text x="430" y="270" text-anchor="middle"
+                font-family="'Archivo Black', 'Arial Black', sans-serif"
+                font-size="210" font-weight="900" letter-spacing="-6"
+                fill="white">inryokü</text>
+        </mask>
+      </defs>
 
-<!-- ═══ 01 CARDINAL offset — 6 directions radially ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 01 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <g opacity="0.85">
-          <text x="280" y="145" fill="#D5343D" transform="translate(0,-4)">GREY</text>
-          <text x="280" y="145" fill="#D5CC34" transform="translate(3,-2)">GREY</text>
-          <text x="280" y="145" fill="#34D53D" transform="translate(3,2)">GREY</text>
-          <text x="280" y="145" fill="#34CCD5" transform="translate(0,4)">GREY</text>
-          <text x="280" y="145" fill="#3D34D5" transform="translate(-3,2)">GREY</text>
-          <text x="280" y="145" fill="#D534CC" transform="translate(-3,-2)">GREY</text>
+      <!-- Rainbow-striped fill inside letters -->
+      <g filter="url(#glow)">
+        <rect x="0" y="0" width="860" height="420" fill="#e8ecf2" mask="url(#letters)"/>
+        <g opacity="0.94" mask="url(#letters)">
+          <rect x="0" y="120" width="860" height="22" fill="#3B63D4"/>
+          <rect x="0" y="158" width="860" height="22" fill="#E0403F"/>
+          <rect x="0" y="196" width="860" height="22" fill="#EFC93B"/>
+          <rect x="0" y="234" width="860" height="22" fill="#3FB76A"/>
+          <rect x="0" y="270" width="860" height="30" fill="#3BBFD0"/>
         </g>
-        <text x="280" y="145" fill="#fafaf7">GREY</text>
+        <!-- top bright band -->
+        <rect x="0" y="90" width="860" height="20" fill="#ffffff" mask="url(#letters)"/>
       </g>
+
+      <!-- '26' cornerstone (pink/red with yellow trace) -->
+      <g filter="url(#glow)" transform="translate(660,300) rotate(-1)">
+        <text font-family="'Archivo Black', 'Arial Black', sans-serif"
+              font-size="120" font-weight="900" letter-spacing="-4"
+              fill="#ff3a6a" opacity="0.95">26</text>
+        <text font-family="'Archivo Black', 'Arial Black', sans-serif"
+              font-size="120" font-weight="900" letter-spacing="-4"
+              fill="none" stroke="#ffd84a" stroke-width="1.2" opacity="0.8"
+              transform="translate(-2,-1)">26</text>
+      </g>
+
+      <!-- Japanese sub-label bottom-left -->
+      <text x="40" y="395"
+            font-family="'Noto Sans JP', sans-serif"
+            font-size="30" font-weight="500"
+            fill="#e5ecf2" letter-spacing="4"
+            filter="url(#glow)">日本製2026</text>
     </svg>
-    <div class="mode">dark · hex cardinal</div>
   </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 01 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <g opacity="0.9">
-          <text x="280" y="145" fill="#C2303A" transform="translate(0,-4)">GREY</text>
-          <text x="280" y="145" fill="#C2BA30" transform="translate(3,-2)">GREY</text>
-          <text x="280" y="145" fill="#30C239" transform="translate(3,2)">GREY</text>
-          <text x="280" y="145" fill="#30BAC2" transform="translate(0,4)">GREY</text>
-          <text x="280" y="145" fill="#3A30C2" transform="translate(-3,2)">GREY</text>
-          <text x="280" y="145" fill="#C230BA" transform="translate(-3,-2)">GREY</text>
-        </g>
-        <text x="280" y="145" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · hex cardinal</div>
-  </div>
-  <div class="annotation">
-    <div class="num">01</div>
-    <div>
-      <div class="kind">hexagonal offset</div>
-      <div class="title">The corona</div>
-    </div>
-    <p>
-      Six copies offset in a hexagon around the word — R top, Y upper-right,
-      G lower-right, C bottom, B lower-left, M upper-left. Each sits
-      exactly 60° apart from the next. The sharp grey word stays
-      readable; the six channels hum at its edges.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> 4px radial</span>
-      <span><b>type</b> Plex Mono 700</span>
-      <span><b>fit</b> all scales · primary</span>
-    </div>
-  </div>
-</article>
 
+  <!-- bottom progress + tagline -->
+  <div class="bottom">
+    <div class="loading-label">Saving Observations..</div>
+    <div class="progress"></div>
+    <div class="tagline">'50% → <em>101%</em>'</div>
+  </div>
 
-<!-- ═══ 02 SOFT BLOOM — blurred rainbow halo ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 02 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="bloom-d" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="5"/>
-        </filter>
-      </defs>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle"
-         filter="url(#bloom-d)" opacity="0.75">
-        <text x="280" y="145" fill="#D5343D" transform="translate(-5,-5)">GREY</text>
-        <text x="280" y="145" fill="#D5CC34" transform="translate(5,-5)">GREY</text>
-        <text x="280" y="145" fill="#34D53D" transform="translate(-7,0)">GREY</text>
-        <text x="280" y="145" fill="#34CCD5" transform="translate(7,0)">GREY</text>
-        <text x="280" y="145" fill="#3D34D5" transform="translate(-5,5)">GREY</text>
-        <text x="280" y="145" fill="#D534CC" transform="translate(5,5)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#fafaf7">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">dark · bloom</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 02 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="bloom-p" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="5"/>
-        </filter>
-      </defs>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle"
-         filter="url(#bloom-p)" opacity="0.85">
-        <text x="280" y="145" fill="#C2303A" transform="translate(-5,-5)">GREY</text>
-        <text x="280" y="145" fill="#C2BA30" transform="translate(5,-5)">GREY</text>
-        <text x="280" y="145" fill="#30C239" transform="translate(-7,0)">GREY</text>
-        <text x="280" y="145" fill="#30BAC2" transform="translate(7,0)">GREY</text>
-        <text x="280" y="145" fill="#3A30C2" transform="translate(-5,5)">GREY</text>
-        <text x="280" y="145" fill="#C230BA" transform="translate(5,5)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · bloom</div>
-  </div>
-  <div class="annotation">
-    <div class="num">02</div>
-    <div>
-      <div class="kind">blurred bloom</div>
-      <div class="title">The glow</div>
-    </div>
-    <p>
-      The six offset channels are blurred outward to an ethereal halo —
-      Kirlian in its original spiritual-photographic sense. The grey letter
-      stays razor sharp; the colour around it is atmosphere, not edge.
-      Reads like radiation.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> 5–7px · blur σ 5</span>
-      <span><b>type</b> Plex Mono 700</span>
-      <span><b>fit</b> large, emotive</span>
-    </div>
-  </div>
-</article>
+  <!-- watermark -->
+  <div class="wm"><span class="glyph">iñ</span>kü</div>
 
+</section>
 
-<!-- ═══ 03 TIGHT — 1px professional CMY aberration ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 03 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5" text-anchor="middle" dominant-baseline="middle" opacity="0.9">
-        <text x="280" y="140" fill="#D5343D" transform="translate(-1,-1)">GREY</text>
-        <text x="280" y="140" fill="#D5CC34" transform="translate(1,-1)">GREY</text>
-        <text x="280" y="140" fill="#34D53D" transform="translate(-1.4,0)">GREY</text>
-        <text x="280" y="140" fill="#34CCD5" transform="translate(1.4,0)">GREY</text>
-        <text x="280" y="140" fill="#3D34D5" transform="translate(-1,1)">GREY</text>
-        <text x="280" y="140" fill="#D534CC" transform="translate(1,1)">GREY</text>
-      </g>
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="140" fill="#fafaf7">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">dark · fine</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 03 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5" text-anchor="middle" dominant-baseline="middle" opacity="0.95">
-        <text x="280" y="140" fill="#C2303A" transform="translate(-1,-1)">GREY</text>
-        <text x="280" y="140" fill="#C2BA30" transform="translate(1,-1)">GREY</text>
-        <text x="280" y="140" fill="#30C239" transform="translate(-1.4,0)">GREY</text>
-        <text x="280" y="140" fill="#30BAC2" transform="translate(1.4,0)">GREY</text>
-        <text x="280" y="140" fill="#3A30C2" transform="translate(-1,1)">GREY</text>
-        <text x="280" y="140" fill="#C230BA" transform="translate(1,1)">GREY</text>
-      </g>
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="140" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · fine</div>
-  </div>
-  <div class="annotation">
-    <div class="num">03</div>
-    <div>
-      <div class="kind">fine edge / serif</div>
-      <div class="title">The whisper</div>
-    </div>
-    <p>
-      Editorial serif with a 1–1.4px six-channel offset. You barely notice
-      the chromatic edge until you come close; then it reveals as six
-      pigments doing quiet work at the margins. Works across scales,
-      especially small — labels, hem tags, print.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> 1–1.4px</span>
-      <span><b>type</b> Fraunces 300</span>
-      <span><b>fit</b> refined · small · print</span>
-    </div>
-  </div>
-</article>
-
-
-<!-- ═══ 04 HORIZONTAL RAINBOW — left-right only ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 04 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle" opacity="0.8">
-        <text x="280" y="145" fill="#D5343D" transform="translate(-6,0)">GREY</text>
-        <text x="280" y="145" fill="#D5CC34" transform="translate(-4,0)">GREY</text>
-        <text x="280" y="145" fill="#34D53D" transform="translate(-2,0)">GREY</text>
-        <text x="280" y="145" fill="#34CCD5" transform="translate(2,0)">GREY</text>
-        <text x="280" y="145" fill="#3D34D5" transform="translate(4,0)">GREY</text>
-        <text x="280" y="145" fill="#D534CC" transform="translate(6,0)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#fafaf7">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">dark · horizontal</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 04 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle" opacity="0.9">
-        <text x="280" y="145" fill="#C2303A" transform="translate(-6,0)">GREY</text>
-        <text x="280" y="145" fill="#C2BA30" transform="translate(-4,0)">GREY</text>
-        <text x="280" y="145" fill="#30C239" transform="translate(-2,0)">GREY</text>
-        <text x="280" y="145" fill="#30BAC2" transform="translate(2,0)">GREY</text>
-        <text x="280" y="145" fill="#3A30C2" transform="translate(4,0)">GREY</text>
-        <text x="280" y="145" fill="#C230BA" transform="translate(6,0)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · horizontal</div>
-  </div>
-  <div class="annotation">
-    <div class="num">04</div>
-    <div>
-      <div class="kind">horizontal splay</div>
-      <div class="title">The left-right bleed</div>
-    </div>
-    <p>
-      The six channels splay only on the x-axis — RGB pulled left of the
-      word, CMY pulled right. Reads cleanly at a glance; inspects rich:
-      it mirrors how film runs through a projector and how our eyes
-      resolve the visible spectrum sequentially.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> ±2 ±4 ±6 px</span>
-      <span><b>type</b> Plex Mono 700</span>
-      <span><b>fit</b> wide formats · shirt front</span>
-    </div>
-  </div>
-</article>
-
-
-<!-- ═══ 05 ASYMMETRIC DRIFT — each letter drifts differently ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 05 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="4" text-anchor="middle" dominant-baseline="middle" opacity="0.9">
-        <!-- Per-letter kirlian fringes -->
-        <text x="130" y="145" fill="#D5343D" transform="translate(-3,-3)">G</text>
-        <text x="130" y="145" fill="#34CCD5" transform="translate(3,3)">G</text>
-
-        <text x="230" y="145" fill="#D5CC34" transform="translate(3,-3)">R</text>
-        <text x="230" y="145" fill="#3D34D5" transform="translate(-3,3)">R</text>
-
-        <text x="330" y="145" fill="#34D53D" transform="translate(-3,3)">E</text>
-        <text x="330" y="145" fill="#D534CC" transform="translate(3,-3)">E</text>
-
-        <text x="430" y="145" fill="#D5343D" transform="translate(3,3)">Y</text>
-        <text x="430" y="145" fill="#34D53D" transform="translate(-3,-3)">Y</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="4" text-anchor="middle" dominant-baseline="middle">
-        <text x="130" y="145" fill="#fafaf7">G</text>
-        <text x="230" y="145" fill="#fafaf7">R</text>
-        <text x="330" y="145" fill="#fafaf7">E</text>
-        <text x="430" y="145" fill="#fafaf7">Y</text>
-      </g>
-    </svg>
-    <div class="mode">dark · per-letter</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 05 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="4" text-anchor="middle" dominant-baseline="middle" opacity="0.95">
-        <text x="130" y="145" fill="#C2303A" transform="translate(-3,-3)">G</text>
-        <text x="130" y="145" fill="#30BAC2" transform="translate(3,3)">G</text>
-        <text x="230" y="145" fill="#C2BA30" transform="translate(3,-3)">R</text>
-        <text x="230" y="145" fill="#3A30C2" transform="translate(-3,3)">R</text>
-        <text x="330" y="145" fill="#30C239" transform="translate(-3,3)">E</text>
-        <text x="330" y="145" fill="#C230BA" transform="translate(3,-3)">E</text>
-        <text x="430" y="145" fill="#C2303A" transform="translate(3,3)">Y</text>
-        <text x="430" y="145" fill="#30C239" transform="translate(-3,-3)">Y</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="4" text-anchor="middle" dominant-baseline="middle">
-        <text x="130" y="145" fill="#0a0a0a">G</text>
-        <text x="230" y="145" fill="#0a0a0a">R</text>
-        <text x="330" y="145" fill="#0a0a0a">E</text>
-        <text x="430" y="145" fill="#0a0a0a">Y</text>
-      </g>
-    </svg>
-    <div class="mode">paper · per-letter</div>
-  </div>
-  <div class="annotation">
-    <div class="num">05</div>
-    <div>
-      <div class="kind">asymmetric drift</div>
-      <div class="title">The individual</div>
-    </div>
-    <p>
-      Each of the four letters carries a different pair of complementary
-      ghosts. G holds R⁺C; R holds Y⁺B; E holds G⁺M; Y closes the loop.
-      The logotype reads as one word, yet every letter has its own private
-      observation.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> 3px diag · complementary pairs</span>
-      <span><b>type</b> Plex Mono 700</span>
-      <span><b>fit</b> statement · back panel</span>
-    </div>
-  </div>
-</article>
-
-
-<!-- ═══ 06 SERIF + BLOOM — ethereal editorial ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 06 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="bloom2-d" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3"/>
-        </filter>
-      </defs>
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5"
-         text-anchor="middle" dominant-baseline="middle" filter="url(#bloom2-d)" opacity="0.8">
-        <text x="280" y="140" fill="#D5343D" transform="translate(0,-4)">GREY</text>
-        <text x="280" y="140" fill="#D5CC34" transform="translate(3.5,-2)">GREY</text>
-        <text x="280" y="140" fill="#34D53D" transform="translate(3.5,2)">GREY</text>
-        <text x="280" y="140" fill="#34CCD5" transform="translate(0,4)">GREY</text>
-        <text x="280" y="140" fill="#3D34D5" transform="translate(-3.5,2)">GREY</text>
-        <text x="280" y="140" fill="#D534CC" transform="translate(-3.5,-2)">GREY</text>
-      </g>
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="140" fill="#fafaf7">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">dark · serif bloom</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 06 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="bloom2-p" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3"/>
-        </filter>
-      </defs>
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5"
-         text-anchor="middle" dominant-baseline="middle" filter="url(#bloom2-p)" opacity="0.9">
-        <text x="280" y="140" fill="#C2303A" transform="translate(0,-4)">GREY</text>
-        <text x="280" y="140" fill="#C2BA30" transform="translate(3.5,-2)">GREY</text>
-        <text x="280" y="140" fill="#30C239" transform="translate(3.5,2)">GREY</text>
-        <text x="280" y="140" fill="#30BAC2" transform="translate(0,4)">GREY</text>
-        <text x="280" y="140" fill="#3A30C2" transform="translate(-3.5,2)">GREY</text>
-        <text x="280" y="140" fill="#C230BA" transform="translate(-3.5,-2)">GREY</text>
-      </g>
-      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-5" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="140" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · serif bloom</div>
-  </div>
-  <div class="annotation">
-    <div class="num">06</div>
-    <div>
-      <div class="kind">serif · bloom</div>
-      <div class="title">The halo</div>
-    </div>
-    <p>
-      The hex cardinal offset in serif, with a soft blur applied only to the
-      colour layers. The grey word stays crystalline; its six coloured twins
-      radiate behind it like a low-voltage halo. Editorial, calm, almost
-      sacred.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> 4px hex · blur σ 3</span>
-      <span><b>type</b> Fraunces 300</span>
-      <span><b>fit</b> editorial · book cover</span>
-    </div>
-  </div>
-</article>
-
-
-<!-- ═══ 07 OUTLINE CORONA — hairline fringe ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 07 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="out-d"><feGaussianBlur stdDeviation="0.4"/></filter>
-      </defs>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="500" font-size="150" letter-spacing="2"
-         text-anchor="middle" dominant-baseline="middle" fill="none" stroke-width="1.4" filter="url(#out-d)">
-        <text x="280" y="145" stroke="#D5343D" transform="translate(0,-3)">GREY</text>
-        <text x="280" y="145" stroke="#D5CC34" transform="translate(2.6,-1.5)">GREY</text>
-        <text x="280" y="145" stroke="#34D53D" transform="translate(2.6,1.5)">GREY</text>
-        <text x="280" y="145" stroke="#34CCD5" transform="translate(0,3)">GREY</text>
-        <text x="280" y="145" stroke="#3D34D5" transform="translate(-2.6,1.5)">GREY</text>
-        <text x="280" y="145" stroke="#D534CC" transform="translate(-2.6,-1.5)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="500" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#fafaf7">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">dark · outline</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 07 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="out-p"><feGaussianBlur stdDeviation="0.4"/></filter>
-      </defs>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="500" font-size="150" letter-spacing="2"
-         text-anchor="middle" dominant-baseline="middle" fill="none" stroke-width="1.4" filter="url(#out-p)">
-        <text x="280" y="145" stroke="#C2303A" transform="translate(0,-3)">GREY</text>
-        <text x="280" y="145" stroke="#C2BA30" transform="translate(2.6,-1.5)">GREY</text>
-        <text x="280" y="145" stroke="#30C239" transform="translate(2.6,1.5)">GREY</text>
-        <text x="280" y="145" stroke="#30BAC2" transform="translate(0,3)">GREY</text>
-        <text x="280" y="145" stroke="#3A30C2" transform="translate(-2.6,1.5)">GREY</text>
-        <text x="280" y="145" stroke="#C230BA" transform="translate(-2.6,-1.5)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="500" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · outline</div>
-  </div>
-  <div class="annotation">
-    <div class="num">07</div>
-    <div>
-      <div class="kind">outlined corona</div>
-      <div class="title">The contour</div>
-    </div>
-    <p>
-      The six channels appear only as hairline outlines — not filled letters.
-      The result is a lighter, more architectural version of the Kirlian
-      edge: less "energy field", more "technical drawing of energy field".
-    </p>
-    <div class="mini">
-      <span><b>offset</b> 3px hex · stroke 1.4px</span>
-      <span><b>type</b> Plex Mono 500</span>
-      <span><b>fit</b> refined · print · invitation</span>
-    </div>
-  </div>
-</article>
-
-
-<!-- ═══ 08 DOUBLE: RGB ABOVE / CMY BELOW ═══ -->
-<article class="specimen">
-  <div class="frame dark">
-    <div class="caption">kirlian · 08 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle" opacity="0.85">
-        <!-- RGB above -->
-        <text x="280" y="145" fill="#D5343D" transform="translate(-3,-4)">GREY</text>
-        <text x="280" y="145" fill="#34D53D" transform="translate(0,-5)">GREY</text>
-        <text x="280" y="145" fill="#3D34D5" transform="translate(3,-4)">GREY</text>
-        <!-- CMY below -->
-        <text x="280" y="145" fill="#34CCD5" transform="translate(-3,4)">GREY</text>
-        <text x="280" y="145" fill="#D534CC" transform="translate(0,5)">GREY</text>
-        <text x="280" y="145" fill="#D5CC34" transform="translate(3,4)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#fafaf7">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">dark · double</div>
-  </div>
-  <div class="frame light">
-    <div class="caption">kirlian · 08 / 08</div>
-    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg">
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle" opacity="0.9">
-        <text x="280" y="145" fill="#C2303A" transform="translate(-3,-4)">GREY</text>
-        <text x="280" y="145" fill="#30C239" transform="translate(0,-5)">GREY</text>
-        <text x="280" y="145" fill="#3A30C2" transform="translate(3,-4)">GREY</text>
-        <text x="280" y="145" fill="#30BAC2" transform="translate(-3,4)">GREY</text>
-        <text x="280" y="145" fill="#C230BA" transform="translate(0,5)">GREY</text>
-        <text x="280" y="145" fill="#C2BA30" transform="translate(3,4)">GREY</text>
-      </g>
-      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="150" letter-spacing="2" text-anchor="middle" dominant-baseline="middle">
-        <text x="280" y="145" fill="#0a0a0a">GREY</text>
-      </g>
-    </svg>
-    <div class="mode">paper · double</div>
-  </div>
-  <div class="annotation">
-    <div class="num">08</div>
-    <div>
-      <div class="kind">dual-layer</div>
-      <div class="title">The two worlds</div>
-    </div>
-    <p>
-      RGB <em>above</em> the word, CMY <em>below</em>. Light floats, pigment
-      settles. The grey word is the horizon between them. Reads the same
-      concept as 7-layer fold, but now as a single edge phenomenon, not a
-      vertical slice.
-    </p>
-    <div class="mini">
-      <span><b>offset</b> ±4–5 vertical split</span>
-      <span><b>type</b> Plex Mono 700</span>
-      <span><b>fit</b> primary logotype</span>
-    </div>
-  </div>
-</article>
-
-
-</main>
-
-<footer style="max-width:1320px;margin:100px auto 0;padding-top:28px;border-top:1px solid var(--hair-lt);display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--lt-mute);line-height:2;">
-  <div>
-    <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:16px;color:var(--lt);text-transform:none;margin-bottom:14px;">Colophon</div>
-    Typefaces · <span style="color:#fff">Fraunces</span> · <span style="color:#fff">IBM Plex Serif</span> · <span style="color:#fff">IBM Plex Mono</span><br>
-    One word. Six offsets. Eight variations of intensity.
-  </div>
-  <div>
-    <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:16px;color:var(--lt);text-transform:none;margin-bottom:14px;">Channels (HSL)</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--r);margin-right:6px"></span>0°&nbsp;&nbsp;&nbsp;R</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--y);margin-right:6px"></span>60°&nbsp;&nbsp;Y</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g);margin-right:6px"></span>120° G</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--c);margin-right:6px"></span>180° C</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--b);margin-right:6px"></span>240° B</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--m);margin-right:6px"></span>300° M</div>
-  </div>
-  <div>
-    <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:16px;color:var(--lt);text-transform:none;margin-bottom:14px;">Issue</div>
-    vol. 04 — spring 2026<br>
-    Kirlian edge studies · eight<br>
-    inryokü — 50% → 101%
-  </div>
-</footer>
+<div class="caption">
+  <b>CRT 84</b> · inryokü logotype as late-80s VHS boot screen.
+  rainbow horizontal stripes inside thick letterforms, CRT green border,
+  scanlines, phosphor glow, terminal log lines, magenta "26" cornerstone.
+  dark-only — this one lives on screens, not paper.
+</div>
 
 </body>
 </html>
