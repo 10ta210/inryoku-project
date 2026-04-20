@@ -158,12 +158,39 @@ loader.load('public/inryoku_logo_3d.glb', gltf => {
   logo.scale.setScalar(baseScale);
   // pump up material
   logo.traverse(o => {
-    if (o.isMesh) {
-      if (o.material) {
-        o.material.metalness = 0.55;
-        o.material.roughness = 0.25;
-        o.material.envMapIntensity = 1.2;
-      }
+    if (!o.isMesh || !o.material) return;
+    const name = o.name.toLowerCase();
+    const mat = o.material;
+    // BodyPin ("i" 本体) — 前面、solid、強い金属感
+    if (name.includes('body') || name.includes('pin')) {
+      mat.metalness = 0.85;
+      mat.roughness = 0.18;
+      mat.envMapIntensity = 1.6;
+      mat.color.setHex(0xe8eaee);
+      o.renderOrder = 2;
+    }
+    // EggShell — ghost 化、透過、控えめ
+    else if (name.includes('egg') || name.includes('shell')) {
+      mat.transparent = true;
+      mat.opacity = 0.28;
+      mat.metalness = 0.35;
+      mat.roughness = 0.45;
+      mat.envMapIntensity = 1.0;
+      mat.depthWrite = false;
+      o.renderOrder = 1;
+    }
+    // RainbowSphere — 発光させる
+    else if (name.includes('rainbow') || name.includes('sphere')) {
+      mat.metalness = 0.15;
+      mat.roughness = 0.1;
+      mat.envMapIntensity = 2.0;
+      if (mat.emissive) mat.emissive.setHex(0x333333);
+      o.renderOrder = 3;
+    }
+    else {
+      mat.metalness = 0.55;
+      mat.roughness = 0.25;
+      mat.envMapIntensity = 1.2;
     }
   });
   scene.add(logo);
