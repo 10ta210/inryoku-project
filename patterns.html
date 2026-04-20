@@ -224,29 +224,31 @@ body::after{
         </mask>
       </defs>
 
-      <!-- Rainbow-striped fill inside letters -->
+      <!-- 6-channel CMYRGB striped fill inside letters -->
       <g filter="url(#glow)">
         <rect x="0" y="0" width="860" height="420" fill="#e8ecf2" mask="url(#letters)"/>
         <g opacity="0.94" mask="url(#letters)">
-          <rect x="0" y="120" width="860" height="22" fill="#3B63D4"/>
-          <rect x="0" y="158" width="860" height="22" fill="#E0403F"/>
-          <rect x="0" y="196" width="860" height="22" fill="#EFC93B"/>
-          <rect x="0" y="234" width="860" height="22" fill="#3FB76A"/>
-          <rect x="0" y="270" width="860" height="30" fill="#3BBFD0"/>
+          <!-- order: C M Y R G B  -->
+          <rect x="0" y="108" width="860" height="28" fill="#3BBFD0"/>  <!-- C -->
+          <rect x="0" y="138" width="860" height="28" fill="#C23E9E"/>  <!-- M -->
+          <rect x="0" y="168" width="860" height="28" fill="#EFC93B"/>  <!-- Y -->
+          <rect x="0" y="198" width="860" height="28" fill="#E0403F"/>  <!-- R -->
+          <rect x="0" y="228" width="860" height="28" fill="#3FB76A"/>  <!-- G -->
+          <rect x="0" y="258" width="860" height="42" fill="#3B63D4"/>  <!-- B -->
         </g>
         <!-- top bright band -->
-        <rect x="0" y="90" width="860" height="20" fill="#ffffff" mask="url(#letters)"/>
+        <rect x="0" y="90" width="860" height="16" fill="#ffffff" mask="url(#letters)"/>
       </g>
 
-      <!-- '26' cornerstone (pink/red with yellow trace) -->
+      <!-- '42' cornerstone — grey -->
       <g filter="url(#glow)" transform="translate(660,300) rotate(-1)">
         <text font-family="'Archivo Black', 'Arial Black', sans-serif"
               font-size="120" font-weight="900" letter-spacing="-4"
-              fill="#ff3a6a" opacity="0.95">26</text>
+              fill="#808080" opacity="0.95">42</text>
         <text font-family="'Archivo Black', 'Arial Black', sans-serif"
               font-size="120" font-weight="900" letter-spacing="-4"
-              fill="none" stroke="#ffd84a" stroke-width="1.2" opacity="0.8"
-              transform="translate(-2,-1)">26</text>
+              fill="none" stroke="#cfcfcf" stroke-width="1.2" opacity="0.75"
+              transform="translate(-2,-1)">42</text>
       </g>
 
       <!-- Japanese sub-label bottom-left -->
