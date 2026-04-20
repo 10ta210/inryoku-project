@@ -2,18 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>inryokü — 7-layer displaced GREY</title>
+<title>inryokü — 7-layer displaced (v2)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0a0a0a;color:rgba(255,255,255,0.7);font-family:'IBM Plex Mono','SF Mono',monospace;padding:40px 20px;min-height:100vh}
 h1{font-size:14px;letter-spacing:0.3em;color:rgba(255,255,255,0.9);margin-bottom:8px;text-align:center;font-weight:300}
-p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:20px;max-width:780px;margin-left:auto;margin-right:auto;line-height:1.7}
-.theory{max-width:640px;margin:20px auto 60px;padding:24px 28px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:11px;line-height:2.1;letter-spacing:0.05em;background:#111}
-.theory b{color:#fff;font-weight:500}
+p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:50px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(460px, 1fr));gap:40px;max-width:1400px;margin:0 auto}
 .tile{background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:40px 30px;display:flex;flex-direction:column;align-items:center}
 .tile svg{width:100%;height:280px;background:#000;border-radius:4px}
-.tile.white-bg svg{background:#fff}
 .tag{font-size:10px;letter-spacing:0.35em;color:rgba(255,255,255,0.35);margin-top:22px;text-transform:uppercase}
 .name{font-size:13px;letter-spacing:0.12em;color:rgba(255,255,255,0.95);margin-top:8px;text-align:center;font-weight:500}
 .desc{font-size:10px;line-height:1.7;color:rgba(255,255,255,0.5);margin-top:10px;text-align:center;letter-spacing:0.02em;max-width:380px}
@@ -21,189 +18,215 @@ p.sub{font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.4);text-align
 </head>
 <body>
 
-<h1>inryokü — 7-layer displaced</h1>
-<p class="sub">「GREY」を7回コピーして位置ズラし / RGBは上へ、CMYは下へ、中央にgrey</p>
-
-<div class="theory">
-  <b>上から下へ:</b><br>
-  R (光) ↑ 最上<br>
-  G (光) ↑<br>
-  B (光) ↑<br>
-  GREY ─ 中心<br>
-  C (影) ↓<br>
-  M (影) ↓<br>
-  Y (影) ↓ 最下
-</div>
+<h1>inryokü — displacement experiments v2</h1>
+<p class="sub">透明度 × 位置ズレ × スケール × 回転 の新しいアイデア8個</p>
 
 <div class="grid">
 
-<!-- A. 基本: 垂直ズレ 小 -->
+<!-- I. 中心から放射 (grey fixed, RGB/CMY widen outward + fade) -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'IBM Plex Mono', monospace" font-size="150" font-weight="800" letter-spacing="4" opacity="0.5">
-    <text x="40" y="155" fill="#ff0000">GREY</text>
-    <text x="40" y="159" fill="#00ff00">GREY</text>
-    <text x="40" y="163" fill="#0044ff">GREY</text>
-    <text x="40" y="167" fill="#808080">GREY</text>
-    <text x="40" y="171" fill="#00ffff">GREY</text>
-    <text x="40" y="175" fill="#ff00ff">GREY</text>
-    <text x="40" y="179" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4">
+    <!-- RGB 上方向へ広がりながらフェード -->
+    <text x="40" y="100" fill="#ff0000" opacity="0.35">GREY</text>
+    <text x="40" y="120" fill="#00ff00" opacity="0.55">GREY</text>
+    <text x="40" y="140" fill="#0044ff" opacity="0.75">GREY</text>
+    <!-- 中心grey 最も濃く -->
+    <text x="40" y="160" fill="#808080" opacity="1">GREY</text>
+    <!-- CMY 下方向へフェード -->
+    <text x="40" y="180" fill="#00ffff" opacity="0.75">GREY</text>
+    <text x="40" y="200" fill="#ff00ff" opacity="0.55">GREY</text>
+    <text x="40" y="220" fill="#ffff00" opacity="0.35">GREY</text>
   </g>
 </svg>
-<div class="tag">A</div>
-<div class="name">vertical shift — small</div>
-<div class="desc">7層を垂直4pxずつズラし。僅かにグリッチ</div>
+<div class="tag">I</div>
+<div class="name">radial fade from grey</div>
+<div class="desc">中心grey=濃、外側RGBCMY=薄 / 観測の中心がgreyに留まる</div>
 </div>
 
-<!-- B. 垂直ズレ 中 -->
+<!-- J. Wave displacement — sine curve -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4" opacity="0.5">
-    <text x="40" y="125" fill="#ff0000">GREY</text>
-    <text x="40" y="135" fill="#00ff00">GREY</text>
-    <text x="40" y="145" fill="#0044ff">GREY</text>
-    <text x="40" y="155" fill="#808080">GREY</text>
-    <text x="40" y="165" fill="#00ffff">GREY</text>
-    <text x="40" y="175" fill="#ff00ff">GREY</text>
-    <text x="40" y="185" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="4" opacity="0.55">
+    <text x="30" y="140" fill="#ff0000">GREY</text>
+    <text x="40" y="150" fill="#00ff00">GREY</text>
+    <text x="50" y="160" fill="#0044ff">GREY</text>
+    <text x="55" y="170" fill="#808080" opacity="1">GREY</text>
+    <text x="50" y="180" fill="#00ffff">GREY</text>
+    <text x="40" y="190" fill="#ff00ff">GREY</text>
+    <text x="30" y="200" fill="#ffff00">GREY</text>
   </g>
 </svg>
-<div class="tag">B</div>
-<div class="name">vertical shift — medium</div>
-<div class="desc">10pxずつズラし。7色個別に読める</div>
+<div class="tag">J</div>
+<div class="name">wave curve</div>
+<div class="desc">各層が sin 波で左右に揺らぐ</div>
 </div>
 
-<!-- C. 垂直ズレ 大 -->
+<!-- K. Depth scale (parallax) -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'IBM Plex Mono', monospace" font-size="110" font-weight="800" letter-spacing="4" opacity="0.6">
-    <text x="40" y="75" fill="#ff0000">GREY</text>
-    <text x="40" y="105" fill="#00ff00">GREY</text>
-    <text x="40" y="135" fill="#0044ff">GREY</text>
-    <text x="40" y="165" fill="#808080">GREY</text>
-    <text x="40" y="195" fill="#00ffff">GREY</text>
-    <text x="40" y="225" fill="#ff00ff">GREY</text>
-    <text x="40" y="255" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4" opacity="0.55">
+    <g transform="translate(230,160) scale(0.85) translate(-230,-160)">
+      <text x="40" y="0" fill="#ff0000">GREY</text>
+    </g>
+    <g transform="translate(230,160) scale(0.9) translate(-230,-160)">
+      <text x="40" y="10" fill="#00ff00">GREY</text>
+    </g>
+    <g transform="translate(230,160) scale(0.95) translate(-230,-160)">
+      <text x="40" y="20" fill="#0044ff">GREY</text>
+    </g>
+    <g transform="translate(230,160) scale(1.0) translate(-230,-160)">
+      <text x="40" y="30" fill="#808080" opacity="1">GREY</text>
+    </g>
+    <g transform="translate(230,160) scale(1.05) translate(-230,-160)">
+      <text x="40" y="40" fill="#00ffff">GREY</text>
+    </g>
+    <g transform="translate(230,160) scale(1.1) translate(-230,-160)">
+      <text x="40" y="50" fill="#ff00ff">GREY</text>
+    </g>
+    <g transform="translate(230,160) scale(1.15) translate(-230,-160)">
+      <text x="40" y="60" fill="#ffff00">GREY</text>
+    </g>
   </g>
 </svg>
-<div class="tag">C</div>
-<div class="name">stacked 7 rows</div>
-<div class="desc">完全に独立した7行。7つの「grey」の積層</div>
+<div class="tag">K</div>
+<div class="name">depth parallax</div>
+<div class="desc">RGBは小さく奥へ、CMYは大きく手前へ</div>
 </div>
 
-<!-- D. 斜めズレ (光が上へ、影が下へ、diagonal) -->
+<!-- L. Rotation offset -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4" opacity="0.5">
-    <text x="28" y="140" fill="#ff0000">GREY</text>
-    <text x="32" y="148" fill="#00ff00">GREY</text>
-    <text x="36" y="156" fill="#0044ff">GREY</text>
-    <text x="40" y="164" fill="#808080">GREY</text>
-    <text x="44" y="172" fill="#00ffff">GREY</text>
-    <text x="48" y="180" fill="#ff00ff">GREY</text>
-    <text x="52" y="188" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="4" opacity="0.5">
+    <g transform="rotate(-6 230 160)"><text x="40" y="170" fill="#ff0000">GREY</text></g>
+    <g transform="rotate(-4 230 160)"><text x="40" y="170" fill="#00ff00">GREY</text></g>
+    <g transform="rotate(-2 230 160)"><text x="40" y="170" fill="#0044ff">GREY</text></g>
+    <g><text x="40" y="170" fill="#808080" opacity="1">GREY</text></g>
+    <g transform="rotate(2 230 160)"><text x="40" y="170" fill="#00ffff">GREY</text></g>
+    <g transform="rotate(4 230 160)"><text x="40" y="170" fill="#ff00ff">GREY</text></g>
+    <g transform="rotate(6 230 160)"><text x="40" y="170" fill="#ffff00">GREY</text></g>
   </g>
 </svg>
-<div class="tag">D</div>
-<div class="name">diagonal shift</div>
-<div class="desc">右下へ 4px/4px ずつ対角ズラし</div>
+<div class="tag">L</div>
+<div class="name">rotation fan</div>
+<div class="desc">各層が中心で ±6° 扇状回転</div>
 </div>
 
-<!-- E. 水平ズレのみ (chromatic aberration 強化版) -->
+<!-- M. Per-letter jitter (GREY の各文字が独立にズレる) -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'IBM Plex Mono', monospace" font-size="150" font-weight="800" letter-spacing="4" opacity="0.5">
-    <text x="28" y="175" fill="#ff0000">GREY</text>
-    <text x="32" y="175" fill="#00ff00">GREY</text>
-    <text x="36" y="175" fill="#0044ff">GREY</text>
-    <text x="40" y="175" fill="#808080">GREY</text>
-    <text x="44" y="175" fill="#00ffff">GREY</text>
-    <text x="48" y="175" fill="#ff00ff">GREY</text>
-    <text x="52" y="175" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" opacity="0.5">
+    <!-- G -->
+    <g transform="translate(50, 0)">
+      <text x="0" y="145" fill="#ff0000">G</text>
+      <text x="3" y="150" fill="#00ff00">G</text>
+      <text x="6" y="155" fill="#0044ff">G</text>
+      <text x="9" y="160" fill="#808080" opacity="1">G</text>
+      <text x="12" y="165" fill="#00ffff">G</text>
+      <text x="15" y="170" fill="#ff00ff">G</text>
+      <text x="18" y="175" fill="#ffff00">G</text>
+    </g>
+    <!-- R -->
+    <g transform="translate(150, 0)">
+      <text x="0" y="175" fill="#ff0000">R</text>
+      <text x="-3" y="170" fill="#00ff00">R</text>
+      <text x="-6" y="165" fill="#0044ff">R</text>
+      <text x="-9" y="160" fill="#808080" opacity="1">R</text>
+      <text x="-12" y="155" fill="#00ffff">R</text>
+      <text x="-15" y="150" fill="#ff00ff">R</text>
+      <text x="-18" y="145" fill="#ffff00">R</text>
+    </g>
+    <!-- E -->
+    <g transform="translate(240, 0)">
+      <text x="3" y="140" fill="#ff0000">E</text>
+      <text x="5" y="148" fill="#00ff00">E</text>
+      <text x="7" y="155" fill="#0044ff">E</text>
+      <text x="9" y="160" fill="#808080" opacity="1">E</text>
+      <text x="7" y="170" fill="#00ffff">E</text>
+      <text x="5" y="178" fill="#ff00ff">E</text>
+      <text x="3" y="185" fill="#ffff00">E</text>
+    </g>
+    <!-- Y -->
+    <g transform="translate(330, 0)">
+      <text x="-6" y="140" fill="#ff0000">Y</text>
+      <text x="-4" y="148" fill="#00ff00">Y</text>
+      <text x="-2" y="155" fill="#0044ff">Y</text>
+      <text x="0" y="160" fill="#808080" opacity="1">Y</text>
+      <text x="2" y="168" fill="#00ffff">Y</text>
+      <text x="4" y="175" fill="#ff00ff">Y</text>
+      <text x="6" y="182" fill="#ffff00">Y</text>
+    </g>
   </g>
 </svg>
-<div class="tag">E</div>
-<div class="name">horizontal shift</div>
-<div class="desc">右へ 4pxずつ、クロマ収差7層版</div>
+<div class="tag">M</div>
+<div class="name">per-letter jitter</div>
+<div class="desc">GREY各文字が独立に異なる方向へ7層ズレ</div>
 </div>
 
-<!-- F. 拡散型 (RGBは上へ広がり、CMYは下へ広がり、greyは中心) -->
+<!-- N. Concentric onion outlines -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4" opacity="0.5">
-    <!-- RGB 上方向へ広がる -->
-    <text x="40" y="110" fill="#ff0000">GREY</text>
-    <text x="40" y="130" fill="#00ff00">GREY</text>
-    <text x="40" y="150" fill="#0044ff">GREY</text>
-    <!-- grey 中央 -->
-    <text x="40" y="170" fill="#808080">GREY</text>
-    <!-- CMY 下方向へ広がる -->
-    <text x="40" y="190" fill="#00ffff">GREY</text>
-    <text x="40" y="210" fill="#ff00ff">GREY</text>
-    <text x="40" y="230" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="150" font-weight="800" letter-spacing="4" fill="none" stroke-width="2.5">
+    <text x="30" y="175" stroke="#ff0000" opacity="0.9">GREY</text>
+    <g transform="translate(230,175) scale(0.94) translate(-230,-175)"><text x="30" y="175" stroke="#00ff00" opacity="0.9">GREY</text></g>
+    <g transform="translate(230,175) scale(0.88) translate(-230,-175)"><text x="30" y="175" stroke="#0044ff" opacity="0.9">GREY</text></g>
+    <g transform="translate(230,175) scale(0.82) translate(-230,-175)"><text x="30" y="175" stroke="#808080" opacity="1" stroke-width="3"/></g>
+    <g transform="translate(230,175) scale(0.82) translate(-230,-175)"><text x="30" y="175" fill="#808080">GREY</text></g>
+    <g transform="translate(230,175) scale(0.88) translate(-230,-175)"><text x="30" y="175" stroke="#00ffff" opacity="0.9"/></g>
+    <!-- outer additional ring just for balance -->
+    <g transform="translate(230,175) scale(1.06) translate(-230,-175)"><text x="30" y="175" stroke="#ff00ff" opacity="0.6">GREY</text></g>
+    <g transform="translate(230,175) scale(1.12) translate(-230,-175)"><text x="30" y="175" stroke="#ffff00" opacity="0.4">GREY</text></g>
   </g>
 </svg>
-<div class="tag">F</div>
-<div class="name">divergent spread</div>
-<div class="desc">中央grey固定、RGBは上へ、CMYは下へ広がる</div>
+<div class="tag">N</div>
+<div class="name">concentric onion</div>
+<div class="desc">中心grey充填、外側は色の輪郭線が玉ねぎ状</div>
 </div>
 
-<!-- G. 白背景 -->
-<div class="tile white-bg">
-<svg viewBox="0 0 460 280">
-  <rect width="460" height="280" fill="#fff"/>
-  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4" opacity="0.85" style="mix-blend-mode:multiply">
-    <text x="40" y="120" fill="#ee0000">GREY</text>
-    <text x="40" y="130" fill="#00aa00">GREY</text>
-    <text x="40" y="140" fill="#0033cc">GREY</text>
-    <text x="40" y="150" fill="#808080">GREY</text>
-    <text x="40" y="160" fill="#00aaaa">GREY</text>
-    <text x="40" y="170" fill="#aa00aa">GREY</text>
-    <text x="40" y="180" fill="#cc9900">GREY</text>
-  </g>
-</svg>
-<div class="tag">G</div>
-<div class="name">on white (multiply)</div>
-<div class="desc">白背景 / 補色理論で乗算ブレンド</div>
-</div>
-
-<!-- H. 垂直ズレ + 極太 -->
+<!-- O. Ghost cluster (white core + 6 color ghosts) -->
 <div class="tile">
 <svg viewBox="0 0 460 280">
-  <g font-family="'Arial Black', sans-serif" font-size="160" font-weight="900" letter-spacing="-2" opacity="0.5">
-    <text x="20" y="110" fill="#ff0000">GREY</text>
-    <text x="20" y="124" fill="#00ff00">GREY</text>
-    <text x="20" y="138" fill="#0044ff">GREY</text>
-    <text x="20" y="152" fill="#808080">GREY</text>
-    <text x="20" y="166" fill="#00ffff">GREY</text>
-    <text x="20" y="180" fill="#ff00ff">GREY</text>
-    <text x="20" y="194" fill="#ffff00">GREY</text>
+  <g font-family="'IBM Plex Mono', monospace" font-size="140" font-weight="800" letter-spacing="4">
+    <!-- 6 color ghosts at cardinal positions around center -->
+    <text x="40" y="150" fill="#ff0000" opacity="0.35">GREY</text>
+    <text x="46" y="156" fill="#00ff00" opacity="0.35">GREY</text>
+    <text x="52" y="162" fill="#0044ff" opacity="0.35">GREY</text>
+    <text x="34" y="168" fill="#00ffff" opacity="0.35">GREY</text>
+    <text x="28" y="174" fill="#ff00ff" opacity="0.35">GREY</text>
+    <text x="22" y="180" fill="#ffff00" opacity="0.35">GREY</text>
+    <!-- white core on top -->
+    <text x="40" y="165" fill="#ffffff">GREY</text>
   </g>
 </svg>
-<div class="tag">H</div>
-<div class="name">heavy + shift</div>
-<div class="desc">極太 + 14px ズラし</div>
+<div class="tag">O</div>
+<div class="name">ghost cluster</div>
+<div class="desc">白核 + 6色の幽霊コピー四方に拡散</div>
+</div>
+
+<!-- P. Strobe / motion (right trailing) -->
+<div class="tile">
+<svg viewBox="0 0 460 280">
+  <g font-family="'IBM Plex Mono', monospace" font-size="130" font-weight="800" letter-spacing="4">
+    <!-- Trail: 6 decreasing opacity, then white -->
+    <text x="30" y="170" fill="#ff0000" opacity="0.15">GREY</text>
+    <text x="40" y="170" fill="#00ff00" opacity="0.22">GREY</text>
+    <text x="50" y="170" fill="#0044ff" opacity="0.3">GREY</text>
+    <text x="60" y="170" fill="#808080" opacity="0.5">GREY</text>
+    <text x="70" y="170" fill="#00ffff" opacity="0.3">GREY</text>
+    <text x="80" y="170" fill="#ff00ff" opacity="0.22">GREY</text>
+    <text x="90" y="170" fill="#ffff00" opacity="0.15">GREY</text>
+    <text x="60" y="170" fill="#ffffff" opacity="0.95">GREY</text>
+  </g>
+</svg>
+<div class="tag">P</div>
+<div class="name">strobe motion</div>
+<div class="desc">残像状に7層が水平に流れる、中央白核</div>
 </div>
 
 </div>
 
-<div style="max-width:680px;margin:80px auto 40px;padding:32px;border:1px solid rgba(255,255,255,0.15);border-radius:10px;background:#111;font-size:12px;line-height:2;letter-spacing:0.03em">
-  <div style="font-size:10px;letter-spacing:0.3em;color:rgba(255,255,255,0.5);margin-bottom:18px">CONCEPT</div>
-  <p>
-    <b>7つの「GREY」</b>を重ねる。<br>
-    それぞれ違う色に塗られ、違う位置にズレている。
-  </p>
-  <p style="margin-top:14px;">
-    上から R → G → B → <b>grey</b> → C → M → Y の順で重なる。
-  </p>
-  <p style="margin-top:14px;opacity:0.7;">
-    全部 pin-sharp に揃えばただの <b>grey</b> になる。<br>
-    ズレてるから色が見える = 観測の揺らぎそのもの。
-  </p>
-</div>
-
-<p style="text-align:center;margin-top:40px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.2em">
-  inryokü · 7-layer displaced GREY · 8 variations
+<p style="text-align:center;margin-top:60px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.2em">
+  inryokü · displacement v2 · I〜P 8 new patterns
 </p>
 
 </body>
