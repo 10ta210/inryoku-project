@@ -3,364 +3,530 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>inryokü — CRT 84</title>
+<title>inryokü — OBSERVATION.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=VT323&family=Fredoka:wght@600;700&family=Titan+One&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..500&family=IBM+Plex+Mono:wght@300;400;500;700&family=VT323&family=Fredoka:wght@500;700&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+
 <style>
+/*
+  OBSERVATION.42 — a full-viewport brand moment.
+  不滅 / 最高の引力 / 50% → 101%
+
+  ・break the frame, break the grid
+  ・typography that physically cannot fit
+  ・asymmetric composition, live motion
+  ・multiple readouts overlapping
+  ・grey at 50% is the only still point
+*/
+
 *{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#06070a;
+  --fg:#f3f5f0;
+  --fg-mute:rgba(243,245,240,0.55);
+  --fg-faint:rgba(243,245,240,0.22);
+  --r:#FF2148;
+  --g:#2FE56A;
+  --b:#4263F5;
+  --c:#2EE2E2;
+  --m:#E23BC8;
+  --y:#F6D52E;
+  --grey:#7f7f7f;
+  --hair:rgba(255,255,255,0.08);
+}
+
 html,body{
-  background:#050505;
-  color:#c7f2c7;
-  font-family:'VT323','IBM Plex Mono',monospace;
-  -webkit-font-smoothing:antialiased;
+  width:100%;
   min-height:100vh;
+  background:var(--bg);
+  color:var(--fg);
   overflow-x:hidden;
-}
-body{
-  padding:40px 24px 80px;
-  display:flex;flex-direction:column;align-items:center;gap:48px;
-}
-
-/* — ambient CRT vignette on body — */
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
-  background:radial-gradient(ellipse at center,
-    transparent 30%,
-    rgba(0,0,0,0.4) 75%,
-    rgba(0,0,0,0.85) 100%);
+  overflow-y:hidden;
+  font-family:'IBM Plex Mono', ui-monospace, monospace;
+  cursor:crosshair;
+  -webkit-font-smoothing:antialiased;
 }
 
-/* — global scanlines — */
-body::after{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:49;
+/* ── cursor-follow chromatic spot ── */
+.spot{
+  position:fixed;
+  width:800px;height:800px;
+  border-radius:50%;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle,
+    rgba(255,33,72,0.14)   0%,
+    rgba(253,213,46,0.10) 25%,
+    rgba(47,229,106,0.08) 45%,
+    rgba(66,99,245,0.08)  65%,
+    rgba(226,59,200,0.06) 80%,
+    transparent 100%);
+  mix-blend-mode:screen;
+  filter:blur(40px);
+  z-index:1;
+  opacity:0.9;
+  transition:opacity 600ms ease;
+}
+
+/* ── scanlines global ── */
+.scan{
+  position:fixed;inset:0;pointer-events:none;z-index:60;
   background:repeating-linear-gradient(
     0deg,
-    rgba(0,0,0,0.35) 0px,
-    rgba(0,0,0,0.35) 1px,
+    rgba(0,0,0,0.28) 0px,
+    rgba(0,0,0,0.28) 1px,
     transparent 1px,
     transparent 3px
   );
   mix-blend-mode:multiply;
+  animation:scanDrift 12s linear infinite;
+}
+@keyframes scanDrift{
+  from{ background-position: 0 0; }
+  to  { background-position: 0 -60px; }
 }
 
-/* ────── CRT SCREEN ────── */
-.crt{
+/* ── vignette ── */
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:59;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+}
+
+/* ── grid background ── */
+.grid-bg{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    linear-gradient(var(--hair) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(90deg, var(--hair) 1px, transparent 1px) 0 0 / 80px 80px;
+  opacity:0.4;
+  mask-image:radial-gradient(ellipse at center, black 20%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at center, black 20%, transparent 75%);
+}
+
+/* ── stage ── */
+.stage{
   position:relative;
   width:100%;
-  max-width:860px;
-  aspect-ratio: 4/5;
-  border:2px solid #4af06a;
-  box-shadow:
-    0 0 0 1px #111 inset,
-    0 0 28px rgba(74,240,106,0.45),
-    0 0 80px rgba(74,240,106,0.15);
-  padding:38px 42px 44px;
-  background:
-    radial-gradient(ellipse at center, #0a1008 0%, #030503 80%);
-  display:flex;flex-direction:column;
-  overflow:hidden;
-  filter:contrast(1.05) saturate(1.1);
+  min-height:100vh;
+  z-index:2;
+  display:grid;
+  grid-template-columns: 80px 1fr 80px;
+  grid-template-rows: 72px 1fr 72px;
 }
 
-.crt::before{  /* inner scanlines denser */
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg,
-    rgba(255,255,255,0.03) 0px,
-    rgba(255,255,255,0.03) 1px,
-    transparent 1px,
-    transparent 2px
+/* registration marks */
+.reg{
+  position:absolute;
+  width:24px;height:24px;
+  border:1px solid var(--fg-mute);
+  z-index:10;
+  opacity:0.5;
+}
+.reg.tl{ top:24px; left:24px; border-right:0; border-bottom:0; }
+.reg.tr{ top:24px; right:24px; border-left:0; border-bottom:0; }
+.reg.bl{ bottom:24px; left:24px; border-right:0; border-top:0; }
+.reg.br{ bottom:24px; right:24px; border-left:0; border-top:0; }
+
+/* ── top bar ── */
+.top-bar{
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:20px 48px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px;
+  letter-spacing:0.32em;
+  color:var(--fg-mute);
+  text-transform:uppercase;
+  border-bottom:1px solid var(--hair);
+}
+.top-bar .c{ text-align:center; color:var(--fg); font-weight:500; }
+.top-bar .r{ text-align:right; }
+.top-bar .blink{ animation: blink 1.4s steps(2, end) infinite; }
+@keyframes blink{ 50%{ opacity:0; } }
+
+/* ── center display ── */
+.center{
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.mega{
+  position:relative;
+  width:140vw;
+  max-width:2400px;
+  margin-left:-20vw;
+  text-align:center;
+  font-family:'Fredoka', 'Titan One', sans-serif;
+  font-weight:700;
+  font-size: clamp(160px, 27vw, 520px);
+  line-height:0.9;
+  letter-spacing: -0.04em;
+  user-select:none;
+  /* wobble VHS */
+  animation: wobble 5.2s ease-in-out infinite;
+}
+@keyframes wobble{
+  0%,100% { transform: translate(0,0) skewX(0deg); }
+  32%     { transform: translate(1.5px,0.5px) skewX(-0.3deg); }
+  55%     { transform: translate(-2px,-1px) skewX(0.25deg); }
+  78%     { transform: translate(0.5px,1.5px) skewX(-0.1deg); }
+}
+
+.mega .word{
+  display:inline-block;
+  position:relative;
+  color:var(--fg);
+  background-image:linear-gradient(180deg,
+    var(--c) 0%,    var(--c) 14%,
+    var(--m) 14%,   var(--m) 28%,
+    var(--y) 28%,   var(--y) 42%,
+    var(--r) 42%,   var(--r) 56%,
+    var(--g) 56%,   var(--g) 70%,
+    var(--b) 70%,   var(--b) 100%
   );
-  mix-blend-mode:overlay;
-}
-.crt::after{ /* soft inner vignette */
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%);
-}
-
-/* terminal header lines */
-.term-line{
-  font-family:'VT323','IBM Plex Mono',monospace;
-  font-size:28px;
-  line-height:1.35;
-  color:#4af06a;
-  text-shadow: 0 0 6px rgba(74,240,106,0.6), 0 0 18px rgba(74,240,106,0.3);
-  letter-spacing:0.02em;
-}
-.term-line .v{ color:#d8e0e8; text-shadow: 0 0 5px rgba(200,200,200,0.45); }
-.term-line .r{ color:#ff4d5a; text-shadow: 0 0 6px rgba(255,77,90,0.55); }
-
-/* title / logotype */
-.logo-stage{
-  flex:1;display:flex;align-items:center;justify-content:center;
-  position:relative;
-  margin:-10px 0;
-}
-.logo-svg{ width:100%; height:auto; display:block; }
-
-/* bottom section */
-.bottom{
-  display:flex;flex-direction:column;align-items:center;gap:14px;
-  margin-top:auto;
-}
-
-.loading-label{
-  font-family:'VT323',monospace;
-  color:#d8e0e8;
-  font-size:26px;
-  letter-spacing:0.05em;
-  text-shadow:0 0 6px rgba(200,200,200,0.5);
-}
-
-.progress{
-  width:58%;
-  height:20px;
-  border:2px solid #4af06a;
-  box-shadow:0 0 10px rgba(74,240,106,0.4);
-  position:relative;
-  background:#080;
-  overflow:hidden;
-}
-.progress::before{
-  content:"";position:absolute;inset:0;
-  background:transparent;
-}
-
-.tagline{
-  color:#aee0a8;
-  font-size:24px;
-  font-family:'VT323',monospace;
-  letter-spacing:0.04em;
-  text-shadow:0 0 4px rgba(174,224,168,0.5);
-  margin-top:6px;
-}
-.tagline .rainbow{
-  font-style:normal;
-  font-weight:bold;
-  background:linear-gradient(90deg,
-    #FF0000 0%, #FFFF00 20%, #00FF00 40%,
-    #00FFFF 60%, #0000FF 80%, #FF00FF 100%);
   -webkit-background-clip:text;
   background-clip:text;
   color:transparent;
-  text-shadow: 0 0 8px rgba(255,255,255,0.2);
-  filter: drop-shadow(0 0 4px rgba(255,200,200,0.35));
+  filter: drop-shadow(0 0 22px rgba(255,255,255,0.08));
 }
 
-.wm{
-  position:absolute;bottom:26px;right:30px;
-  font-family:'VT323',monospace;font-size:22px;
-  color:#4af06a;letter-spacing:0.08em;
-  opacity:0.85;text-shadow:0 0 5px rgba(74,240,106,0.5);
-}
-.wm .glyph{
-  display:inline-block;border:1.5px solid currentColor;
-  padding:1px 6px; margin-right:4px; border-radius:1px;
-}
-
-/* — tiny bar group above logo like reference 2 — */
-
-/* sub-label (Japanese) */
-.jp-label{
-  font-family:'Noto Sans JP', sans-serif;
-  font-weight:500;
-  font-size:22px;
-  color:#d8e0e8;
-  letter-spacing:0.06em;
-  text-shadow:0 0 6px rgba(200,200,200,0.4);
+/* huge grey 42 over right side */
+.forty-two{
   position:absolute;
-  left:0;
-  bottom:0;
-  line-height:1;
+  right: -4vw;
+  bottom: -14vw;
+  font-family:'Fraunces','IBM Plex Serif', serif;
+  font-style:italic;
+  font-weight:300;
+  font-size: clamp(260px, 44vw, 780px);
+  line-height:0.8;
+  color:var(--grey);
+  opacity:0.85;
+  letter-spacing:-0.05em;
+  mix-blend-mode:screen;
+  filter: blur(0.3px);
+  pointer-events:none;
+  z-index:1;
+  animation:breath 8s ease-in-out infinite;
+}
+@keyframes breath{
+  0%,100% { opacity: 0.85; transform: scale(1); }
+  50%     { opacity: 0.6;  transform: scale(1.018); }
 }
 
-/* alt tile container */
-.alt{
-  width:100%;max-width:860px;text-align:center;
-  color:#6aa86a;font-family:'IBM Plex Mono', monospace;
-  font-size:10px;letter-spacing:0.35em;opacity:0.65;text-transform:uppercase;
+/* JP vertical — on right edge */
+.jp-vert{
+  position:absolute;
+  top:50%;
+  right:28px;
+  transform:translateY(-50%);
+  writing-mode:vertical-rl;
+  text-orientation:upright;
+  font-family:'Noto Serif JP', serif;
+  font-weight:900;
+  font-size: clamp(22px, 2.3vw, 38px);
+  letter-spacing:0.14em;
+  color:var(--fg);
+  text-shadow:0 0 8px rgba(255,255,255,0.15);
+  z-index:8;
 }
 
-/* — caption below crt — */
-.caption{
-  width:100%;max-width:860px;padding:18px 24px;
-  border:1px solid rgba(74,240,106,0.22);
-  background:rgba(20,30,18,0.35);
-  color:#a8d4a8;
+/* Left column readouts */
+.left-col{
+  position:absolute;
+  top:50%;
+  left:28px;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:20px;
+  z-index:8;
   font-family:'IBM Plex Mono', monospace;
-  font-size:11px;letter-spacing:0.12em;line-height:1.9;
-  text-align:center;
+  font-size:10px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--fg-mute);
+  line-height:1.9;
+  max-width:180px;
 }
-.caption b{ color:#e6f9e6; }
+.left-col h5{
+  font-size:9px;
+  letter-spacing:0.35em;
+  color:var(--fg-faint);
+  margin-bottom:4px;
+  font-weight:400;
+}
+.left-col .v{ color:var(--fg); font-weight:500; }
+.bar-eq{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-top:4px;
+}
+.bar-eq .bar{
+  height:3px;
+  background:linear-gradient(90deg, var(--r), var(--y), var(--g), var(--c), var(--b), var(--m));
+  opacity:0.8;
+  animation: eqpulse 3.1s ease-in-out infinite;
+  transform-origin:left;
+}
+.bar-eq .bar:nth-child(1){ width:62%; animation-delay:0s; }
+.bar-eq .bar:nth-child(2){ width:84%; animation-delay:0.4s; }
+.bar-eq .bar:nth-child(3){ width:48%; animation-delay:0.8s; }
+.bar-eq .bar:nth-child(4){ width:71%; animation-delay:1.2s; }
+.bar-eq .bar:nth-child(5){ width:33%; animation-delay:1.6s; }
+.bar-eq .bar:nth-child(6){ width:90%; animation-delay:2.0s; }
+@keyframes eqpulse{
+  0%,100% { transform: scaleX(1); opacity:0.8; }
+  50%     { transform: scaleX(0.4); opacity:0.4; }
+}
+
+/* bottom ticker */
+.bottom-bar{
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display:grid;
+  grid-template-columns: auto 1fr auto;
+  align-items:center;
+  border-top:1px solid var(--hair);
+  padding:0;
+  overflow:hidden;
+  height:72px;
+}
+.bottom-bar .side{
+  padding: 0 28px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px;
+  letter-spacing:0.3em;
+  color:var(--fg-mute);
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.ticker{
+  overflow:hidden;
+  position:relative;
+  height:100%;
+  display:flex;
+  align-items:center;
+  border-left:1px solid var(--hair);
+  border-right:1px solid var(--hair);
+}
+.ticker-track{
+  display:flex;
+  gap:60px;
+  white-space:nowrap;
+  animation: tickerMove 42s linear infinite;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.24em;
+  color:var(--fg-mute);
+  text-transform:uppercase;
+}
+.ticker-track .r{ color:var(--r); }
+.ticker-track .g{ color:var(--g); }
+.ticker-track .b{ color:var(--b); }
+.ticker-track .c{ color:var(--c); }
+.ticker-track .m{ color:var(--m); }
+.ticker-track .y{ color:var(--y); }
+.ticker-track .k{ color:var(--grey); }
+.ticker-track .w{ color:var(--fg); }
+.ticker-track .rnb{
+  background:linear-gradient(90deg, var(--r), var(--y), var(--g), var(--c), var(--b), var(--m));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  font-weight:700;
+}
+@keyframes tickerMove{
+  from{ transform: translateX(0); }
+  to  { transform: translateX(-50%); }
+}
+
+/* pulse dot in very center */
+.pulse-dot{
+  position:absolute;
+  top:50%; left:50%;
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--grey);
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 20px rgba(255,255,255,0.4);
+  z-index:9;
+  animation: dotPulse 2.2s ease-in-out infinite;
+}
+@keyframes dotPulse{
+  0%,100%{ transform: translate(-50%,-50%) scale(1); opacity:0.85; }
+  50%    { transform: translate(-50%,-50%) scale(2.5); opacity:0.3; }
+}
+
+/* responsive */
+@media (max-width: 820px){
+  html,body{ overflow-y:auto; }
+  .stage{ grid-template-columns: 44px 1fr 44px; grid-template-rows: 56px 1fr 56px; min-height:100vh; }
+  .top-bar{ padding:14px 20px; font-size:8.5px; letter-spacing:0.2em; }
+  .top-bar .l span.hide{ display:none; }
+  .left-col, .jp-vert{ display:none; }
+  .forty-two{ right:-8vw; bottom:-28vw; font-size:80vw; }
+  .mega{ width:160vw; margin-left:-30vw; font-size:28vw; }
+  .bottom-bar .side{ font-size:8px; padding:0 14px; letter-spacing:0.22em; }
+  .ticker-track{ font-size:9px; letter-spacing:0.2em; }
+  .reg{ width:14px; height:14px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ animation: none !important; transition: none !important; }
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     inryokü · CRT 84  — Google-84 homage
-═══════════════════════════════════════════════ -->
-<div class="alt">inryokü · CRT 84 / vol. 05</div>
+<!-- chromatic cursor spot -->
+<div class="spot" id="spot"></div>
 
-<section class="crt">
+<!-- backdrop -->
+<div class="grid-bg"></div>
 
-  <!-- terminal lines -->
-  <div class="term-line">&gt; Today's observer:&nbsp;&nbsp;<span class="v">GREY</span></div>
-  <div class="term-line">&gt; Observations committed:&nbsp;&nbsp;<span class="r">101</span></div>
+<!-- registration marks -->
+<div class="reg tl"></div>
+<div class="reg tr"></div>
+<div class="reg bl"></div>
+<div class="reg br"></div>
 
-  <!-- logo -->
-  <div class="logo-stage">
-    <svg class="logo-svg" viewBox="0 0 860 420" xmlns="http://www.w3.org/2000/svg" aria-label="inryokü 84 retro logotype" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.4" result="b1"/>
-          <feGaussianBlur stdDeviation="6"   result="b2"/>
-          <feMerge>
-            <feMergeNode in="b2"/>
-            <feMergeNode in="b1"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-        <mask id="letters">
-          <rect width="860" height="420" fill="black"/>
-          <!-- "inryoku" base letters + custom circle umlaut over u -->
-          <text x="430" y="270" text-anchor="middle"
-                font-family="'Fredoka', 'Titan One', 'Arial Rounded MT Bold', sans-serif"
-                font-size="210" font-weight="900" letter-spacing="-6"
-                fill="white">inryoku</text>
-          <!-- umlaut dots = circles above the last u -->
-          <circle cx="680" cy="108" r="11" fill="white"/>
-          <circle cx="712" cy="108" r="11" fill="white"/>
-        </mask>
-      </defs>
+<!-- stage -->
+<div class="stage">
 
-      <!-- 6-channel pure CMYRGB stripes — 均等分割 (each stripe ≈ 33px in letter body) -->
-      <g filter="url(#glow)">
-        <g mask="url(#letters)">
-          <rect x="0" y="95"  width="860" height="33" fill="#00FFFF"/>  <!-- C -->
-          <rect x="0" y="128" width="860" height="33" fill="#FF00FF"/>  <!-- M -->
-          <rect x="0" y="161" width="860" height="33" fill="#FFFF00"/>  <!-- Y -->
-          <rect x="0" y="194" width="860" height="33" fill="#FF0000"/>  <!-- R -->
-          <rect x="0" y="227" width="860" height="33" fill="#00FF00"/>  <!-- G -->
-          <rect x="0" y="260" width="860" height="60" fill="#0000FF"/>  <!-- B (下descender含む) -->
-        </g>
-      </g>
-
-      <!-- '42' cornerstone — grey -->
-      <g filter="url(#glow)" transform="translate(660,300) rotate(-1)">
-        <text font-family="'Fredoka', 'Titan One', 'Arial Rounded MT Bold', sans-serif"
-              font-size="120" font-weight="900" letter-spacing="-4"
-              fill="#808080" opacity="0.95">42</text>
-        <text font-family="'Fredoka', 'Titan One', 'Arial Rounded MT Bold', sans-serif"
-              font-size="120" font-weight="900" letter-spacing="-4"
-              fill="none" stroke="#cfcfcf" stroke-width="1.2" opacity="0.7"
-              transform="translate(-2,-1)">42</text>
-      </g>
-
-      <!-- Japanese sub-label bottom-left -->
-      <text x="40" y="395"
-            font-family="'Noto Sans JP', sans-serif"
-            font-size="30" font-weight="700"
-            fill="#e5ecf2" letter-spacing="4"
-            filter="url(#glow)">最高の引力</text>
-    </svg>
-  </div>
-
-  <!-- bottom progress + tagline -->
-  <div class="bottom">
-    <div class="loading-label">Saving Observations..</div>
-    <div class="progress"></div>
-    <div class="tagline">'50% → <span class="rainbow">101%</span>'</div>
-  </div>
-
-  <!-- watermark -->
-  <div class="wm"><span class="glyph">iñ</span>kü</div>
-
-</section>
-
-<div class="caption">
-  <b>CRT 84</b> · inryokü logotype as late-80s VHS boot screen.
-  rainbow horizontal stripes inside thick letterforms, CRT green border,
-  scanlines, phosphor glow, terminal log lines, grey "42" cornerstone.
-  dark-only — this one lives on screens, not paper.
-</div>
-
-
-<!-- ═══════════════════════════════════════════════
-     vol. 05b · CRT TESTCARD — white logotype + bars
-═══════════════════════════════════════════════ -->
-<div class="alt" style="margin-top:40px">inryokü · CRT testcard / vol. 05b</div>
-
-<section class="crt" style="aspect-ratio: 5/4; max-width:860px;">
-
-  <!-- dots above (6 pure CMYRGB) -->
-  <div style="display:flex;justify-content:center;gap:18px;margin-top:36px;margin-bottom:22px;">
-    <span style="display:block;width:22px;height:22px;border-radius:50%;background:#00FFFF;box-shadow:0 0 16px rgba(0,255,255,0.6);"></span>
-    <span style="display:block;width:22px;height:22px;border-radius:50%;background:#FF00FF;box-shadow:0 0 16px rgba(255,0,255,0.6);"></span>
-    <span style="display:block;width:22px;height:22px;border-radius:50%;background:#FFFF00;box-shadow:0 0 16px rgba(255,255,0,0.6);"></span>
-    <span style="display:block;width:22px;height:22px;border-radius:50%;background:#FF0000;box-shadow:0 0 16px rgba(255,0,0,0.6);"></span>
-    <span style="display:block;width:22px;height:22px;border-radius:50%;background:#00FF00;box-shadow:0 0 16px rgba(0,255,0,0.6);"></span>
-    <span style="display:block;width:22px;height:22px;border-radius:50%;background:#0000FF;box-shadow:0 0 16px rgba(0,0,255,0.6);"></span>
-  </div>
-
-  <!-- white logotype — thick rounded -->
-  <div class="logo-stage" style="flex:0 0 auto; margin:10px 0 18px;">
-    <svg class="logo-svg" viewBox="0 0 860 220" xmlns="http://www.w3.org/2000/svg" aria-label="inryokü white">
-      <defs>
-        <filter id="wglow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.2" result="b1"/>
-          <feGaussianBlur stdDeviation="5" result="b2"/>
-          <feMerge>
-            <feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      <text x="430" y="145" text-anchor="middle"
-            font-family="'Fredoka','Titan One','Arial Rounded MT Bold',sans-serif"
-            font-size="175" font-weight="700" letter-spacing="-4"
-            fill="#f4f4ee" filter="url(#wglow)">inryoku</text>
-      <!-- umlaut circles over last u -->
-      <circle cx="655" cy="52" r="9" fill="#f4f4ee" filter="url(#wglow)"/>
-      <circle cx="683" cy="52" r="9" fill="#f4f4ee" filter="url(#wglow)"/>
-    </svg>
-  </div>
-
-  <!-- color bars below (different widths — test card aesthetic) -->
-  <div style="display:flex;justify-content:center;align-items:flex-start;gap:0;margin-top:6px;padding:0 40px;flex-wrap:wrap;">
-    <!-- 6 stripes with varying widths -->
-    <span style="height:22px;width:28%;background:#3FB76A;box-shadow:0 0 10px rgba(63,183,106,0.5);"></span>
-    <span style="height:22px;width:16%;background:#3B63D4;box-shadow:0 0 10px rgba(59,99,212,0.5);"></span>
-    <span style="height:22px;width:12%;background:#FFFF00;box-shadow:0 0 10px rgba(255,255,0,0.5);"></span>
-    <span style="height:22px;width:10%;background:#FF0000;box-shadow:0 0 10px rgba(255,0,0,0.5);"></span>
-    <span style="height:22px;width:18%;background:#00FFFF;box-shadow:0 0 10px rgba(0,255,255,0.5);"></span>
-    <span style="height:22px;width:14%;background:#FFFF00;box-shadow:0 0 10px rgba(255,255,0,0.5);"></span>
-  </div>
-  <div style="display:flex;justify-content:center;align-items:flex-start;gap:0;margin-top:0;padding:0 40px;flex-wrap:wrap;">
-    <span style="height:22px;width:14%;background:#FF00FF;opacity:0.85;"></span>
-    <span style="height:22px;width:20%;background:#3FB76A;opacity:0.85;"></span>
-    <span style="height:22px;width:12%;background:#FF0000;opacity:0.85;"></span>
-    <span style="height:22px;width:22%;background:#FFFF00;opacity:0.85;"></span>
-    <span style="height:22px;width:15%;background:#0000FF;opacity:0.85;"></span>
-    <span style="height:22px;width:14%;background:#00FFFF;opacity:0.85;"></span>
-  </div>
-
-  <!-- bottom centered JP label -->
-  <div style="margin-top:auto;text-align:center;">
-    <div style="font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:24px;color:#e5ecf2;letter-spacing:4px;text-shadow:0 0 8px rgba(255,255,255,0.3);margin-bottom:12px;">
-      最高の引力
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="l">
+      inryokü · observation
+      <span class="hide">· since 2026</span>
     </div>
-    <div class="tagline" style="margin-top:0;">'50% → <span class="rainbow">101%</span>'</div>
+    <div class="c">OBSERVATION<span style="opacity:0.5">.</span>42</div>
+    <div class="r">
+      <span class="v">50% <span class="blink">→</span> 101%</span>
+    </div>
   </div>
 
-  <div class="wm"><span class="glyph">iñ</span>kü</div>
+  <!-- CENTER -->
+  <div class="center">
 
-</section>
+    <!-- Big grey 42 behind -->
+    <div class="forty-two">42</div>
 
-<div class="caption">
-  <b>CRT testcard</b> · 2枚目参考画像の再解釈。白文字ロゴ + 上に6色ドット +
-  下に色帯（BBCテストカード / 80年代 TV 放送開始時アイキャッチ）。
-  色帯の幅をランダムにすることで情報密度感を出し、単なる虹ではない放送技術感。
+    <!-- Main mega word -->
+    <div class="mega">
+      <span class="word">inryokü</span>
+    </div>
+
+    <!-- pulse dot -->
+    <div class="pulse-dot"></div>
+
+    <!-- Left readouts -->
+    <aside class="left-col">
+      <div>
+        <h5>CHANNEL</h5>
+        <div class="bar-eq">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+      </div>
+      <div>
+        <h5>MODE</h5>
+        <div class="v">observe</div>
+      </div>
+      <div>
+        <h5>STATE</h5>
+        <div class="v">50%</div>
+      </div>
+      <div>
+        <h5>TARGET</h5>
+        <div class="v">101%</div>
+      </div>
+    </aside>
+
+    <!-- JP vertical right -->
+    <aside class="jp-vert">最高の引力</aside>
+
+  </div>
+
+  <!-- BOTTOM TICKER -->
+  <div class="bottom-bar">
+    <div class="side">OBS_LOG<span style="opacity:0.5"> //</span></div>
+    <div class="ticker">
+      <div class="ticker-track">
+        <span>grey is the meeting point of <span class="r">R</span><span class="g">G</span><span class="b">B</span> and <span class="c">C</span><span class="m">M</span><span class="y">Y</span>.</span>
+        <span>&nbsp;·&nbsp;</span>
+        <span>observe <span class="rnb">101%</span> / the ceiling is a ceiling someone else invented.</span>
+        <span>&nbsp;·&nbsp;</span>
+        <span class="w">最高の引力</span>
+        <span>·</span>
+        <span>do not pick a side.</span>
+        <span>·</span>
+        <span><span class="k">grey</span> = every colour folded in</span>
+        <span>·</span>
+        <span>inryokü — <span class="rnb">50% → 101%</span></span>
+        <span>·</span>
+        <!-- loop copy -->
+        <span>grey is the meeting point of <span class="r">R</span><span class="g">G</span><span class="b">B</span> and <span class="c">C</span><span class="m">M</span><span class="y">Y</span>.</span>
+        <span>&nbsp;·&nbsp;</span>
+        <span>observe <span class="rnb">101%</span> / the ceiling is a ceiling someone else invented.</span>
+        <span>&nbsp;·&nbsp;</span>
+        <span class="w">最高の引力</span>
+        <span>·</span>
+        <span>do not pick a side.</span>
+        <span>·</span>
+        <span><span class="k">grey</span> = every colour folded in</span>
+        <span>·</span>
+        <span>inryokü — <span class="rnb">50% → 101%</span></span>
+        <span>·</span>
+      </div>
+    </div>
+    <div class="side" id="clock">00:00:00</div>
+  </div>
+
 </div>
 
+<div class="vignette"></div>
+<div class="scan"></div>
+
+<script>
+  // cursor spot
+  (() => {
+    const spot = document.getElementById('spot');
+    let tx = innerWidth/2, ty = innerHeight/2, cx = tx, cy = ty;
+    document.addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; });
+    const tick = () => {
+      cx += (tx - cx) * 0.14;
+      cy += (ty - cy) * 0.14;
+      spot.style.transform = `translate(${cx}px, ${cy}px) translate(-50%,-50%)`;
+      requestAnimationFrame(tick);
+    };
+    tick();
+  })();
+
+  // clock
+  (() => {
+    const el = document.getElementById('clock');
+    const pad = n => String(n).padStart(2,'0');
+    const render = () => {
+      const d = new Date();
+      el.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+    render();
+    setInterval(render, 1000);
+  })();
+</script>
 </body>
 </html>
