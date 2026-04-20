@@ -3,508 +3,949 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>inryokü — GREY logotypes</title>
+<title>inryokü — GREY · 10 studies</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=IBM+Plex+Serif:ital,wght@0,200;0,300;0,400&family=Fraunces:opsz,wght@9..144,200;9..144,300;9..144,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&family=IBM+Plex+Serif:ital,wght@0,200;0,300;0,400&family=Fraunces:opsz,wght@9..144,200;9..144,300;9..144,400;9..144,500&display=swap" rel="stylesheet">
 
 <style>
+/*
+  inryokü — GREY logotype · vol. 03
+  Synthesised from aura photography, chakra systems, Kirlian fields,
+  prism refraction, Munsell colour space, holographic iridescence,
+  and perceptually-uniform HSL palettes.
+*/
 :root {
   --ink: #0a0a0a;
-  --paper: #fafaf7;
-  --grey: #808080;
-  --grey-lt: rgba(255,255,255,0.86);
-  --grey-dk: rgba(10,10,10,0.86);
+  --paper: #f6f3ec;
+  --grey: #7f7f7f;
+  --lt: rgba(255,255,255,0.88);
+  --lt-mute: rgba(255,255,255,0.44);
+  --lt-faint: rgba(255,255,255,0.22);
+  --dk: rgba(10,10,10,0.88);
+  --dk-mute: rgba(10,10,10,0.5);
+  --dk-faint: rgba(10,10,10,0.22);
   --hair-lt: rgba(255,255,255,0.12);
   --hair-dk: rgba(10,10,10,0.12);
-  --mute-lt: rgba(255,255,255,0.42);
-  --mute-dk: rgba(10,10,10,0.45);
 
-  /* brand pigments — garment-print safe */
-  --r: #E43B3B;
-  --g: #2EA259;
-  --b: #2F4CC7;
-  --c: #2CB7B7;
-  --m: #B62F96;
-  --y: #D4B233;
-}
+  /* perceptually-uniform HSL (S 66, L 52) — equal visual weight */
+  --r: hsl(0,   66%, 52%);    /* #D5343D */
+  --y: hsl(60,  66%, 52%);    /* #D5CC34 */
+  --g: hsl(120, 66%, 52%);    /* #34D53D */
+  --c: hsl(180, 66%, 52%);    /* #34CCD5 */
+  --b: hsl(240, 66%, 52%);    /* #3D34D5 */
+  --m: hsl(300, 66%, 52%);    /* #D534CC */
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html, body {
-  background: var(--ink);
-  color: var(--grey-lt);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
+  /* garment-print calibrated (slightly muted for fabric) */
+  --rp: #C2303A;
+  --yp: #C2BA30;
+  --gp: #30C239;
+  --cp: #30BAC2;
+  --bp: #3A30C2;
+  --mp: #C230BA;
 }
 
-body {
-  min-height: 100vh;
-  padding: 80px 36px 120px;
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  background:var(--ink);
+  color:var(--lt);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
+body{min-height:100vh;padding:80px 36px 140px}
+
+/* ── masthead ── */
+header.mast{
+  max-width:1320px;margin:0 auto 72px;
+  display:grid;grid-template-columns:1fr auto;align-items:end;gap:32px;
+  border-bottom:1px solid var(--hair-lt);padding-bottom:28px;
+}
+.mast h1{
+  font-family:'Fraunces',serif;font-style:italic;font-weight:300;
+  font-size:clamp(28px,3.4vw,46px);letter-spacing:-0.015em;color:var(--lt);
+  line-height:1;
+}
+.mast .meta{
+  text-align:right;font-size:10px;letter-spacing:0.28em;
+  color:var(--lt-mute);line-height:1.9;text-transform:uppercase;
+}
+.mast .meta b{color:var(--lt);font-weight:400}
+
+.preamble{
+  max-width:740px;margin:0 auto 100px;
+  font-family:'IBM Plex Serif',serif;font-weight:300;
+  font-size:15px;line-height:1.85;color:var(--lt-mute);text-align:center;
+}
+.preamble b{color:var(--lt);font-weight:400;font-style:italic}
+
+/* ── specimen grid ── */
+.specimens{max-width:1320px;margin:0 auto;display:grid;gap:72px}
+
+.specimen{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--hair-lt);border:1px solid var(--hair-lt);
+  border-radius:2px;overflow:hidden;
+}
+.frame{
+  position:relative;padding:56px 48px 64px;min-height:380px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  overflow:hidden;
+}
+.frame.dark{background:var(--ink);color:var(--lt)}
+.frame.light{background:var(--paper);color:var(--dk)}
+
+.frame::before,.frame::after{
+  content:"";position:absolute;width:14px;height:14px;
+  border:1px solid currentColor;opacity:0.2;
+}
+.frame::before{top:16px;left:16px;border-right:0;border-bottom:0}
+.frame::after{bottom:16px;right:16px;border-left:0;border-top:0}
+
+.frame .caption{
+  position:absolute;top:18px;right:22px;
+  font-size:9px;letter-spacing:0.32em;font-weight:500;
+  text-transform:uppercase;opacity:0.55;
+}
+.frame .mode{
+  position:absolute;bottom:18px;left:22px;
+  font-size:8.5px;letter-spacing:0.3em;text-transform:uppercase;opacity:0.4;
 }
 
-header.mast {
-  max-width: 1260px;
-  margin: 0 auto 72px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 32px;
-  border-bottom: 1px solid var(--hair-lt);
-  padding-bottom: 28px;
-}
-.mast h1 {
-  font-family: 'IBM Plex Serif', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(26px, 3.2vw, 42px);
-  letter-spacing: -0.01em;
-  color: var(--grey-lt);
-}
-.mast .meta {
-  text-align: right;
-  font-size: 10px;
-  letter-spacing: 0.28em;
-  color: var(--mute-lt);
-  line-height: 1.9;
-  text-transform: uppercase;
-}
-.mast .meta b { color: var(--grey-lt); font-weight: 400; }
+.logo-svg{width:100%;max-width:560px;height:auto;display:block}
 
-.preamble {
-  max-width: 720px;
-  margin: 0 auto 100px;
-  font-family: 'IBM Plex Serif', serif;
-  font-weight: 300;
-  font-size: 15px;
-  line-height: 1.85;
-  color: var(--mute-lt);
-  text-align: center;
+/* ── annotation ── */
+.annotation{
+  grid-column:1/-1;background:var(--ink);
+  padding:28px 48px 34px;
+  display:grid;grid-template-columns:80px 1.1fr 2fr 1fr;gap:36px;
+  align-items:start;border-top:1px solid var(--hair-lt);
+  font-size:10.5px;line-height:1.75;letter-spacing:0.04em;
 }
-.preamble b { color: var(--grey-lt); font-weight: 400; font-style: italic; }
+.annotation .num{
+  font-family:'Fraunces',serif;font-weight:300;
+  font-size:46px;letter-spacing:-0.03em;color:var(--lt);line-height:0.9;
+}
+.annotation .title{
+  font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:400;
+  font-size:16px;color:var(--lt);margin-bottom:6px;
+}
+.annotation .kind{
+  text-transform:uppercase;letter-spacing:0.28em;font-size:9px;color:var(--lt-mute);
+}
+.annotation .ref{
+  font-size:9px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--lt-faint);margin-top:10px;
+}
+.annotation p{color:var(--lt-mute)}
+.annotation .mini{
+  font-size:9.5px;letter-spacing:0.08em;
+  color:var(--lt-faint);line-height:2;
+}
+.annotation .mini span{display:block}
+.annotation .mini b{color:var(--lt);font-weight:500}
 
-/* ── specimen ── */
-.specimens {
-  max-width: 1260px;
-  margin: 0 auto;
-  display: grid;
-  gap: 80px;
+@media (max-width:820px){
+  body{padding:40px 18px 80px}
+  .specimen{grid-template-columns:1fr}
+  .frame{min-height:320px;padding:40px 28px 48px}
+  .annotation{grid-template-columns:1fr;gap:14px;padding:22px 28px 28px}
+  .mast{grid-template-columns:1fr;gap:12px;align-items:start}
+  .mast .meta{text-align:left}
 }
 
-.specimen {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1px;
-  background: var(--hair-lt);
-  border: 1px solid var(--hair-lt);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.frame {
-  position: relative;
-  padding: 56px 48px 64px;
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.frame.dark  { background: var(--ink); color: var(--grey-lt); }
-.frame.light { background: var(--paper); color: var(--grey-dk); }
-
-.frame::before,
-.frame::after {
-  content: "";
-  position: absolute;
-  width: 14px; height: 14px;
-  border: 1px solid currentColor;
-  opacity: 0.22;
-}
-.frame::before { top: 16px; left: 16px; border-right: 0; border-bottom: 0; }
-.frame::after  { bottom: 16px; right: 16px; border-left: 0; border-top: 0; }
-
-.frame .caption {
-  position: absolute;
-  top: 18px;
-  right: 22px;
-  font-size: 9px;
-  letter-spacing: 0.32em;
-  font-weight: 500;
-  text-transform: uppercase;
-  opacity: 0.55;
-}
-.frame .mode {
-  position: absolute;
-  bottom: 18px;
-  left: 22px;
-  font-size: 8.5px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  opacity: 0.4;
-}
-
-.annotation {
-  grid-column: 1 / -1;
-  background: var(--ink);
-  padding: 28px 48px 34px;
-  display: grid;
-  grid-template-columns: 80px 1fr 2.2fr 1fr;
-  gap: 36px;
-  align-items: start;
-  border-top: 1px solid var(--hair-lt);
-  font-size: 10.5px;
-  line-height: 1.75;
-  letter-spacing: 0.04em;
-}
-.annotation .num {
-  font-family: 'Fraunces', serif;
-  font-weight: 300;
-  font-size: 46px;
-  letter-spacing: -0.03em;
-  color: var(--grey-lt);
-  line-height: 0.9;
-}
-.annotation .title {
-  font-family: 'IBM Plex Serif', serif;
-  font-style: italic;
-  font-weight: 400;
-  font-size: 16px;
-  color: var(--grey-lt);
-  margin-bottom: 6px;
-}
-.annotation .kind {
-  text-transform: uppercase;
-  letter-spacing: 0.28em;
-  font-size: 9px;
-  color: var(--mute-lt);
-}
-.annotation p { color: var(--mute-lt); }
-.annotation .mini {
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.22);
-  line-height: 2;
-}
-.annotation .mini span { display: block; }
-.annotation .mini b { color: var(--grey-lt); font-weight: 500; }
-
-/* ═══════════════════════════════════════
-   LOGOTYPE RENDER — SVG centered
-═══════════════════════════════════════ */
-
-.logo-svg {
-  width: 100%;
-  max-width: 520px;
-  height: auto;
-  display: block;
-}
-
-@media (max-width: 820px) {
-  body { padding: 40px 18px 80px; }
-  .specimen { grid-template-columns: 1fr; }
-  .frame { min-height: 300px; padding: 40px 28px 48px; }
-  .annotation {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 22px 28px 28px;
-  }
-  .mast { grid-template-columns: 1fr; gap: 12px; align-items: start; }
-  .mast .meta { text-align: left; }
-}
+/* decorative helper — hide 0-size stroke artefact */
+.logo-svg text{paint-order:stroke fill}
 </style>
 </head>
 <body>
 
 <header class="mast">
-  <h1>GREY — four unified logotypes.</h1>
+  <h1>GREY — ten studies. aura · chakra · prism · uniform hue.</h1>
   <div class="meta">
-    <div><b>inryokü</b> / logotype study</div>
+    <div><b>inryokü</b> / logotype vol. 03</div>
     <div>archive · 2026 — spring</div>
-    <div>typography · vol. 02</div>
+    <div>synthesis from referenced systems</div>
   </div>
 </header>
 
 <p class="preamble">
-  Each proposal is <b>one word, one mark</b> — a complete logotype.
-  All six channels (R G B C M Y) are present, but they do not fragment the
-  word; they <em>belong to it</em>. Read as one thing, designed to be worn,
-  stamped, printed, or embroidered.
+  Ten marks, each a single word. Every one reads as <b>GREY</b> — a whole
+  logotype — while carrying the six channels (R G B C M Y) in a different
+  spatial logic. Informed by aura photography, Kirlian edges, the chakra
+  vertical, prism refraction, Munsell perceptual spacing, holographic
+  iridescence, and HSL uniformity.
 </p>
 
 <main class="specimens">
 
-  <!-- ═══ 01  GREY + spectrum punctum ═══ -->
-  <article class="specimen">
-    <div class="frame dark">
-      <div class="caption">logotype · 01</div>
-      <svg class="logo-svg" viewBox="0 0 520 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY with spectrum period">
-        <g font-family="'Fraunces', 'IBM Plex Serif', serif" font-weight="300" font-size="180" letter-spacing="-6">
-          <text x="38" y="162" fill="#fafaf7" dominant-baseline="middle">GREY</text>
-        </g>
-        <!-- spectrum punctum — six pigments as tiny row under the Y -->
-        <g transform="translate(375, 178)">
-          <circle cx="0"  cy="0" r="3.2" fill="#E43B3B"/>
-          <circle cx="9"  cy="0" r="3.2" fill="#2EA259"/>
-          <circle cx="18" cy="0" r="3.2" fill="#2F4CC7"/>
-          <circle cx="27" cy="0" r="3.2" fill="#2CB7B7"/>
-          <circle cx="36" cy="0" r="3.2" fill="#B62F96"/>
-          <circle cx="45" cy="0" r="3.2" fill="#D4B233"/>
-        </g>
-      </svg>
-      <div class="mode">dark · logotype</div>
-    </div>
 
-    <div class="frame light">
-      <div class="caption">logotype · 01</div>
-      <svg class="logo-svg" viewBox="0 0 520 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY paper">
-        <g font-family="'Fraunces', 'IBM Plex Serif', serif" font-weight="300" font-size="180" letter-spacing="-6">
-          <text x="38" y="162" fill="#0a0a0a" dominant-baseline="middle">GREY</text>
-        </g>
-        <g transform="translate(375, 178)">
-          <circle cx="0"  cy="0" r="3.2" fill="#C12D2D"/>
-          <circle cx="9"  cy="0" r="3.2" fill="#247C44"/>
-          <circle cx="18" cy="0" r="3.2" fill="#233E9E"/>
-          <circle cx="27" cy="0" r="3.2" fill="#1E8A8A"/>
-          <circle cx="36" cy="0" r="3.2" fill="#8C2573"/>
-          <circle cx="45" cy="0" r="3.2" fill="#AE8F1F"/>
-        </g>
-      </svg>
-      <div class="mode">paper · logotype</div>
+<!-- ═══════════════════════════════════════════════════════
+     01 · AURA — radial halo around a neutral core
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 01 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY aura">
+      <defs>
+        <radialGradient id="aura-d" cx="50%" cy="50%" r="55%">
+          <stop offset="0%"  stop-color="#7f7f7f" stop-opacity="0"/>
+          <stop offset="30%" stop-color="#D5343D" stop-opacity="0.25"/>
+          <stop offset="45%" stop-color="#D5CC34" stop-opacity="0.22"/>
+          <stop offset="55%" stop-color="#34D53D" stop-opacity="0.2"/>
+          <stop offset="65%" stop-color="#34CCD5" stop-opacity="0.2"/>
+          <stop offset="75%" stop-color="#3D34D5" stop-opacity="0.22"/>
+          <stop offset="85%" stop-color="#D534CC" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="aurablur-d"><feGaussianBlur stdDeviation="18"/></filter>
+      </defs>
+      <ellipse cx="280" cy="180" rx="240" ry="150" fill="url(#aura-d)" filter="url(#aurablur-d)"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-6">
+        <text x="280" y="200" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">dark · aura</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 01 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY aura paper">
+      <defs>
+        <radialGradient id="aura-p" cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stop-color="#f6f3ec" stop-opacity="0"/>
+          <stop offset="30%" stop-color="#D5343D" stop-opacity="0.20"/>
+          <stop offset="45%" stop-color="#D5CC34" stop-opacity="0.18"/>
+          <stop offset="55%" stop-color="#34D53D" stop-opacity="0.18"/>
+          <stop offset="65%" stop-color="#34CCD5" stop-opacity="0.18"/>
+          <stop offset="75%" stop-color="#3D34D5" stop-opacity="0.20"/>
+          <stop offset="85%" stop-color="#D534CC" stop-opacity="0.20"/>
+          <stop offset="100%" stop-color="#f6f3ec" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="aurablur-p"><feGaussianBlur stdDeviation="18"/></filter>
+      </defs>
+      <ellipse cx="280" cy="180" rx="240" ry="150" fill="url(#aura-p)" filter="url(#aurablur-p)"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-6">
+        <text x="280" y="200" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">paper · aura</div>
+  </div>
+  <div class="annotation">
+    <div class="num">01</div>
+    <div>
+      <div class="kind">aura field</div>
+      <div class="title">The aura</div>
+      <div class="ref">ref · aura photography, Kirlian ambient field</div>
     </div>
+    <p>
+      GREY sits in solid neutral at the centre. Around it, a soft elliptical
+      field of all six channels blurs outward — the way an aura reads in a
+      Kirlian plate. Nothing is sharp except the word. The colour exists
+      because the word is being observed.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> hoodie back · poster</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> blur essential</span>
+    </div>
+  </div>
+</article>
 
-    <div class="annotation">
-      <div class="num">01</div>
-      <div>
-        <div class="kind">GREY + spectrum punctum</div>
-        <div class="title">The period</div>
-      </div>
-      <p>
-        The word is set once, clean, in an editorial serif. A six-channel
-        spectrum sits where a period would — six pigments compressed into a
-        single punctuation mark. The word reads as one; the colour lives
-        in the pause that follows.
-      </p>
-      <div class="mini">
-        <span><b>type</b> Fraunces 300</span>
-        <span><b>scale</b> 60mm – 300mm</span>
-        <span><b>fit</b> label, chest, embroidery</span>
-      </div>
-    </div>
-  </article>
 
-  <!-- ═══ 02  GREY with stroke-assigned channels ═══ -->
-  <article class="specimen">
-    <div class="frame dark">
-      <div class="caption">logotype · 02</div>
-      <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY stroke-assigned">
-        <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-weight="500" font-size="180" letter-spacing="2">
-          <text x="30" y="170" fill="#fafaf7" dominant-baseline="middle">GREY</text>
-        </g>
-        <!-- six thin color hairlines, two per letter, running across baseline -->
-        <g stroke-width="2.4">
-          <line x1="38"  y1="198" x2="150" y2="198" stroke="#E43B3B"/>
-          <line x1="150" y1="198" x2="280" y2="198" stroke="#2EA259"/>
-          <line x1="280" y1="198" x2="400" y2="198" stroke="#2F4CC7"/>
-          <line x1="400" y1="198" x2="470" y2="198" stroke="#2CB7B7"/>
-          <line x1="470" y1="198" x2="510" y2="198" stroke="#B62F96"/>
-          <line x1="510" y1="198" x2="535" y2="198" stroke="#D4B233"/>
-        </g>
-      </svg>
-      <div class="mode">dark · logotype</div>
+<!-- ═══════════════════════════════════════════════════════
+     02 · CHAKRA STACK — vertical 7-row meditation
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 02 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg" aria-label="GREY chakra stack">
+      <defs>
+        <filter id="softrow-d" x="-10%" y="-40%" width="120%" height="180%">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
+      </defs>
+      <g filter="url(#softrow-d)" opacity="0.9">
+        <rect x="140" y="40"  width="280" height="16" fill="#D5343D"/>
+        <rect x="140" y="86"  width="280" height="16" fill="#D5CC34"/>
+        <rect x="140" y="132" width="280" height="16" fill="#34D53D"/>
+        <rect x="140" y="224" width="280" height="16" fill="#34CCD5"/>
+        <rect x="140" y="270" width="280" height="16" fill="#3D34D5"/>
+        <rect x="140" y="316" width="280" height="16" fill="#D534CC"/>
+      </g>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="120" letter-spacing="-4">
+        <text x="280" y="188" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <g font-family="'IBM Plex Mono',monospace" font-size="8" letter-spacing="4" text-anchor="end" fill="rgba(255,255,255,0.45)">
+        <text x="120" y="52">700 nm · R</text>
+        <text x="120" y="98">580 · Y</text>
+        <text x="120" y="144">545 · G</text>
+        <text x="120" y="236">490 · C</text>
+        <text x="120" y="282">440 · B</text>
+        <text x="120" y="328">400 · M</text>
+      </g>
+    </svg>
+    <div class="mode">dark · chakra</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 02 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 400" xmlns="http://www.w3.org/2000/svg" aria-label="GREY chakra paper">
+      <defs>
+        <filter id="softrow-p" x="-10%" y="-40%" width="120%" height="180%">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
+      </defs>
+      <g filter="url(#softrow-p)" opacity="0.85">
+        <rect x="140" y="40"  width="280" height="16" fill="#C2303A"/>
+        <rect x="140" y="86"  width="280" height="16" fill="#C2BA30"/>
+        <rect x="140" y="132" width="280" height="16" fill="#30C239"/>
+        <rect x="140" y="224" width="280" height="16" fill="#30BAC2"/>
+        <rect x="140" y="270" width="280" height="16" fill="#3A30C2"/>
+        <rect x="140" y="316" width="280" height="16" fill="#C230BA"/>
+      </g>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="120" letter-spacing="-4">
+        <text x="280" y="188" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <g font-family="'IBM Plex Mono',monospace" font-size="8" letter-spacing="4" text-anchor="end" fill="rgba(10,10,10,0.5)">
+        <text x="120" y="52">700 nm · R</text>
+        <text x="120" y="98">580 · Y</text>
+        <text x="120" y="144">545 · G</text>
+        <text x="120" y="236">490 · C</text>
+        <text x="120" y="282">440 · B</text>
+        <text x="120" y="328">400 · M</text>
+      </g>
+    </svg>
+    <div class="mode">paper · chakra</div>
+  </div>
+  <div class="annotation">
+    <div class="num">02</div>
+    <div>
+      <div class="kind">chakra stack</div>
+      <div class="title">The vertical</div>
+      <div class="ref">ref · chakra system, spectral wavelength chart</div>
     </div>
+    <p>
+      Six soft horizontal lights, stacked vertically by wavelength.
+      The word is set at the meridian — the middle of the stack, the 50%.
+      The RGB lights rise above; the CMY pigments descend below. Read
+      vertically, the logotype is a diagram of observation.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> long sleeve, poster, tote</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> vertical format</span>
+    </div>
+  </div>
+</article>
 
-    <div class="frame light">
-      <div class="caption">logotype · 02</div>
-      <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY stroke paper">
-        <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-weight="500" font-size="180" letter-spacing="2">
-          <text x="30" y="170" fill="#0a0a0a" dominant-baseline="middle">GREY</text>
-        </g>
-        <g stroke-width="2.4">
-          <line x1="38"  y1="198" x2="150" y2="198" stroke="#C12D2D"/>
-          <line x1="150" y1="198" x2="280" y2="198" stroke="#247C44"/>
-          <line x1="280" y1="198" x2="400" y2="198" stroke="#233E9E"/>
-          <line x1="400" y1="198" x2="470" y2="198" stroke="#1E8A8A"/>
-          <line x1="470" y1="198" x2="510" y2="198" stroke="#8C2573"/>
-          <line x1="510" y1="198" x2="535" y2="198" stroke="#AE8F1F"/>
-        </g>
-      </svg>
-      <div class="mode">paper · logotype</div>
-    </div>
 
-    <div class="annotation">
-      <div class="num">02</div>
-      <div>
-        <div class="kind">GREY with underline spectrum</div>
-        <div class="title">The underscore</div>
-      </div>
-      <p>
-        A single mono-set GREY, sitting on a hair-thin six-channel baseline.
-        The underline is not decoration — it is a line of descending pigments
-        the word is anchored to. From a distance, one reads a word and a rule;
-        up close, the rule is the entire visible spectrum.
-      </p>
-      <div class="mini">
-        <span><b>type</b> Plex Mono 500</span>
-        <span><b>scale</b> 80mm – 400mm</span>
-        <span><b>fit</b> chest, back panel, poster</span>
-      </div>
+<!-- ═══════════════════════════════════════════════════════
+     03 · PRISM REFRACTION — dispersion through the word
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 03 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg" aria-label="GREY prism">
+      <!-- incoming grey beam -->
+      <line x1="20" y1="150" x2="200" y2="150" stroke="#bbbbbb" stroke-width="2" opacity="0.7"/>
+      <!-- the word is the prism -->
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="150" letter-spacing="-5">
+        <text x="280" y="168" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <!-- refracted spread out right -->
+      <g stroke-width="1.8" opacity="0.85" fill="none">
+        <line x1="420" y1="150" x2="540" y2="80"  stroke="#D5343D"/>
+        <line x1="420" y1="150" x2="545" y2="108" stroke="#D5CC34"/>
+        <line x1="420" y1="150" x2="548" y2="136" stroke="#34D53D"/>
+        <line x1="420" y1="150" x2="548" y2="164" stroke="#34CCD5"/>
+        <line x1="420" y1="150" x2="545" y2="192" stroke="#3D34D5"/>
+        <line x1="420" y1="150" x2="540" y2="220" stroke="#D534CC"/>
+      </g>
+    </svg>
+    <div class="mode">dark · refraction</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 03 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg" aria-label="GREY prism paper">
+      <line x1="20" y1="150" x2="200" y2="150" stroke="#666" stroke-width="2" opacity="0.7"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="150" letter-spacing="-5">
+        <text x="280" y="168" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <g stroke-width="1.8" opacity="0.9" fill="none">
+        <line x1="420" y1="150" x2="540" y2="80"  stroke="#C2303A"/>
+        <line x1="420" y1="150" x2="545" y2="108" stroke="#C2BA30"/>
+        <line x1="420" y1="150" x2="548" y2="136" stroke="#30C239"/>
+        <line x1="420" y1="150" x2="548" y2="164" stroke="#30BAC2"/>
+        <line x1="420" y1="150" x2="545" y2="192" stroke="#3A30C2"/>
+        <line x1="420" y1="150" x2="540" y2="220" stroke="#C230BA"/>
+      </g>
+    </svg>
+    <div class="mode">paper · refraction</div>
+  </div>
+  <div class="annotation">
+    <div class="num">03</div>
+    <div>
+      <div class="kind">prism refraction</div>
+      <div class="title">The dispersion</div>
+      <div class="ref">ref · Newton's prism, spectral dispersion</div>
     </div>
-  </article>
+    <p>
+      A grey beam enters from the left; the word is the glass; on the right
+      the spectrum fans out. The logotype becomes the apparatus that
+      <em>proves</em> grey contains the six — and reveals them only when
+      something passes through it.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> horizontal formats · banners</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> scales to billboard</span>
+    </div>
+  </div>
+</article>
 
-  <!-- ═══ 03  BRACKETED GREY ═══ -->
-  <article class="specimen">
-    <div class="frame dark">
-      <div class="caption">logotype · 03</div>
-      <svg class="logo-svg" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY bracketed">
-        <!-- left bracket = 3 coloured verticals (RGB) -->
-        <g stroke-width="3" fill="none">
-          <path d="M 60 80 L 46 80 L 46 200 L 60 200"  stroke="#E43B3B"/>
-          <path d="M 72 90 L 62 90 L 62 190 L 72 190"  stroke="#2EA259"/>
-          <path d="M 84 100 L 76 100 L 76 180 L 84 180" stroke="#2F4CC7"/>
-        </g>
-        <!-- right bracket = 3 coloured verticals (CMY) -->
-        <g stroke-width="3" fill="none">
-          <path d="M 500 100 L 508 100 L 508 180 L 500 180" stroke="#2CB7B7"/>
-          <path d="M 512 90  L 522 90  L 522 190 L 512 190" stroke="#B62F96"/>
-          <path d="M 524 80  L 538 80  L 538 200 L 524 200" stroke="#D4B233"/>
-        </g>
-        <g font-family="'Fraunces', 'IBM Plex Serif', serif" font-weight="300" font-size="140" letter-spacing="-4">
-          <text x="300" y="155" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
-        </g>
-      </svg>
-      <div class="mode">dark · logotype</div>
-    </div>
 
-    <div class="frame light">
-      <div class="caption">logotype · 03</div>
-      <svg class="logo-svg" viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY bracketed paper">
-        <g stroke-width="3" fill="none">
-          <path d="M 60 80 L 46 80 L 46 200 L 60 200"  stroke="#C12D2D"/>
-          <path d="M 72 90 L 62 90 L 62 190 L 72 190"  stroke="#247C44"/>
-          <path d="M 84 100 L 76 100 L 76 180 L 84 180" stroke="#233E9E"/>
-        </g>
-        <g stroke-width="3" fill="none">
-          <path d="M 500 100 L 508 100 L 508 180 L 500 180" stroke="#1E8A8A"/>
-          <path d="M 512 90  L 522 90  L 522 190 L 512 190" stroke="#8C2573"/>
-          <path d="M 524 80  L 538 80  L 538 200 L 524 200" stroke="#AE8F1F"/>
-        </g>
-        <g font-family="'Fraunces', 'IBM Plex Serif', serif" font-weight="300" font-size="140" letter-spacing="-4">
-          <text x="300" y="155" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
-        </g>
-      </svg>
-      <div class="mode">paper · logotype</div>
+<!-- ═══════════════════════════════════════════════════════
+     04 · KIRLIAN EDGE — electric chromatic glow
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 04 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg" aria-label="GREY kirlian">
+      <defs>
+        <filter id="kirlian-d" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2"/>
+        </filter>
+      </defs>
+      <!-- 6 offset colour copies, barely — the electric fringe -->
+      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="160" letter-spacing="2" filter="url(#kirlian-d)" opacity="0.8">
+        <text x="280" y="165" fill="#D5343D" text-anchor="middle" dominant-baseline="middle" transform="translate(-3,-3)">GREY</text>
+        <text x="280" y="165" fill="#D5CC34" text-anchor="middle" dominant-baseline="middle" transform="translate(3,-3)">GREY</text>
+        <text x="280" y="165" fill="#34D53D" text-anchor="middle" dominant-baseline="middle" transform="translate(-3,3)">GREY</text>
+        <text x="280" y="165" fill="#34CCD5" text-anchor="middle" dominant-baseline="middle" transform="translate(3,3)">GREY</text>
+        <text x="280" y="165" fill="#3D34D5" text-anchor="middle" dominant-baseline="middle" transform="translate(-4,0)">GREY</text>
+        <text x="280" y="165" fill="#D534CC" text-anchor="middle" dominant-baseline="middle" transform="translate(4,0)">GREY</text>
+      </g>
+      <!-- crisp grey word on top -->
+      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="160" letter-spacing="2">
+        <text x="280" y="165" fill="#888888" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">dark · kirlian</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 04 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg" aria-label="GREY kirlian paper">
+      <defs>
+        <filter id="kirlian-p"><feGaussianBlur stdDeviation="2"/></filter>
+      </defs>
+      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="160" letter-spacing="2" filter="url(#kirlian-p)" opacity="0.9">
+        <text x="280" y="165" fill="#C2303A" text-anchor="middle" dominant-baseline="middle" transform="translate(-3,-3)">GREY</text>
+        <text x="280" y="165" fill="#C2BA30" text-anchor="middle" dominant-baseline="middle" transform="translate(3,-3)">GREY</text>
+        <text x="280" y="165" fill="#30C239" text-anchor="middle" dominant-baseline="middle" transform="translate(-3,3)">GREY</text>
+        <text x="280" y="165" fill="#30BAC2" text-anchor="middle" dominant-baseline="middle" transform="translate(3,3)">GREY</text>
+        <text x="280" y="165" fill="#3A30C2" text-anchor="middle" dominant-baseline="middle" transform="translate(-4,0)">GREY</text>
+        <text x="280" y="165" fill="#C230BA" text-anchor="middle" dominant-baseline="middle" transform="translate(4,0)">GREY</text>
+      </g>
+      <g font-family="'IBM Plex Mono',monospace" font-weight="700" font-size="160" letter-spacing="2">
+        <text x="280" y="165" fill="#555555" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">paper · kirlian</div>
+  </div>
+  <div class="annotation">
+    <div class="num">04</div>
+    <div>
+      <div class="kind">kirlian edge</div>
+      <div class="title">The fringe</div>
+      <div class="ref">ref · Kirlian photography, chromatic aberration</div>
     </div>
+    <p>
+      A crisp grey word surrounded by six faintly offset coloured ghosts.
+      The effect echoes Kirlian corona discharge — the energetic outline of a
+      living object. From a few metres the logo reads as a single word in a
+      soft haze. Up close, the haze reveals itself as six specific pigments.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> embroidery, print, screen</span>
+      <span><b>type</b> Plex Mono 700</span>
+      <span><b>note</b> reads clean small</span>
+    </div>
+  </div>
+</article>
 
-    <div class="annotation">
-      <div class="num">03</div>
-      <div>
-        <div class="kind">bracketed GREY</div>
-        <div class="title">The enclosure</div>
-      </div>
-      <p>
-        Left bracket draws R / G / B — the three lights.
-        Right bracket draws C / M / Y — the three pigments.
-        The word GREY is held between them. The colours surround the word
-        without entering it. A simple, containable mark, readable at any scale.
-      </p>
-      <div class="mini">
-        <span><b>type</b> Fraunces 300</span>
-        <span><b>scale</b> 40mm – 300mm</span>
-        <span><b>fit</b> monogram, tote, print</span>
-      </div>
-    </div>
-  </article>
 
-  <!-- ═══ 04  STACKED GREY with channel stamp ═══ -->
-  <article class="specimen">
-    <div class="frame dark">
-      <div class="caption">logotype · 04</div>
-      <svg class="logo-svg" viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg" aria-label="GREY stamped">
-        <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-weight="700" font-size="180" letter-spacing="0">
-          <text x="260" y="155" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
-        </g>
-        <!-- channel stamp row — small monospace labels colored -->
-        <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="10" letter-spacing="4" text-anchor="middle">
-          <text x="120" y="230" fill="#E43B3B">R</text>
-          <text x="162" y="230" fill="#2EA259">G</text>
-          <text x="204" y="230" fill="#2F4CC7">B</text>
-          <text x="246" y="230" fill="rgba(255,255,255,0.35)">·</text>
-          <text x="288" y="230" fill="#2CB7B7">C</text>
-          <text x="330" y="230" fill="#B62F96">M</text>
-          <text x="372" y="230" fill="#D4B233">Y</text>
-        </g>
-        <!-- dotted rule -->
-        <line x1="60" y1="246" x2="460" y2="246" stroke="rgba(255,255,255,0.14)" stroke-width="1" stroke-dasharray="2,3"/>
-        <!-- hex caption -->
-        <text x="260" y="270" fill="rgba(255,255,255,0.35)" font-family="'IBM Plex Mono', monospace" font-size="9" letter-spacing="4" text-anchor="middle">#808080</text>
-      </svg>
-      <div class="mode">dark · logotype</div>
+<!-- ═══════════════════════════════════════════════════════
+     05 · HUE WHEEL — uniform HSL color space
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 05 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY hue wheel">
+      <!-- 6 dots at 60° positions -->
+      <g>
+        <circle cx="280" cy="100" r="6"  fill="#D5343D"/>  <!-- 0° R top -->
+        <circle cx="430" cy="175" r="6"  fill="#D5CC34"/>  <!-- 60° Y -->
+        <circle cx="430" cy="260" r="6"  fill="#34D53D"/>  <!-- 120° G -->
+        <circle cx="280" cy="330" r="6"  fill="#34CCD5"/>  <!-- 180° C bottom -->
+        <circle cx="130" cy="260" r="6"  fill="#3D34D5"/>  <!-- 240° B -->
+        <circle cx="130" cy="175" r="6"  fill="#D534CC"/>  <!-- 300° M -->
+      </g>
+      <!-- connecting hexagon ring -->
+      <path d="M 280 100 L 430 175 L 430 260 L 280 330 L 130 260 L 130 175 Z"
+            fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+      <!-- word at center -->
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="95" letter-spacing="-3">
+        <text x="280" y="225" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <!-- tiny hue labels -->
+      <g font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="2" fill="rgba(255,255,255,0.4)" text-anchor="middle">
+        <text x="280" y="82">0°</text>
+        <text x="454" y="170">60°</text>
+        <text x="454" y="272">120°</text>
+        <text x="280" y="352">180°</text>
+        <text x="104" y="272">240°</text>
+        <text x="104" y="170">300°</text>
+      </g>
+    </svg>
+    <div class="mode">dark · hue wheel</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 05 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY hue wheel paper">
+      <g>
+        <circle cx="280" cy="100" r="6"  fill="#C2303A"/>
+        <circle cx="430" cy="175" r="6"  fill="#C2BA30"/>
+        <circle cx="430" cy="260" r="6"  fill="#30C239"/>
+        <circle cx="280" cy="330" r="6"  fill="#30BAC2"/>
+        <circle cx="130" cy="260" r="6"  fill="#3A30C2"/>
+        <circle cx="130" cy="175" r="6"  fill="#C230BA"/>
+      </g>
+      <path d="M 280 100 L 430 175 L 430 260 L 280 330 L 130 260 L 130 175 Z"
+            fill="none" stroke="rgba(10,10,10,0.14)" stroke-width="1"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="95" letter-spacing="-3">
+        <text x="280" y="225" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <g font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="2" fill="rgba(10,10,10,0.45)" text-anchor="middle">
+        <text x="280" y="82">0°</text>
+        <text x="454" y="170">60°</text>
+        <text x="454" y="272">120°</text>
+        <text x="280" y="352">180°</text>
+        <text x="104" y="272">240°</text>
+        <text x="104" y="170">300°</text>
+      </g>
+    </svg>
+    <div class="mode">paper · hue wheel</div>
+  </div>
+  <div class="annotation">
+    <div class="num">05</div>
+    <div>
+      <div class="kind">uniform HSL hex</div>
+      <div class="title">The wheel</div>
+      <div class="ref">ref · Munsell colour space, HSL 60° division</div>
     </div>
+    <p>
+      The six channels are plotted at 0° 60° 120° 180° 240° 300° — evenly
+      spaced on the hue wheel, all at identical saturation and lightness.
+      The word sits at the centre of the wheel, the zero-saturation point
+      where every hue converges: perceptually, and philosophically, grey.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> monogram, packaging, book</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> square or round formats</span>
+    </div>
+  </div>
+</article>
 
-    <div class="frame light">
-      <div class="caption">logotype · 04</div>
-      <svg class="logo-svg" viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg" aria-label="GREY stamped paper">
-        <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-weight="700" font-size="180" letter-spacing="0">
-          <text x="260" y="155" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
-        </g>
-        <g font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="10" letter-spacing="4" text-anchor="middle">
-          <text x="120" y="230" fill="#C12D2D">R</text>
-          <text x="162" y="230" fill="#247C44">G</text>
-          <text x="204" y="230" fill="#233E9E">B</text>
-          <text x="246" y="230" fill="rgba(10,10,10,0.35)">·</text>
-          <text x="288" y="230" fill="#1E8A8A">C</text>
-          <text x="330" y="230" fill="#8C2573">M</text>
-          <text x="372" y="230" fill="#AE8F1F">Y</text>
-        </g>
-        <line x1="60" y1="246" x2="460" y2="246" stroke="rgba(10,10,10,0.18)" stroke-width="1" stroke-dasharray="2,3"/>
-        <text x="260" y="270" fill="rgba(10,10,10,0.4)" font-family="'IBM Plex Mono', monospace" font-size="9" letter-spacing="4" text-anchor="middle">#808080</text>
-      </svg>
-      <div class="mode">paper · logotype</div>
-    </div>
 
-    <div class="annotation">
-      <div class="num">04</div>
-      <div>
-        <div class="kind">GREY with channel stamp</div>
-        <div class="title">The signed word</div>
-      </div>
-      <p>
-        A heavy mono word sits above a single line of channel letters —
-        R G B · C M Y — each stamped in its own pigment. The rule and the
-        hex caption below make the logotype legible as both a word and a
-        technical signature. Looks equally at home on a tag, a book, or a sleeve.
-      </p>
-      <div class="mini">
-        <span><b>type</b> Plex Mono 700 · Mono 10 caps</span>
-        <span><b>scale</b> 80mm – 500mm</span>
-        <span><b>fit</b> primary wordmark</span>
-      </div>
+<!-- ═══════════════════════════════════════════════════════
+     06 · IRIDESCENT SHEEN — holographic gradient
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 06 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY iridescent">
+      <defs>
+        <linearGradient id="iri-d" x1="0" y1="0" x2="1" y2="0.7">
+          <stop offset="0%"  stop-color="#D5343D"/>
+          <stop offset="18%" stop-color="#D5CC34"/>
+          <stop offset="35%" stop-color="#34D53D"/>
+          <stop offset="50%" stop-color="#7f7f7f"/>
+          <stop offset="65%" stop-color="#34CCD5"/>
+          <stop offset="82%" stop-color="#3D34D5"/>
+          <stop offset="100%" stop-color="#D534CC"/>
+        </linearGradient>
+      </defs>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-6" fill="url(#iri-d)">
+        <text x="280" y="155" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">dark · iridescent</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 06 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY iridescent paper">
+      <defs>
+        <linearGradient id="iri-p" x1="0" y1="0" x2="1" y2="0.7">
+          <stop offset="0%"  stop-color="#C2303A"/>
+          <stop offset="18%" stop-color="#C2BA30"/>
+          <stop offset="35%" stop-color="#30C239"/>
+          <stop offset="50%" stop-color="#7f7f7f"/>
+          <stop offset="65%" stop-color="#30BAC2"/>
+          <stop offset="82%" stop-color="#3A30C2"/>
+          <stop offset="100%" stop-color="#C230BA"/>
+        </linearGradient>
+      </defs>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="180" letter-spacing="-6" fill="url(#iri-p)">
+        <text x="280" y="155" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">paper · iridescent</div>
+  </div>
+  <div class="annotation">
+    <div class="num">06</div>
+    <div>
+      <div class="kind">iridescent sheen</div>
+      <div class="title">The holographic</div>
+      <div class="ref">ref · oil slick, holographic foil</div>
     </div>
-  </article>
+    <p>
+      A single-stroke gradient carries all six pigments with a grey node at
+      the centre. The logotype is one wordmark, but it has the shimmer of an
+      angle-dependent holographic foil: RGB on the left, grey at the midline,
+      CMY on the right.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> premium tag, embossed card</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> foil-stamp friendly</span>
+    </div>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     07 · SPECTRUM BAR — GREY cut from full rainbow band
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 07 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY band">
+      <defs>
+        <linearGradient id="band-d" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"  stop-color="#D5343D"/>
+          <stop offset="20%" stop-color="#D5CC34"/>
+          <stop offset="40%" stop-color="#34D53D"/>
+          <stop offset="60%" stop-color="#34CCD5"/>
+          <stop offset="80%" stop-color="#3D34D5"/>
+          <stop offset="100%" stop-color="#D534CC"/>
+        </linearGradient>
+        <mask id="cut-d">
+          <rect x="0" y="0" width="560" height="260" fill="white"/>
+          <text x="280" y="140" text-anchor="middle" dominant-baseline="middle"
+                font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300"
+                font-size="170" letter-spacing="-5" fill="black">GREY</text>
+        </mask>
+      </defs>
+      <rect x="40" y="100" width="480" height="80" fill="url(#band-d)" mask="url(#cut-d)"/>
+      <!-- hairline guides -->
+      <line x1="40"  y1="100" x2="520" y2="100" stroke="rgba(255,255,255,0.14)" stroke-width="0.7"/>
+      <line x1="40"  y1="180" x2="520" y2="180" stroke="rgba(255,255,255,0.14)" stroke-width="0.7"/>
+    </svg>
+    <div class="mode">dark · band</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 07 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 260" xmlns="http://www.w3.org/2000/svg" aria-label="GREY band paper">
+      <defs>
+        <linearGradient id="band-p" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"  stop-color="#C2303A"/>
+          <stop offset="20%" stop-color="#C2BA30"/>
+          <stop offset="40%" stop-color="#30C239"/>
+          <stop offset="60%" stop-color="#30BAC2"/>
+          <stop offset="80%" stop-color="#3A30C2"/>
+          <stop offset="100%" stop-color="#C230BA"/>
+        </linearGradient>
+        <mask id="cut-p">
+          <rect x="0" y="0" width="560" height="260" fill="white"/>
+          <text x="280" y="140" text-anchor="middle" dominant-baseline="middle"
+                font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300"
+                font-size="170" letter-spacing="-5" fill="black">GREY</text>
+        </mask>
+      </defs>
+      <rect x="40" y="100" width="480" height="80" fill="url(#band-p)" mask="url(#cut-p)"/>
+      <line x1="40"  y1="100" x2="520" y2="100" stroke="rgba(10,10,10,0.14)" stroke-width="0.7"/>
+      <line x1="40"  y1="180" x2="520" y2="180" stroke="rgba(10,10,10,0.14)" stroke-width="0.7"/>
+    </svg>
+    <div class="mode">paper · band</div>
+  </div>
+  <div class="annotation">
+    <div class="num">07</div>
+    <div>
+      <div class="kind">spectrum band</div>
+      <div class="title">The subtraction</div>
+      <div class="ref">ref · visible spectrum, negative space</div>
+    </div>
+    <p>
+      A single horizontal spectrum band runs across the frame. The word
+      <em>GREY</em> is cut from the middle — the letterforms are where the
+      colour is missing. Presence is the pigment; the word is the silence.
+      A quiet inversion: the logotype is read by what it removes.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> poster, tee back 280mm</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> wider than tall</span>
+    </div>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     08 · AURA PORTRAIT — halo around embedded word
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 08 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY aura portrait">
+      <defs>
+        <radialGradient id="halo-d" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stop-color="#7f7f7f" stop-opacity="0"/>
+          <stop offset="60%" stop-color="#7f7f7f" stop-opacity="0"/>
+          <stop offset="66%" stop-color="#D5343D" stop-opacity="0.55"/>
+          <stop offset="72%" stop-color="#D5CC34" stop-opacity="0.5"/>
+          <stop offset="78%" stop-color="#34D53D" stop-opacity="0.5"/>
+          <stop offset="84%" stop-color="#34CCD5" stop-opacity="0.5"/>
+          <stop offset="90%" stop-color="#3D34D5" stop-opacity="0.5"/>
+          <stop offset="96%" stop-color="#D534CC" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="halo-blur-d"><feGaussianBlur stdDeviation="4"/></filter>
+      </defs>
+      <circle cx="280" cy="180" r="160" fill="url(#halo-d)" filter="url(#halo-blur-d)"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="120" letter-spacing="-4">
+        <text x="280" y="198" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">dark · portrait</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 08 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY aura portrait paper">
+      <defs>
+        <radialGradient id="halo-p" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"  stop-color="#f6f3ec" stop-opacity="0"/>
+          <stop offset="60%" stop-color="#f6f3ec" stop-opacity="0"/>
+          <stop offset="66%" stop-color="#C2303A" stop-opacity="0.55"/>
+          <stop offset="72%" stop-color="#C2BA30" stop-opacity="0.5"/>
+          <stop offset="78%" stop-color="#30C239" stop-opacity="0.5"/>
+          <stop offset="84%" stop-color="#30BAC2" stop-opacity="0.5"/>
+          <stop offset="90%" stop-color="#3A30C2" stop-opacity="0.5"/>
+          <stop offset="96%" stop-color="#C230BA" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#f6f3ec" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="halo-blur-p"><feGaussianBlur stdDeviation="4"/></filter>
+      </defs>
+      <circle cx="280" cy="180" r="160" fill="url(#halo-p)" filter="url(#halo-blur-p)"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="120" letter-spacing="-4">
+        <text x="280" y="198" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">paper · portrait</div>
+  </div>
+  <div class="annotation">
+    <div class="num">08</div>
+    <div>
+      <div class="kind">aura portrait</div>
+      <div class="title">The halo</div>
+      <div class="ref">ref · aura portraiture, saint iconography</div>
+    </div>
+    <p>
+      A thin circular aureole, multi-channel, glows around the word —
+      the way a halo sits in religious portraiture. Word, held; aura, breathed
+      outward. The form is almost sacred, and intentionally so:
+      GREY as the thing observed, light surrounding it in every spectrum.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> pendant, tote face, album</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> square / round</span>
+    </div>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     09 · FREQUENCY LINES — the equaliser
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 09 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg" aria-label="GREY frequencies">
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="140" letter-spacing="-4">
+        <text x="280" y="120" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <!-- 6 short horizontal bars stacked below like an equaliser -->
+      <g>
+        <line x1="120" y1="190" x2="440" y2="190" stroke="#D5343D" stroke-width="2"/>
+        <line x1="160" y1="205" x2="400" y2="205" stroke="#D5CC34" stroke-width="2"/>
+        <line x1="140" y1="220" x2="420" y2="220" stroke="#34D53D" stroke-width="2"/>
+        <line x1="180" y1="235" x2="380" y2="235" stroke="#34CCD5" stroke-width="2"/>
+        <line x1="150" y1="250" x2="410" y2="250" stroke="#3D34D5" stroke-width="2"/>
+        <line x1="200" y1="265" x2="360" y2="265" stroke="#D534CC" stroke-width="2"/>
+      </g>
+      <!-- tiny values -->
+      <g font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="2" fill="rgba(255,255,255,0.4)" text-anchor="end">
+        <text x="450" y="192">700</text>
+        <text x="450" y="207">580</text>
+        <text x="450" y="222">545</text>
+        <text x="450" y="237">490</text>
+        <text x="450" y="252">440</text>
+        <text x="450" y="267">400</text>
+      </g>
+      <text x="110" y="192" font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="2" fill="rgba(255,255,255,0.4)" text-anchor="start">nm</text>
+    </svg>
+    <div class="mode">dark · frequencies</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 09 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg" aria-label="GREY frequencies paper">
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="140" letter-spacing="-4">
+        <text x="280" y="120" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+      <g>
+        <line x1="120" y1="190" x2="440" y2="190" stroke="#C2303A" stroke-width="2"/>
+        <line x1="160" y1="205" x2="400" y2="205" stroke="#C2BA30" stroke-width="2"/>
+        <line x1="140" y1="220" x2="420" y2="220" stroke="#30C239" stroke-width="2"/>
+        <line x1="180" y1="235" x2="380" y2="235" stroke="#30BAC2" stroke-width="2"/>
+        <line x1="150" y1="250" x2="410" y2="250" stroke="#3A30C2" stroke-width="2"/>
+        <line x1="200" y1="265" x2="360" y2="265" stroke="#C230BA" stroke-width="2"/>
+      </g>
+      <g font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="2" fill="rgba(10,10,10,0.5)" text-anchor="end">
+        <text x="450" y="192">700</text>
+        <text x="450" y="207">580</text>
+        <text x="450" y="222">545</text>
+        <text x="450" y="237">490</text>
+        <text x="450" y="252">440</text>
+        <text x="450" y="267">400</text>
+      </g>
+      <text x="110" y="192" font-family="'IBM Plex Mono',monospace" font-size="7" letter-spacing="2" fill="rgba(10,10,10,0.5)" text-anchor="start">nm</text>
+    </svg>
+    <div class="mode">paper · frequencies</div>
+  </div>
+  <div class="annotation">
+    <div class="num">09</div>
+    <div>
+      <div class="kind">frequency lines</div>
+      <div class="title">The equaliser</div>
+      <div class="ref">ref · audio EQ, visible-light wavelength</div>
+    </div>
+    <p>
+      GREY sits above a reading — six wavelength bars (700 580 545 490 440 400 nm),
+      each in its channel, the length of each varying like an equaliser display.
+      The logotype is both wordmark and measurement: the name sits over the data.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> back panel, record sleeve</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> scientific / sonic tone</span>
+    </div>
+  </div>
+</article>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     10 · CONVERGENCE — six beams forming the word
+════════════════════════════════════════════════════════ -->
+<article class="specimen">
+  <div class="frame dark">
+    <div class="caption">logotype · 10 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY convergence">
+      <!-- 6 beams converging on the word center (280,180) -->
+      <g stroke-width="1.2" opacity="0.88" fill="none">
+        <line x1="40"  y1="40"  x2="220" y2="150" stroke="#D5343D"/>
+        <line x1="520" y1="40"  x2="340" y2="150" stroke="#D5CC34"/>
+        <line x1="10"  y1="180" x2="215" y2="180" stroke="#34D53D"/>
+        <line x1="550" y1="180" x2="345" y2="180" stroke="#34CCD5"/>
+        <line x1="40"  y1="320" x2="220" y2="210" stroke="#3D34D5"/>
+        <line x1="520" y1="320" x2="340" y2="210" stroke="#D534CC"/>
+      </g>
+      <!-- glow at center -->
+      <defs><radialGradient id="conv-d" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+        <stop offset="60%" stop-color="#ffffff" stop-opacity="0"/>
+      </radialGradient></defs>
+      <circle cx="280" cy="180" r="110" fill="url(#conv-d)"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="110" letter-spacing="-4">
+        <text x="280" y="198" fill="#fafaf7" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">dark · convergence</div>
+  </div>
+  <div class="frame light">
+    <div class="caption">logotype · 10 / 10</div>
+    <svg class="logo-svg" viewBox="0 0 560 360" xmlns="http://www.w3.org/2000/svg" aria-label="GREY convergence paper">
+      <g stroke-width="1.2" opacity="0.88" fill="none">
+        <line x1="40"  y1="40"  x2="220" y2="150" stroke="#C2303A"/>
+        <line x1="520" y1="40"  x2="340" y2="150" stroke="#C2BA30"/>
+        <line x1="10"  y1="180" x2="215" y2="180" stroke="#30C239"/>
+        <line x1="550" y1="180" x2="345" y2="180" stroke="#30BAC2"/>
+        <line x1="40"  y1="320" x2="220" y2="210" stroke="#3A30C2"/>
+        <line x1="520" y1="320" x2="340" y2="210" stroke="#C230BA"/>
+      </g>
+      <defs><radialGradient id="conv-p" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#0a0a0a" stop-opacity="0.08"/>
+        <stop offset="60%" stop-color="#0a0a0a" stop-opacity="0"/>
+      </radialGradient></defs>
+      <circle cx="280" cy="180" r="110" fill="url(#conv-p)"/>
+      <g font-family="'Fraunces','IBM Plex Serif',serif" font-weight="300" font-size="110" letter-spacing="-4">
+        <text x="280" y="198" fill="#0a0a0a" text-anchor="middle" dominant-baseline="middle">GREY</text>
+      </g>
+    </svg>
+    <div class="mode">paper · convergence</div>
+  </div>
+  <div class="annotation">
+    <div class="num">10</div>
+    <div>
+      <div class="kind">convergence</div>
+      <div class="title">The arrival</div>
+      <div class="ref">ref · light recombination, additive colour</div>
+    </div>
+    <p>
+      Six beams approach from the corners and edges and converge on one point.
+      Where they meet, a faint glow emerges and the word forms. It is the
+      reverse prism: colour travelling back to the neutral, the six becoming
+      one. The logotype as destination.
+    </p>
+    <div class="mini">
+      <span><b>fit</b> poster, intro screen</span>
+      <span><b>type</b> Fraunces 300</span>
+      <span><b>note</b> centred composition</span>
+    </div>
+  </div>
+</article>
+
 
 </main>
 
-<footer style="max-width:1260px;margin:100px auto 0;padding-top:28px;border-top:1px solid var(--hair-lt);display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--mute-lt);line-height:2;">
+<footer style="max-width:1320px;margin:100px auto 0;padding-top:28px;border-top:1px solid var(--hair-lt);display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--lt-mute);line-height:2;">
   <div>
-    <div style="font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:300;font-size:16px;letter-spacing:-0.005em;color:var(--grey-lt);text-transform:none;margin-bottom:14px;">Colophon</div>
+    <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:16px;letter-spacing:-0.005em;color:var(--lt);text-transform:none;margin-bottom:14px;">Colophon</div>
     Typefaces · <span style="color:#fff">Fraunces</span> · <span style="color:#fff">IBM Plex Serif</span> · <span style="color:#fff">IBM Plex Mono</span><br>
-    Four logotypes. One word. Six pigments.
+    Ten logotypes. One word. Six channels — perceptually even.
   </div>
   <div>
-    <div style="font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:300;font-size:16px;letter-spacing:-0.005em;color:var(--grey-lt);text-transform:none;margin-bottom:14px;">Pigments</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--r);margin-right:6px"></span>E43B3B&nbsp;&nbsp;red</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g);margin-right:6px"></span>2EA259&nbsp;&nbsp;green</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--b);margin-right:6px"></span>2F4CC7&nbsp;&nbsp;blue</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--c);margin-right:6px"></span>2CB7B7&nbsp;&nbsp;cyan</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--m);margin-right:6px"></span>B62F96&nbsp;&nbsp;magenta</div>
-    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--y);margin-right:6px"></span>D4B233&nbsp;&nbsp;yellow</div>
+    <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:16px;color:var(--lt);text-transform:none;margin-bottom:14px;">Pigments (HSL)</div>
+    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--r);margin-right:6px"></span>0°&nbsp;&nbsp;&nbsp;R</div>
+    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--y);margin-right:6px"></span>60°&nbsp;&nbsp;Y</div>
+    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--g);margin-right:6px"></span>120° G</div>
+    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--c);margin-right:6px"></span>180° C</div>
+    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--b);margin-right:6px"></span>240° B</div>
+    <div><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--m);margin-right:6px"></span>300° M</div>
   </div>
   <div>
-    <div style="font-family:'IBM Plex Serif',serif;font-style:italic;font-weight:300;font-size:16px;letter-spacing:-0.005em;color:var(--grey-lt);text-transform:none;margin-bottom:14px;">Issue</div>
-    vol. 02 — spring 2026<br>
-    logotype study<br>
+    <div style="font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:16px;color:var(--lt);text-transform:none;margin-bottom:14px;">Issue</div>
+    vol. 03 — spring 2026<br>
+    logotype study · ten<br>
     inryokü — 50% → 101%
   </div>
 </footer>
