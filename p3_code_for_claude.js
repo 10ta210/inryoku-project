@@ -804,7 +804,7 @@ function renderPhase3() {
           <div class="carousel-ring" id="carousel-ring">
             ${PRODUCTS.map((p, i) => {
               var angle = (360 / PRODUCTS.length) * i;
-              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(240px);">
+              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(200px);">
                 <div class="product-card-img">
                   <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;color:rgba(255,255,255,0.15);font-family:monospace;\\'>${p.name.charAt(0)}</div>'">
                 </div>
@@ -1425,18 +1425,18 @@ function initStoreGrid() {
         var diff = targetAngle - currentAngle;
         diff = ((diff % 360) + 540) % 360 - 180;
         var dest = currentAngle + diff;
-        ring.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+        ring.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
         currentAngle = dest;
         ring.style.transform = 'rotateY(' + dest + 'deg)';
         var angle = (360 / count) * idx;
-        // 2026-04-20: scale 1.15→1.08 でロゴに被らない
-        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(290px) scale(1.08)';
-        card.style.filter = 'brightness(1.4)';
+        // 2026-04-21: 小型化に伴いタップで大きく見やすく (scale 1.08 → 1.55, Z 290 → 320)
+        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(320px) scale(1.55)';
+        card.style.filter = 'brightness(1.5) saturate(1.15)';
         card.style.zIndex = '20';
     }
     function resetCard(card, idx) {
         var angle = (360 / count) * idx;
-        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(240px) scale(1)';
+        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(200px) scale(1)';
         card.style.filter = '';
         card.style.zIndex = '';
     }
