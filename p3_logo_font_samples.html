@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü P3 — logo font samples</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;500;700&family=IBM+Plex+Mono:wght@300;400;500;700&family=Archivo+Black&family=Anton&family=Bebas+Neue&family=Audiowide&family=Orbitron:wght@400;500;700;900&family=Michroma&family=Unica+One&family=Zen+Dots&family=Syne:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;700&family=Inter+Tight:wght@200;300;500;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,700;1,9..144,300&family=Cormorant:ital,wght@0,300;0,500;1,300&family=DM+Serif+Display:ital@0;1&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Major+Mono+Display&family=Shippori+Mincho:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;500;700;900&family=Reggae+One&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#0a0a0c;color:#eee;font-family:'Inter Tight',sans-serif;min-height:100%}
+  body{padding:36px 24px 80px}
+  h1{font-size:22px;font-weight:300;letter-spacing:0.04em;margin-bottom:4px}
+  h1 em{font-style:italic;font-weight:500}
+  .intro{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-bottom:28px;letter-spacing:0.1em;text-transform:uppercase}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:1400px;margin:0 auto}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+
+  .cell{background:#14141a;border:1px solid #2a2a30;border-radius:6px;padding:18px 22px;display:flex;flex-direction:column;gap:8px}
+  .cell-meta{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#888}
+  .cell-meta strong{font-weight:500;color:#ccc}
+  .wm{font-size:40px;letter-spacing:0;line-height:1.05;color:#eee;overflow:hidden;white-space:nowrap}
+  .pair{display:flex;gap:14px;flex-wrap:wrap;color:#999;font-size:11px;font-family:'IBM Plex Mono',monospace;margin-top:4px;letter-spacing:0.04em}
+
+  /* font-class presets */
+  .f-current{ font-family:'Press Start 2P',monospace; font-size:22px; letter-spacing:0.12em; }
+  .f-vt{ font-family:'VT323',monospace; font-size:52px; letter-spacing:0; }
+  .f-spacemono{ font-family:'Space Mono',monospace; font-weight:700; letter-spacing:-0.02em; }
+  .f-jetbrains{ font-family:'JetBrains Mono',monospace; font-weight:500; letter-spacing:-0.03em; }
+  .f-ibm{ font-family:'IBM Plex Mono',monospace; font-weight:500; letter-spacing:-0.02em; }
+  .f-archivo{ font-family:'Archivo Black',sans-serif; letter-spacing:-0.03em; }
+  .f-anton{ font-family:'Anton',sans-serif; font-size:56px; letter-spacing:0.02em; font-stretch:condensed; }
+  .f-bebas{ font-family:'Bebas Neue',sans-serif; font-size:56px; letter-spacing:0.04em; }
+  .f-orbitron{ font-family:'Orbitron',sans-serif; font-weight:700; letter-spacing:0.06em; }
+  .f-audiowide{ font-family:'Audiowide',sans-serif; letter-spacing:0.02em; }
+  .f-michroma{ font-family:'Michroma',sans-serif; font-size:30px; letter-spacing:0.02em; }
+  .f-unica{ font-family:'Unica One',sans-serif; font-size:46px; letter-spacing:0.08em; }
+  .f-zendots{ font-family:'Zen Dots',sans-serif; font-size:34px; letter-spacing:0; }
+  .f-syne{ font-family:'Syne',sans-serif; font-weight:800; letter-spacing:-0.04em; }
+  .f-spaceg{ font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-0.03em; }
+  .f-inter{ font-family:'Inter Tight',sans-serif; font-weight:800; letter-spacing:-0.06em; }
+  .f-fraunces{ font-family:'Fraunces',serif; font-style:italic; font-weight:400; letter-spacing:-0.01em; }
+  .f-cormorant{ font-family:'Cormorant',serif; font-style:italic; font-weight:500; font-size:52px; letter-spacing:-0.01em; }
+  .f-dmserif{ font-family:'DM Serif Display',serif; font-style:italic; }
+  .f-playfair{ font-family:'Playfair Display',serif; font-style:italic; font-weight:400; }
+  .f-majormono{ font-family:'Major Mono Display',monospace; font-size:32px; letter-spacing:0; text-transform:lowercase; }
+  .f-shippori{ font-family:'Shippori Mincho',serif; font-weight:500; }
+  .f-noto{ font-family:'Noto Serif JP',serif; font-weight:400; }
+  .f-zenmincho{ font-family:'Zen Old Mincho',serif; font-weight:400; }
+  .f-zenkaku{ font-family:'Zen Kaku Gothic New',sans-serif; font-weight:700; letter-spacing:-0.02em; }
+  .f-reggae{ font-family:'Reggae One',sans-serif; font-size:48px; letter-spacing:0.02em; }
+</style>
+</head>
+<body>
+
+<h1>inryokü <em>· P3</em> · logo font samples</h1>
+<p class="intro">current: press start 2p (pixel / 8-bit)</p>
+
+<div class="grid">
+
+  <div class="cell"><div class="cell-meta"><span>01</span><strong>PRESS START 2P (CURRENT)</strong><span>pixel</span></div><div class="wm f-current">inryokü</div><div class="pair">ゲーム感 / レトロ / P2と連続</div></div>
+  <div class="cell"><div class="cell-meta"><span>02</span><strong>VT323</strong><span>crt mono</span></div><div class="wm f-vt">inryokü</div><div class="pair">ブラウン管 / ドキュメント / 観測装置感</div></div>
+
+  <div class="cell"><div class="cell-meta"><span>03</span><strong>SPACE MONO</strong><span>mono</span></div><div class="wm f-spacemono">inryokü</div><div class="pair">Google系 / クリーン / テック</div></div>
+  <div class="cell"><div class="cell-meta"><span>04</span><strong>JETBRAINS MONO</strong><span>dev mono</span></div><div class="wm f-jetbrains">inryokü</div><div class="pair">プログラマ / 細長 / 硬質</div></div>
+  <div class="cell"><div class="cell-meta"><span>05</span><strong>IBM PLEX MONO</strong><span>mono</span></div><div class="wm f-ibm">inryokü</div><div class="pair">IBM / エディトリアル / 品</div></div>
+  <div class="cell"><div class="cell-meta"><span>06</span><strong>MAJOR MONO DISPLAY</strong><span>mono display</span></div><div class="wm f-majormono">inryokü</div><div class="pair">独特 / アート系 / モダン</div></div>
+
+  <div class="cell"><div class="cell-meta"><span>07</span><strong>ARCHIVO BLACK</strong><span>display</span></div><div class="wm f-archivo">inryokü</div><div class="pair">重量級 / ブランド / Off-White的</div></div>
+  <div class="cell"><div class="cell-meta"><span>08</span><strong>ANTON</strong><span>condensed</span></div><div class="wm f-anton">inryokü</div><div class="pair">縦長 / ファッション雑誌</div></div>
+  <div class="cell"><div class="cell-meta"><span>09</span><strong>BEBAS NEUE</strong><span>condensed</span></div><div class="wm f-bebas">inryokü</div><div class="pair">広告 / 抜け感 / スポーティ</div></div>
+  <div class="cell"><div class="cell-meta"><span>10</span><strong>SYNE</strong><span>contemporary</span></div><div class="wm f-syne">inryokü</div><div class="pair">現代 / アート寄り / 流麗</div></div>
+  <div class="cell"><div class="cell-meta"><span>11</span><strong>SPACE GROTESK</strong><span>geometric</span></div><div class="wm f-spaceg">inryokü</div><div class="pair">ミニマル / テック / 親しみ</div></div>
+  <div class="cell"><div class="cell-meta"><span>12</span><strong>INTER TIGHT 800</strong><span>geometric</span></div><div class="wm f-inter">inryokü</div><div class="pair">ソフトウェア / 現代スタンダード</div></div>
+
+  <div class="cell"><div class="cell-meta"><span>13</span><strong>ORBITRON</strong><span>sci-fi</span></div><div class="wm f-orbitron">inryokü</div><div class="pair">未来 / 宇宙 / SF</div></div>
+  <div class="cell"><div class="cell-meta"><span>14</span><strong>AUDIOWIDE</strong><span>sci-fi</span></div><div class="wm f-audiowide">inryokü</div><div class="pair">カプセル / テック</div></div>
+  <div class="cell"><div class="cell-meta"><span>15</span><strong>MICHROMA</strong><span>sci-fi</span></div><div class="wm f-michroma">inryokü</div><div class="pair">NASA / 広い字間</div></div>
+  <div class="cell"><div class="cell-meta"><span>16</span><strong>UNICA ONE</strong><span>sci-fi</span></div><div class="wm f-unica">inryokü</div><div class="pair">広い字間 / メタリック感</div></div>
+  <div class="cell"><div class="cell-meta"><span>17</span><strong>ZEN DOTS</strong><span>digital</span></div><div class="wm f-zendots">inryokü</div><div class="pair">電光掲示板 / ドット</div></div>
+
+  <div class="cell"><div class="cell-meta"><span>18</span><strong>FRAUNCES (italic)</strong><span>serif</span></div><div class="wm f-fraunces">inryokü</div><div class="pair">エディトリアル / 知性</div></div>
+  <div class="cell"><div class="cell-meta"><span>19</span><strong>CORMORANT (italic)</strong><span>serif</span></div><div class="wm f-cormorant">inryokü</div><div class="pair">古典的 / 書籍 / ラグジュアリー</div></div>
+  <div class="cell"><div class="cell-meta"><span>20</span><strong>DM SERIF DISPLAY (italic)</strong><span>serif</span></div><div class="wm f-dmserif">inryokü</div><div class="pair">ディスプレイ / モダンクラシック</div></div>
+  <div class="cell"><div class="cell-meta"><span>21</span><strong>PLAYFAIR DISPLAY (italic)</strong><span>serif</span></div><div class="wm f-playfair">inryokü</div><div class="pair">エレガント / ファッション誌</div></div>
+
+  <div class="cell"><div class="cell-meta"><span>22</span><strong>SHIPPORI MINCHO</strong><span>jp serif</span></div><div class="wm f-shippori">inryokü</div><div class="pair">和 / 凛 / 明朝</div></div>
+  <div class="cell"><div class="cell-meta"><span>23</span><strong>NOTO SERIF JP</strong><span>jp serif</span></div><div class="wm f-noto">inryokü</div><div class="pair">和 / 万能</div></div>
+  <div class="cell"><div class="cell-meta"><span>24</span><strong>ZEN OLD MINCHO</strong><span>jp serif</span></div><div class="wm f-zenmincho">inryokü</div><div class="pair">古典 / 書道</div></div>
+  <div class="cell"><div class="cell-meta"><span>25</span><strong>ZEN KAKU GOTHIC</strong><span>jp sans</span></div><div class="wm f-zenkaku">inryokü</div><div class="pair">現代 / 硬派</div></div>
+  <div class="cell"><div class="cell-meta"><span>26</span><strong>REGGAE ONE</strong><span>jp display</span></div><div class="wm f-reggae">inryokü</div><div class="pair">独特 / 遊び</div></div>
+
+</div>
+
+</body>
+</html>

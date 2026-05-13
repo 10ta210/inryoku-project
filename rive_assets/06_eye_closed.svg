@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <!-- 06 EYE_CLOSED: eye shape shut, white light halo -->
+  <defs>
+    <radialGradient id="lightHalo" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.75)"/>
+      <stop offset="55%" stop-color="rgba(255,255,255,0.2)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="800" fill="#020204"/>
+  <!-- white light halo -->
+  <rect width="800" height="800" fill="url(#lightHalo)"/>
+  <!-- eye lids closed: almond outline + horizontal closure line -->
+  <g transform="translate(400,400)" fill="none" stroke="#1a1a1b" stroke-width="3" stroke-linecap="round">
+    <!-- upper lid arc -->
+    <path d="M -180 0 Q 0 -12 180 0" stroke="#2a2a2d" stroke-width="4"/>
+    <!-- lower lid arc (mirrored, nearly identical when closed) -->
+    <path d="M -180 0 Q 0 14 180 0" stroke="#2a2a2d" stroke-width="4"/>
+  </g>
+  <!-- eyelashes hint -->
+  <g transform="translate(400,400)" stroke="#111" stroke-width="2" stroke-linecap="round" opacity="0.5">
+    <line x1="-160" y1="-4" x2="-168" y2="-14"/>
+    <line x1="-100" y1="-9" x2="-104" y2="-20"/>
+    <line x1="-40"  y1="-11" x2="-42" y2="-23"/>
+    <line x1="40"   y1="-11" x2="42"  y2="-23"/>
+    <line x1="100"  y1="-9" x2="104"  y2="-20"/>
+    <line x1="160"  y1="-4" x2="168"  y2="-14"/>
+  </g>
+</svg>

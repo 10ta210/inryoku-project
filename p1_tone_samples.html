@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü P1 — tone samples</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@300;500;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --R:#ff0033; --G:#00e54a; --B:#2f6bff;
+    --C:#00e5e5; --M:#ff00cc; --Y:#ffe500;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#1b1b1f;color:#eaeaea;font-family:'Inter Tight',sans-serif;min-height:100%}
+  body{padding:40px 24px 80px}
+  h1{font-size:24px;font-weight:300;letter-spacing:0.04em;margin-bottom:6px}
+  h1 em{font-style:italic;font-weight:500}
+  .intro{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-bottom:32px;letter-spacing:0.1em;text-transform:uppercase}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;max-width:1400px;margin:0 auto}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+  .sample{background:#121215;border:1px solid #2a2a30;border-radius:6px;overflow:hidden}
+  .sample-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;border-bottom:1px solid #2a2a30;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
+  }
+  .sample-head .tag{color:#888}
+  .sample-head strong{font-weight:500}
+  .sample-body{aspect-ratio:16/11;position:relative;display:flex;align-items:center;justify-content:center}
+
+  /* Win95 window frame (shared) */
+  .win95{
+    width:84%;height:82%;
+    background:#c0c0c0;
+    border:2px solid;
+    border-color:#ffffff #808080 #808080 #ffffff;
+    box-shadow:1px 1px 0 #000;
+    font-family:'MS Sans Serif','Helvetica Neue',Arial,sans-serif;
+    display:flex;flex-direction:column;
+    position:relative;
+  }
+  .win95 .bar{
+    background:linear-gradient(to right,#0a246a,#a6b8e8);
+    color:#fff;font-weight:700;font-size:11px;padding:3px 6px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .win95 .bar .x{background:#c0c0c0;color:#000;width:16px;height:14px;border:1px solid;border-color:#fff #808080 #808080 #fff;font-size:9px;text-align:center;line-height:12px}
+  .win95 .menubar{background:#c0c0c0;font-size:10px;padding:2px 6px;border-bottom:1px solid #808080;color:#000}
+  .win95 .stage{flex:1;margin:8px;position:relative;overflow:hidden}
+  .win95 .statusbar{background:#c0c0c0;padding:3px 8px;font-size:9.5px;color:#000;display:flex;justify-content:space-between;border-top:1px solid #fff}
+  .win95 .statusbar .prog{background:#000;width:40%;height:10px;position:relative;border:1px inset #808080}
+  .win95 .statusbar .prog i{display:block;height:100%;width:63%;background:repeating-linear-gradient(to right,#0000aa 0 8px,#0000cc 8px 10px)}
+
+  /* ========== 案A: 暗闇 + 光 ========== */
+  .tone-a .stage{background:#050509;border:1px inset #808080}
+  .tone-a .balls{position:absolute;inset:0;display:grid;place-items:center}
+  .tone-a .balls .b{
+    position:absolute;width:42px;height:42px;border-radius:50%;
+    filter:blur(0.5px);
+    box-shadow:0 0 22px currentColor,0 0 44px currentColor;
+  }
+  .tone-a .balls .b::after{
+    content:'';position:absolute;inset:14%;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.85),transparent 50%);
+  }
+  .tone-a .r{background:var(--R);color:var(--R);transform:translate(-90px,-34px)}
+  .tone-a .g{background:var(--G);color:var(--G);transform:translate(0,-68px)}
+  .tone-a .b{background:var(--B);color:var(--B);transform:translate(90px,-34px)}
+  .tone-a .c{background:var(--C);color:var(--C);transform:translate(90px,34px)}
+  .tone-a .m{background:var(--M);color:var(--M);transform:translate(0,68px)}
+  .tone-a .y{background:var(--Y);color:var(--Y);transform:translate(-90px,34px)}
+  .tone-a .stage::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,0.6) 100%);
+  }
+
+  /* ========== 案B: 白背景 + 黒 (図面・説明書) ========== */
+  .tone-b .stage{background:#f4f1ea;border:1px inset #808080;color:#0a0a0c}
+  .tone-b .balls{position:absolute;inset:0}
+  .tone-b .balls .b{
+    position:absolute;left:50%;top:50%;width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(17,17,20,0.6);background:transparent;
+    display:grid;place-items:center;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;color:#0a0a0c;
+  }
+  .tone-b .balls .b::before{content:'';position:absolute;width:3px;height:3px;border-radius:50%;background:currentColor}
+  .tone-b .r{margin-left:-90px;margin-top:-34px;color:var(--R)}
+  .tone-b .r::before{background:var(--R)}
+  .tone-b .g{margin-top:-68px;color:#00a838}
+  .tone-b .g::before{background:#00a838}
+  .tone-b .b2{margin-left:90px;margin-top:-34px;color:var(--B)}
+  .tone-b .b2::before{background:var(--B)}
+  .tone-b .c{margin-left:90px;margin-top:34px;color:#008a8a}
+  .tone-b .c::before{background:#008a8a}
+  .tone-b .m{margin-top:68px;color:var(--M)}
+  .tone-b .m::before{background:var(--M)}
+  .tone-b .y{margin-left:-90px;margin-top:34px;color:#a88800}
+  .tone-b .y::before{background:#a88800}
+  .tone-b .axis{
+    position:absolute;inset:0;pointer-events:none;
+    background:
+      linear-gradient(to right,rgba(0,0,0,0.08) 1px,transparent 1px) 0 0/28px 28px,
+      linear-gradient(to bottom,rgba(0,0,0,0.08) 1px,transparent 1px) 0 0/28px 28px;
+  }
+
+  /* ========== 案C: CRT / 古い画面 ========== */
+  .tone-c .stage{background:#0a0e08;border:1px inset #808080;color:#8aff5a;overflow:hidden}
+  .tone-c .balls{position:absolute;inset:0;filter:url(#crtBlur) brightness(1.1)}
+  .tone-c .balls .b{
+    position:absolute;left:50%;top:50%;width:36px;height:36px;border-radius:50%;
+    mix-blend-mode:screen;filter:blur(0.4px);
+    box-shadow:0 0 14px currentColor,0 0 28px currentColor;
+  }
+  .tone-c .r{background:#ff2222;color:#ff2222;transform:translate(-88px,-32px)}
+  .tone-c .g{background:#44ff44;color:#44ff44;transform:translate(0,-66px)}
+  .tone-c .b3{background:#4466ff;color:#4466ff;transform:translate(88px,-32px)}
+  .tone-c .c{background:#44ffff;color:#44ffff;transform:translate(88px,32px)}
+  .tone-c .m{background:#ff44ff;color:#ff44ff;transform:translate(0,66px)}
+  .tone-c .y{background:#ffff44;color:#ffff44;transform:translate(-88px,32px)}
+  .tone-c .scan{
+    position:absolute;inset:0;pointer-events:none;
+    background:
+      repeating-linear-gradient(to bottom,rgba(0,0,0,0.32) 0 1px,transparent 1px 3px),
+      radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.55) 100%);
+  }
+  .tone-c .label{
+    position:absolute;bottom:6px;left:8px;font-family:'VT323',monospace;font-size:14px;color:#7aff4a;
+    text-shadow:0 0 6px #7aff4a;letter-spacing:0.08em;
+  }
+  .tone-c .cursor{position:absolute;top:8px;left:8px;font-family:'VT323',monospace;font-size:13px;color:#7aff4a;text-shadow:0 0 6px #7aff4a;letter-spacing:0.08em}
+
+  /* ========== 案D: GLSL 派手系 ========== */
+  .tone-d .stage{background:#000;border:1px inset #808080;overflow:hidden}
+  .tone-d .nebula{
+    position:absolute;inset:-20%;
+    background:
+      radial-gradient(circle at 22% 30%,rgba(255,0,90,0.42) 0%,transparent 45%),
+      radial-gradient(circle at 78% 32%,rgba(0,255,200,0.34) 0%,transparent 48%),
+      radial-gradient(circle at 30% 78%,rgba(255,255,60,0.28) 0%,transparent 45%),
+      radial-gradient(circle at 75% 72%,rgba(120,60,255,0.40) 0%,transparent 52%),
+      radial-gradient(circle at 50% 50%,rgba(0,120,255,0.22) 0%,transparent 60%);
+    filter:blur(18px);
+  }
+  .tone-d .balls{position:absolute;inset:0}
+  .tone-d .balls .b{
+    position:absolute;left:50%;top:50%;width:52px;height:52px;border-radius:50%;
+    mix-blend-mode:screen;
+    background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.95) 0%,currentColor 40%,transparent 75%);
+  }
+  .tone-d .r{color:var(--R);transform:translate(-100px,-38px)}
+  .tone-d .g{color:var(--G);transform:translate(0,-76px)}
+  .tone-d .b4{color:var(--B);transform:translate(100px,-38px)}
+  .tone-d .c{color:var(--C);transform:translate(100px,38px)}
+  .tone-d .m{color:var(--M);transform:translate(0,76px)}
+  .tone-d .y{color:var(--Y);transform:translate(-100px,38px)}
+  .tone-d .fringe{
+    position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+    background:
+      conic-gradient(from 90deg at 50% 50%,
+        rgba(255,0,100,0.15) 0deg,
+        rgba(0,255,200,0.15) 90deg,
+        rgba(255,255,60,0.15) 180deg,
+        rgba(120,60,255,0.15) 270deg,
+        rgba(255,0,100,0.15) 360deg);
+    filter:blur(40px);
+  }
+
+  /* ========== 案E: GREY APPARATUS (Codex 推奨) ========== */
+  .tone-e .stage{background:#808085;border:1px inset #808080;position:relative;overflow:hidden;color:#0a0a0c}
+  .tone-e .grey-field{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 50% 50%,rgba(255,255,255,0.06) 0%,transparent 60%),
+      repeating-linear-gradient(0deg,rgba(0,0,0,0.04) 0 1px,transparent 1px 3px);
+  }
+  .tone-e .balls{position:absolute;inset:0}
+  .tone-e .balls .b{position:absolute;left:50%;top:50%;border-radius:50%}
+  /* RGB = light = transparent glowing */
+  .tone-e .light{
+    width:46px;height:46px;
+    mix-blend-mode:screen;
+    background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.95) 0%,currentColor 45%,transparent 80%);
+    filter:blur(0.3px);
+    box-shadow:0 0 18px currentColor,0 0 36px currentColor;
+  }
+  .tone-e .light.r{color:var(--R);transform:translate(-96px,-36px)}
+  .tone-e .light.g{color:var(--G);transform:translate(0,-72px)}
+  .tone-e .light.bb{color:var(--B);transform:translate(96px,-36px)}
+  /* CMY = pigment = matte solid */
+  .tone-e .pigment{
+    width:40px;height:40px;
+    mix-blend-mode:multiply;
+    background:radial-gradient(circle at 35% 30%,rgba(255,255,255,0.28) 0%,currentColor 50%);
+    box-shadow:
+      inset -6px -8px 14px rgba(0,0,0,0.22),
+      0 3px 8px rgba(0,0,0,0.32);
+  }
+  .tone-e .pigment.c{background:radial-gradient(circle at 35% 30%,#66d9d9 0%,#007878 60%);transform:translate(96px,36px)}
+  .tone-e .pigment.m{background:radial-gradient(circle at 35% 30%,#ff66cc 0%,#a8007a 60%);transform:translate(0,72px)}
+  .tone-e .pigment.y{background:radial-gradient(circle at 35% 30%,#ffd94d 0%,#8a7000 60%);transform:translate(-96px,36px)}
+  /* interference overlay when overlapping (static hint) */
+  .tone-e .interference{
+    position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 50% 50%,
+        rgba(255,0,80,0.08) 0%,
+        rgba(0,255,200,0.07) 18%,
+        rgba(255,255,0,0.06) 30%,
+        transparent 55%);
+    mix-blend-mode:screen;filter:blur(16px);
+  }
+  .tone-e .apparatus-label{
+    position:absolute;bottom:8px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:9px;
+    letter-spacing:0.24em;color:rgba(0,0,0,0.55);
+  }
+
+  /* shared square frame (thin border inside stage) */
+  .square{
+    position:absolute;top:50%;left:50%;width:70%;aspect-ratio:1/1;
+    transform:translate(-50%,-50%);
+    border:1px solid rgba(255,255,255,0.14);
+    box-shadow:0 0 18px rgba(255,255,255,0.04) inset;
+  }
+  .tone-b .square{border-color:rgba(17,17,20,0.3);box-shadow:none}
+  .tone-c .square{border-color:rgba(122,255,74,0.28);box-shadow:0 0 12px rgba(122,255,74,0.08) inset}
+  .tone-e .square{border-color:rgba(0,0,0,0.22);box-shadow:inset 0 0 40px rgba(0,0,0,0.08)}
+
+  .footer{
+    max-width:1400px;margin:32px auto 0;padding:20px 4px;
+    border-top:1px solid #2a2a30;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#aaa;line-height:1.8;letter-spacing:0.04em;
+  }
+  .footer b{color:#fff}
+</style>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="crtBlur"><feGaussianBlur stdDeviation="0.4"/></filter>
+</svg>
+</head>
+<body>
+
+<h1>inryokü <em>· P1</em> · tone samples</h1>
+<p class="intro">select one — A / B / C / D</p>
+
+<div class="grid">
+
+  <!-- A -->
+  <div class="sample">
+    <div class="sample-head"><span class="tag">A</span><strong>DARKNESS &amp; LIGHT</strong><span class="tag">宇宙に繋がる</span></div>
+    <div class="sample-body tone-a">
+      <div class="win95">
+        <div class="bar"><span>inryokü — loading</span><span class="x">×</span></div>
+        <div class="menubar">File  Edit  View  Observe  Help</div>
+        <div class="stage">
+          <div class="square"></div>
+          <div class="balls">
+            <div class="b r"></div><div class="b g"></div><div class="b b"></div>
+            <div class="b c"></div><div class="b m"></div><div class="b y"></div>
+          </div>
+        </div>
+        <div class="statusbar"><span>ATTRACT · 42%</span><span class="prog"><i></i></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B -->
+  <div class="sample">
+    <div class="sample-head"><span class="tag">B</span><strong>BLUEPRINT</strong><span class="tag">図面・説明書</span></div>
+    <div class="sample-body tone-b">
+      <div class="win95">
+        <div class="bar"><span>inryokü — specification</span><span class="x">×</span></div>
+        <div class="menubar">File  Edit  Spec  Observe  Help</div>
+        <div class="stage">
+          <div class="axis"></div>
+          <div class="square"></div>
+          <div class="balls">
+            <div class="b r">R</div><div class="b g">G</div><div class="b b2">B</div>
+            <div class="b c">C</div><div class="b m">M</div><div class="b y">Y</div>
+          </div>
+        </div>
+        <div class="statusbar"><span>FIG.01 · 6-POINT ARRAY</span><span class="prog"><i></i></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C -->
+  <div class="sample">
+    <div class="sample-head"><span class="tag">C</span><strong>CRT / RETRO TERMINAL</strong><span class="tag">Win95と馴染む</span></div>
+    <div class="sample-body tone-c">
+      <div class="win95">
+        <div class="bar"><span>inryokü — observation.exe</span><span class="x">×</span></div>
+        <div class="menubar">File  Edit  View  Display  Help</div>
+        <div class="stage">
+          <div class="cursor">&gt; observe.exec _</div>
+          <div class="square"></div>
+          <div class="balls">
+            <div class="b r"></div><div class="b g"></div><div class="b b3"></div>
+            <div class="b c"></div><div class="b m"></div><div class="b y"></div>
+          </div>
+          <div class="scan"></div>
+          <div class="label">50% → 101%</div>
+        </div>
+        <div class="statusbar"><span>CH.1 · 60hz</span><span class="prog"><i></i></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E: GREY APPARATUS (Codex 推奨) -->
+  <div class="sample" style="outline:2px solid #8aa1ff;outline-offset:-1px">
+    <div class="sample-head"><span class="tag" style="color:#8aa1ff">E ★</span><strong>GREY APPARATUS</strong><span class="tag">灰色の観測装置</span></div>
+    <div class="sample-body tone-e">
+      <div class="win95">
+        <div class="bar"><span>inryokü — observation device</span><span class="x">×</span></div>
+        <div class="menubar">File  Edit  View  Observe  Help</div>
+        <div class="stage">
+          <div class="grey-field"></div>
+          <div class="square"></div>
+          <div class="balls">
+            <div class="b light r"></div><div class="b light g"></div><div class="b light bb"></div>
+            <div class="b pigment c"></div><div class="b pigment m"></div><div class="b pigment y"></div>
+          </div>
+          <div class="interference"></div>
+          <div class="apparatus-label">50 → 101</div>
+        </div>
+        <div class="statusbar"><span>GREY 50% · observing</span><span class="prog"><i></i></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="sample">
+    <div class="sample-head"><span class="tag">D</span><strong>GLSL NEBULA</strong><span class="tag">派手系シェーダー</span></div>
+    <div class="sample-body tone-d">
+      <div class="win95">
+        <div class="bar"><span>inryokü — shader.glsl</span><span class="x">×</span></div>
+        <div class="menubar">File  Edit  Render  Observe  Help</div>
+        <div class="stage">
+          <div class="nebula"></div>
+          <div class="fringe"></div>
+          <div class="square"></div>
+          <div class="balls">
+            <div class="b r"></div><div class="b g"></div><div class="b b4"></div>
+            <div class="b c"></div><div class="b m"></div><div class="b y"></div>
+          </div>
+        </div>
+        <div class="statusbar"><span>GPU · WebGL2</span><span class="prog"><i></i></span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <b>A</b> darkness &amp; light — 暗闇に発光する6球、P3宇宙への自然な伏線<br>
+  <b>B</b> blueprint — 白紙+黒罫、座標軸、科学資料トーン、RGBCMYは文字識別子<br>
+  <b>C</b> crt terminal — 緑蛍光 + スキャンライン、Win95と時代軸が揃う<br>
+  <b>D</b> glsl nebula — 原色+blurの派手表現、星雲・光の爆発<br>
+  <b>E ★ grey apparatus</b> — <span style="color:#fff">Codex推奨</span> 灰色背景、RGB=光の球 / CMY=顔料の物質球、重なると虹が滲む
+</div>
+
+</body>
+</html>

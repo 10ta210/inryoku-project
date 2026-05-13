@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <!-- 05 TUNNEL: radial rainbow rings — use concentric circles as separate objects in Rive for animation -->
+  <defs>
+    <radialGradient id="center" cx="0.5" cy="0.5" r="0.1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f2f2ee"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1080" height="1080" fill="#0a0a0c"/>
+
+  <g transform="translate(540,540)" fill="none" stroke-width="14" opacity="0.92">
+    <!-- outermost to innermost: M, B, C, G, Y, orange, R -->
+    <circle r="480" stroke="#ff00cc"/>
+    <circle r="420" stroke="#2f6bff"/>
+    <circle r="360" stroke="#00e5e5"/>
+    <circle r="300" stroke="#00e54a"/>
+    <circle r="240" stroke="#ffe500"/>
+    <circle r="180" stroke="#ff7a00"/>
+    <circle r="120" stroke="#ff0033"/>
+  </g>
+  <circle cx="540" cy="540" r="52" fill="url(#center)"/>
+</svg>

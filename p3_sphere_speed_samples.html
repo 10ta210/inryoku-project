@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü P3 sphere — speed samples (12-pole)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#0a0a0c;color:#eee;font-family:'Inter Tight',sans-serif;min-height:100%}
+  body{padding:28px 20px 80px}
+  h1{font-size:22px;font-weight:300;letter-spacing:0.04em;margin-bottom:4px}
+  h1 em{font-style:italic;font-weight:500}
+  .intro{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-bottom:24px;letter-spacing:0.1em;text-transform:uppercase}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1400px;margin:0 auto}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+
+  .cell{background:#14141a;border:1px solid #2a2a30;border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+  .cell-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #2a2a30;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.22em;text-transform:uppercase}
+  .cell-head .tag{color:#888}
+  .cell-head strong{font-weight:500}
+  .stage{aspect-ratio:1/1;background:#050509;position:relative;display:grid;place-items:center}
+  canvas{width:80%;height:80%}
+  .cell-note{padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.04em;color:#aaa;line-height:1.55;border-top:1px solid #2a2a30}
+</style>
+</head>
+<body>
+
+<h1>inryokü <em>· P3</em> · 12-pole speed samples</h1>
+<p class="intro">select speed — 1 / 2 / 3 / 4 / 5</p>
+
+<div class="grid">
+  <div class="cell"><div class="cell-head"><span class="tag">1</span><strong>×1 (current)</strong><span class="tag">0.07</span></div><div class="stage"><canvas data-spd="0.07"></canvas></div><div class="cell-note">現行の速度。穏やか。</div></div>
+
+  <div class="cell"><div class="cell-head"><span class="tag">2</span><strong>×2</strong><span class="tag">0.14</span></div><div class="stage"><canvas data-spd="0.14"></canvas></div><div class="cell-note">少し早い、生き生き感</div></div>
+
+  <div class="cell"><div class="cell-head"><span class="tag">3</span><strong>×4</strong><span class="tag">0.28</span></div><div class="stage"><canvas data-spd="0.28"></canvas></div><div class="cell-note">流動的、観察者意識が湧く</div></div>
+
+  <div class="cell"><div class="cell-head"><span class="tag">4</span><strong>×8</strong><span class="tag">0.56</span></div><div class="stage"><canvas data-spd="0.56"></canvas></div><div class="cell-note">活発、色がぐるぐる</div></div>
+
+  <div class="cell"><div class="cell-head"><span class="tag">5</span><strong>×16</strong><span class="tag">1.12</span></div><div class="stage"><canvas data-spd="1.12"></canvas></div><div class="cell-note">猛烈、カオス気味</div></div>
+</div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script>
+(function(){
+  const THREE = window.THREE;
+  const sVert = `
+    varying vec3 vNormal; varying vec3 vViewDir; varying vec2 vUv;
+    void main(){
+      vec4 wPos = modelMatrix * vec4(position, 1.0);
+      vNormal  = normalize(normalMatrix * normal);
+      vViewDir = normalize(cameraPosition - wPos.xyz);
+      vUv      = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+  function frag(speed){
+    return `precision highp float;
+      uniform float u_time;
+      varying vec3 vNormal; varying vec3 vViewDir; varying vec2 vUv;
+      float h1(float n){ return fract(sin(mod(n, 300.0) * 127.1) * 43758.545); }
+      float noise3(vec3 p){
+        vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.-2.*f);
+        float a = h1(i.x + i.y*57. + i.z*113.);
+        float b = h1(i.x+1. + i.y*57. + i.z*113.);
+        float c = h1(i.x + (i.y+1.)*57. + i.z*113.);
+        float d = h1(i.x+1. + (i.y+1.)*57. + i.z*113.);
+        float e = h1(i.x + i.y*57. + (i.z+1.)*113.);
+        float f2= h1(i.x+1. + i.y*57. + (i.z+1.)*113.);
+        float g = h1(i.x + (i.y+1.)*57. + (i.z+1.)*113.);
+        float hh= h1(i.x+1. + (i.y+1.)*57. + (i.z+1.)*113.);
+        return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,f2,f.x),mix(g,hh,f.x),f.y),f.z);
+      }
+      void main(){
+        float phi=vUv.x*6.28318, theta=vUv.y*3.14159;
+        vec3 sPos=vec3(sin(theta)*cos(phi),cos(theta),sin(theta)*sin(phi));
+        float t = u_time*${speed.toFixed(3)};
+        vec3 nOff = vec3(
+          noise3(sPos*2.5+vec3(t,0,0))*2.-1.,
+          noise3(sPos*2.5+vec3(0,t*0.8,0))*2.-1.,
+          noise3(sPos*2.5+vec3(0,0,t*0.6))*2.-1.
+        );
+        vec3 wPos = normalize(sPos + nOff*0.28);
+
+        vec3 dirs[12];
+        dirs[0]=vec3(1,0,0); dirs[1]=vec3(-1,0,0);
+        dirs[2]=vec3(0,1,0); dirs[3]=vec3(0,-1,0);
+        dirs[4]=vec3(0,0,1); dirs[5]=vec3(0,0,-1);
+        dirs[6]=normalize(vec3(1,1,0));  dirs[7]=normalize(vec3(-1,-1,0));
+        dirs[8]=normalize(vec3(0,1,1));  dirs[9]=normalize(vec3(0,-1,-1));
+        dirs[10]=normalize(vec3(1,0,1)); dirs[11]=normalize(vec3(-1,0,-1));
+        vec3 cols[12];
+        cols[0]=vec3(1,0,0); cols[1]=vec3(0,1,1);
+        cols[2]=vec3(0,1,0); cols[3]=vec3(1,0,1);
+        cols[4]=vec3(0,0,1); cols[5]=vec3(1,1,0);
+        cols[6]=vec3(1.0,0.45,0);  cols[7]=vec3(0.0,0.55,1.0);
+        cols[8]=vec3(0.0,1.0,0.6); cols[9]=vec3(1.0,0.25,0.55);
+        cols[10]=vec3(0.75,0.25,1);cols[11]=vec3(0.85,0.85,0.2);
+
+        vec3 result=vec3(0); float total=0.;
+        for(int i=0;i<12;i++){float w=max(0.,dot(wPos,dirs[i])); w=w*w*w; result+=cols[i]*w; total+=w;}
+        result/=max(total,0.001);
+
+        vec3 N = normalize(vNormal); vec3 V = normalize(vViewDir);
+        vec3 L = normalize(vec3(0.5, 0.7, 1.0));
+        float diff = max(dot(N, L), 0.0); float ambient = 0.05;
+        vec3 H = normalize(L + V);
+        float spec = pow(max(dot(N, H), 0.0), 72.0) * 0.18;
+        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 1.8);
+        float frCol_scalar = 0.45 + 0.10 * sin(u_time * 0.3);
+        vec3 frCol = vec3(frCol_scalar) * fresnel * 0.9;
+        float rim = pow(1.0 - max(dot(N, V), 0.0), 2.5);
+        vec3 rimLight = result * rim * 0.22;
+        vec3 col = result * (ambient + diff * 0.90) + result * 0.05 + frCol + vec3(spec) + rimLight;
+        gl_FragColor = vec4(col, 1.0);
+      }`;
+  }
+
+  function makeSphere(canvas, speed){
+    const r = canvas.getBoundingClientRect();
+    const s = Math.max(120, Math.floor(Math.min(r.width, r.height)));
+    canvas.width = s * 2; canvas.height = s * 2;
+    canvas.style.width = s + 'px'; canvas.style.height = s + 'px';
+    const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+    renderer.setPixelRatio(2); renderer.setSize(s, s, false); renderer.setClearColor(0x050509, 1);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
+    camera.position.set(0,0,3.1);
+    const uni = { u_time:{value:0} };
+    const mat = new THREE.ShaderMaterial({vertexShader:sVert, fragmentShader:frag(speed), uniforms:uni});
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), mat);
+    scene.add(mesh);
+    // 回転速度もノイズ速度に比例 (0.07 基準 = rotation 0.25)
+    const rotSpd = 0.25 * (speed / 0.07);
+    const clock = new THREE.Clock();
+    function loop(){
+      const dt = clock.getDelta();
+      uni.u_time.value += dt;
+      mesh.rotation.y += dt * rotSpd;
+      mesh.rotation.x = Math.sin(uni.u_time.value * 0.17 * (speed/0.07)) * 0.12;
+      renderer.render(scene, camera);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  document.querySelectorAll('canvas[data-spd]').forEach(cv=>{
+    const spd = parseFloat(cv.getAttribute('data-spd'));
+    try { makeSphere(cv, spd); }
+    catch(e) { console.error('sphere init failed', e); }
+  });
+})();
+</script>
+
+</body>
+</html>

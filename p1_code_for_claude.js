@@ -2599,10 +2599,11 @@ function renderPhase1() {
                         var lt2 = (t2 - 0.75) / 0.25;
                         ease = 0.5 + lt2 * lt2 * 0.5; // 急収縮
                     }
+                    // 2026-04-23: 司「縮むのやめて」— scale を 1 で固定
                     cmyP.forEach(function(p) {
                         p.position.x += (cmyCtr.x - p.position.x) * (0.02 + ease * 0.12);
                         p.position.y += (cmyCtr.y - p.position.y) * (0.02 + ease * 0.12);
-                        p.scale.setScalar(1 - ease * 0.65);
+                        p.scale.setScalar(1);
                         if (p.material && p.material.emissiveIntensity !== undefined) {
                             p.material.emissiveIntensity = ease * 0.3;
                         }
@@ -2610,7 +2611,7 @@ function renderPhase1() {
                     rgbP.forEach(function(p) {
                         p.position.x += (rgbCtr.x - p.position.x) * (0.03 + ease * 0.15);
                         p.position.y += (rgbCtr.y - p.position.y) * (0.03 + ease * 0.15);
-                        p.scale.setScalar(1 - ease * 0.55);
+                        p.scale.setScalar(1);
                     });
                     // 磁場線: 削除（ユーザー指示）
                     fieldPlane.visible = false;
@@ -2622,8 +2623,15 @@ function renderPhase1() {
                     const t2 = (et - 1.5) / 0.7;
                     const ease = t2 * t2 * (3 - 2 * t2); // smoothstep
                     // 6球を段階的にフェードアウト
-                    cmyP.forEach(function(p) { p.scale.setScalar(Math.max(0.01, 0.35 * (1 - ease))); });
-                    rgbP.forEach(function(p) { p.scale.setScalar(Math.max(0.01, 0.45 * (1 - ease))); });
+                    // 2026-04-23: 縮小せず 1 のままで opacity だけで消える
+                    cmyP.forEach(function(p) {
+                        p.scale.setScalar(1);
+                        if (p.material) { p.material.transparent = true; p.material.opacity = Math.max(0, 1 - ease); }
+                    });
+                    rgbP.forEach(function(p) {
+                        p.scale.setScalar(1);
+                        if (p.material) { p.material.transparent = true; p.material.opacity = Math.max(0, 1 - ease); }
+                    });
                     // bDot/wDotを徐々にフェードイン
                     if (t2 > 0.2) {
                         const appear = (t2 - 0.2) / 0.8;
@@ -2633,8 +2641,8 @@ function renderPhase1() {
                         }
                         bDot.visible = true; bDot.position.set(cmyCtr.x, 0, 0);
                         wDot.visible = true; wDot.position.set(rgbCtr.x, 0, 0);
-                        bDot.scale.setScalar(0.2 + appear * 0.8);
-                        wDot.scale.setScalar(0.2 + appear * 0.8);
+                        bDot.scale.setScalar(1);
+                        wDot.scale.setScalar(1);
                     }
                     // フラッシュ: ゆるやかに上昇
                     bgMat.uniforms.u_flash.value = ease * 0.5;
@@ -2693,10 +2701,12 @@ function renderPhase1() {
                 bDot.position.x += (targetX_b - bDot.position.x) * accel;
                 wDot.position.x += (targetX_w - wDot.position.x) * accel;
                 // Stretch toward each other as they get close
+                // 2026-04-23: 司「形が変わるのやめて ニュイーンと伸びる球体でいい」
+                // 横伸びのみ、Y 方向の squash 廃止 (楕円変形しない、ただ引き伸ばされる)
                 const dist = Math.abs(bDot.position.x - wDot.position.x);
-                const stretchFactor = 1.0 + Math.max(0, 1.0 - dist / (4 * unit)) * 0.3;
-                bDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
-                wDot.scale.set(stretchFactor, 1.0 / stretchFactor, 1);
+                const stretchFactor = 1.0 + Math.max(0, 1.0 - dist / (4 * unit)) * 0.6;
+                bDot.scale.set(stretchFactor, 1, 1);
+                wDot.scale.set(stretchFactor, 1, 1);
                 // bDot/wDotは純黒・純白のまま維持（50%衝突まで混ざらない）
                 bDotMat.uniforms.u_greyMix.value = 0.0;
                 wDotMat.uniforms.u_greyMix.value = 0.0;
@@ -2713,9 +2723,11 @@ function renderPhase1() {
                     renderer.setPixelRatio(window.devicePixelRatio);
                     bgMat.uniforms.u_pixelSize.value = 1.0;
                     if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
-                    // DUALITYの引き伸ばしをリセット
-                    bDot.scale.setScalar(1); wDot.scale.setScalar(1);
+                    // 2026-04-23: DUALITY の引き伸ばしはそのまま引き継ぐ (scale リセットしない)
                     bDot.position.y = 0; wDot.position.y = 0;
+                    // 補間開始位置の登録はこの後 Step A で行う
+                    window.__p1_singStartB = undefined;
+                    window.__p1_singStartW = undefined;
                 }
 
                 // ═══ Step A (0-1.5s): 白黒が真ん中で衝突 ═══
@@ -2726,13 +2738,22 @@ function renderPhase1() {
                     bgMat.uniforms.u_grey.value = 0;
                     bgMat.uniforms.u_vortex.value = 0.0;
                     bDot.visible = true; wDot.visible = true;
-                    bDot.scale.setScalar(1); wDot.scale.setScalar(1);
+                    // 2026-04-23: 横伸びのみ保持 (DUALITY の stretchFactor を引き継ぐ)
                     bDotMat.uniforms.u_greyMix.value = 0;
                     wDotMat.uniforms.u_greyMix.value = 0;
-                    // 中心へ加速接近
-                    var dist = (1 - ease) * 1.2 * unit;
-                    bDot.position.set(-dist, 0, 0);
-                    wDot.position.set(dist, 0, 0);
+                    // 2026-04-23: DUALITY 終端位置から中心へ滑らかに (ジャンプ廃止)
+                    // 初フレームのみ保存、以降は stored start から ease 補間
+                    if (typeof window.__p1_singStartB === 'undefined') {
+                        window.__p1_singStartB = bDot.position.x;
+                        window.__p1_singStartW = wDot.position.x;
+                    }
+                    bDot.position.x = window.__p1_singStartB * (1 - ease);
+                    wDot.position.x = window.__p1_singStartW * (1 - ease);
+                    // 接近するほど横へ伸びる (ニュイーン感、Y は変えない)
+                    var sep = Math.abs(bDot.position.x - wDot.position.x);
+                    var stretch = 1.0 + Math.max(0, 1.0 - sep / (0.4 * unit)) * 0.9;
+                    bDot.scale.set(stretch, 1, 1);
+                    wDot.scale.set(stretch, 1, 1);
                     if (bloom) bloom.strength = 0.3 + ease * 0.3;
                     yyPlane.visible = false; greySphere.visible = false; haloPlane.visible = false;
                     updateWin95Status('⚠ REALITY.SYS MERGING...');

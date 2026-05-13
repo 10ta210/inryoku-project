@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <!-- 01 SEPARATION: left white panel with CMY triangle / right black panel with RGB triangle -->
+  <defs>
+    <radialGradient id="cyanG" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#66d9d9"/>
+      <stop offset="70%" stop-color="#007878"/>
+      <stop offset="100%" stop-color="#004545"/>
+    </radialGradient>
+    <radialGradient id="magentaG" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#ff66cc"/>
+      <stop offset="70%" stop-color="#a8007a"/>
+      <stop offset="100%" stop-color="#6a0050"/>
+    </radialGradient>
+    <radialGradient id="yellowG" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#ffd94d"/>
+      <stop offset="70%" stop-color="#8a7000"/>
+      <stop offset="100%" stop-color="#574400"/>
+    </radialGradient>
+    <radialGradient id="redG" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#ff9aa8"/>
+      <stop offset="50%" stop-color="#ff0033"/>
+      <stop offset="100%" stop-color="#9e0020"/>
+    </radialGradient>
+    <radialGradient id="greenG" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#9dffb8"/>
+      <stop offset="50%" stop-color="#00e54a"/>
+      <stop offset="100%" stop-color="#008d2b"/>
+    </radialGradient>
+    <radialGradient id="blueG" cx="0.35" cy="0.3">
+      <stop offset="0%" stop-color="#adc2ff"/>
+      <stop offset="50%" stop-color="#2f6bff"/>
+      <stop offset="100%" stop-color="#0a2d8a"/>
+    </radialGradient>
+  </defs>
+
+  <!-- LEFT PANEL (white, for CMY) -->
+  <rect x="0" y="0" width="540" height="1080" fill="#f4f1ea"/>
+  <!-- RIGHT PANEL (black, for RGB) -->
+  <rect x="540" y="0" width="540" height="1080" fill="#050505"/>
+  <!-- divider hairline -->
+  <rect x="539" y="0" width="2" height="1080" fill="#808085" opacity="0.55"/>
+
+  <!-- CMY triangle on left panel -->
+  <!-- Cyan top -->
+  <circle cx="270" cy="380" r="70" fill="url(#cyanG)"/>
+  <!-- Magenta bottom-left -->
+  <circle cx="195" cy="560" r="70" fill="url(#magentaG)"/>
+  <!-- Yellow bottom-right -->
+  <circle cx="345" cy="560" r="70" fill="url(#yellowG)"/>
+
+  <!-- RGB triangle on right panel -->
+  <!-- Red top -->
+  <circle cx="810" cy="380" r="70" fill="url(#redG)"/>
+  <!-- Green bottom-left -->
+  <circle cx="735" cy="560" r="70" fill="url(#greenG)"/>
+  <!-- Blue bottom-right -->
+  <circle cx="885" cy="560" r="70" fill="url(#blueG)"/>
+</svg>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü P1 — white & black focus</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;width:100%;background:#808085;overflow:hidden;font-family:ui-monospace,Menlo,monospace;color:#1a1a1a}
+  #stage{position:fixed;inset:0;display:grid;grid-template-columns:1fr 1fr}
+  .panel{position:relative;overflow:hidden}
+  .left{background:#f5f4ef}
+  .right{background:#0a0a0b}
+
+  .sphere{
+    position:absolute;left:50%;top:50%;width:180px;height:180px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    will-change:transform,opacity;
+  }
+  /* black sphere on white bg */
+  .sphere.black{
+    background:radial-gradient(circle at 35% 30%,#2a2a2e 0%,#0b0b0d 55%,#000 100%);
+    box-shadow:
+      0 14px 40px rgba(0,0,0,0.22),
+      inset -16px -22px 40px rgba(0,0,0,0.55),
+      inset 10px 14px 28px rgba(255,255,255,0.04);
+  }
+  /* white sphere on black bg */
+  .sphere.white{
+    background:radial-gradient(circle at 35% 30%,#ffffff 0%,#e6e5df 55%,#c9c7bf 100%);
+    box-shadow:
+      0 14px 40px rgba(255,255,255,0.08),
+      inset -16px -22px 40px rgba(0,0,0,0.12),
+      inset 10px 14px 30px rgba(255,255,255,0.22);
+  }
+
+  /* labels (very quiet) */
+  .label{
+    position:absolute;bottom:24px;left:24px;right:24px;
+    font-size:10px;letter-spacing:0.32em;text-transform:uppercase;
+    display:flex;justify-content:space-between;
+  }
+  .left .label{color:rgba(15,15,17,0.42)}
+  .right .label{color:rgba(240,240,242,0.42)}
+  .label .r{text-align:right}
+
+  /* divider — subtle hair */
+  .divider{
+    position:fixed;top:0;bottom:0;left:50%;width:1px;background:rgba(128,128,133,0.55);
+    transform:translateX(-0.5px);z-index:5;pointer-events:none;
+  }
+
+  /* phase readout */
+  .meta{
+    position:fixed;top:20px;left:0;right:0;z-index:6;pointer-events:none;
+    display:flex;justify-content:space-between;padding:0 24px;
+    font-size:9.5px;letter-spacing:0.3em;text-transform:uppercase;
+  }
+  .meta .l{color:rgba(15,15,17,0.6)}
+  .meta .r{color:rgba(240,240,242,0.6)}
+  .meta em{font-style:normal;opacity:0.5}
+
+  /* floor (soft contact shadow to ground the spheres) */
+  .floor{
+    position:absolute;left:50%;bottom:28%;width:220px;height:14px;border-radius:50%;
+    transform:translateX(-50%);
+    filter:blur(6px);opacity:0.35;
+  }
+  .left .floor{background:rgba(0,0,0,0.45)}
+  .right .floor{background:rgba(255,255,255,0.18)}
+
+  /* motion */
+  @keyframes riseFall{
+    0%,100%{ transform:translate(-50%,-50%) }
+    50%    { transform:translate(-50%,calc(-50% - 12px)) }
+  }
+  @keyframes floorPulse{
+    0%,100%{ transform:translateX(-50%) scale(1,1);opacity:.38 }
+    50%    { transform:translateX(-50%) scale(0.85,1);opacity:.22 }
+  }
+  .sphere{ animation:riseFall 5.2s cubic-bezier(.4,0,.2,1) infinite }
+  .floor { animation:floorPulse 5.2s cubic-bezier(.4,0,.2,1) infinite }
+
+  /* very fine scanline on whole screen (almost invisible) */
+  body::after{
+    content:'';position:fixed;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,0.022) 0 1px,transparent 1px 3px);
+    mix-blend-mode:multiply;
+  }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <div class="l">p1 <em>·</em> observation 01 <em>·</em> matter / subtraction</div>
+  <div class="r">light / addition <em>·</em> 02 observation <em>·</em> p1</div>
+</div>
+
+<div id="stage">
+  <div class="panel left">
+    <div class="floor"></div>
+    <div class="sphere black"></div>
+    <div class="label"><span>cmy · fused</span><span class="r">black</span></div>
+  </div>
+  <div class="panel right">
+    <div class="floor"></div>
+    <div class="sphere white"></div>
+    <div class="label"><span>rgb · fused</span><span class="r">white</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+</body>
+</html>

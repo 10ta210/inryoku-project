@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- 02 FUSE result: black sphere (from CMY subtractive fusion) -->
+  <defs>
+    <radialGradient id="blackG" cx="0.38" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#2a2a2e"/>
+      <stop offset="40%" stop-color="#0e0e10"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="blackHL" cx="0.3" cy="0.25" r="0.25">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+  <circle cx="200" cy="200" r="160" fill="url(#blackG)"/>
+  <circle cx="200" cy="200" r="160" fill="url(#blackHL)"/>
+</svg>

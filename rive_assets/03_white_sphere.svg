@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- 03 FUSE result: white sphere (from RGB additive fusion) -->
+  <defs>
+    <radialGradient id="whiteG" cx="0.38" cy="0.3" r="0.85">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#f2f1ea"/>
+      <stop offset="100%" stop-color="#c5c3b8"/>
+    </radialGradient>
+    <radialGradient id="whiteHalo" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="60%" stop-color="rgba(255,255,255,0)"/>
+      <stop offset="85%" stop-color="rgba(255,255,255,0.15)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+  <circle cx="200" cy="200" r="185" fill="url(#whiteHalo)"/>
+  <circle cx="200" cy="200" r="160" fill="url(#whiteG)"/>
+</svg>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü P1 — tunnel transition samples</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --R:#ff0033; --G:#00e54a; --B:#2f6bff;
+    --C:#00e5e5; --M:#ff00cc; --Y:#ffe500;
+    --grey:#808085;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#15151a;color:#eee;font-family:'Inter Tight',sans-serif;min-height:100%}
+  body{padding:36px 22px 80px}
+  h1{font-size:22px;font-weight:300;letter-spacing:0.04em;margin-bottom:4px}
+  h1 em{font-style:italic;font-weight:500}
+  .intro{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888;margin-bottom:28px;letter-spacing:0.1em;text-transform:uppercase}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;max-width:1400px;margin:0 auto}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+  .sample{background:#0d0d11;border:1px solid #2a2a30;border-radius:4px;overflow:hidden}
+  .sample-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;border-bottom:1px solid #2a2a30;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;
+  }
+  .sample-head .tag{color:#888}
+  .sample-head strong{font-weight:500}
+  .stage{aspect-ratio:4/3;position:relative;overflow:hidden;background:#000}
+
+  .grey-sphere{
+    position:absolute;left:50%;top:50%;width:84px;height:84px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 35% 30%,#d0d0d3 0%,#808085 55%,#50505a 100%);
+    box-shadow:inset -8px -10px 18px rgba(0,0,0,0.4),0 0 18px rgba(255,255,255,0.08);
+  }
+
+  /* ========== (a) プリズム分光 ========== */
+  .s-a .stage{background:#050509}
+  .s-a .prism{
+    position:absolute;left:50%;top:62%;width:0;height:0;
+    border-left:38px solid transparent;border-right:38px solid transparent;border-bottom:56px solid rgba(255,255,255,0.12);
+    transform:translateX(-50%);
+    filter:drop-shadow(0 0 6px rgba(255,255,255,0.2));
+  }
+  .s-a .beam-in{
+    position:absolute;left:50%;top:0;width:2px;height:62%;
+    background:linear-gradient(to bottom,transparent,rgba(255,255,255,0.7));
+    transform:translateX(-50%);
+    filter:blur(0.5px);
+  }
+  .s-a .spectrum{
+    position:absolute;left:50%;top:75%;width:360px;height:240px;transform:translateX(-50%);
+    background:
+      linear-gradient(105deg,transparent 40%,var(--R) 45%,transparent 50%),
+      linear-gradient(102deg,transparent 40%,var(--Y) 47%,transparent 52%),
+      linear-gradient(98deg,transparent 40%,var(--G) 49%,transparent 54%),
+      linear-gradient(94deg,transparent 40%,var(--C) 51%,transparent 56%),
+      linear-gradient(90deg,transparent 40%,var(--B) 53%,transparent 58%),
+      linear-gradient(86deg,transparent 40%,var(--M) 55%,transparent 60%);
+    mix-blend-mode:screen;filter:blur(1px);opacity:0.9;
+    mask-image:linear-gradient(to bottom,#000 0%,transparent 100%);
+  }
+  .s-a .grey-sphere{width:34px;height:34px;top:22%}
+
+  /* ========== (b) 中に入る (ズームイン) ========== */
+  .s-b .stage{background:#000}
+  .s-b .inside{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at center,
+        #888 0%,
+        var(--Y) 22%,
+        var(--M) 38%,
+        var(--C) 54%,
+        var(--B) 68%,
+        var(--G) 82%,
+        var(--R) 95%);
+    filter:blur(1.2px);
+    opacity:0.85;
+  }
+  .s-b .vignette{
+    position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(circle at center,transparent 18%,rgba(0,0,0,0.3) 50%,rgba(0,0,0,0.7) 100%);
+  }
+  .s-b .grey-sphere{width:42px;height:42px;box-shadow:inset -6px -8px 14px rgba(0,0,0,0.4),0 0 30px rgba(255,255,255,0.15)}
+  .s-b .rings{
+    position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(circle at center,transparent 22%,rgba(255,255,255,0.12) 24%,transparent 26%),
+      radial-gradient(circle at center,transparent 35%,rgba(255,255,255,0.08) 37%,transparent 39%),
+      radial-gradient(circle at center,transparent 50%,rgba(255,255,255,0.05) 52%,transparent 54%);
+  }
+
+  /* ========== (c) 薄膜干渉 (Dichroic) ========== */
+  .s-c .stage{background:#0a0a10}
+  .s-c .grey-sphere{
+    width:150px;height:150px;
+    background:
+      conic-gradient(from 215deg at 50% 50%,
+        var(--R) 0deg,
+        var(--Y) 60deg,
+        var(--G) 120deg,
+        var(--C) 180deg,
+        var(--B) 240deg,
+        var(--M) 300deg,
+        var(--R) 360deg);
+    filter:saturate(0.9) brightness(0.85) blur(0.3px);
+    box-shadow:
+      inset -10px -14px 30px rgba(0,0,0,0.42),
+      inset 10px 14px 26px rgba(255,255,255,0.18),
+      0 0 28px rgba(255,255,255,0.12);
+  }
+  .s-c .grey-sphere::after{
+    content:'';position:absolute;inset:12%;border-radius:50%;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,0.65) 0%,transparent 50%);
+    mix-blend-mode:screen;
+  }
+  .s-c .overflow{
+    position:absolute;inset:-30%;pointer-events:none;
+    background:conic-gradient(from 0deg at 50% 50%,
+      rgba(255,0,100,0.14),rgba(0,255,200,0.14),rgba(255,255,60,0.14),rgba(120,60,255,0.14),rgba(255,0,100,0.14));
+    filter:blur(30px);opacity:0.5;
+  }
+
+  /* ========== (d) シャボン玉が弾ける ========== */
+  .s-d .stage{background:#060612}
+  .s-d .shards{
+    position:absolute;inset:0;pointer-events:none;
+  }
+  .s-d .shards span{
+    position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;
+    transform:translate(-50%,-50%);
+  }
+  .s-d .shards span:nth-child(1){background:var(--R);box-shadow:0 0 8px var(--R);transform:translate(-120px,-60px) scale(1.4)}
+  .s-d .shards span:nth-child(2){background:var(--G);box-shadow:0 0 8px var(--G);transform:translate(40px,-90px) scale(1.6)}
+  .s-d .shards span:nth-child(3){background:var(--B);box-shadow:0 0 8px var(--B);transform:translate(130px,-40px) scale(1.2)}
+  .s-d .shards span:nth-child(4){background:var(--C);box-shadow:0 0 8px var(--C);transform:translate(110px,60px) scale(1.8)}
+  .s-d .shards span:nth-child(5){background:var(--M);box-shadow:0 0 8px var(--M);transform:translate(-30px,100px) scale(1.3)}
+  .s-d .shards span:nth-child(6){background:var(--Y);box-shadow:0 0 8px var(--Y);transform:translate(-130px,50px) scale(1.5)}
+  .s-d .burst{
+    position:absolute;left:50%;top:50%;width:200px;height:200px;transform:translate(-50%,-50%);
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:0 0 40px rgba(255,255,255,0.12) inset,0 0 60px rgba(255,255,255,0.08);
+  }
+  .s-d .burst2{
+    position:absolute;left:50%;top:50%;width:300px;height:300px;transform:translate(-50%,-50%);
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .s-d .grey-sphere{width:48px;height:48px;opacity:0.85;filter:blur(0.5px)}
+
+  /* ========== (e) 虹の雨 (逆トンネル) ========== */
+  .s-e .stage{background:#02020a}
+  .s-e .rain{
+    position:absolute;inset:-10%;pointer-events:none;
+    background:
+      radial-gradient(circle at 12% 18%,var(--R) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 32% 8%,var(--G) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 54% 22%,var(--B) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 76% 11%,var(--C) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 92% 28%,var(--M) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 8% 44%,var(--Y) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 28% 52%,var(--R) 0 1.2px,transparent 2.2px),
+      radial-gradient(circle at 48% 66%,var(--G) 0 1.4px,transparent 2.4px),
+      radial-gradient(circle at 70% 58%,var(--B) 0 1.2px,transparent 2.2px),
+      radial-gradient(circle at 88% 72%,var(--M) 0 1.3px,transparent 2.3px),
+      radial-gradient(circle at 14% 82%,var(--Y) 0 1.5px,transparent 2.5px),
+      radial-gradient(circle at 62% 86%,var(--C) 0 1.4px,transparent 2.4px);
+    filter:drop-shadow(0 0 2px currentColor);
+  }
+  .s-e .rain-streaks{
+    position:absolute;inset:0;pointer-events:none;
+    background:
+      linear-gradient(180deg,transparent 0%,rgba(255,255,255,0.04) 40%,transparent 100%);
+  }
+  .s-e .grey-sphere{width:68px;height:68px}
+
+  /* recommended badge */
+  .reco{outline:2px solid #8aa1ff;outline-offset:-1px}
+  .reco .sample-head .tag{color:#8aa1ff}
+
+  .footer{
+    max-width:1400px;margin:30px auto 0;padding:20px 4px;
+    border-top:1px solid #2a2a30;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#aaa;line-height:1.8;letter-spacing:0.04em;
+  }
+  .footer b{color:#fff}
+</style>
+</head>
+<body>
+
+<h1>inryokü <em>· P1</em> · tunnel transition samples</h1>
+<p class="intro">grey sphere → rainbow / select a / b / c / d / e</p>
+
+<div class="grid">
+
+  <div class="sample reco">
+    <div class="sample-head"><span class="tag">b ★</span><strong>INSIDE THE GREY</strong><span class="tag">哲学直撃</span></div>
+    <div class="stage s-b">
+      <div class="inside"></div>
+      <div class="rings"></div>
+      <div class="grey-sphere"></div>
+      <div class="vignette"></div>
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-head"><span class="tag">a</span><strong>PRISM SPECTRUM</strong><span class="tag">物理的</span></div>
+    <div class="stage s-a">
+      <div class="beam-in"></div>
+      <div class="grey-sphere"></div>
+      <div class="prism"></div>
+      <div class="spectrum"></div>
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-head"><span class="tag">c</span><strong>DICHROIC FILM</strong><span class="tag">静謐・高級</span></div>
+    <div class="stage s-c">
+      <div class="overflow"></div>
+      <div class="grey-sphere"></div>
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-head"><span class="tag">d</span><strong>BUBBLE BURST</strong><span class="tag">崩壊 → 再生</span></div>
+    <div class="stage s-d">
+      <div class="burst2"></div>
+      <div class="burst"></div>
+      <div class="grey-sphere"></div>
+      <div class="shards">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-head"><span class="tag">e</span><strong>RAINBOW RAIN</strong><span class="tag">逆方向</span></div>
+    <div class="stage s-e">
+      <div class="rain"></div>
+      <div class="rain-streaks"></div>
+      <div class="grey-sphere"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <b>b ★ INSIDE THE GREY</b> — カメラが球の中へ入り、内壁が虹色 (P2 コードワールドへの自然な導線)<br>
+  <b>a PRISM SPECTRUM</b> — グレー光が三角プリズムを通って RGBCMY に分光<br>
+  <b>c DICHROIC FILM</b> — 球表面に油膜のような虹が浮かび全体に溢れる<br>
+  <b>d BUBBLE BURST</b> — 球が震えて弾け、破片が RGBCMY の波紋になる<br>
+  <b>e RAINBOW RAIN</b> — 奥から手前に RGBCMY 光の粒が降ってくる、球は静止
+</div>
+
+</body>
+</html>

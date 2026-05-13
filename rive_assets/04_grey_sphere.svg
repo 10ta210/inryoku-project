@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- 04 MERGE result: grey sphere (black + white = grey = 50%) -->
+  <defs>
+    <radialGradient id="greyG" cx="0.38" cy="0.3" r="0.85">
+      <stop offset="0%" stop-color="#cfcfd2"/>
+      <stop offset="50%" stop-color="#808085"/>
+      <stop offset="100%" stop-color="#4a4a50"/>
+    </radialGradient>
+    <radialGradient id="greyHL" cx="0.3" cy="0.25" r="0.22">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.42)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+  </defs>
+  <circle cx="200" cy="200" r="160" fill="url(#greyG)"/>
+  <circle cx="200" cy="200" r="160" fill="url(#greyHL)"/>
+</svg>

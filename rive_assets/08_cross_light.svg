@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <!-- 08 CROSS: pure white light cross over dark bg, with radial halo -->
+  <defs>
+    <radialGradient id="crossHalo" cx="0.5" cy="0.5" r="0.4">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.95)"/>
+      <stop offset="40%" stop-color="rgba(255,255,255,0.35)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <linearGradient id="vBar" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <linearGradient id="hBar" x1="0" y1="0.5" x2="1" y2="0.5">
+      <stop offset="0%" stop-color="rgba(255,255,255,0)"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="#020204"/>
+  <!-- halo -->
+  <rect width="1080" height="1080" fill="url(#crossHalo)"/>
+  <!-- vertical beam -->
+  <rect x="520" y="0" width="40" height="1080" fill="url(#vBar)"/>
+  <!-- horizontal beam -->
+  <rect x="0" y="520" width="1080" height="40" fill="url(#hBar)"/>
+  <!-- central bloom -->
+  <circle cx="540" cy="540" r="72" fill="rgba(255,255,255,0.9)"/>
+</svg>

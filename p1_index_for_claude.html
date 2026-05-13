@@ -78,9 +78,7 @@
     })();
 
     if (!__inryokuMobile) {
-        // デスクトップ: テスト用P3直行
-        renderPhase3();
-        /* P0→P1→P2→P3 フルシーケンス（本番用）
+        // デスクトップ: P0→P1→P2→P3 フルシーケンス
         renderPhase1();
 
         // P1完了 → P2起動
@@ -94,7 +92,6 @@
           console.log('✅ P2 complete — starting P3');
           renderPhase3();
         });
-        */
     }
   </script>
 </body>

@@ -371,6 +371,281 @@ function updateAudioEnergy() {
 // Three.js SphereGeometry + カスタムシェーダー
 // 虹色ニュートンリング + フレネル + 回転 + 脈動
 function init3DLogoSphere() {
+    // 2026-04-24: 司要望 — P2 の RGBCMY 球体 (rcSphere) と同じシェーダーを P3 ロゴに搭載
+    // PNG img を非表示、canvas で i ドット位置に 3D 球を描画
+    try {
+        if (window._p3LogoSphere3D) return window._p3LogoSphere3D; // 多重初期化防止
+
+        var imgEl = document.querySelector('.logo-sphere');
+        var wrap  = document.querySelector('.logo-holo-wrap');
+        if (!imgEl || !wrap || typeof THREE === 'undefined') return null;
+
+        var wrapW = Math.max(wrap.offsetWidth, 60);
+        var candleSize = Math.round(wrapW * 0.30); // 卵の i ドット — 司 30%
+        var pxRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+        var canvas = document.createElement('canvas');
+        canvas.className = 'logo-sphere-3d';
+        canvas.width  = candleSize * pxRatio;
+        canvas.height = candleSize * pxRatio;
+        canvas.style.cssText = [
+            'position: absolute',
+            'top: 22%',                            // 司微調整
+            'left: 50%',
+            'transform: translateX(-50%)',
+            'width: '  + candleSize + 'px',
+            'height: ' + candleSize + 'px',
+            'z-index: 3',
+            'pointer-events: none',
+            // mix-blend-mode: screen 廃止 (glow halo 除去)
+            'opacity: 1'
+        ].join(';');
+
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setPixelRatio(pxRatio);
+        renderer.setSize(candleSize, candleSize, false);
+        renderer.setClearColor(0x000000, 0);
+
+        var scene  = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
+        camera.position.set(0, 0, 3.1);
+        camera.lookAt(0, 0, 0);
+
+        // ── P2 と完全に同一の vertex / fragment シェーダー (rcSphere / rcFrag / sVert) ──
+        var sVert = [
+            'varying vec3 vNormal;',
+            'varying vec3 vViewDir;',
+            'varying vec2 vUv;',
+            'void main(){',
+            '    vec4 wPos = modelMatrix * vec4(position, 1.0);',
+            '    vNormal  = normalize(normalMatrix * normal);',
+            '    vViewDir = normalize(cameraPosition - wPos.xyz);',
+            '    vUv      = uv;',
+            '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+            '}'
+        ].join('\n');
+
+        var rcFrag = [
+            'precision highp float;',
+            'uniform float u_time;',
+            'uniform float u_hover;',
+            'uniform float u_clickT;',
+            'uniform float u_morph;',
+            'varying vec3 vNormal;',
+            'varying vec3 vViewDir;',
+            'varying vec2 vUv;',
+            '',
+            'float h1(float n){ return fract(sin(mod(n, 300.0) * 127.1) * 43758.545); }',
+            'float noise3(vec3 p){',
+            '    vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.-2.*f);',
+            '    float a = h1(i.x + i.y*57. + i.z*113.);',
+            '    float b = h1(i.x+1. + i.y*57. + i.z*113.);',
+            '    float c = h1(i.x + (i.y+1.)*57. + i.z*113.);',
+            '    float d = h1(i.x+1. + (i.y+1.)*57. + i.z*113.);',
+            '    float e = h1(i.x + i.y*57. + (i.z+1.)*113.);',
+            '    float f2= h1(i.x+1. + i.y*57. + (i.z+1.)*113.);',
+            '    float g = h1(i.x + (i.y+1.)*57. + (i.z+1.)*113.);',
+            '    float hh= h1(i.x+1. + (i.y+1.)*57. + (i.z+1.)*113.);',
+            '    return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),',
+            '               mix(mix(e,f2,f.x),mix(g,hh,f.x),f.y),f.z);',
+            '}',
+            '',
+            'void main(){',
+            '    float phi   = vUv.x * 6.28318;',
+            '    float theta = vUv.y * 3.14159;',
+            '    vec3 sPos = vec3(sin(theta)*cos(phi), cos(theta), sin(theta)*sin(phi));',
+            '    float spd = 0.21 + u_hover * 0.15 + u_clickT * 0.25;',  // 2026-04-24: 3倍速
+            '    float t   = u_time * spd;',
+            '    vec3 nOff = vec3(',
+            '        noise3(sPos * 2.5 + vec3(t,    0.,   0.)) * 2. - 1.,',
+            '        noise3(sPos * 2.5 + vec3(0., t*0.8,  0.)) * 2. - 1.,',
+            '        noise3(sPos * 2.5 + vec3(0.,   0., t*0.6))* 2. - 1.',
+            '    );',
+            '    vec3 wPos = normalize(sPos + nOff * 0.28);',
+            // 2026-04-24: 司「b (12極) で」 — 6色 → 12色
+            '    vec3 dirs[12];',
+            '    dirs[0]=vec3(1.,0.,0.); dirs[1]=vec3(-1.,0.,0.);',
+            '    dirs[2]=vec3(0.,1.,0.); dirs[3]=vec3(0.,-1.,0.);',
+            '    dirs[4]=vec3(0.,0.,1.); dirs[5]=vec3(0.,0.,-1.);',
+            '    dirs[6]=normalize(vec3(1.,1.,0.));   dirs[7]=normalize(vec3(-1.,-1.,0.));',
+            '    dirs[8]=normalize(vec3(0.,1.,1.));   dirs[9]=normalize(vec3(0.,-1.,-1.));',
+            '    dirs[10]=normalize(vec3(1.,0.,1.));  dirs[11]=normalize(vec3(-1.,0.,-1.));',
+            '    vec3 cols[12];',
+            '    cols[0]=vec3(1.,0.,0.);       cols[1]=vec3(0.,1.,1.);',
+            '    cols[2]=vec3(0.,1.,0.);       cols[3]=vec3(1.,0.,1.);',
+            '    cols[4]=vec3(0.,0.,1.);       cols[5]=vec3(1.,1.,0.);',
+            '    cols[6]=vec3(1.0,0.45,0.);    cols[7]=vec3(0.0,0.55,1.0);',
+            '    cols[8]=vec3(0.0,1.0,0.6);    cols[9]=vec3(1.0,0.25,0.55);',
+            '    cols[10]=vec3(0.75,0.25,1.); cols[11]=vec3(0.85,0.85,0.2);',
+            '    vec3 result = vec3(0.); float total = 0.;',
+            '    for(int i = 0; i < 12; i++){',
+            '        float w = max(0., dot(wPos, dirs[i]));',
+            '        w = w * w * w;',
+            '        result += cols[i] * w; total += w;',
+            '    }',
+            '    result /= max(total, 0.001);',
+            '    vec3 N = normalize(vNormal);',
+            '    vec3 V = normalize(vViewDir);',
+            '    vec3 L = normalize(vec3(0.5, 0.7, 1.0));',
+            '    float diff    = max(dot(N, L), 0.0);',
+            '    float ambient = 0.05;',
+            '    vec3  H    = normalize(L + V);',
+            '    float spec = pow(max(dot(N, H), 0.0), 72.0) * 0.18;',
+            '    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 1.8);',
+            '    float frStr   = 0.9 + u_hover * 0.8;',
+            '    float greyVal = 0.45 + 0.10 * sin(u_time * 0.3);',
+            '    vec3  frCol   = vec3(greyVal) * fresnel * frStr;',
+            '    float emissive = 0.05 + u_hover * 0.10;',
+            '    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.5);',
+            '    vec3 rimLight = result * rim * 0.22 + vec3(0.3, 0.4, 0.5) * rim * 0.10;',
+            '    rimLight += result * rim * u_hover * 0.18;',
+            '    vec3 col = result * (ambient + diff * 0.90)',
+            '             + result * emissive',
+            '             + frCol',
+            '             + vec3(spec)',
+            '             + rimLight;',
+            '    col = mix(col, vec3(1.0), u_clickT * 0.5);',
+            '    if (u_morph > 0.0) {',
+            '        float grey = dot(col, vec3(0.299, 0.587, 0.114));',
+            '        vec3 holoGrey = vec3(grey) * (0.8 + 0.2 * sin(u_time * 2.0));',
+            '        float fr = pow(1.0 - max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 2.5);',
+            '        vec3 aurora = vec3(',
+            '            0.5 + 0.5 * sin(u_time * 1.3 + fr * 6.28),',
+            '            0.5 + 0.5 * sin(u_time * 1.7 + fr * 6.28 + 2.094),',
+            '            0.5 + 0.5 * sin(u_time * 2.1 + fr * 6.28 + 4.189)',
+            '        );',
+            '        holoGrey += aurora * fr * 0.4 * (1.0 - u_morph * 0.25);',
+            '        col = mix(col, holoGrey, u_morph);',
+            '    }',
+            '    gl_FragColor = vec4(col, 1.0);',
+            '}'
+        ].join('\n');
+
+        var uniforms = { u_time:{value:0}, u_hover:{value:0}, u_clickT:{value:0}, u_morph:{value:0} };
+        var mat = new THREE.ShaderMaterial({ vertexShader: sVert, fragmentShader: rcFrag, uniforms: uniforms });
+        var geo = new THREE.SphereGeometry(1, 64, 64);
+        var sphere = new THREE.Mesh(geo, mat);
+        scene.add(sphere);
+
+        // canvas を wrap に挿入、PNG img を非表示
+        wrap.appendChild(canvas);
+        imgEl.style.display = 'none';
+
+        // 回転アニメ + uniform 更新
+        var clock = new THREE.Clock();
+        var alive = true;
+        function loop() {
+            if (!alive) return;
+            var dt = clock.getDelta();
+            uniforms.u_time.value += dt;
+            sphere.rotation.y += dt * 0.75;                                   // 2026-04-24: 3倍
+            sphere.rotation.x = Math.sin(uniforms.u_time.value * 0.51) * 0.12;
+            renderer.render(scene, camera);
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+
+        // hover/click interaction (P2 と同じトリガー)
+        function setHover(v) {
+            var target = v ? 1 : 0;
+            var start = uniforms.u_hover.value;
+            var t0 = performance.now();
+            (function ease(){
+                var p = Math.min(1, (performance.now()-t0)/260);
+                uniforms.u_hover.value = start + (target - start) * p;
+                if (p < 1) requestAnimationFrame(ease);
+            })();
+        }
+        wrap.addEventListener('pointerenter', function(){ setHover(true); });
+        wrap.addEventListener('pointerleave', function(){ setHover(false); });
+
+        var ref = {
+            canvas: canvas, renderer: renderer, scene: scene, camera: camera,
+            uniforms: uniforms, sphere: sphere,
+            dispose: function(){
+                alive = false;
+                try { geo.dispose(); mat.dispose(); renderer.forceContextLoss(); renderer.dispose(); } catch(e){}
+                if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+                imgEl.style.display = '';
+                window._p3LogoSphere3D = null;
+            }
+        };
+        window._p3LogoSphere3D = ref;
+        return ref;
+    } catch(err) {
+        console.warn('[init3DLogoSphere] failed, fallback to PNG:', err);
+        return null;
+    }
+}
+
+// ═══ ロゴ専用ホログラム視差 ═══
+// WebGL/Canvasを増やさず、CSS変数だけで投影レイヤーに奥行きを与える。
+function initLogoHologramParallax() {
+    var wrap = document.querySelector('.logo-holo-wrap');
+    if (!wrap) return;
+
+    if (window._inryokuLogoParallaxCleanup) {
+        window._inryokuLogoParallaxCleanup();
+        window._inryokuLogoParallaxCleanup = null;
+    }
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    var targetX = 0;
+    var targetY = 0;
+    var currentX = 0;
+    var currentY = 0;
+    var raf = 0;
+    var running = true;
+
+    function setTargetFromPoint(x, y) {
+        var rect = wrap.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        targetX = Math.max(-1, Math.min(1, (x - cx) / Math.max(rect.width * 2.1, 1)));
+        targetY = Math.max(-1, Math.min(1, (y - cy) / Math.max(rect.height * 1.7, 1)));
+    }
+
+    function onPointerMove(e) {
+        setTargetFromPoint(e.clientX, e.clientY);
+    }
+
+    function onPointerLeave() {
+        targetX = 0;
+        targetY = 0;
+    }
+
+    function onDeviceOrientation(e) {
+        if (typeof e.gamma === 'number') targetX = Math.max(-1, Math.min(1, e.gamma / 24));
+        if (typeof e.beta === 'number') targetY = Math.max(-1, Math.min(1, (e.beta - 45) / 32));
+    }
+
+    function tick() {
+        if (!running) return;
+        currentX += (targetX - currentX) * 0.075;
+        currentY += (targetY - currentY) * 0.075;
+        wrap.style.setProperty('--holo-tilt-y', (currentX * 7).toFixed(3) + 'deg');
+        wrap.style.setProperty('--holo-tilt-x', (-currentY * 5).toFixed(3) + 'deg');
+        wrap.style.setProperty('--holo-shift-x', (currentX * 1.8).toFixed(3) + 'px');
+        wrap.style.setProperty('--holo-shift-y', (currentY * 1.2).toFixed(3) + 'px');
+        raf = requestAnimationFrame(tick);
+    }
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerleave', onPointerLeave, { passive: true });
+    window.addEventListener('deviceorientation', onDeviceOrientation, { passive: true });
+    raf = requestAnimationFrame(tick);
+
+    window._inryokuLogoParallaxCleanup = function() {
+        running = false;
+        if (raf) cancelAnimationFrame(raf);
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerleave', onPointerLeave);
+        window.removeEventListener('deviceorientation', onDeviceOrientation);
+    };
+}
+function init3DLogoSphere_disabled() {
     var imgEl = document.querySelector('.logo-sphere');
     var wrap = document.querySelector('.logo-holo-wrap');
     if (!imgEl || !wrap || typeof THREE === 'undefined') return null;
@@ -804,7 +1079,7 @@ function renderPhase3() {
           <div class="carousel-ring" id="carousel-ring">
             ${PRODUCTS.map((p, i) => {
               var angle = (360 / PRODUCTS.length) * i;
-              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(200px);">
+              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(115px);">
                 <div class="product-card-img">
                   <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;color:rgba(255,255,255,0.15);font-family:monospace;\\'>${p.name.charAt(0)}</div>'">
                 </div>
@@ -842,6 +1117,7 @@ function renderPhase3() {
 
 
     console.log('[Phase 3] DOM setup complete, initializing particle universe...');
+    initLogoHologramParallax();
     // 同期呼び出し（rAFだとバックグラウンドタブや競合で不発になるケースがある）
     try {
         initParticleUniverse();
@@ -853,13 +1129,13 @@ function renderPhase3() {
     // ── 「間」の演出: 真っ暗→5秒後にリビール開始（ラッパー表示は子要素リセット後） ──
     // 旧: 3秒でラッパーfadeIn→5秒でリビール → 2秒間子要素が一瞬見えるバグあり
     // 修正: ラッパー表示をinitBrandParticleReveal内に統合
-    setTimeout(initBrandParticleReveal, 5000);
+    // 2026-04-22: reveal 開始 5000ms → 1200ms
+    setTimeout(initBrandParticleReveal, 1200);
 
-    // ── 3Dホログラムロゴ球体（ShaderMaterial）を起動 ──
-    // brand reveal 完了後、PNG sphere を Three.js sphere に置換
+    // 2026-04-24: 司要望 — PNG 球体が出るタイミングと同期 (brand reveal 1200 + 100 = 1300ms)
     setTimeout(function() {
         try { init3DLogoSphere(); } catch(e) { console.warn('[3DLogo] init failed:', e); }
-    }, 7500);
+    }, 1300);
 
     // ── ストアグリッド制御 ──
     initStoreGrid();
@@ -867,7 +1143,13 @@ function renderPhase3() {
     // ── カートアイコン（フローティング） ──
     const cartIcon = document.createElement('div');
     cartIcon.id = 'cart-icon';
-    cartIcon.innerHTML = `<span style="font-size:20px;">🛒</span><span id="cart-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ff0055;color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;font-family:monospace;">0</span>`;
+    // 2026-04-22: 絵文字全廃止 — 細線 SVG バッグ
+    cartIcon.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+          <path d="M6 7h12l-1.2 11.3a2 2 0 0 1-2 1.7H9.2a2 2 0 0 1-2-1.7L6 7Z"/>
+          <path d="M9 7V5a3 3 0 0 1 6 0v2"/>
+        </svg>
+        <span id="cart-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ff0055;color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;letter-spacing:0;">0</span>`;
     cartIcon.style.cssText = 'position:fixed;top:20px;right:20px;z-index:1000;cursor:pointer;padding:10px;background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;opacity:0;transition:opacity 1.2s ease;pointer-events:none;';
     cartIcon.addEventListener('click', function() { showCartDrawer(); });
     document.body.appendChild(cartIcon);
@@ -878,13 +1160,16 @@ function renderPhase3() {
     if (window._inryokuMuted === undefined) window._inryokuMuted = true;
     const muteBtn = document.createElement('div');
     muteBtn.id = 'mute-btn';
-    muteBtn.innerHTML = window._inryokuMuted ? '<span style="font-size:16px;">🔇</span>' : '<span style="font-size:16px;">🔊</span>';
+    // 2026-04-22: 絵文字廃止 — 細線 SVG (音ON/OFF)
+    var _muteOnSVG  = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><line x1="17" y1="9" x2="21" y2="13"/><line x1="21" y1="9" x2="17" y2="13"/></svg>';
+    var _muteOffSVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M4 10v4h4l5 4V6L8 10H4Z"/><path d="M16 8a5 5 0 0 1 0 8"/><path d="M19 5a8 8 0 0 1 0 14"/></svg>';
+    muteBtn.innerHTML = window._inryokuMuted ? _muteOnSVG : _muteOffSVG;
     muteBtn.style.cssText = 'position:fixed;top:20px;right:75px;z-index:1000;cursor:pointer;padding:10px;background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;opacity:0;pointer-events:none;transition:opacity 1.2s ease;';
     muteBtn.addEventListener('click', function() {
         window._inryokuMuted = !window._inryokuMuted;
         muteBtn.innerHTML = window._inryokuMuted
-            ? '<span style="font-size:16px;">🔇</span>'
-            : '<span style="font-size:16px;">🔊</span>';
+            ? _muteOnSVG
+            : _muteOffSVG;
         // BGMミュート
         if (window._p6bgm) window._p6bgm.muted = window._inryokuMuted;
         // 全AudioContextをsuspend/resume
@@ -1196,51 +1481,7 @@ function renderPhase3() {
         });
     });
 
-    // ── OSテーマスイッチャー ──
-    const themeSwitcher = document.createElement('div');
-    themeSwitcher.className = 'theme-switcher';
-    themeSwitcher.id = 'theme-switcher';
-    themeSwitcher.style.cssText = 'opacity:0;transition:opacity 1.2s ease;';
-    themeSwitcher.innerHTML = `
-        <div class="theme-label">THEME</div>
-        <div class="theme-buttons">
-            <button class="theme-btn theme-btn--active" data-theme="cosmos" title="Cosmos">✦</button>
-            <button class="theme-btn" data-theme="mac" title="macOS"></button>
-            <button class="theme-btn" data-theme="win95" title="Windows 95">⊞</button>
-        </div>
-    `;
-    var scContentForTheme = document.querySelector('.singularity-content');
-    if (scContentForTheme) { scContentForTheme.appendChild(themeSwitcher); }
-
-    // テーマ切替ロジック（カードスキンも連動）
-    var THEME_SKIN_MAP = { cosmos: 'glass', mac: 'mac-system1', win95: 'win95' };
-    function applyThemeSkin(theme) {
-        document.body.setAttribute('data-theme', theme);
-        var skin = THEME_SKIN_MAP[theme] || 'glass';
-        // 全カードの data-skin 属性更新
-        document.querySelectorAll('.carousel-item').forEach(function(c) {
-            c.classList.remove('mac-system1','mac-os9','mac-imacg3','mac-apple2','win95-skin');
-            if (skin === 'mac-system1') c.classList.add('mac-system1');
-            if (skin === 'win95') c.classList.add('win95-skin');
-        });
-        // イースターエッグ解放済みスキンがあれば優先
-        var layers = JSON.parse(localStorage.getItem('inryoku.layers') || '[]');
-        if (layers.length && theme === 'mac') {
-            var active = layers[layers.length - 1];
-            document.querySelectorAll('.carousel-item').forEach(function(c) {
-                c.classList.remove('mac-system1');
-                c.classList.add('mac-' + active);
-            });
-        }
-    }
-    themeSwitcher.querySelectorAll('.theme-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var theme = btn.dataset.theme;
-            applyThemeSkin(theme);
-            themeSwitcher.querySelectorAll('.theme-btn').forEach(function(b) { b.classList.remove('theme-btn--active'); });
-            btn.classList.add('theme-btn--active');
-        });
-    });
+    // 2026-04-22: THEME スイッチャー完全削除（司さん確定）— サンプル確認用だったため本番トップから撤去
 
     // ── イースターエッグ: Konami Code → レイヤー解放 ──
     (function setupEasterEggs() {
@@ -1320,21 +1561,23 @@ function spawnBigBang(x, y, count) {
     var colors = ['#FF0000','#00FF00','#0044FF','#00FFFF','#FF00FF','#FFFF00'];
     count = count || 20;
     for (var i = 0; i < count; i++) {
-        var dot = document.createElement('div');
-        dot.className = 'bang-particle';
-        var c = colors[i % 6];
-        var angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-        var dist = 40 + Math.random() * 80;
-        var bx = Math.cos(angle) * dist;
-        var by = Math.sin(angle) * dist;
-        var size = 2 + Math.random() * 4;
-        dot.style.cssText = 'left:' + x + 'px;top:' + y + 'px;' +
-            'width:' + size + 'px;height:' + size + 'px;' +
-            'background:' + c + ';' +
-            'box-shadow:0 0 ' + (size * 3) + 'px ' + c + ';' +
-            '--bx:' + bx.toFixed(0) + 'px;--by:' + by.toFixed(0) + 'px;';
-        document.body.appendChild(dot);
-        setTimeout(function() { if (dot.parentNode) dot.parentNode.removeChild(dot); }, 900);
+        (function(i){
+            var dot = document.createElement('div');
+            dot.className = 'bang-particle';
+            var c = colors[i % 6];
+            var angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+            var dist = 40 + Math.random() * 80;
+            var bx = Math.cos(angle) * dist;
+            var by = Math.sin(angle) * dist;
+            var size = 2 + Math.random() * 4;
+            dot.style.cssText = 'left:' + x + 'px;top:' + y + 'px;' +
+                'width:' + size + 'px;height:' + size + 'px;' +
+                'background:' + c + ';' +
+                'box-shadow:0 0 ' + (size * 3) + 'px ' + c + ';' +
+                '--bx:' + bx.toFixed(0) + 'px;--by:' + by.toFixed(0) + 'px;';
+            document.body.appendChild(dot);
+            setTimeout(function() { if (dot.parentNode) dot.parentNode.removeChild(dot); }, 900);
+        })(i);
     }
 }
 
@@ -1349,8 +1592,15 @@ function initStoreGrid() {
     var items = ring.querySelectorAll('.carousel-item');
     var count = items.length;
     var sliceAngle = 360 / count;
+    // 2026-04-21: カード密度をレスポンシブに — mobile でリング半径を縮め接続を緻密に
+    var isMobile = window.matchMedia('(max-width: 768px)').matches;
+    // 2026-04-24: 司「カード大きく」 RING/FRONT 拡大、scale 抑制 (ロゴ被らない)
+    var RING_Z  = isMobile ? 200 : 290;
+    var FRONT_Z = isMobile ? 320 : 470;
+    var FRONT_S = isMobile ? 1.45 : 1.35;
     var currentAngle = 0;
-    var autoRotateSpeed = 0.08; // deg per frame
+    // 2026-04-22: ぬるっと ゆっくり → 司「ほんのちょっとスピード上げて」 0.025 → 0.04
+    var autoRotateSpeed = 0.04; // deg per frame
     var isDragging = false;
     var dragStartX = 0;
     var dragAngle = 0;
@@ -1366,31 +1616,48 @@ function initStoreGrid() {
     var GLOW_COLORS = ['#FF0000','#00FF00','#0044FF','#00FFFF','#FF00FF','#FFFF00'];
 
     function updateFrontCard() {
-        var normAngle = ((currentAngle % 360) + 360) % 360;
         var bestIdx = 0;
         var bestDist = 999;
 
         items.forEach(function(item, i) {
+            // -180〜180 に正規化した相対角度
             var itemAngle = ((i * sliceAngle + currentAngle) % 360 + 360) % 360;
             if (itemAngle > 180) itemAngle -= 360;
-            var absDist = Math.abs(itemAngle);
+            var absDist = Math.abs(itemAngle); // 0 = 正面 / 180 = 真裏
 
             if (absDist < bestDist) {
                 bestDist = absDist;
                 bestIdx = i;
             }
 
-            if (absDist < sliceAngle * 0.6) {
+            // 2026-04-21: 接続を緻密に — 角度距離に基づく連続補間
+            // 正面(0°)→遠景(180°) を滑らかな ease で結ぶ (activeCard は bring/reset が上書き)
+            if (item === activeCard) return;
+
+            var t = absDist / 180;                    // 0..1
+            var ease = t * t * (3 - 2 * t);           // smoothstep
+            var scale      = 1.0  - ease * 0.28;      // 1.0 → 0.72
+            var opacity    = 1.0  - ease * 0.65;      // 1.0 → 0.35
+            var brightness = 1.35 - ease * 0.80;      // 1.35 → 0.55
+            var saturate   = 1.15 - ease * 0.55;      // 1.15 → 0.60
+            var blur       = ease * 2.2;              // 0 → 2.2px
+            // cinematic lift: 側面カードはわずかに下へ沈み、奥で持ち上がる
+            var lift       = -Math.sin(itemAngle * Math.PI / 180) * 6; // -6..+6
+            var angle      = i * sliceAngle;
+
+            item.style.transform =
+                'rotateY(' + angle + 'deg) translateZ(' + RING_Z + 'px) translateY(' + lift.toFixed(2) + 'px) scale(' + scale.toFixed(3) + ')';
+            item.style.opacity = opacity.toFixed(3);
+            item.style.filter  =
+                'brightness(' + brightness.toFixed(2) + ') saturate(' + saturate.toFixed(2) + ') blur(' + blur.toFixed(2) + 'px)';
+
+            if (absDist < sliceAngle * 0.55) {
                 item.classList.add('carousel-front');
-                item.style.filter = 'brightness(1.3)';
             } else {
                 item.classList.remove('carousel-front');
-                var dimAmount = Math.min(absDist / 180, 0.7);
-                item.style.filter = 'brightness(' + (1 - dimAmount * 0.6).toFixed(2) + ')';
             }
         });
 
-        // タイプライター演出（正面が変わった時のみ）
         if (bestIdx !== currentFrontIdx) {
             currentFrontIdx = bestIdx;
             startTypewriter(bestIdx);
@@ -1425,24 +1692,34 @@ function initStoreGrid() {
         var diff = targetAngle - currentAngle;
         diff = ((diff % 360) + 540) % 360 - 180;
         var dest = currentAngle + diff;
-        ring.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+        ring.style.transition = 'transform 0.7s cubic-bezier(0.16,1,0.3,1)';
         currentAngle = dest;
         ring.style.transform = 'rotateY(' + dest + 'deg)';
         var angle = (360 / count) * idx;
-        // 2026-04-21: 小型化に伴いタップで大きく見やすく (scale 1.08 → 1.55, Z 290 → 320)
-        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(320px) scale(1.55)';
-        card.style.filter = 'brightness(1.5) saturate(1.15)';
+        card.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.35s ease, opacity 0.35s ease';
+        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + FRONT_Z + 'px) scale(' + FRONT_S + ')';
+        card.style.filter = 'brightness(1.5) saturate(1.2)';
+        card.style.opacity = '1';
         card.style.zIndex = '20';
+
     }
     function resetCard(card, idx) {
         var angle = (360 / count) * idx;
-        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(200px) scale(1)';
+        card.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.35s ease, opacity 0.35s ease';
+        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + RING_Z + 'px) scale(1)';
         card.style.filter = '';
         card.style.zIndex = '';
+        setTimeout(function() {
+            if (card !== activeCard) {
+                card.style.transition = 'filter 0.35s cubic-bezier(0.23,1,0.32,1), opacity 0.35s cubic-bezier(0.23,1,0.32,1)';
+            }
+        }, 560);
     }
     items.forEach(function(card) {
         card.style.cursor = 'pointer';
-        card.style.transition = 'filter 0.3s ease, transform 0.4s cubic-bezier(0.23,1,0.32,1)';
+        // 2026-04-21: rAF が毎フレーム transform を書くので transform には transition を付けない (競合防止)
+        // filter/opacity は離散イベント時に滑らかに効かせる
+        card.style.transition = 'filter 0.35s cubic-bezier(0.23,1,0.32,1), opacity 0.35s cubic-bezier(0.23,1,0.32,1)';
 
         card.addEventListener('mouseenter', function() {
             isHovering = true;
@@ -1456,28 +1733,47 @@ function initStoreGrid() {
             resetCard(card, parseInt(card.dataset.idx));
         });
 
+        // 2026-04-22: 2タップ混乱解消 — VIEW ボタン化
         card.addEventListener('click', function(e) {
             if (isDragging || dragMoved) return;
+            // VIEW ボタンが押されたらモーダル
+            if (e.target.classList && e.target.classList.contains('card-view-btn')) {
+                e.stopPropagation();
+                var i2 = parseInt(card.dataset.idx);
+                spawnBigBang(e.clientX, e.clientY, 15);
+                showProductModal(i2);
+                return;
+            }
             var idx = parseInt(card.dataset.idx);
-            // 2段階タップ: 1回目で前に出す、2回目でモーダル
             if (activeCard !== card) {
-                // 前の選択を戻す
-                if (activeCard) resetCard(activeCard, parseInt(activeCard.dataset.idx));
+                if (activeCard) { resetCard(activeCard, parseInt(activeCard.dataset.idx)); removeViewBtn(activeCard); }
                 activeCard = card;
                 velocity = 0;
                 bringCardForward(card, idx);
+                attachViewBtn(card, idx);
                 spawnBigBang(e.clientX, e.clientY, 8);
-                return;
             }
-            // 2回目タップ: モーダル
-            spawnBigBang(e.clientX, e.clientY, 15);
-            showProductModal(idx);
         });
     });
-    // カルーセル外タップでactiveCard解除
+    // 2026-04-22: VIEW ボタン helpers
+    function attachViewBtn(card, idx) {
+        if (card.querySelector('.card-view-btn')) return;
+        var p = PRODUCTS[idx];
+        var btn = document.createElement('button');
+        btn.className = 'card-view-btn';
+        btn.textContent = 'VIEW / ' + p.price;
+        card.appendChild(btn);
+        requestAnimationFrame(function() { btn.classList.add('visible'); });
+    }
+    function removeViewBtn(card) {
+        var b = card.querySelector('.card-view-btn');
+        if (b) { b.classList.remove('visible'); setTimeout(function() { if (b.parentNode) b.parentNode.removeChild(b); }, 240); }
+    }
+
     document.addEventListener('click', function(e) {
         if (!activeCard) return;
         if (!activeCard.contains(e.target)) {
+            removeViewBtn(activeCard);
             resetCard(activeCard, parseInt(activeCard.dataset.idx));
             activeCard = null;
         }
@@ -1491,7 +1787,7 @@ function initStoreGrid() {
                 if (velocity > 1.5) velocity = 1.5;
                 if (velocity < -1.5) velocity = -1.5;
                 currentAngle += velocity;
-                velocity *= 0.92;
+                velocity *= 0.96;  // 2026-04-22: ぬるっと余韻 0.92 → 0.96
             } else {
                 velocity = 0;
                 currentAngle -= autoRotateSpeed;
@@ -1520,7 +1816,7 @@ function initStoreGrid() {
         if (!isDragging) return;
         var dx = e.clientX - dragStartX;
         if (Math.abs(dx) > 3) dragMoved = true;
-        currentAngle = dragAngle + dx * 0.15;
+        currentAngle = dragAngle + dx * 0.09;
 
         // 速度計算（慣性用）
         var now = Date.now();
@@ -1554,7 +1850,7 @@ function initStoreGrid() {
         var tx = e.touches[0].clientX;
         var dx = tx - dragStartX;
         if (Math.abs(dx) > 3) dragMoved = true;
-        currentAngle = dragAngle + dx * 0.15;
+        currentAngle = dragAngle + dx * 0.09;
         var now = Date.now();
         var dt = now - lastDragTime;
         if (dt > 0) {
@@ -1851,6 +2147,8 @@ function initBrandParticleReveal() {
     if (logoShell)  { logoShell.style.animation = 'none'; logoShell.style.opacity = '0'; logoShell.style.transition = 'none'; }
     if (logoSphere) { logoSphere.style.animation = 'none'; logoSphere.style.opacity = '0'; logoSphere.style.transition = 'none'; }
     chars.forEach(function(ch, idx) {
+        if (ch.dataset.real) { ch.textContent = ch.dataset.real; delete ch.dataset.real; }
+        delete ch.dataset.decoded;
         ch.style.opacity = '0';
         ch.style.color = '#808080';
         ch.style.textShadow = '0 0 15px rgba(128,128,128,0.6), 0 0 30px rgba(128,128,128,0.2)';
@@ -1859,6 +2157,9 @@ function initBrandParticleReveal() {
         ch.style.transition = 'none';
         ch.style.display = 'inline-block';
     });
+    // scramble timer clear (以前の実装の残骸)
+    if (window._inryokuBinaryScrambleTimer) { clearInterval(window._inryokuBinaryScrambleTimer); window._inryokuBinaryScrambleTimer = null; }
+    if (window._inryokuCharTimers) { window._inryokuCharTimers.forEach(function(t){ clearInterval(t); }); window._inryokuCharTimers = []; }
 
     // ── 子要素リセット完了 → ラッパーを表示（中身は全てopacity:0なので何も見えない） ──
     var holoWrap = document.getElementById('holo-logo-wrap');
@@ -1873,35 +2174,33 @@ function initBrandParticleReveal() {
     if (logoSphere) {
         logoSphere.style.filter = 'drop-shadow(0 0 4px rgba(255,255,255,0.2)) brightness(0.05) saturate(0)';
         logoSphere.style.opacity = '0';
-        logoSphere.style.transform = 'scale(0.3)';
+        logoSphere.style.transform = 'translateZ(34px) scale(0.3)';
     }
-    // 第一波: 微かな光点が出現（ゆっくり）
+    // 2026-04-22: 球体実体化を短く (2200ms final → 800ms final)
     setTimeout(function() {
         if (logoSphere) {
-            logoSphere.style.transition = 'opacity 2.5s ease-in, filter 3.0s ease, transform 3.0s cubic-bezier(0.16,1,0.3,1)';
+            logoSphere.style.transition = 'opacity 0.7s ease-in, filter 0.8s ease, transform 0.9s cubic-bezier(0.16,1,0.3,1)';
             logoSphere.style.opacity = '0.4';
-            logoSphere.style.transform = 'scale(0.7)';
-            logoSphere.style.filter = 'drop-shadow(0 0 8px rgba(128,128,128,0.6)) brightness(0.3) saturate(0)';
+            logoSphere.style.transform = 'translateZ(34px) scale(0.7)';
+            logoSphere.style.filter = 'drop-shadow(0 0 4px rgba(128,128,128,0.5)) brightness(0.3) saturate(0)';
         }
-    }, 300);
-    // 第二波: グレーから色が滲み出す（グレーの中に虹がある）
+    }, 100);
     setTimeout(function() {
         if (logoSphere) {
-            logoSphere.style.transition = 'opacity 2.0s ease, filter 2.5s ease, transform 2.5s cubic-bezier(0.16,1,0.3,1)';
+            logoSphere.style.transition = 'opacity 0.6s ease, filter 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1)';
             logoSphere.style.opacity = '0.8';
-            logoSphere.style.transform = 'scale(0.9)';
-            logoSphere.style.filter = 'drop-shadow(0 0 15px rgba(0,255,255,0.4)) drop-shadow(0 0 30px rgba(255,0,255,0.2)) brightness(0.6) saturate(0.5)';
+            logoSphere.style.transform = 'translateZ(34px) scale(0.9)';
+            logoSphere.style.filter = 'drop-shadow(0 0 5px rgba(0,255,255,0.35)) drop-shadow(0 0 10px rgba(255,0,255,0.18)) brightness(0.6) saturate(0.5)';
         }
-    }, 1600);
-    // 第三波: 完全実体化 — 彩度が戻り、光が満ちる
+    }, 500);
     setTimeout(function() {
         if (logoSphere) {
-            logoSphere.style.transition = 'filter 2.5s ease, transform 2.0s ease, opacity 1.5s ease';
+            logoSphere.style.transition = 'filter 0.7s ease, transform 0.6s ease, opacity 0.5s ease';
             logoSphere.style.opacity = '1';
-            logoSphere.style.transform = 'scale(1.0)';
+            logoSphere.style.transform = 'translateZ(34px) scale(1.0)';
             logoSphere.style.filter = '';
         }
-    }, 2200);
+    }, 800);
 
     // シェル(0+1)は初期非表示のまま — ブランド名の後にホログラムで出す
 
@@ -1909,9 +2208,10 @@ function initBrandParticleReveal() {
     //  STEP 2: 球体から光が放たれてブランドネームへ（2500ms〜）
     //  球体実体化後すぐに光を放射
     // ═══════════════════════════════════════════
-    var LIGHT_START = 3200;  // 球体実体化後、少し間を置いてから（ゆっくり）
-    var LIGHT_DELAY = 280;   // 文字間ディレイ（ゆっくり）
-    var FLIGHT_MS   = 1400;  // 光の飛行時間（ゆっくり）
+    // 2026-04-24: 司「ブランドネームゆっくり」— 2.5倍スロー
+    var LIGHT_START = 1400;
+    var LIGHT_DELAY = 220;
+    var FLIGHT_MS   = 1200;
 
     // 光粒子コンテナ
     var container = document.createElement('div');
@@ -1949,7 +2249,7 @@ function initBrandParticleReveal() {
             var osx = origin.x;
             var osy = origin.y;
 
-            // 光粒子（コア + トレイル）
+            // 光粒子（コア + トレイル） — そのままの光
             var dot = document.createElement('div');
             dot.style.cssText =
                 'position:absolute;border-radius:50%;will-change:transform,opacity;' +
@@ -2038,33 +2338,30 @@ function initBrandParticleReveal() {
 
                     // ── STEP 4: ホログラム文字演出 + SF音 ──
                     playBrandRevealSF(idx, chars.length);
-                    // シアンで出現（translateYからの浮上 + スケール補正）
-                    ch.style.transition = 'opacity 0.6s ease, transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+                    // シアンで出現（translateYからの浮上 + スケール補正） — 司要望でスロー化
+                    ch.style.transition = 'opacity 1.1s ease, transform 1.1s cubic-bezier(0.23, 1, 0.32, 1)';
                     ch.style.opacity = '0.7';
                     ch.style.transform = 'scaleY(1.1) scaleX(0.95) translateY(0px)';
 
-                    // ちらつき
                     setTimeout(function() {
-                        ch.style.transition = 'opacity 0.05s';
+                        ch.style.transition = 'opacity 0.12s';
                         ch.style.opacity = '0.15';
-                    }, 150);
+                    }, 380);
 
-                    // シアン再出現
                     setTimeout(function() {
-                        ch.style.transition = 'opacity 0.1s, transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+                        ch.style.transition = 'opacity 0.22s, transform 1.1s cubic-bezier(0.23, 1, 0.32, 1)';
                         ch.style.opacity = '0.85';
                         ch.style.transform = 'scaleY(1.0) scaleX(1.0) translateY(0px)';
                         ch.style.filter = 'brightness(1.5)';
-                    }, 230);
+                    }, 580);
 
-                    // 本来の色に変わる
                     setTimeout(function() {
-                        ch.style.transition = 'color 0.6s cubic-bezier(0.23, 1, 0.32, 1), text-shadow 0.6s ease, filter 0.6s ease, opacity 0.6s ease';
+                        ch.style.transition = 'color 1.1s cubic-bezier(0.23, 1, 0.32, 1), text-shadow 1.1s ease, filter 1.1s ease, opacity 1.1s ease';
                         ch.style.opacity = '1';
                         ch.style.color = color;
                         ch.style.textShadow = '0 0 8px ' + glow;
                         ch.style.filter = 'brightness(1.1)';
-                    }, 450);
+                    }, 1100);
 
                     // 安定
                     setTimeout(function() {
@@ -2089,14 +2386,14 @@ function initBrandParticleReveal() {
         // ── シェル(0+1)がホログラムで投影される ──
         if (logoShell) {
             logoShell.style.opacity = '0';
-            logoShell.style.transform = 'scale(0.3) rotateY(90deg)';
+            logoShell.style.transform = 'translateZ(16px) scale(0.3) rotateY(90deg)';
             logoShell.style.filter = 'brightness(3) saturate(0) hue-rotate(180deg)';
 
             // フェーズ1: ゴーストのように薄く出現
             setTimeout(function() {
                 logoShell.style.transition = 'opacity 0.8s ease-in, transform 1.5s cubic-bezier(0.16,1,0.3,1), filter 1.2s ease';
                 logoShell.style.opacity = '0.2';
-                logoShell.style.transform = 'scale(0.7) rotateY(30deg)';
+                logoShell.style.transform = 'translateZ(16px) scale(0.7) rotateY(30deg)';
                 logoShell.style.filter = 'brightness(2.5) saturate(0) hue-rotate(120deg)';
             }, 100);
 
@@ -2104,24 +2401,24 @@ function initBrandParticleReveal() {
             setTimeout(function() {
                 logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
                 logoShell.style.opacity = '0.02';
-                logoShell.style.transform = 'scale(0.7) rotateY(30deg) translateX(5px)';
+                logoShell.style.transform = 'translateZ(16px) scale(0.7) rotateY(30deg) translateX(5px)';
             }, 800);
             setTimeout(function() {
                 logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
                 logoShell.style.opacity = '0.5';
-                logoShell.style.transform = 'scale(0.85) rotateY(-10deg) translateX(-3px)';
+                logoShell.style.transform = 'translateZ(16px) scale(0.85) rotateY(-10deg) translateX(-3px)';
             }, 860);
             setTimeout(function() {
                 logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
                 logoShell.style.opacity = '0.1';
-                logoShell.style.transform = 'scale(0.9) rotateY(5deg) translateX(2px)';
+                logoShell.style.transform = 'translateZ(16px) scale(0.9) rotateY(5deg) translateX(2px)';
             }, 920);
 
             // フェーズ3: 安定化 — 完全実体化
             setTimeout(function() {
                 logoShell.style.transition = 'opacity 1.0s ease, transform 1.2s cubic-bezier(0.16,1,0.3,1), filter 1.5s ease';
                 logoShell.style.opacity = '0.7';
-                logoShell.style.transform = 'scale(1.0) rotateY(0deg)';
+                logoShell.style.transform = 'translateZ(16px) scale(1.0) rotateY(0deg)';
                 logoShell.style.filter = '';
             }, 980);
 
@@ -2168,6 +2465,13 @@ function initBrandParticleReveal() {
                     logoSphere.style.cursor = 'pointer';
                 }
             }, 1000);
+
+            // 2026-04-22: 司要望「ホログラム感は最初だけ、後はちょっっとでいい」
+            // UI 出現 (800ms 後) + 余韻 1.4s で holo を calm mode に
+            setTimeout(function() {
+                var wrap = document.querySelector('.logo-holo-wrap');
+                if (wrap) wrap.classList.add('holo-calmed');
+            }, 2200);
         }, 2500);
 
         // 球体のCSSアニメーション移行
@@ -2213,45 +2517,62 @@ function initParticleUniverse() {
     //  15000 RGBCMY+White 星 — 呼吸する宇宙
     // ═══════════════════════════════════════════════════════════════
     const isMobile = W < 768;
-    // 2026-04-20: 粒子多すぎ問題により削減 (mob 3000→2000, desk 8000→4500)
-    const N = isMobile ? 2000 : 4500;
+    // 2026-04-24: 司「数減らして」 mobile 2800 / desktop 5000
+    const N = isMobile ? 2800 : 5000;
 
     const positions = new Float32Array(N * 3);
     const colors = new Float32Array(N * 3);
     const aSizes = new Float32Array(N);
     const aPhases = new Float32Array(N);
 
+    // 2026-04-24: 司「粒子言語もっといい感じに」
+    // RGBCMY 純色 + 白 + grey のハイブリッドパレット、色ごとに微シフトを入れて単調化回避
     const PALETTE = [
-        [1, 0, 0], [0, 1, 0], [0, 0, 1],
-        [0, 1, 1], [1, 0, 1], [1, 1, 0],
-        [1, 1, 1]
+        [1.00, 0.12, 0.25],   // R
+        [1.00, 0.45, 0.15],   // 橙
+        [0.18, 0.95, 0.42],   // G
+        [0.20, 0.55, 1.00],   // B
+        [0.22, 0.95, 0.95],   // C
+        [0.98, 0.30, 0.78],   // M
+        [1.00, 0.90, 0.28],   // Y
+        [0.95, 0.95, 1.00],   // warm white
+        [0.88, 0.88, 0.92],   // pale
+        [0.55, 0.55, 0.60],   // dim grey
     ];
+    // 2026-04-24: 司「白多すぎ、RGBCMYに寄せて」 grey 30% / RGBCMY 70%
+    const GREY_INDICES = [7, 8, 9];
+    const COLOR_INDICES = [0, 1, 2, 3, 4, 5, 6];
 
-    // ★ シード付き乱数で「全員違う宇宙」を生成
     for (let i = 0; i < N; i++) {
-        // 球状に均等分布（シード依存）
-        const r = 80 + uRng() * 400;
+        // 2026-04-24: 司「奥にいるサイズばっか、幻想的さ少ない」→ 近距離寄せ
+        // 球状に分布、半分は近場 (60-250)、残り中〜遠 (250-480)
+        const r = 60 + Math.pow(uRng(), 1.6) * 420;
         const theta = uRng() * Math.PI * 2;
         const phi = Math.acos(2 * uRng() - 1);
-        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
         positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = r * Math.cos(phi);
 
-        // RGBCMY+White（シード依存 — 宇宙ごとに色の比率が違う）
-        const c = PALETTE[Math.floor(uRng() * 7)];
-        colors[i * 3] = c[0];
-        colors[i * 3 + 1] = c[1];
-        colors[i * 3 + 2] = c[2];
+        // 2026-04-24: 司「粒子鮮やかさ消えた」— 10% grey / 90% 虹色
+        const isColor = uRng() < 0.90;
+        const idx = isColor
+            ? COLOR_INDICES[Math.floor(uRng() * COLOR_INDICES.length)]
+            : GREY_INDICES[Math.floor(uRng() * GREY_INDICES.length)];
+        const c = PALETTE[idx];
+        // 微シフト: 同じ R でも個体差
+        const jitter = 0.08;
+        colors[i * 3]     = Math.max(0, Math.min(1, c[0] + (uRng() - 0.5) * jitter));
+        colors[i * 3 + 1] = Math.max(0, Math.min(1, c[1] + (uRng() - 0.5) * jitter));
+        colors[i * 3 + 2] = Math.max(0, Math.min(1, c[2] + (uRng() - 0.5) * jitter));
 
-        // サイズバラつき（シード依存）
+        // 2026-04-24: 司「ちいちい玉ばっか」— 中〜大に振り直し
         const sR = uRng();
-        if (sR < 0.03) aSizes[i] = 12.0 + uRng() * 8.0;
-        else if (sR < 0.10) aSizes[i] = 6.0 + uRng() * 6.0;
-        else if (sR < 0.30) aSizes[i] = 3.0 + uRng() * 3.0;
-        else if (sR < 0.55) aSizes[i] = 1.5 + uRng() * 2.0;
-        else aSizes[i] = 0.3 + uRng() * 1.5;
+        if (sR < 0.10)       aSizes[i] = 10.0 + uRng() * 8.0;   // 超大 10%
+        else if (sR < 0.32)  aSizes[i] = 5.0  + uRng() * 4.0;   // 大 22%
+        else if (sR < 0.65)  aSizes[i] = 2.5  + uRng() * 2.0;   // 中 33%
+        else if (sR < 0.92)  aSizes[i] = 1.3  + uRng() * 1.0;   // 小 27%
+        else                 aSizes[i] = 0.6  + uRng() * 0.6;   // 微粒子 8%
 
-        // 呼吸フェーズ（シード依存）
         aPhases[i] = uRng() * Math.PI * 2;
     }
 
@@ -2470,7 +2791,8 @@ void main() {
     // ═══════════════════════════════════════════════════════════════
     //  星座ネットワーク (Constellation Lines)
     // ═══════════════════════════════════════════════════════════════
-    const MAX_LINES = 5000;
+    // 2026-04-22: 司 "線多すぎ" — 5000 → 1200
+    const MAX_LINES = 1200;
     const linePositions = new Float32Array(MAX_LINES * 6);
     const lineColors = new Float32Array(MAX_LINES * 6);
     const lineGeo = new THREE.BufferGeometry();
@@ -2501,8 +2823,8 @@ void main() {
                 depthFade = depthFade * depthFade;
                 // 微かな明滅（星座の瞬き）+ 音楽で脈動
                 float twinkle = 0.7 + 0.3 * sin(uTime * 0.8 + vDepth * 0.05) + uAudioEnergy * 0.4;
-                // 2026-04-19: 0.8→1.3 星座の繋がり視認性アップ
-                float alpha = depthFade * twinkle * 1.3;
+                // 2026-04-22: 線多すぎ→ alpha 1.3 → 0.55 (控えめ)
+                float alpha = depthFade * twinkle * 0.55;
                 gl_FragColor = vec4(vColor * (0.6 + depthFade * 0.4 + uAudioEnergy * 0.3), alpha);
             }
         `,
@@ -2526,11 +2848,11 @@ void main() {
             if (dz > -150 && dz < 60) {
                 nearby.push(i);
             }
-            if (nearby.length >= 1200) break;
+            if (nearby.length >= 600) break;
         }
 
         let lineIdx = 0;
-        const CONNECT_DIST = 110;  // 2026-04-19: 70→110 視認性UP
+        const CONNECT_DIST = 70;  // 2026-04-22: 110 → 70 (線多すぎ抑制)
 
         for (let a = 0; a < nearby.length && lineIdx < MAX_LINES; a++) {
             const ia = nearby[a];
@@ -2618,28 +2940,27 @@ void main() {
     const shootingDirY = new Float32Array(N);
     var shootingStarRate = 0.008; // 全体の0.8%が流れ星
 
+    // 2026-04-24: 司「スピードも早すぎ」→ さらに 0.5x
     for (let i = 0; i < N; i++) {
         if (uRng() < shootingStarRate) {
-            // 流れ星: 超高速 + ランダム方向
             isShootingStar[i] = 1;
-            const speed = 0.3 + uRng() * 0.8;
+            const speed = 0.08 + uRng() * 0.22;
             driftSpeedZ[i] = speed;
             const ang = uRng() * Math.PI * 2;
             shootingDirX[i] = Math.cos(ang) * 0.15 * speed;
             shootingDirY[i] = Math.sin(ang) * 0.15 * speed;
-            // 流れ星は白く明るい
             colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
             aSizes[i] = 2.0 + uRng() * 3.0;
         } else {
             isShootingStar[i] = 0;
             const isReverse = uRng() < 0.2;
-            const speed = 0.00875 + uRng() * 0.045;
+            const speed = 0.0022 + uRng() * 0.011;
             driftSpeedZ[i] = isReverse ? -speed * 0.6 : speed;
             shootingDirX[i] = 0;
             shootingDirY[i] = 0;
         }
-        driftFreqX[i] = 0.13 + uRng() * 0.34;
-        driftFreqY[i] = 0.10 + uRng() * 0.30;
+        driftFreqX[i] = 0.04 + uRng() * 0.10;
+        driftFreqY[i] = 0.03 + uRng() * 0.09;
         driftAmpX[i] = 0.017 + uRng() * 0.10;
         driftAmpY[i] = 0.017 + uRng() * 0.085;
         driftPhaseX[i] = uRng() * Math.PI * 2;
@@ -2874,8 +3195,8 @@ void main() {
         }
 
         // 微かなカメラ揺らぎ + スクロールパララックス
-        camera6.position.x = Math.sin(uTime * 0.17) * 0.43;
-        camera6.position.y = Math.cos(uTime * 0.13) * 0.26 + scrollY6 * 0.04;
+        camera6.position.x = Math.sin(uTime * 0.09) * 0.43;
+        camera6.position.y = Math.cos(uTime * 0.07) * 0.26 + scrollY6 * 0.04;
         camera6.lookAt(0, 0, 0);
 
         // ═══ 状態遷移: absorb → speaking → chatting → (close時) bb_collapse → bb_explode → idle ═══
@@ -4516,10 +4837,10 @@ function showProductModal(idx) {
                         <span class="cart-btn-price">${p.price}</span>
                     </button>
                     <div class="product-shipping-info">
-                        <span>🚚 お届けまで 7〜14営業日</span>
-                        <span>🌍 全世界配送対応</span>
+                        <span>DELIVERY · 7–14 BUSINESS DAYS</span>
+                        <span>WORLDWIDE SHIPPING</span>
                     </div>
-                    <div class="size-guide-toggle" id="sg-toggle">📏 サイズガイド</div>
+                    <div class="size-guide-toggle" id="sg-toggle">SIZE GUIDE</div>
                     <div class="size-guide-table" id="sg-table" style="display:none;">
                         <table>
                             <thead><tr><th></th><th>S</th><th>M</th><th>L</th><th>XL</th><th>2XL</th></tr></thead>

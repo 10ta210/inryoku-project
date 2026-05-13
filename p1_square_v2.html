@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü P1 — square v2</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;width:100%;background:#808085;overflow:hidden;font-family:ui-monospace,Menlo,monospace;color:#d6d4cc}
+  #stage{position:fixed;inset:0}
+  #square{width:100%;height:100%;position:relative;background:#808085}
+  #canvas{position:absolute;inset:0;width:100%;height:100%}
+
+  .meta{
+    position:fixed;top:18px;left:0;right:0;z-index:10;pointer-events:none;
+    display:flex;justify-content:space-between;padding:0 28px;
+    font-size:9.5px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(214,212,204,0.55);
+  }
+  .meta em{font-style:normal;opacity:0.5}
+
+  .label{
+    position:absolute;bottom:16px;left:16px;right:16px;z-index:12;pointer-events:none;
+    display:flex;justify-content:space-between;
+    font-size:9px;letter-spacing:0.32em;text-transform:uppercase;color:rgba(214,212,204,0.6);
+  }
+
+  .progress{
+    position:fixed;left:28px;right:28px;bottom:22px;z-index:11;
+    display:flex;align-items:center;gap:14px;
+    font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(214,212,204,0.55);
+  }
+  .bar{flex:1;height:1px;background:rgba(214,212,204,0.2);position:relative;overflow:hidden}
+  .bar i{display:block;height:100%;background:#f5f2ea;width:0}
+  .phaseN{width:120px;text-align:right;opacity:0.9}
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <div>inryokü <em>·</em> P1 <em>·</em> SQUARE</div>
+  <div>50 <em>→</em> 101</div>
+</div>
+
+<div id="stage"><div id="square"><canvas id="canvas"></canvas>
+  <div class="label"><span id="lbl-l">observation 01</span><span id="lbl-r">matter · light</span></div>
+</div></div>
+
+<div class="progress">
+  <span id="phaseTag">SEPARATION</span>
+  <div class="bar"><i id="progBar"></i></div>
+  <span class="phaseN" id="pctTag">0%</span>
+</div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  const THREE = window.THREE;
+  const canvas = document.getElementById('canvas');
+  const square = document.getElementById('square');
+  const phaseTag = document.getElementById('phaseTag');
+  const progBar = document.getElementById('progBar');
+  const pctTag = document.getElementById('pctTag');
+  const lblL = document.getElementById('lbl-l');
+  const lblR = document.getElementById('lbl-r');
+
+  const COL = {
+    R:0xff0033,G:0x00e54a,B:0x2f6bff,C:0x00e5e5,M:0xff00cc,Y:0xffe500,
+    BLACK:0x0a0a0b, WHITE:0xf2f1ea, GREY:0x808085,
+    PAPER:0xf4f1ea, INK:0x050505
+  };
+
+  const DUR = {
+    SEPARATION: 2200,
+    FUSE:       3200,
+    MERGE:      1800,
+    TUNNEL:     4200,
+    EYE_CLOSED: 1400,
+    EYE_OPEN:   1800,
+    CROSS:      2200,
+    EXIT:       1200
+  };
+  const ORDER = ['SEPARATION','FUSE','MERGE','TUNNEL','EYE_CLOSED','EYE_OPEN','CROSS','EXIT'];
+  const TOTAL = ORDER.reduce((s,k)=>s+DUR[k],0);
+
+  // ───────── Three.js setup ─────────
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setClearColor(COL.GREY, 1);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(COL.GREY);
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+  camera.position.set(0, 0, 12);
+
+  function resize(){
+    const r = square.getBoundingClientRect();
+    renderer.setSize(r.width, r.height, false);
+    camera.aspect = r.width / r.height;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.9);
+  key.position.set(3, 4, 6);
+  scene.add(key);
+
+  // ───────── Panels (left white / right black) ─────────
+  const panelGeo = new THREE.PlaneGeometry(5.0, 10.0);
+  const leftPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({color:COL.PAPER}));
+  leftPanel.position.set(-2.55, 0, -1);
+  const rightPanel = new THREE.Mesh(panelGeo, new THREE.MeshBasicMaterial({color:COL.INK}));
+  rightPanel.position.set(2.55, 0, -1);
+  scene.add(leftPanel, rightPanel);
+
+  // Divider hairline
+  const dividerMat = new THREE.MeshBasicMaterial({color:0x3a3a3d, transparent:true, opacity:0.6});
+  const divider = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 9.0), dividerMat);
+  divider.position.set(0, 0, -0.5);
+  scene.add(divider);
+
+  // ───────── CMY balls (left, on white) ─────────
+  const ballGeo = new THREE.SphereGeometry(0.55, 48, 32);
+  const cmyMats = {
+    c: new THREE.MeshStandardMaterial({color:COL.C, roughness:0.45, metalness:0.08, transparent:true, opacity:1}),
+    m: new THREE.MeshStandardMaterial({color:COL.M, roughness:0.45, metalness:0.08, transparent:true, opacity:1}),
+    y: new THREE.MeshStandardMaterial({color:COL.Y, roughness:0.45, metalness:0.08, transparent:true, opacity:1})
+  };
+  const rgbMats = {
+    r: new THREE.MeshStandardMaterial({color:COL.R, emissive:COL.R, emissiveIntensity:0.9, roughness:0.25, transparent:true, opacity:1}),
+    g: new THREE.MeshStandardMaterial({color:COL.G, emissive:COL.G, emissiveIntensity:0.9, roughness:0.25, transparent:true, opacity:1}),
+    b: new THREE.MeshStandardMaterial({color:COL.B, emissive:COL.B, emissiveIntensity:0.9, roughness:0.25, transparent:true, opacity:1})
+  };
+  // positions for CMY on left panel (triangle)
+  const CMY_POS = {
+    c:[-2.55, 1.55, 0.4],
+    m:[-3.55, -0.45, 0.4],
+    y:[-1.55, -0.45, 0.4]
+  };
+  const RGB_POS = {
+    r:[ 2.55, 1.55, 0.4],
+    g:[ 1.55, -0.45, 0.4],
+    b:[ 3.55, -0.45, 0.4]
+  };
+  const cmyBalls = {};
+  const rgbBalls = {};
+  Object.keys(cmyMats).forEach(k=>{
+    const m = new THREE.Mesh(ballGeo, cmyMats[k]);
+    m.position.fromArray(CMY_POS[k]);
+    scene.add(m); cmyBalls[k]=m;
+  });
+  Object.keys(rgbMats).forEach(k=>{
+    const m = new THREE.Mesh(ballGeo, rgbMats[k]);
+    m.position.fromArray(RGB_POS[k]);
+    scene.add(m); rgbBalls[k]=m;
+  });
+
+  // ───────── Fused black/white spheres ─────────
+  const blackBall = new THREE.Mesh(
+    new THREE.SphereGeometry(0.85, 64, 40),
+    new THREE.MeshStandardMaterial({color:COL.BLACK, roughness:0.6, metalness:0.02, transparent:true, opacity:0})
+  );
+  blackBall.position.set(-2.55, 0.2, 0.5);
+  scene.add(blackBall);
+  const whiteBall = new THREE.Mesh(
+    new THREE.SphereGeometry(0.85, 64, 40),
+    new THREE.MeshStandardMaterial({color:COL.WHITE, emissive:COL.WHITE, emissiveIntensity:0.6, roughness:0.2, transparent:true, opacity:0})
+  );
+  whiteBall.position.set(2.55, 0.2, 0.5);
+  scene.add(whiteBall);
+
+  // ───────── Grey sphere (merge result) ─────────
+  const greyBall = new THREE.Mesh(
+    new THREE.SphereGeometry(0.95, 72, 42),
+    new THREE.MeshStandardMaterial({color:COL.GREY, roughness:0.5, metalness:0.03, transparent:true, opacity:0})
+  );
+  greyBall.position.set(0, 0, 1);
+  scene.add(greyBall);
+
+  // ───────── Rainbow tunnel (radial rings) ─────────
+  const tunnelMat = new THREE.ShaderMaterial({
+    uniforms:{uTime:{value:0}, uOpacity:{value:0}, uAdvance:{value:0}},
+    transparent:true, depthWrite:false, side:THREE.DoubleSide,
+    blending:THREE.AdditiveBlending,
+    vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`
+      precision highp float;
+      varying vec2 vUv;
+      uniform float uTime, uOpacity, uAdvance;
+      vec3 rainbow(float t){
+        t = fract(t);
+        vec3 c = vec3(0.0);
+        if (t<0.166) c = mix(vec3(1,0,0.2), vec3(1,0.45,0), t/0.166);
+        else if (t<0.333) c = mix(vec3(1,0.45,0), vec3(1,0.9,0), (t-0.166)/0.167);
+        else if (t<0.5)   c = mix(vec3(1,0.9,0), vec3(0,0.9,0.3), (t-0.333)/0.167);
+        else if (t<0.666) c = mix(vec3(0,0.9,0.3), vec3(0,0.9,0.9), (t-0.5)/0.166);
+        else if (t<0.833) c = mix(vec3(0,0.9,0.9), vec3(0.18,0.42,1), (t-0.666)/0.167);
+        else              c = mix(vec3(0.18,0.42,1), vec3(1,0,0.8), (t-0.833)/0.167);
+        return c;
+      }
+      void main(){
+        vec2 p = (vUv - 0.5) * 2.0;
+        float r = length(p);
+        float a = atan(p.y, p.x);
+        // ring density radial
+        float rings = sin((r * 16.0 - uTime*2.2 - uAdvance*8.0));
+        float mask = smoothstep(0.15, 0.4, r) * (1.0 - smoothstep(0.85, 1.05, r));
+        vec3 col = rainbow(r * 1.2 - uTime*0.14);
+        col *= 0.55 + 0.45 * rings;
+        float centerFade = smoothstep(0.0, 0.22, r);
+        float edgeDark = 1.0 - smoothstep(0.9, 1.05, r);
+        float alpha = mask * centerFade * edgeDark * uOpacity;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `
+  });
+  const tunnel = new THREE.Mesh(new THREE.CircleGeometry(6.0, 128), tunnelMat);
+  tunnel.position.set(0, 0, -0.8);
+  tunnel.visible = false;
+  scene.add(tunnel);
+
+  // ───────── White light core (end of tunnel) ─────────
+  const coreMat = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0});
+  const core = new THREE.Mesh(new THREE.CircleGeometry(1.4, 64), coreMat);
+  core.position.set(0, 0, 0.2);
+  scene.add(core);
+
+  // ───────── Eye (closed → open) ─────────
+  // Eye = an almond shape using SphereGeometry stretched, with iris + pupil
+  const eyeGroup = new THREE.Group();
+  eyeGroup.position.set(0, 0, 0.8);
+  eyeGroup.visible = false;
+  scene.add(eyeGroup);
+
+  // eyeball white
+  const eyeball = new THREE.Mesh(
+    new THREE.SphereGeometry(1.0, 48, 32),
+    new THREE.MeshStandardMaterial({color:0xfcfaf5, emissive:0xfcfaf5, emissiveIntensity:0.1, roughness:0.3, transparent:true, opacity:0})
+  );
+  eyeGroup.add(eyeball);
+
+  // iris (grey)
+  const iris = new THREE.Mesh(
+    new THREE.CircleGeometry(0.45, 48),
+    new THREE.MeshBasicMaterial({color:0x3a3a3e, transparent:true, opacity:0})
+  );
+  iris.position.set(0, 0, 0.95);
+  eyeGroup.add(iris);
+
+  // pupil (black)
+  const pupil = new THREE.Mesh(
+    new THREE.CircleGeometry(0.18, 32),
+    new THREE.MeshBasicMaterial({color:0x040404, transparent:true, opacity:0})
+  );
+  pupil.position.set(0, 0, 0.96);
+  eyeGroup.add(pupil);
+
+  // eyelid (a plane covering the eye when closed, opens by scaling)
+  const lid = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.4, 2.4),
+    new THREE.MeshBasicMaterial({color:0x1a1a1b, transparent:true, opacity:0})
+  );
+  lid.position.set(0, 0, 1.02);
+  eyeGroup.add(lid);
+
+  // ───────── Cross of light ─────────
+  const crossMat = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false});
+  const crossV = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 12.0), crossMat);
+  const crossH = new THREE.Mesh(new THREE.PlaneGeometry(12.0, 0.32), crossMat);
+  crossV.position.set(0, 0, 1.5);
+  crossH.position.set(0, 0, 1.5);
+  crossV.visible = crossH.visible = false;
+  scene.add(crossV, crossH);
+
+  // ───────── Phase engine ─────────
+  const t0 = performance.now();
+  function ease(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+  function smooth(t){ t=Math.max(0,Math.min(1,t)); return t*t*(3-2*t); }
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function phaseOf(elapsed){
+    let acc = 0;
+    for (const k of ORDER){
+      const d = DUR[k];
+      if (elapsed < acc + d) {
+        return {name:k, local:(elapsed-acc)/d, accumulated:acc};
+      }
+      acc += d;
+    }
+    return {name:'DONE', local:1, accumulated:acc};
+  }
+
+  function setPhaseUI(name, globalPct){
+    phaseTag.textContent = name;
+    pctTag.textContent = Math.round(globalPct) + '%';
+    progBar.style.width = globalPct + '%';
+    if (name==='SEPARATION'){ lblL.textContent='CMY · MATTER'; lblR.textContent='RGB · LIGHT'; }
+    else if (name==='FUSE'){ lblL.textContent='FUSING → BLACK'; lblR.textContent='FUSING → WHITE'; }
+    else if (name==='MERGE'){ lblL.textContent='BLACK'; lblR.textContent='WHITE'; }
+    else if (name==='TUNNEL'){ lblL.textContent='50 → 101'; lblR.textContent='OBSERVATION'; }
+    else { lblL.textContent='·'; lblR.textContent='·'; }
+  }
+
+  function animate(now){
+    const elapsed = now - t0;
+    const p = phaseOf(elapsed % TOTAL);  // loop
+    const globalPct = 101 * Math.min(1, elapsed / TOTAL);
+    setPhaseUI(p.name, globalPct);
+    const t = p.local;
+
+    // reset visibility helpers
+    const showCMY = (op)=>{Object.values(cmyBalls).forEach(m=>{m.material.opacity = op; m.visible = op>0.01;});};
+    const showRGB = (op)=>{Object.values(rgbBalls).forEach(m=>{m.material.opacity = op; m.visible = op>0.01;});};
+
+    if (p.name === 'SEPARATION'){
+      showCMY(1); showRGB(1);
+      blackBall.material.opacity = 0;
+      whiteBall.material.opacity = 0;
+      greyBall.material.opacity = 0;
+      tunnel.visible = false;
+      core.material.opacity = 0;
+      eyeGroup.visible = false;
+      crossV.visible = crossH.visible = false;
+      leftPanel.material.color.set(COL.PAPER);
+      rightPanel.material.color.set(COL.INK);
+      divider.material.opacity = 0.6;
+      // balls settle into triangle (they start there)
+      Object.keys(cmyBalls).forEach(k=>{ cmyBalls[k].position.fromArray(CMY_POS[k]); });
+      Object.keys(rgbBalls).forEach(k=>{ rgbBalls[k].position.fromArray(RGB_POS[k]); });
+    }
+    else if (p.name === 'FUSE'){
+      const e = smooth(t);
+      // CMY converge to left-panel center, keep scale 1, opacity fade
+      const Lc = [-2.55, 0.2, 0.4];
+      const Rc = [ 2.55, 0.2, 0.4];
+      Object.keys(cmyBalls).forEach(k=>{
+        const src = CMY_POS[k];
+        const m = cmyBalls[k];
+        m.position.set(
+          lerp(src[0], Lc[0], e),
+          lerp(src[1], Lc[1], e),
+          lerp(src[2], Lc[2], e)
+        );
+        m.material.opacity = 1 - e;
+        m.visible = m.material.opacity > 0.02;
+      });
+      Object.keys(rgbBalls).forEach(k=>{
+        const src = RGB_POS[k];
+        const m = rgbBalls[k];
+        m.position.set(
+          lerp(src[0], Rc[0], e),
+          lerp(src[1], Rc[1], e),
+          lerp(src[2], Rc[2], e)
+        );
+        m.material.opacity = 1 - e;
+        m.visible = m.material.opacity > 0.02;
+      });
+      blackBall.material.opacity = e;
+      whiteBall.material.opacity = e;
+      greyBall.material.opacity = 0;
+      tunnel.visible = false;
+    }
+    else if (p.name === 'MERGE'){
+      const e = smooth(t);
+      // black & white slide to center, scale stable (no stretch per user)
+      blackBall.position.x = lerp(-2.55, -0.1, e);
+      whiteBall.position.x = lerp( 2.55,  0.1, e);
+      blackBall.position.y = 0.2;
+      whiteBall.position.y = 0.2;
+      blackBall.material.opacity = 1 - smooth(Math.max(0, (t-0.7)/0.3));
+      whiteBall.material.opacity = 1 - smooth(Math.max(0, (t-0.7)/0.3));
+      greyBall.material.opacity = smooth(Math.max(0,(t-0.55)/0.45));
+      greyBall.position.set(0, 0.2, 1);
+      // panels begin to darken toward grey
+      leftPanel.material.color.lerpColors(new THREE.Color(COL.PAPER), new THREE.Color(COL.GREY), e*0.75);
+      rightPanel.material.color.lerpColors(new THREE.Color(COL.INK), new THREE.Color(COL.GREY), e*0.75);
+      divider.material.opacity = 0.6 * (1 - e);
+      tunnel.visible = false;
+    }
+    else if (p.name === 'TUNNEL'){
+      // grey stays, tunnel appears and we move into it
+      greyBall.material.opacity = 1 - smooth(Math.max(0,(t-0.6)/0.4));
+      greyBall.scale.setScalar(lerp(1, 0.7, smooth(Math.max(0,(t-0.4)/0.6))));
+      greyBall.position.z = lerp(1, -0.4, smooth(t));
+      blackBall.material.opacity = 0;
+      whiteBall.material.opacity = 0;
+      leftPanel.material.color.set(COL.GREY);
+      rightPanel.material.color.set(COL.GREY);
+      divider.material.opacity = 0;
+      tunnel.visible = true;
+      tunnel.material.uniforms.uTime.value = now * 0.001;
+      tunnel.material.uniforms.uOpacity.value = smooth(t);
+      tunnel.material.uniforms.uAdvance.value = t;
+      // camera pushes in
+      camera.position.z = lerp(12, 7.2, smooth(t));
+    }
+    else if (p.name === 'EYE_CLOSED'){
+      const e = smooth(t);
+      tunnel.visible = true;
+      tunnel.material.uniforms.uTime.value = now * 0.001;
+      tunnel.material.uniforms.uOpacity.value = 1 - e*0.3;
+      core.material.opacity = e;
+      core.scale.setScalar(lerp(0.6, 2.2, e));
+      core.position.z = 0.2;
+      eyeGroup.visible = true;
+      eyeGroup.position.set(0, 0, 1.2);
+      eyeball.material.opacity = e * 0.9;
+      lid.material.opacity = e;
+      lid.scale.set(1, 1, 1); // lid fully covers
+      iris.material.opacity = 0;
+      pupil.material.opacity = 0;
+      camera.position.z = 7.2;
+    }
+    else if (p.name === 'EYE_OPEN'){
+      const e = smooth(t);
+      tunnel.material.uniforms.uTime.value = now * 0.001;
+      tunnel.material.uniforms.uOpacity.value = 0.7 - e*0.4;
+      core.material.opacity = 1 - e*0.3;
+      core.scale.setScalar(2.2);
+      eyeGroup.visible = true;
+      eyeball.material.opacity = 1;
+      iris.material.opacity = e;
+      pupil.material.opacity = e;
+      // eyelid opens: scale Y from 1 to 0 to reveal
+      lid.scale.set(1, 1 - e, 1);
+      lid.position.y = (1 - e) * 1.2; // pulls upward as it shrinks
+      lid.material.opacity = 1 - e;
+    }
+    else if (p.name === 'CROSS'){
+      const e = smooth(t);
+      tunnel.material.uniforms.uOpacity.value = 0.1;
+      core.material.opacity = 0.6;
+      eyeGroup.visible = true;
+      eyeball.material.opacity = 1;
+      iris.material.opacity = 1 - e*0.6;
+      pupil.material.opacity = 1 - e*0.8;
+      lid.material.opacity = 0;
+      crossV.visible = crossH.visible = true;
+      const cOp = Math.sin(Math.min(1,e*1.2) * Math.PI);
+      crossV.material.opacity = cOp;
+      crossV.scale.set(1 + e*1.4, 1, 1);
+      crossH.scale.set(1, 1 + e*1.4, 1);
+      // add radial bloom via growing white core
+      core.scale.setScalar(2.2 + e*3.0);
+      core.material.opacity = 0.6 + e*0.4;
+    }
+    else if (p.name === 'EXIT'){
+      const e = smooth(t);
+      // white-out then fade to code world
+      core.material.opacity = 1 - e*0.6;
+      core.scale.setScalar(8 + e*4);
+      crossV.material.opacity = 1 - e;
+      crossH.material.opacity = 1 - e;
+      tunnel.material.uniforms.uOpacity.value = 0;
+      // subtle fade to black
+      scene.background.setRGB(
+        lerp(1,0.02,e),
+        lerp(1,0.02,e),
+        lerp(1,0.02,e)
+      );
+      renderer.setClearColor(scene.background, 1);
+    }
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+
+</body>
+</html>
