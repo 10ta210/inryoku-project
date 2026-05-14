@@ -4,7 +4,7 @@
   "framework": null,
   "installCommand": null,
   "rewrites": [
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/", "destination": "/p3_test.html" }
   ],
   "cleanUrls": false
 }
