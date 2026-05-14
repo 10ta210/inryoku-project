@@ -2543,3 +2543,12 @@ body[data-theme="win95"] .carousel-scene::before {
 .cart-total {
   font-size: 12px !important;
 }
+
+/* モバイルでは音楽系UI（mute/bgm）を非表示 — 邪魔回避 */
+/* 削除ではなくCSS非表示。PC では従来通り動作 */
+@media (max-width: 768px) {
+  #bgm-btn,
+  #mute-btn {
+    display: none !important;
+  }
+}
