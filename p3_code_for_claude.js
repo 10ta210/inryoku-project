@@ -1443,9 +1443,20 @@ function renderPhase3() {
     if (scContentForContact) { scContentForContact.appendChild(contactForm); }
 
     // 問い合わせ展開トグル
+    // 2026-05-13: CONTACT クリック → ビッグバン + ロゴが喋る発動
+    // bb-logo のクリックを再利用（absorb → chatting → speakBinary の既存フロー）
+    // ロゴ未存在 or クールダウン中はフォーム展開にフォールバック
     document.getElementById('contact-toggle').addEventListener('click', function() {
+        var logo = document.getElementById('bb-logo');
+        if (logo) {
+            // bb-logo の既存ハンドラ（idle ガード付き）に委譲
+            // 二重発火・状態異常は内部でブロックされる
+            logo.click();
+            return;
+        }
+        // フォールバック: 旧来のフォーム開閉
         var body = document.getElementById('contact-body');
-        body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
     });
 
     // 問い合わせ送信

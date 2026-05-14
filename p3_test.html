@@ -124,21 +124,25 @@
   <script>
     // P3 直接起動 (P1/P2をスキップ)
     renderPhase3();
-    // 初回クリック/タッチで BGM 再生再開（ブラウザの自動再生ポリシー対策）
+    // 2026-05-13: モバイル audio 修正
+    // 旧コードの問題: { once: true } で最初のタップ時に _p6bgm 未生成だと
+    // リスナーが消えて二度と再生されなかった。
+    // 修正: _p6bgm が用意されるまでリトライ、touchstart→touchend に変更（iOS安定化）
     (function(){
       function kick(){
-        if (window._p6bgm) {
+        if (!window._p6bgm) return; // まだ準備中 → 次のジェスチャで再試行
+        try {
           window._p6bgm.muted = !!window._inryokuMuted;
           var pr = window._p6bgm.play();
           if (pr && pr.catch) pr.catch(function(){});
-        }
-        document.removeEventListener('click', kick);
-        document.removeEventListener('touchstart', kick);
-        document.removeEventListener('keydown', kick);
+        } catch(e) {}
+        document.removeEventListener('click', kick, true);
+        document.removeEventListener('touchend', kick, true);
+        document.removeEventListener('keydown', kick, true);
       }
-      document.addEventListener('click', kick, { once: true });
-      document.addEventListener('touchstart', kick, { once: true });
-      document.addEventListener('keydown', kick, { once: true });
+      document.addEventListener('click', kick, true);
+      document.addEventListener('touchend', kick, true);
+      document.addEventListener('keydown', kick, true);
     })();
   </script>
 </body>
