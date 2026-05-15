@@ -7,7 +7,8 @@
     { "source": "/", "destination": "/p3_test.html" },
     { "source": "/index.html", "destination": "/p3_test.html" },
     { "source": "/index", "destination": "/p3_test.html" },
-    { "source": "/p2", "destination": "/p2_test.html" }
+    { "source": "/p2", "destination": "/p2_test.html" },
+    { "source": "/full", "destination": "/index_full_sequence.html" }
   ],
   "cleanUrls": false
 }
