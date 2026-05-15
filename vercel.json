@@ -6,7 +6,8 @@
   "rewrites": [
     { "source": "/", "destination": "/p3_test.html" },
     { "source": "/index.html", "destination": "/p3_test.html" },
-    { "source": "/index", "destination": "/p3_test.html" }
+    { "source": "/index", "destination": "/p3_test.html" },
+    { "source": "/p2", "destination": "/p2_test.html" }
   ],
   "cleanUrls": false
 }
