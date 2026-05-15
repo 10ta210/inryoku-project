@@ -9,5 +9,6 @@
     { "source": "/index", "destination": "/p3_test.html" },
     { "source": "/p2", "destination": "/p2_test.html" }
   ],
+  "trailingSlash": false,
   "cleanUrls": false
 }

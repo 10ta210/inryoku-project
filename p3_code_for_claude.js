@@ -336,6 +336,13 @@ var p3AudioCtx = null;
 var p3Analyser = null;
 var p3FreqData = null;
 var p3AudioEnergy = 0;
+// 2026-05-15: 音響シンクロ強化 — 帯域別の値とビート検出を公開
+var p3AudioBass = 0;   // 低音 0-1
+var p3AudioMid = 0;    // 中音 0-1
+var p3AudioHigh = 0;   // 高音 0-1
+var p3AudioBeat = 0;   // ビート（低音スパイク時に1→急減衰）
+var _p3BassPrev = 0;   // ビート検出用の前フレーム低音
+var _p3BassMA = 0;     // 低音の移動平均（適応閾値）
 
 function initP3Audio() {
     if (p3AudioCtx) return;
@@ -364,7 +371,19 @@ function updateAudioEnergy() {
     bass /= (bassEnd * 255);
     mid /= ((midEnd - bassEnd) * 255);
     high /= ((len - midEnd) * 255);
+    // 帯域別を公開（uniformやJSアニメから参照可能）
+    p3AudioBass = bass;
+    p3AudioMid = mid;
+    p3AudioHigh = high;
     p3AudioEnergy = bass * 0.5 + mid * 0.35 + high * 0.15;
+    // ビート検出: 低音が移動平均+閾値を超えた瞬間にパルス
+    _p3BassMA = _p3BassMA * 0.95 + bass * 0.05;
+    if (bass > _p3BassMA * 1.4 && bass > _p3BassPrev + 0.04 && bass > 0.18) {
+        p3AudioBeat = 1.0;
+    } else {
+        p3AudioBeat *= 0.88; // 急減衰
+    }
+    _p3BassPrev = bass;
 }
 
 // ═══ 3Dロゴ球体（PNGを置き換え） ═══
@@ -3189,10 +3208,19 @@ void main() {
 
         // ── 音響リアクティブ: AnalyserNodeからエネルギーを取得 ──
         updateAudioEnergy();
-        // スムーズに追従（急変を防ぐ）
-        const targetEnergy = p3AudioEnergy;
+        // スムーズに追従（急変を防ぐ）。ビート時は瞬間ブースト
+        const targetEnergy = p3AudioEnergy + p3AudioBeat * 0.35;
         const currentEnergy = material.uniforms.uAudioEnergy.value;
-        material.uniforms.uAudioEnergy.value += (targetEnergy - currentEnergy) * 0.15;
+        // ビート時はアタック速く（0.35）、平時はゆっくり（0.15）
+        const attack = p3AudioBeat > 0.4 ? 0.35 : 0.15;
+        material.uniforms.uAudioEnergy.value += (targetEnergy - currentEnergy) * attack;
+
+        // 2026-05-15: ビート時のカメラ微振動（迫力UP・酔わない程度）
+        if (p3AudioBeat > 0.5) {
+            const kick = p3AudioBeat * 0.08;
+            camera6.position.x += (Math.random() - 0.5) * kick;
+            camera6.position.y += (Math.random() - 0.5) * kick;
+        }
 
         // ── パーティクル段階的出現（60秒: 暗闇→ぽつぽつ→加速→全星） ──
         if (visibleCount < N) {
