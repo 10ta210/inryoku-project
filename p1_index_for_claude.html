@@ -85,7 +85,7 @@
         // → Win95ローディング直行（P1演出をすぐ見たい時用）
         // 本番アクセスは無関係（パラメータ無しなら従来通り）
         (function devSkipIntro() {
-            if (!/[\?&](dev=1|skip=intro)/.test(location.search)) return;
+            if (!/[\?&](dev=1|skip=intro|at=50)/.test(location.search)) return;
             console.log('[P1 dev] auto-skip intro enabled');
             var attempts = 0;
             var iv = setInterval(function() {
@@ -100,6 +100,20 @@
                 }
                 if (attempts > 150) { clearInterval(iv); } // 30秒で諦め
             }, 200);
+        })();
+
+        // 2026-05-17 開発用: ?at=50 で P1 prog を 0→50 まで 20倍速で早送り
+        // 50%到達イベント (inryoku:p1_50percent) で等倍に戻す
+        // 本番アクセスは無関係（パラメータ無しなら _p1FastForward は undefined → 1扱い）
+        (function devFastForwardTo50() {
+            if (!/[\?&]at=50/.test(location.search)) return;
+            window._p1FastForward = 20;
+            console.log('[P1 dev] fast-forward x20 until 50% mark');
+            window.addEventListener('inryoku:p1_50percent', function once() {
+                window._p1FastForward = 1;
+                window.removeEventListener('inryoku:p1_50percent', once);
+                console.log('[P1 dev] 50% reached — speed reset to x1');
+            });
         })();
 
         // P1完了 → P2起動

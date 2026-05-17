@@ -2394,7 +2394,8 @@ function renderPhase1() {
                         rate = CONSUME_SPEED_NORMAL;
                     }
                 }
-                prog = Math.min(101, prog + rate * dt);
+                // 2026-05-17 開発用: ?at=50 早送り倍率 (本番では undefined → 1)
+                prog = Math.min(101, prog + rate * dt * (window._p1FastForward || 1));
                 showProg(prog);
             }
 
