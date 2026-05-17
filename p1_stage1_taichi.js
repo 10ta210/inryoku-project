@@ -495,6 +495,10 @@
         breakthroughTime: 0,      // performance.now() at fireBreakthrough
         ingestStartTime: 0,       // performance.now() at applyIngestClass
         pressureActive: false,    // class state tracker
+        // 2026-05-18 段階4.2: Reality Frame Collapse (whole .phase-1 dissolution)
+        realityFrame: null,       // { source, clone }
+        screenWarp: null,         // fullscreen warp overlay element
+        realityFrameRoot: null,   // discoverRealityFrameRoot() cached result
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
@@ -610,6 +614,67 @@
             // 元 DOM を隠す (レイアウトは維持)
             source.style.visibility = 'hidden';
             return { source: source, clone: clone };
+        } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階4.2: Reality Frame discovery (P1 root 全体 — .phase-1 優先)
+    //   Codex: 101% は Win95 window だけでなく、四角フレームの概念ごと溶解させる。
+    //   priority: .phase-1 → #phase-1 → #root (contains .phase-1) → largest fallback
+    function discoverRealityFrameRoot() {
+        try {
+            const phase1 = document.querySelector('.phase-1')
+                        || document.querySelector('#phase-1');
+            if (phase1 && phase1.offsetWidth > 200 && phase1.offsetHeight > 100) return phase1;
+            const root = document.getElementById('root');
+            if (root && root.querySelector && root.querySelector('.phase-1')
+                && root.offsetWidth > 200 && root.offsetHeight > 100) {
+                return root;
+            }
+            // Fallback: 既存ロジック (Win95 window) を再利用
+            return discoverWin95Root();
+        } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階4.2: P1 root 全体を clone → reality-frame-collapse 用 overlay
+    function createRealityFrameClone() {
+        try {
+            const source = discoverRealityFrameRoot();
+            if (!source) return null;
+            const rect = source.getBoundingClientRect();
+            const clone = source.cloneNode(true);
+            clone.id = 'p1-reality-frame-clone';
+            try {
+                const ids = clone.querySelectorAll('[id]');
+                ids.forEach(function(n){ n.id = 'rfc-' + n.id; });
+                clone.id = 'p1-reality-frame-clone';
+            } catch (e) {}
+            Object.assign(clone.style, {
+                position: 'fixed',
+                left: rect.left + 'px',
+                top:  rect.top  + 'px',
+                width:  rect.width  + 'px',
+                height: rect.height + 'px',
+                margin: '0',
+                zIndex: '2147483000',
+                pointerEvents: 'none',
+                transformOrigin: '50% 50%',
+                overflow: 'hidden',
+                willChange: 'transform, opacity, filter, clip-path'
+            });
+            document.body.appendChild(clone);
+            // 元の root を hide (レイアウトは保持)
+            source.style.visibility = 'hidden';
+            return { source: source, clone: clone };
+        } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階4.2: フルビューポート warp overlay (圧縮 blur gradient)
+    function createScreenWarpOverlay() {
+        try {
+            const overlay = document.createElement('div');
+            overlay.className = 'p1-screen-warp';
+            document.body.appendChild(overlay);
+            return overlay;
         } catch (e) { return null; }
     }
 
@@ -903,6 +968,46 @@
                 '          drop-shadow(2px 0 rgba(0,255,255,.55))',
                 '          drop-shadow(-2px 0 rgba(255,0,255,.55))',
                 '          drop-shadow(0 2px rgba(255,255,0,.45));',
+                '}',
+                // ── 2026-05-18 段階4.2: Reality Frame Collapse (P1 root 全体の崩壊) ──
+                //   Codex: 101% は .phase-1 全域を square → ellipse → dot に溶解する。
+                '#p1-reality-frame-clone.reality-frame-collapse {',
+                '  animation: realityFrameCollapse 2400ms cubic-bezier(.76,0,.1,1) forwards;',
+                (IS_MOBILE ? '  filter: contrast(1.08) saturate(1.18);' : '  filter: contrast(1.2) saturate(1.4);'),
+                '}',
+                '@keyframes realityFrameCollapse {',
+                '  0%   { opacity: 1; transform: scale(1);',
+                '         clip-path: inset(0% 0% 0% 0% round 0px); }',
+                '  22%  { opacity: .98; transform: scale(1.015);',
+                '         clip-path: inset(1% 1% 1% 1% round 18px); }',
+                '  45%  { opacity: .94; transform: scale(.92, .86) rotate(.4deg);',
+                '         clip-path: ellipse(78% 62% at 50% 50%); }',
+                '  68%  { opacity: .78; transform: scale(.55, .34) rotate(-2deg);',
+                '         clip-path: ellipse(42% 22% at 50% 50%); }',
+                '  86%  { opacity: .45; transform: scale(.16, .07) rotate(13deg);',
+                '         clip-path: ellipse(12% 5% at 50% 50%); }',
+                '  100% { opacity: 0; transform: scale(.01) rotate(38deg);',
+                '         clip-path: ellipse(1% 1% at 50% 50%); }',
+                '}',
+                '.p1-screen-warp {',
+                '  position: fixed; inset: 0;',
+                '  z-index: 2147482999;',
+                '  pointer-events: none;',
+                '  background: radial-gradient(circle at 50% 50%,',
+                '    transparent 0 18%,',
+                '    rgba(255,255,255,.08) 28%,',
+                '    rgba(0,0,0,0) 60%);',
+                '  animation: screenWarp 2400ms ease-in forwards;',
+                '}',
+                '@keyframes screenWarp {',
+                '  0%   { transform: scale(1); filter: blur(0); opacity: 0; }',
+                '  30%  { opacity: .35; }',
+                (IS_MOBILE
+                    ? '  70%  { opacity: .8; transform: scale(.82); filter: blur(.6px); }'
+                    : '  70%  { opacity: .8; transform: scale(.82); filter: blur(1px); }'),
+                (IS_MOBILE
+                    ? '  100% { opacity: 0; transform: scale(.05); filter: blur(4px); }'
+                    : '  100% { opacity: 0; transform: scale(.05); filter: blur(8px); }'),
                 '}',
                 // ── 2026-05-18 段階2.5: Codex redesign — grey OS bar (default) ──
                 //   旧: JS が rainbow gradient を毎フレーム inline 書き換え
@@ -1345,45 +1450,69 @@
     }
 
     function applyIngestClass() {
-        // 2026-05-18 段階3.2: DOM clone overlay 方式に切替
-        //   旧: #win95-main にクラスを付ける → 子の stacking context で clip-path/transform が壊れる
-        //   新: 可視 Win95 を clone → body 末尾に絶対配置 → 元 DOM は visibility:hidden
+        // 2026-05-18 段階4.2: Reality Frame Collapse へ置換
+        //   Codex: 101% は Win95 window だけではなく .phase-1 全域を溶解させる。
+        //   旧 createUiIngestClone (#win95-main) は左右パネル/外枠が残り
+        //   "四角の中で四角が縮む" 違和感があった → reality frame 全体を clone。
         try {
-            // discover (キャッシュ)
+            // 旧: discoverWin95Root() ベースの ingest source キャッシュ。fallback 用に残す。
             if (!state.win95Root) {
                 state.win95Root = discoverWin95Root();
-                if (state.win95Root) {
+            }
+            // 段階4.2: P1 root (.phase-1) 全体を発見
+            if (!state.realityFrameRoot) {
+                state.realityFrameRoot = discoverRealityFrameRoot();
+                if (state.realityFrameRoot) {
                     try {
-                        console.log('[P1 stage3.2] discoverWin95Root →',
-                            state.win95Root,
-                            '(' + (state.win95Root.tagName || '') + '#' + (state.win95Root.id || '') + '.' + (state.win95Root.className || '') + ')');
+                        const el = state.realityFrameRoot;
+                        console.log('[P1 stage4.2] discoverRealityFrameRoot →',
+                            el,
+                            '(' + (el.tagName || '') + '#' + (el.id || '') + '.' + (el.className || '') + ')',
+                            el.getBoundingClientRect());
                     } catch (e) {}
                 }
             }
-            const src = state.win95Root;
-            if (!src) return;
+            const rootSrc = state.realityFrameRoot || state.win95Root;
+            if (!rootSrc) return;
             // prewarp class は元に付いている可能性があるので外す
-            try { src.classList.remove('p1-window-prewarp'); } catch (e) {}
-            // 2026-05-18 段階4: SVG goo filter を保証
+            try {
+                if (state.win95Root && state.win95Root.classList) {
+                    state.win95Root.classList.remove('p1-window-prewarp');
+                }
+            } catch (e) {}
+            // 2026-05-18 段階4: SVG goo filter を保証 (warp overlay と層をなす)
             ensureP1GooFilter();
-            const pair = createUiIngestClone(src);
+
+            // ── 旧コード (段階3.2/4): #win95-main のみ clone — フォールバック用に保持 ──
+            // const pair = createUiIngestClone(rootSrc);
+            // if (!pair) return;
+            // state.uiIngestClone = pair.clone;
+            // state.uiIngestSource = pair.source;
+
+            // ── 段階4.2: Reality Frame Clone (P1 root 全体) ──
+            const pair = createRealityFrameClone();
             if (!pair) return;
-            state.uiIngestClone = pair.clone;
+            state.realityFrame = pair;
+            state.uiIngestClone = pair.clone;     // 既存コードとの後方互換
             state.uiIngestSource = pair.source;
+            // フルスクリーン warp overlay
+            state.screenWarp = createScreenWarpOverlay();
+
             state.ingestStartMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
             // 2026-05-18 段階2.5: alias for Codex text degradation sequence
             state.ingestStartTime = state.ingestStartMs;
-            // 次フレームで .p1-goo-ingest を付与 (2400ms 液体吸引)
-            // 旧コード: is-ingesting (1350ms clip-path circle) → 段階4 で置換
             // 2026-05-18 段階5/6/7: 量子崩壊 WebGL オーバーレイを同時起動
-            // 旧 SVG goo はそのまま (CSS) と並行。粒子は uCollapse 0→1 で中心収束。
+            // 粒子は reality-frame collapse の下層に layer される (Z 順は WebGL canvas に依存)。
             try { buildQuantumCollapseParticles(); } catch (e) {}
-            // CSS フェード (p1-quantum-collapse) も #win95-main に付与
+            // CSS フェード (p1-quantum-collapse) も元 root に付与 (sphere/tunnel と層をなす)
             try {
-                if (src && src.classList) src.classList.add('p1-quantum-collapse');
+                if (rootSrc && rootSrc.classList) rootSrc.classList.add('p1-quantum-collapse');
             } catch (e) {}
             requestAnimationFrame(function(){
                 try {
+                    // 段階4.2: reality-frame-collapse animation を発火
+                    pair.clone.classList.add('reality-frame-collapse');
+                    // 後方互換 (既存 hook/teardown が .p1-goo-ingest を待つかもしれない)
                     pair.clone.classList.add('p1-goo-ingest');
                     // Easter Egg 1: CMY ink bleed (最初の 600ms)
                     if (!REDUCE_MOTION) {
@@ -1394,10 +1523,20 @@
                         }, 600);
                     }
                 } catch (e) {}
-                // ingest dur (2.4s) + 余裕 0.2s 後に clone を片付ける
+                // ingest dur (2.4s) + 余裕 ~0.1s 後に clone / overlay を片付ける
                 setTimeout(function(){
-                    try { pair.clone.remove(); } catch (e) {}
-                }, 2600);
+                    try {
+                        if (state.realityFrame && state.realityFrame.clone) {
+                            state.realityFrame.clone.remove();
+                        }
+                    } catch (e) {}
+                    try {
+                        if (state.screenWarp && state.screenWarp.remove) {
+                            state.screenWarp.remove();
+                        }
+                    } catch (e) {}
+                    // 元 DOM は visibility:hidden のまま保持 (post-handoff state 用)
+                }, 2500);
             });
         } catch (e) {}
     }
