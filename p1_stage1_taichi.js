@@ -1385,11 +1385,13 @@
                 runner.style.display    = 'block';
                 runner.style.visibility = 'visible';
                 runner.style.opacity    = '1';
-                // morphProg を再計算 (try ブロックの外なので)
+                // 2026-05-18 段階3.3: 50→101 連続走行 (戻りバグ修正)
+                // 旧: (rp-50)/51 を 0-100%にマップ → 50% で左端に戻る
+                // 新: rp そのものを左 % に。50→101 でバー上を連続走行
                 let rp;
                 if (rv <= 1.0) rp = 50 + rv * 50; else rp = 101;
-                const p = Math.max(0, Math.min(1, (rp - 50) / 51));
-                runner.style.left = (p * 100) + '%';
+                const leftPct = Math.min(101, Math.max(50, rp));
+                runner.style.left = leftPct + '%';
                 // 状態クラス
                 const plateauNow = rp >= 99 && rp < 101;
                 runner.classList.toggle('is-plateau',
