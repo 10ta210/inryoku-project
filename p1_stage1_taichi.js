@@ -490,6 +490,11 @@
         easterCmyInked: false,
         easterGreyPointFired: false,
         easterRunnerLastFired: false,
+        // 2026-05-18 段階2.5: Codex redesign — grey OS bar + color leak only at key moments
+        bled50: false,            // 50% bleed flash one-shot guard
+        breakthroughTime: 0,      // performance.now() at fireBreakthrough
+        ingestStartTime: 0,       // performance.now() at applyIngestClass
+        pressureActive: false,    // class state tracker
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
@@ -642,6 +647,47 @@
             pctEl.textContent = 'Loading reality... 10'
                 + glyphs[Math.floor(Math.random() * glyphs.length)] + '%';
         } catch (e) {}
+    }
+
+    // 2026-05-18 段階2.5: Codex 文字グリッチ生成 (ingest 中の breakdown 用)
+    function glitchText(src, intensity) {
+        try {
+            const chars = ['▒','█','▓','◢','◣','✕','░','■'];
+            return src.split('').map(function (c) {
+                if (c === ' ' || c === '.') return c;
+                return Math.random() < intensity ? chars[Math.floor(Math.random() * chars.length)] : c;
+            }).join('');
+        } catch (e) { return src; }
+    }
+
+    // 2026-05-18 段階2.5: Codex text degradation sequence
+    //   normal → 100% → 10█% → ∞% → 101% → glitch → empty
+    function updateLoadingText(rv, now) {
+        const pctEl = document.getElementById('p1-lpct');
+        if (!pctEl) return;
+        if (state.ingestFired) {
+            const elapsed = now - (state.ingestStartTime || state.ingestStartMs || now);
+            if (elapsed < 100)       pctEl.textContent = glitchText('Loading reality... 101%', 0.4);
+            else if (elapsed < 240)  pctEl.textContent = glitchText('Loading reality... 101%', 0.7);
+            else if (elapsed < 380)  pctEl.textContent = glitchText('Loading reality... 101%', 0.95);
+            else                     pctEl.textContent = '';
+            return;
+        }
+        if (state.breakthroughFired) {
+            const elapsed = now - (state.breakthroughTime || now);
+            if (elapsed < 50)        pctEl.textContent = 'Loading reality... 10█%';
+            else if (elapsed < 100)  pctEl.textContent = 'Loading reality... ∞%';
+            else                     pctEl.textContent = 'Loading reality... 101%';
+            return;
+        }
+        if (rv >= 1.0) {
+            pctEl.textContent = 'Loading reality... 100%';
+            return;
+        }
+        // normal: milestone snap (既存の nearestMilestone を流用)
+        const morphProg = 50 + rv * 50;
+        const shown = nearestMilestone(morphProg);
+        pctEl.textContent = 'Loading reality... ' + shown + '%';
     }
 
     // 2026-05-18 段階3.2: ローディングバー quantized milestones
@@ -857,6 +903,93 @@
                 '          drop-shadow(2px 0 rgba(0,255,255,.55))',
                 '          drop-shadow(-2px 0 rgba(255,0,255,.55))',
                 '          drop-shadow(0 2px rgba(255,255,0,.45));',
+                '}',
+                // ── 2026-05-18 段階2.5: Codex redesign — grey OS bar (default) ──
+                //   旧: JS が rainbow gradient を毎フレーム inline 書き換え
+                //   新: クラス制で grey が default、色は 50/100/101 の 3 瞬間だけ漏れる
+                '#p1-lb {',
+                '  background: repeating-linear-gradient(',
+                '    90deg,',
+                '    #6f6f6f 0 2px,',
+                '    #9a9a9a 2px 4px',
+                '  );',
+                '  box-shadow:',
+                '    inset 0 1px 0 rgba(255,255,255,.55),',
+                '    inset 0 -1px 0 rgba(0,0,0,.45);',
+                '  filter: none;',
+                '  position: relative;',
+                '  overflow: visible;',
+                '}',
+                // ── 50% bleed: 240ms CMY/RGB chromatic aberration flash ──
+                '#p1-lb.is-bleed-50 {',
+                '  animation: p1Bleed50 240ms cubic-bezier(.7,0,.2,1) forwards;',
+                '}',
+                '@keyframes p1Bleed50 {',
+                '  0%   { filter: none; }',
+                '  35%  { filter: saturate(2.4)',
+                '         drop-shadow(2px 0 rgba(0,255,255,.55))',
+                '         drop-shadow(-2px 0 rgba(255,0,255,.5)); }',
+                '  70%  { filter: saturate(1.6); }',
+                '  100% { filter: none; }',
+                '}',
+                // ── 50-99% pressure: grey stripe + contrast pulse ──
+                '#p1-lb.is-pressure {',
+                '  background:',
+                '    repeating-linear-gradient(',
+                '      90deg,',
+                '      #777 0 2px,',
+                '      #aaa 2px 3px,',
+                '      #555 3px 5px',
+                '    );',
+                '  animation: p1Pressure 900ms steps(4,end) infinite;',
+                '}',
+                '@keyframes p1Pressure {',
+                '  0%,100% { filter: contrast(1.05); }',
+                '  50% { filter: contrast(1.35) brightness(1.12); }',
+                '}',
+                // ── 2026-05-18 段階2.5: 100% plateau refine (override 旧 is-plateau) ──
+                '#p1-lb.is-plateau {',
+                '  background: linear-gradient(90deg, #777, #bdbdbd 72%, #f2f2f2 98%);',
+                '  animation: p1Strain 320ms steps(2,end) infinite;',
+                '}',
+                '@keyframes p1Strain {',
+                '  0% { transform: scaleX(1); }',
+                '  50% { transform: scaleX(1.012) skewX(-1deg); }',
+                '  100% { transform: scaleX(.998); }',
+                '}',
+                // ── 101% breakthrough: right-edge RGBCMY color leak eruption ──
+                '#p1-lb.is-breakthrough {',
+                '  /* bar stays grey; ::after carries the only color moment */',
+                '}',
+                '#p1-lb.is-breakthrough::after {',
+                '  content: "";',
+                '  position: absolute;',
+                '  right: -6px;',
+                '  top: -4px;',
+                '  width: 18px;',
+                '  height: calc(100% + 8px);',
+                '  background: linear-gradient(180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f);',
+                '  filter: blur(2px) brightness(1.8);',
+                '  animation: p1ColorLeak 520ms ease-out forwards;',
+                '  pointer-events: none;',
+                '}',
+                '@keyframes p1ColorLeak {',
+                '  from { opacity: 0; transform: scaleY(.4); }',
+                '  35%  { opacity: 1; transform: scaleY(1.3); }',
+                '  to   { opacity: 0; transform: translateX(34px) scaleY(.1); }',
+                '}',
+                // ── 2026-05-18 段階2.5: runner double-bump wall (override 旧 is-plateau) ──
+                '#exit-runner.is-plateau {',
+                '  animation: runnerDoubleBump 1500ms cubic-bezier(.7,0,.3,1) forwards;',
+                '}',
+                '@keyframes runnerDoubleBump {',
+                '  0%   { transform: translateX(0); }',
+                '  18%  { transform: translateX(6px) scaleX(.85); }',
+                '  34%  { transform: translateX(-4px) scaleX(1.05); }',
+                '  50%  { transform: translateX(2px); }',
+                '  68%  { transform: translateX(10px) scaleX(.8); }',
+                '  84%  { transform: translateX(-6px) scaleX(1.08); }',
+                '  100% { transform: translateX(4px); }',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -1238,6 +1371,8 @@
             state.uiIngestClone = pair.clone;
             state.uiIngestSource = pair.source;
             state.ingestStartMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+            // 2026-05-18 段階2.5: alias for Codex text degradation sequence
+            state.ingestStartTime = state.ingestStartMs;
             // 次フレームで .p1-goo-ingest を付与 (2400ms 液体吸引)
             // 旧コード: is-ingesting (1350ms clip-path circle) → 段階4 で置換
             // 2026-05-18 段階5/6/7: 量子崩壊 WebGL オーバーレイを同時起動
@@ -1291,6 +1426,8 @@
     function fireBreakthrough() {
         if (state.breakthroughFired) return;
         state.breakthroughFired = true;
+        // 2026-05-18 段階2.5: record breakthrough timestamp for text degradation
+        state.breakthroughTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
         triggerBarBurst();
         triggerWhiteFlash();
         // 2026-05-18 段階3.2: bar breakthrough animation + sparks
@@ -1905,7 +2042,39 @@
                     // 2026-05-18 段階3.2: quantized visualPct (旧: 直接 morphProg)
                     // 旧コード: barFill.style.width = Math.min(100, morphProg) + '%';
                     barFill.style.width = Math.min(100, state.visualPct + strain) + '%';
-                    // plateau class for strain animation
+                    // 2026-05-18 段階2.5: Codex redesign — class-based state only
+                    //   旧コード (rainbow gradient inline 書き換え) は完全に廃止。
+                    //   bar は default で grey OS dither、色は 3 瞬間だけ漏れる。
+                    // 旧コード (削除):
+                    //   if (rv < 0.04) { barFill.style.background = '...白黒...'; }
+                    //   else if (rv < 1.0) { barFill.style.background = '...rainbow stops...'; }
+                    //   else { barFill.style.background = '...full rainbow...'; }
+                    // 旧コードで inline 設定された style.background をクリア (再進入対策)
+                    if (barFill.style.background) {
+                        barFill.style.background = '';
+                    }
+                    // 50% bleed flash (1-shot, reveal が初めて 0.04 を超えた瞬間)
+                    if (!state.bled50 && rv >= 0.04) {
+                        state.bled50 = true;
+                        try {
+                            barFill.classList.add('is-bleed-50');
+                            setTimeout(function () {
+                                try { barFill.classList.remove('is-bleed-50'); } catch (e) {}
+                            }, 260);
+                        } catch (e) {}
+                    }
+                    // pressure class (50-99%, breakthrough/plateau 前)
+                    const wantPressure = (rv >= 0.04 && rv < 0.96)
+                        && !plateau
+                        && !state.breakthroughFired;
+                    if (wantPressure) {
+                        if (!barFill.classList.contains('is-pressure')) {
+                            barFill.classList.add('is-pressure');
+                        }
+                    } else {
+                        barFill.classList.remove('is-pressure');
+                    }
+                    // plateau class (100% wall)
                     if (plateau && !state.breakthroughFired) {
                         if (!barFill.classList.contains('is-plateau')) {
                             barFill.classList.add('is-plateau');
@@ -1913,53 +2082,15 @@
                     } else {
                         barFill.classList.remove('is-plateau');
                     }
-                    if (rv < 0.04) {
-                        // 50%: 陰陽 — 白黒ストライプ
-                        barFill.style.background =
-                            'repeating-linear-gradient(to right,' +
-                            '#ffffff 0px,#ffffff 5px,#000000 5px,#000000 10px)';
-                    } else if (rv < 1.0) {
-                        // 51%〜100%: グレーから rainbow が湧き出す
-                        const greyA   = (1 - rv) * 0.85;          // グレー側
-                        const colorA  = Math.min(1, rv * 1.15);   // 虹側 (少し早めに濃く)
-                        const stops = [
-                            'rgba(128,128,128,' + greyA + ')',
-                            'rgba(255,0,0,'   + (colorA * 0.85) + ')',
-                            'rgba(255,140,0,' + (colorA * 0.75) + ')',
-                            'rgba(255,255,0,' + (colorA * 0.85) + ')',
-                            'rgba(0,255,0,'   + (colorA * 0.85) + ')',
-                            'rgba(0,255,255,' + (colorA * 0.85) + ')',
-                            'rgba(0,0,255,'   + (colorA * 0.85) + ')',
-                            'rgba(255,0,255,' + (colorA * 0.85) + ')'
-                        ];
-                        barFill.style.background = 'linear-gradient(to right,' + stops.join(',') + ')';
-                    } else {
-                        // 101%: 完全 RGBCMY 虹
-                        barFill.style.background =
-                            'linear-gradient(to right,' +
-                            '#ff0000,#ff8800,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000)';
-                    }
                 }
                 if (pctEl) {
-                    // 2026-05-17 段階3.1: milestone snap, 100 plateau then 101 breakthrough
-                    // 2026-05-18 段階3.2: breakthrough 直前 (t ≈ BREAKTHROUGH_T - 40ms) で
-                    //   "10█%" のグリッチ文字を 1-2 フレームだけ出してから 101 にスナップ
-                    const preGlitchWindow = (t >= BREAKTHROUGH_T - 0.04) && (t < BREAKTHROUGH_T);
-                    let shown;
-                    if (preGlitchWindow && !state.glitchTextFired) {
-                        state.glitchTextFired = true;
-                        showGlitchPercent(pctEl);
-                        shown = null; // 上書きしない
-                    } else if (rv > 1.0) {
-                        shown = 101;
-                    } else if (rv >= 1.0) {
-                        shown = 100; // 厳密な 100% snap
-                    } else {
-                        shown = nearestMilestone(morphProg);
-                    }
-                    if (shown !== null && shown !== undefined) {
-                        pctEl.textContent = 'Loading reality... ' + shown + '%';
-                    }
+                    // 2026-05-18 段階2.5: Codex text degradation sequence
+                    //   旧 milestone snap + preGlitch ロジックは updateLoadingText に統合
+                    // 旧コード (削除):
+                    //   const preGlitchWindow = ...; if (preGlitchWindow && !state.glitchTextFired) {...}
+                    //   else if (rv > 1.0) shown = 101; else if (rv >= 1.0) shown = 100; ...
+                    const nowMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+                    updateLoadingText(rv, nowMs);
                 }
             }
         } catch (e) { /* DOM 未準備でも黙って続行 */ }
