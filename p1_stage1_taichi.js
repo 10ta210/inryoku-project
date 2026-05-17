@@ -26,6 +26,126 @@
 
     const RADIUS = 0.42;
 
+    // ───────────────────────────────────────────────────────────────
+    // 2026-05-17 段階2.1: P2/P3 rcSphere シェーダ移植
+    //   最終 RGBCMY オーブ (uColorBirth=1) を P3 i ドットロゴ球と
+    //   ピクセル単位で一致させるため、独立した第二メッシュとして搭載。
+    //   既存の taichi/grey ベース (state.mesh) は維持し、上に
+    //   rcSphere (state.rcMesh) を被せる。uColorBirth を opacity に
+    //   反映してフェードイン。taichi ベースは uColorBirth=1 で 18% 残し
+    //   「101% は 50% を否定しない」哲学を保つ。
+    // ───────────────────────────────────────────────────────────────
+    const RC_VERT = [
+        'varying vec3 vNormal;',
+        'varying vec3 vViewDir;',
+        'varying vec2 vUv;',
+        'void main(){',
+        '    vec4 wPos = modelMatrix * vec4(position, 1.0);',
+        '    vNormal  = normalize(normalMatrix * normal);',
+        '    vViewDir = normalize(cameraPosition - wPos.xyz);',
+        '    vUv      = uv;',
+        '    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+        '}'
+    ].join('\n');
+
+    // P3 init3DLogoSphere の rcFrag (12極バリアント) と完全同一の本文。
+    // uAlpha だけ追加して taichi ベースとブレンドできるようにする。
+    const RC_FRAG = [
+        'precision highp float;',
+        'uniform float u_time;',
+        'uniform float u_hover;',
+        'uniform float u_clickT;',
+        'uniform float u_morph;',
+        'uniform float uAlpha;',
+        'varying vec3 vNormal;',
+        'varying vec3 vViewDir;',
+        'varying vec2 vUv;',
+        '',
+        'float h1(float n){ return fract(sin(mod(n, 300.0) * 127.1) * 43758.545); }',
+        'float noise3(vec3 p){',
+        '    vec3 i = floor(p); vec3 f = fract(p); f = f*f*(3.-2.*f);',
+        '    float a = h1(i.x + i.y*57. + i.z*113.);',
+        '    float b = h1(i.x+1. + i.y*57. + i.z*113.);',
+        '    float c = h1(i.x + (i.y+1.)*57. + i.z*113.);',
+        '    float d = h1(i.x+1. + (i.y+1.)*57. + i.z*113.);',
+        '    float e = h1(i.x + i.y*57. + (i.z+1.)*113.);',
+        '    float f2= h1(i.x+1. + i.y*57. + (i.z+1.)*113.);',
+        '    float g = h1(i.x + (i.y+1.)*57. + (i.z+1.)*113.);',
+        '    float hh= h1(i.x+1. + (i.y+1.)*57. + (i.z+1.)*113.);',
+        '    return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),',
+        '               mix(mix(e,f2,f.x),mix(g,hh,f.x),f.y),f.z);',
+        '}',
+        '',
+        'void main(){',
+        '    float phi   = vUv.x * 6.28318;',
+        '    float theta = vUv.y * 3.14159;',
+        '    vec3 sPos = vec3(sin(theta)*cos(phi), cos(theta), sin(theta)*sin(phi));',
+        '    float spd = 0.21 + u_hover * 0.15 + u_clickT * 0.25;',
+        '    float t   = u_time * spd;',
+        '    vec3 nOff = vec3(',
+        '        noise3(sPos * 2.5 + vec3(t,    0.,   0.)) * 2. - 1.,',
+        '        noise3(sPos * 2.5 + vec3(0., t*0.8,  0.)) * 2. - 1.,',
+        '        noise3(sPos * 2.5 + vec3(0.,   0., t*0.6))* 2. - 1.',
+        '    );',
+        '    vec3 wPos = normalize(sPos + nOff * 0.28);',
+        '    vec3 dirs[12];',
+        '    dirs[0]=vec3(1.,0.,0.); dirs[1]=vec3(-1.,0.,0.);',
+        '    dirs[2]=vec3(0.,1.,0.); dirs[3]=vec3(0.,-1.,0.);',
+        '    dirs[4]=vec3(0.,0.,1.); dirs[5]=vec3(0.,0.,-1.);',
+        '    dirs[6]=normalize(vec3(1.,1.,0.));   dirs[7]=normalize(vec3(-1.,-1.,0.));',
+        '    dirs[8]=normalize(vec3(0.,1.,1.));   dirs[9]=normalize(vec3(0.,-1.,-1.));',
+        '    dirs[10]=normalize(vec3(1.,0.,1.));  dirs[11]=normalize(vec3(-1.,0.,-1.));',
+        '    vec3 cols[12];',
+        '    cols[0]=vec3(1.,0.,0.);       cols[1]=vec3(0.,1.,1.);',
+        '    cols[2]=vec3(0.,1.,0.);       cols[3]=vec3(1.,0.,1.);',
+        '    cols[4]=vec3(0.,0.,1.);       cols[5]=vec3(1.,1.,0.);',
+        '    cols[6]=vec3(1.0,0.45,0.);    cols[7]=vec3(0.0,0.55,1.0);',
+        '    cols[8]=vec3(0.0,1.0,0.6);    cols[9]=vec3(1.0,0.25,0.55);',
+        '    cols[10]=vec3(0.75,0.25,1.); cols[11]=vec3(0.85,0.85,0.2);',
+        '    vec3 result = vec3(0.); float total = 0.;',
+        '    for(int i = 0; i < 12; i++){',
+        '        float w = max(0., dot(wPos, dirs[i]));',
+        '        w = w * w * w;',
+        '        result += cols[i] * w; total += w;',
+        '    }',
+        '    result /= max(total, 0.001);',
+        '    vec3 N = normalize(vNormal);',
+        '    vec3 V = normalize(vViewDir);',
+        '    vec3 L = normalize(vec3(0.5, 0.7, 1.0));',
+        '    float diff    = max(dot(N, L), 0.0);',
+        '    float ambient = 0.05;',
+        '    vec3  H    = normalize(L + V);',
+        '    float spec = pow(max(dot(N, H), 0.0), 72.0) * 0.18;',
+        '    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 1.8);',
+        '    float frStr   = 0.9 + u_hover * 0.8;',
+        '    float greyVal = 0.45 + 0.10 * sin(u_time * 0.3);',
+        '    vec3  frCol   = vec3(greyVal) * fresnel * frStr;',
+        '    float emissive = 0.05 + u_hover * 0.10;',
+        '    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.5);',
+        '    vec3 rimLight = result * rim * 0.22 + vec3(0.3, 0.4, 0.5) * rim * 0.10;',
+        '    rimLight += result * rim * u_hover * 0.18;',
+        '    vec3 col = result * (ambient + diff * 0.90)',
+        '             + result * emissive',
+        '             + frCol',
+        '             + vec3(spec)',
+        '             + rimLight;',
+        '    col = mix(col, vec3(1.0), u_clickT * 0.5);',
+        '    if (u_morph > 0.0) {',
+        '        float grey = dot(col, vec3(0.299, 0.587, 0.114));',
+        '        vec3 holoGrey = vec3(grey) * (0.8 + 0.2 * sin(u_time * 2.0));',
+        '        float fr = pow(1.0 - max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 2.5);',
+        '        vec3 aurora = vec3(',
+        '            0.5 + 0.5 * sin(u_time * 1.3 + fr * 6.28),',
+        '            0.5 + 0.5 * sin(u_time * 1.7 + fr * 6.28 + 2.094),',
+        '            0.5 + 0.5 * sin(u_time * 2.1 + fr * 6.28 + 4.189)',
+        '        );',
+        '        holoGrey += aurora * fr * 0.4 * (1.0 - u_morph * 0.25);',
+        '        col = mix(col, holoGrey, u_morph);',
+        '    }',
+        '    gl_FragColor = vec4(col, uAlpha);',
+        '}'
+    ].join('\n');
+
     const VERT = `
         varying vec3 vNormal;
         varying vec3 vPosition;
@@ -108,9 +228,11 @@
             vec3 rimColor = mix(prism, sixBand, 0.45);
             col += rimColor * rim * (boundary * 0.18 + 0.05) * uPrism;
 
-            // 2026-05-17 段階2: RGBCMY metaball オーブ
-            // 6 中心 (±X, ±Y, ±Z) を時間でゆっくり回し、色の位置を循環させる
-            if (uColorBirth > 0.001) {
+            // 2026-05-17 段階2.1: 旧 metaball オーブは rcSphere (第二メッシュ) に置換済み。
+            //   ベースメッシュは taichi/grey の「残像」専用となり、uColorBirth=1 で
+            //   alpha 18% まで減衰させて「101% の奥に 50% が残る」哲学を担う。
+            //   metaball ブロックは無効化 (false ガード) しつつ、ロジック自体は残置。
+            if (false && uColorBirth > 0.001) {
                 vec3 centers[6];
                 centers[0] = vec3( 1.0, 0.0, 0.0); // R
                 centers[1] = vec3(-1.0, 0.0, 0.0); // G
@@ -162,7 +284,10 @@
                 col += orbRim * uColorBirth;
             }
 
-            gl_FragColor = vec4(col * uTaichiMix, uTaichiMix);
+            // 2026-05-17 段階2.1: rcSphere が前面に被さると base alpha を絞る
+            //   uColorBirth 0 → 1 で base 透明度を 1.0 → 0.18 (核 18% 残し)
+            float baseAlpha = mix(1.0, 0.18, clamp(uColorBirth, 0.0, 1.0));
+            gl_FragColor = vec4(col * uTaichiMix, uTaichiMix * baseAlpha);
         }
     `;
 
@@ -185,6 +310,10 @@
         disposed: false,
         hiddenLegacy: [], // 元の greySphere を保持
         stage2Fired: false, // 2026-05-17 段階2: イベント二重発火防止
+        // 2026-05-17 段階2.1: P2/P3 rcSphere 移植用の第二メッシュ
+        rcMesh: null,
+        rcMat:  null,
+        rcGeo:  null,
     };
 
     // Web Audio (オプション)
@@ -279,6 +408,32 @@
         state.mesh.scale.setScalar(REDUCE_MOTION ? 1 : 0.001);
         state.scene.add(state.mesh);
 
+        // 2026-05-17 段階2.1: P2/P3 rcSphere 第二メッシュを生成
+        //   z=0.69 (base mesh より僅か手前) で z-fight を回避
+        //   uAlpha は uColorBirth と同期 (毎フレーム更新)
+        //   render order を base より大きくして前面描画
+        state.rcGeo = new THREE.SphereGeometry(RADIUS, 64, 64);
+        state.rcMat = new THREE.ShaderMaterial({
+            vertexShader: RC_VERT,
+            fragmentShader: RC_FRAG,
+            uniforms: {
+                u_time:   { value: 0 },
+                u_hover:  { value: 0 },
+                u_clickT: { value: 0 },
+                u_morph:  { value: 0 },
+                uAlpha:   { value: REDUCE_MOTION ? 1 : 0 },
+            },
+            transparent: true,
+            depthWrite: false,
+        });
+        state.rcMesh = new THREE.Mesh(state.rcGeo, state.rcMat);
+        state.rcMesh.name = 'p1Stage1RCSphere';
+        state.rcMesh.position.set(0, 0, 0.69);
+        state.rcMesh.renderOrder = 1000;
+        state.rcMesh.scale.setScalar(REDUCE_MOTION ? 1 : 0.001);
+        state.rcMesh.visible = true;
+        state.scene.add(state.rcMesh);
+
         // 既存グレー球を隠す
         hideLegacyGreySphere(state.scene);
 
@@ -324,6 +479,7 @@
 
         // 回転 ~12°/sec = 0.2094 rad/s
         state.mesh.rotation.y = t * 0.2094;
+
 
         if (t < 0.4) {
             // 0.0–0.4s: 出現
@@ -395,6 +551,20 @@
                 } catch (e) {}
             }
         }
+
+        // 2026-05-17 段階2.1: rcSphere を base と同期 (uniform/rotation/scale)
+        //   uAlpha は base 側で確定した uColorBirth を直結 → 最終的に 1.0 で
+        //   P3 i ドットロゴ球と同一の不透明描画になる。
+        if (state.rcMesh && state.rcMat) {
+            var ru = state.rcMat.uniforms;
+            ru.u_time.value   = t;
+            ru.u_hover.value  = 0;
+            ru.u_clickT.value = 0;
+            ru.u_morph.value  = 0;
+            ru.uAlpha.value   = Math.max(0, Math.min(1, u.uColorBirth.value));
+            state.rcMesh.rotation.y = state.mesh.rotation.y;
+            state.rcMesh.scale.copy(state.mesh.scale);
+        }
     }
 
     function dispose() {
@@ -406,12 +576,21 @@
         }
         if (state.geo)  state.geo.dispose();
         if (state.mat)  state.mat.dispose();
+        // 2026-05-17 段階2.1: rcSphere (第二メッシュ) も破棄
+        if (state.rcMesh && state.scene) {
+            state.scene.remove(state.rcMesh);
+        }
+        if (state.rcGeo) state.rcGeo.dispose();
+        if (state.rcMat) state.rcMat.dispose();
         // 隠した既存球を元に戻す
         state.hiddenLegacy.forEach(function(o) { try { o.visible = true; } catch(e){} });
         state.hiddenLegacy = [];
         state.mesh = null;
         state.geo  = null;
         state.mat  = null;
+        state.rcMesh = null;
+        state.rcGeo  = null;
+        state.rcMat  = null;
     }
 
     window.inryokuP1Stage1 = {
