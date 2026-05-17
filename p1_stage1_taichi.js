@@ -6,6 +6,11 @@
 //   RGBCMY 水滴オーブへ変容。6 metaball を球面に配置・field blend。
 //   中心には微小な太極核を保持 (101% は 50% を否定しない)。
 //   4.2s で inryoku:p1stage2complete 発火、以降は微呼吸＋色循環で保持。
+// 2026-05-17 段階2.2: Codex リファクタ — 単一マテリアル uReveal 駆動モーフ
+//   旧 Scene B + Scene C を MorphScene (1.2 → 4.2s, 3.0s) として統合。
+//   基底マテリアル一つで taichi → grey → 内圧 → RGBCMY → 表面開花 を完結。
+//   太極核は表面残像ではなく中心深層 (facing^5) のメモリ化。
+//   rcSphere はブルームアシスタント (uAlpha ≤ 0.18, reveal>0.62 で出現)。
 (function p1Stage1IIFE() {
     'use strict';
     if (typeof window === 'undefined') return;
@@ -16,24 +21,27 @@
         : false;
 
     const SCENE_A_DUR = 1.2;
-    const SCENE_B_DUR = 1.6; // 1.2 → 2.8
-    const TOTAL_DUR   = SCENE_A_DUR + SCENE_B_DUR; // 2.8s
-    // 2026-05-17 段階2: Scene C タイムライン
+    const SCENE_B_DUR = 1.6; // 1.2 → 2.8 (旧定数、互換のため残置)
+    const TOTAL_DUR   = SCENE_A_DUR + SCENE_B_DUR; // 2.8s (旧)
+    // 2026-05-17 段階2: Scene C タイムライン (旧、互換のため残置)
     const STAGE2_START   = 2.8;
-    const STAGE2_RAMP_IN = 2.95; // 0.15s ホールド余韻
-    const STAGE2_RAMP_END = 4.0; // 0 → 1 完了
+    const STAGE2_RAMP_IN = 2.95;
+    const STAGE2_RAMP_END = 4.0;
     const STAGE2_END      = 4.2; // settle 完了 → イベント発火
+
+    // 2026-05-17 段階2.2: 新タイムライン (Codex)
+    //   0.0 → 1.2s : Scene A (taichi 出現)
+    //   1.2 → 4.2s : MorphScene (uReveal 0 → 1, easeInOutCubic)
+    //   4.2s +    : Hold, rcSphere assistant 0.18, microbreath, event fire
+    const MORPH_START = 1.2;
+    const MORPH_END   = 4.2;
 
     const RADIUS = 0.42;
 
     // ───────────────────────────────────────────────────────────────
     // 2026-05-17 段階2.1: P2/P3 rcSphere シェーダ移植
-    //   最終 RGBCMY オーブ (uColorBirth=1) を P3 i ドットロゴ球と
-    //   ピクセル単位で一致させるため、独立した第二メッシュとして搭載。
-    //   既存の taichi/grey ベース (state.mesh) は維持し、上に
-    //   rcSphere (state.rcMesh) を被せる。uColorBirth を opacity に
-    //   反映してフェードイン。taichi ベースは uColorBirth=1 で 18% 残し
-    //   「101% は 50% を否定しない」哲学を保つ。
+    //   段階2.2 でアシスタント (uAlpha ≤ 0.18) に降格。
+    //   フラグメント本文は触らず、uAlpha クランプのみで補助役に。
     // ───────────────────────────────────────────────────────────────
     const RC_VERT = [
         'varying vec3 vNormal;',
@@ -165,21 +173,26 @@
         }
     `;
 
+    // 2026-05-17 段階2.2: 単一マテリアル uReveal モーフ (Codex)
+    //   uReveal 0 → 1 で taichi → grey → 内部圧 → 表面開花 → RGBCMY を一気通貫。
+    //   旧 uColorBirth / uGreyMix / uPrism / uLiquid uniforms は宣言だけ残し
+    //   後方互換 (現在は新ロジックが上書き)。
     const FRAG = `
         precision highp float;
         varying vec3 vNormal;
         varying vec3 vPosition;
-        // 2026-05-17 段階1.2: ワールド空間入力 (本物の Fresnel 用)
         varying vec3 vWorldPos;
         varying vec3 vWorldNormal;
         uniform vec3 uCameraPos;
         uniform float uTime;
         uniform float uTaichiMix;
+        // ── 旧 uniforms (後方互換のため保持。新ロジックは uReveal 駆動) ──
         uniform float uGreyMix;
         uniform float uPrism;
-        // 2026-05-17 段階2: 色生 (0=灰/太極, 1=RGBCMYオーブ) と液体歪み
         uniform float uColorBirth;
         uniform float uLiquid;
+        // ── 新: 主駆動 ──
+        uniform float uReveal; // 0 → 1
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -187,107 +200,119 @@
             return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
         }
 
+        // 軽量 fbm: 3 オクターブの sin-noise (外部ライブラリ不使用)
+        float hash31(vec3 p) {
+            p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+            p += dot(p, p.yzx + 19.19);
+            return fract((p.x + p.y) * p.z);
+        }
+        float vnoise(vec3 p) {
+            vec3 i = floor(p);
+            vec3 f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            float n000 = hash31(i + vec3(0.0, 0.0, 0.0));
+            float n100 = hash31(i + vec3(1.0, 0.0, 0.0));
+            float n010 = hash31(i + vec3(0.0, 1.0, 0.0));
+            float n110 = hash31(i + vec3(1.0, 1.0, 0.0));
+            float n001 = hash31(i + vec3(0.0, 0.0, 1.0));
+            float n101 = hash31(i + vec3(1.0, 0.0, 1.0));
+            float n011 = hash31(i + vec3(0.0, 1.0, 1.0));
+            float n111 = hash31(i + vec3(1.0, 1.0, 1.0));
+            return mix(
+                mix(mix(n000, n100, f.x), mix(n010, n110, f.x), f.y),
+                mix(mix(n001, n101, f.x), mix(n011, n111, f.x), f.y),
+                f.z
+            );
+        }
+        float fbm(vec3 p) {
+            float v = 0.0;
+            float a = 0.5;
+            for (int i = 0; i < 3; i++) {
+                v += a * vnoise(p);
+                p *= 2.02;
+                a *= 0.5;
+            }
+            return v;
+        }
+
         void main() {
+            // ── reveal から派生する段階マスク ──
+            float greyMix     = smoothstep(0.00, 0.48, uReveal);
+            float colorBirth  = smoothstep(0.38, 0.92, uReveal);
+            float surfaceOpen = smoothstep(0.58, 1.00, uReveal);
+            float coreRemain  = 0.18 * smoothstep(0.70, 1.00, uReveal);
+
+            // ── Taichi → Grey ベース ──
             vec3 p = normalize(vPosition);
             float angle = atan(p.y, p.x);
-            // 呼吸する蛇行境界線
             float s = sin(angle + sin(p.y * 3.8 + uTime * 0.4) * 0.32 + p.z * 0.7);
             float yin = smoothstep(-0.06, 0.06, s);
+            vec3 taichi = mix(vec3(0.015), vec3(0.82), yin);
+            vec3 grey   = vec3(0.50);
+            vec3 base   = mix(taichi, grey, greyMix);
 
-            vec3 black = vec3(0.01);
-            vec3 white = vec3(0.82);
-            vec3 grey  = vec3(0.50);
+            // ── 内圧 (色が漏れ出る前駆) ──
+            float n = fbm(p * 3.8 + uTime * 0.16);
+            float innerPressure = smoothstep(0.25, 0.85, uReveal);
+            float innerMask = smoothstep(0.34, 0.95, n + innerPressure * 0.58);
 
-            vec3 taichi = mix(black, white, yin);
-            vec3 col = mix(taichi, grey, uGreyMix);
-
-            // 2026-05-17 段階1.2: 本物の Fresnel — ワールド空間の view ベクトル
-            vec3 viewDir = normalize(uCameraPos - vWorldPos);
-            float rim = pow(1.0 - max(dot(normalize(vWorldNormal), viewDir), 0.0), 2.0);
-
-            // 境界帯（陰陽の境）— 溶けるにつれ広がる
-            float boundary = 1.0 - smoothstep(0.0, 0.12 + uGreyMix * 0.25, abs(s));
-
-            // ニュートンリング風干渉 (r² ∝ nλR 簡略)
-            float r2 = rim * rim;
-            float rings = sin(r2 * 80.0 - uTime * 2.0);
-            float hue = fract(rings * 0.08 + uTime * 0.02 + angle * 0.04);
-            vec3 prism = hsv2rgb(vec3(hue, 0.85, 1.0));
-
-            // 6波長加算（赤橙黄緑青紫を少しずつ混ぜる）
-            vec3 sixBand = vec3(0.0);
+            // ── RGBCMY 6 メタボール (有機的に微オフセット) ──
+            vec3 centers[6];
+            centers[0] = normalize(vec3( 1.0,  0.2,  0.1)); // R
+            centers[1] = normalize(vec3(-0.8,  0.7, -0.1)); // G
+            centers[2] = normalize(vec3( 0.1, -1.0,  0.2)); // B
+            centers[3] = normalize(vec3(-0.2,  0.1,  1.0)); // C
+            centers[4] = normalize(vec3( 0.5, -0.4, -1.0)); // M
+            centers[5] = normalize(vec3(-1.0, -0.2,  0.3)); // Y
+            vec3 cols[6];
+            cols[0] = vec3(1.0, 0.0, 0.0);
+            cols[1] = vec3(0.0, 1.0, 0.0);
+            cols[2] = vec3(0.0, 0.15, 1.0);
+            cols[3] = vec3(0.0, 1.0, 1.0);
+            cols[4] = vec3(1.0, 0.0, 1.0);
+            cols[5] = vec3(1.0, 1.0, 0.0);
+            float field = 0.0;
+            vec3 colorSum = vec3(0.0);
             for (int i = 0; i < 6; i++) {
                 float fi = float(i);
-                float bh = fi / 6.0;
-                vec3 bc = hsv2rgb(vec3(bh, 0.9, 1.0));
-                float bw = 0.5 + 0.5 * sin(r2 * (40.0 + fi * 8.0) - uTime * 1.5 + fi);
-                sixBand += bc * bw;
+                vec3 c = normalize(centers[i] + 0.07 * vec3(
+                    sin(uTime * 0.40 + fi),
+                    cos(uTime * 0.33 + fi * 1.7),
+                    sin(uTime * 0.27 + fi * 2.1)
+                ));
+                float d = length(p - c);
+                float m = exp(-d * d * 5.2);
+                field    += m;
+                colorSum += cols[i] * m;
             }
-            sixBand /= 6.0;
+            vec3 rgbcmy = colorSum / max(field, 0.001);
 
-            vec3 rimColor = mix(prism, sixBand, 0.45);
-            col += rimColor * rim * (boundary * 0.18 + 0.05) * uPrism;
+            // ── サブサーフェス (内側からの色漏れ) ──
+            vec3 viewDir = normalize(uCameraPos - vWorldPos);
+            float facing = max(dot(normalize(vWorldNormal), viewDir), 0.0);
+            float fresnel = pow(1.0 - facing, 2.2);
+            float subsurface = pow(1.0 - facing, 1.7) * 0.28 + pow(facing, 3.6) * 0.14;
+            vec3 innerGlow = rgbcmy * innerMask * colorBirth * subsurface * 0.75;
 
-            // 2026-05-17 段階2.1: 旧 metaball オーブは rcSphere (第二メッシュ) に置換済み。
-            //   ベースメッシュは taichi/grey の「残像」専用となり、uColorBirth=1 で
-            //   alpha 18% まで減衰させて「101% の奥に 50% が残る」哲学を担う。
-            //   metaball ブロックは無効化 (false ガード) しつつ、ロジック自体は残置。
-            if (false && uColorBirth > 0.001) {
-                vec3 centers[6];
-                centers[0] = vec3( 1.0, 0.0, 0.0); // R
-                centers[1] = vec3(-1.0, 0.0, 0.0); // G
-                centers[2] = vec3( 0.0, 1.0, 0.0); // B
-                centers[3] = vec3( 0.0,-1.0, 0.0); // C
-                centers[4] = vec3( 0.0, 0.0, 1.0); // M
-                centers[5] = vec3( 0.0, 0.0,-1.0); // Y
+            // ── 表面開花 ──
+            float surfaceMask = innerMask * surfaceOpen;
+            vec3 col = mix(base, rgbcmy, surfaceMask);
+            col += innerGlow;
 
-                vec3 colorsArr[6];
-                colorsArr[0] = vec3(1.0, 0.0, 0.0);
-                colorsArr[1] = vec3(0.0, 1.0, 0.0);
-                colorsArr[2] = vec3(0.0, 0.0, 1.0);
-                colorsArr[3] = vec3(0.0, 1.0, 1.0);
-                colorsArr[4] = vec3(1.0, 0.0, 1.0);
-                colorsArr[5] = vec3(1.0, 1.0, 0.0);
+            // ── 中心深層の太極核 (記憶。表面残像ではない) ──
+            float coreMask = pow(facing, 5.0) * coreRemain;
+            vec3 hiddenTaichi = mix(vec3(0.03), vec3(0.88), yin);
+            col = mix(col, hiddenTaichi, coreMask);
 
-                float field = 0.0;
-                vec3 colorSum = vec3(0.0);
-                // 全中心を共通 Y 軸でゆるく回す (~8s で一周相当)
-                float ang = uTime * 0.08;
-                float ca = cos(ang);
-                float sa = sin(ang);
-                for (int i = 0; i < 6; i++) {
-                    vec3 c = centers[i];
-                    vec3 cr = vec3(c.x * ca - c.z * sa, c.y, c.x * sa + c.z * ca);
-                    float d = length(p - normalize(cr));
-                    float m = exp(-d * d * 4.0);
-                    field += m;
-                    colorSum += colorsArr[i] * m;
-                }
-                vec3 orb = colorSum / max(field, 0.001);
+            // ── リムにニュートンリング風プリズム ──
+            float boundary = 1.0 - smoothstep(0.0, 0.12, abs(s));
+            float newton = 0.5 + 0.5 * sin((fresnel * fresnel) * 90.0 - uTime * 2.0);
+            vec3 prism = hsv2rgb(vec3(fract(newton * 0.16 + angle * 0.08), 0.82, 1.0));
+            col += prism * fresnel * (0.10 + colorBirth * 0.34);
+            col += prism * boundary * (1.0 - greyMix) * 0.05;
 
-                // 液体感: 球面方向の微小ノイズで明度を揺らす（normal 改変は省略・安全策）
-                float liqN = sin(p.x * 6.0 + uTime * 0.6) * sin(p.y * 5.0 - uTime * 0.5)
-                           * sin(p.z * 7.0 + uTime * 0.4);
-                orb *= (1.0 + 0.08 * uLiquid * liqN);
-
-                // 哲学: 中心に微小な太極核を残す (101% は 50% を消さない)
-                float coreMask = smoothstep(0.18, 0.04, length(p.xy));
-                vec3 taichiCore = mix(black, white, yin);
-                orb = mix(orb, taichiCore, coreMask * 0.18);
-
-                // 強い Fresnel (pow 2.5) のリムグロー
-                float strongRim = pow(1.0 - max(dot(normalize(vWorldNormal), viewDir), 0.0), 2.5);
-                vec3 orbRim = orb * strongRim * 0.8;
-
-                // ベースを orb に混ぜる
-                col = mix(col, orb, uColorBirth);
-                col += orbRim * uColorBirth;
-            }
-
-            // 2026-05-17 段階2.1: rcSphere が前面に被さると base alpha を絞る
-            //   uColorBirth 0 → 1 で base 透明度を 1.0 → 0.18 (核 18% 残し)
-            float baseAlpha = mix(1.0, 0.18, clamp(uColorBirth, 0.0, 1.0));
-            gl_FragColor = vec4(col * uTaichiMix, uTaichiMix * baseAlpha);
+            // ── 旧 alpha ロジック互換: taichi 出現スケール ──
+            gl_FragColor = vec4(col * uTaichiMix, uTaichiMix);
         }
     `;
 
@@ -295,6 +320,10 @@
     function easeOutCubic(t) { return 1.0 - Math.pow(1.0 - t, 3.0); }
     function easeInOutCubic(t) {
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function smoothstepJS(edge0, edge1, x) {
+        const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3 - 2 * t);
     }
 
     let state = {
@@ -308,9 +337,8 @@
         rafId: 0,
         running: false,
         disposed: false,
-        hiddenLegacy: [], // 元の greySphere を保持
-        stage2Fired: false, // 2026-05-17 段階2: イベント二重発火防止
-        // 2026-05-17 段階2.1: P2/P3 rcSphere 移植用の第二メッシュ
+        hiddenLegacy: [],
+        stage2Fired: false,
         rcMesh: null,
         rcMat:  null,
         rcGeo:  null,
@@ -324,11 +352,10 @@
             const ctx = new Ctx();
             const now = ctx.currentTime;
 
-            // 0.0s: 柔らかな A3 単音
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.value = 220; // A3
+            osc.frequency.value = 220;
             gain.gain.setValueAtTime(0.0001, now);
             gain.gain.exponentialRampToValueAtTime(0.08, now + 0.05);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
@@ -336,14 +363,13 @@
             osc.start(now);
             osc.stop(now + 1.3);
 
-            // 2.8s: グレーパッド (微小)
             const padOsc = ctx.createOscillator();
             const padOsc2 = ctx.createOscillator();
             const padGain = ctx.createGain();
             padOsc.type = 'sine';
             padOsc2.type = 'sine';
             padOsc.frequency.value = 220;
-            padOsc2.frequency.value = 277.18; // C#4
+            padOsc2.frequency.value = 277.18;
             padGain.gain.setValueAtTime(0.0001, now + 2.8);
             padGain.gain.exponentialRampToValueAtTime(0.025, now + 4.0);
             padOsc.connect(padGain);
@@ -353,12 +379,9 @@
             padOsc2.start(now + 2.8);
             padOsc.stop(now + 6.0);
             padOsc2.stop(now + 6.0);
-        } catch (e) {
-            // 失敗しても無視
-        }
+        } catch (e) {}
     }
 
-    // 2026-05-17 段階1.2: 名前ベース hide のみ採用（ヒューリスティック / uniform 検出は廃止）
     function hideLegacyGreySphere(scene) {
         if (!scene || typeof scene.getObjectByName !== 'function') return;
         const names = ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel'];
@@ -389,13 +412,13 @@
             uniforms: {
                 uTime:      { value: 0 },
                 uTaichiMix: { value: 0 },
-                uGreyMix:   { value: 0 },
-                uPrism:     { value: 0 },
-                // 2026-05-17 段階1.2: 本物の Fresnel 用カメラ位置
+                uGreyMix:   { value: 0 }, // 旧互換
+                uPrism:     { value: 0 }, // 旧互換
                 uCameraPos: { value: new THREE.Vector3() },
-                // 2026-05-17 段階2: RGBCMY オーブ生成
-                uColorBirth: { value: 0 },
-                uLiquid:     { value: 0 },
+                uColorBirth: { value: 0 }, // 旧互換
+                uLiquid:     { value: 0 }, // 旧互換
+                // 2026-05-17 段階2.2: 新主駆動
+                uReveal:     { value: 0 },
             },
             transparent: true,
             depthWrite: false,
@@ -403,15 +426,12 @@
 
         state.mesh = new THREE.Mesh(state.geo, state.mat);
         state.mesh.name = 'p1Stage1TaichiSphere';
-        state.mesh.position.set(0, 0, 0.7); // 既存 greySphere(z=0.5) の手前
+        state.mesh.position.set(0, 0, 0.7);
         state.mesh.renderOrder = 999;
         state.mesh.scale.setScalar(REDUCE_MOTION ? 1 : 0.001);
         state.scene.add(state.mesh);
 
-        // 2026-05-17 段階2.1: P2/P3 rcSphere 第二メッシュを生成
-        //   z=0.69 (base mesh より僅か手前) で z-fight を回避
-        //   uAlpha は uColorBirth と同期 (毎フレーム更新)
-        //   render order を base より大きくして前面描画
+        // 2026-05-17 段階2.2: rcSphere はアシスタント (uAlpha ≤ 0.18)
         state.rcGeo = new THREE.SphereGeometry(RADIUS, 64, 64);
         state.rcMat = new THREE.ShaderMaterial({
             vertexShader: RC_VERT,
@@ -421,36 +441,36 @@
                 u_hover:  { value: 0 },
                 u_clickT: { value: 0 },
                 u_morph:  { value: 0 },
-                uAlpha:   { value: REDUCE_MOTION ? 1 : 0 },
+                uAlpha:   { value: REDUCE_MOTION ? 0.18 : 0 },
             },
             transparent: true,
             depthWrite: false,
+            blending: THREE.AdditiveBlending,
         });
         state.rcMesh = new THREE.Mesh(state.rcGeo, state.rcMat);
         state.rcMesh.name = 'p1Stage1RCSphere';
         state.rcMesh.position.set(0, 0, 0.69);
         state.rcMesh.renderOrder = 1000;
         state.rcMesh.scale.setScalar(REDUCE_MOTION ? 1 : 0.001);
-        state.rcMesh.visible = true;
+        state.rcMesh.visible = REDUCE_MOTION; // 段階2.2: reveal>0.62 で表示
         state.scene.add(state.rcMesh);
 
-        // 既存グレー球を隠す
         hideLegacyGreySphere(state.scene);
 
-        // 音
         if (!REDUCE_MOTION) playEntranceTone();
 
         state.startTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
         state.running = true;
 
         if (REDUCE_MOTION) {
-            // 動きなし: 最終 RGBCMY オーブ状態を即時セット (段階2 完了形)
+            // 動きなし: 即時 reveal=1
             state.mat.uniforms.uTaichiMix.value  = 1;
+            state.mat.uniforms.uReveal.value     = 1;
+            // 互換: 旧 uniforms も最終値に
             state.mat.uniforms.uGreyMix.value    = 0.85;
             state.mat.uniforms.uPrism.value      = 1.0;
             state.mat.uniforms.uColorBirth.value = 1;
             state.mat.uniforms.uLiquid.value     = 1;
-            // 段階2完了イベントも即発火 (Stage 3 を待たせない)
             try {
                 window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
                 state.stage2Fired = true;
@@ -472,78 +492,38 @@
         if (!state.mat || !state.mesh) return;
         const u = state.mat.uniforms;
         u.uTime.value = t;
-        // 2026-05-17 段階1.2: 毎フレーム camera 位置を uniform に反映 (本物の Fresnel)
         if (state.camera && u.uCameraPos) {
             u.uCameraPos.value.copy(state.camera.position);
         }
 
-        // 回転 ~12°/sec = 0.2094 rad/s
+        // 回転 ~12°/sec
         state.mesh.rotation.y = t * 0.2094;
 
-
+        // ── Scene A (0.0 → 1.2s): taichi 出現 ──
         if (t < 0.4) {
-            // 0.0–0.4s: 出現
             const p = easeOutCubic(t / 0.4);
             state.mesh.scale.setScalar(Math.max(0.001, p));
             u.uTaichiMix.value = p;
-            u.uGreyMix.value   = 0;
-            u.uPrism.value     = 0.3 * p;
-        } else if (t < SCENE_A_DUR) {
-            // 0.4–1.2s: 太極安定
+            u.uReveal.value    = 0;
+        } else if (t < MORPH_START) {
             state.mesh.scale.setScalar(1);
             u.uTaichiMix.value = 1;
-            u.uGreyMix.value   = 0;
-            u.uPrism.value     = 0.3;
-        } else if (t < TOTAL_DUR) {
-            // 1.2–2.8s: グレーへ溶解
-            const p = easeInOutCubic((t - SCENE_A_DUR) / SCENE_B_DUR);
-            state.mesh.scale.setScalar(1);
+            u.uReveal.value    = 0;
+        } else if (t < MORPH_END) {
+            // ── MorphScene (1.2 → 4.2s): uReveal 0 → 1 easeInOutCubic ──
+            const raw = (t - MORPH_START) / (MORPH_END - MORPH_START);
+            const reveal = easeInOutCubic(Math.max(0, Math.min(1, raw)));
+            // 微呼吸 (3%)
+            const breath = 1.0 + 0.03 * Math.sin(raw * Math.PI);
+            state.mesh.scale.setScalar(breath);
             u.uTaichiMix.value = 1;
-            u.uGreyMix.value   = 0.85 * p;
-            u.uPrism.value     = 0.3 + 0.7 * p;
-        } else if (t < STAGE2_RAMP_IN) {
-            // 2.8–2.95s: Stage 1 から滑らかにバトンタッチ (ほぼホールド)
-            state.mesh.scale.setScalar(1);
-            u.uTaichiMix.value  = 1;
-            u.uGreyMix.value    = 0.85;
-            var holdT0 = t - TOTAL_DUR;
-            u.uPrism.value      = 0.55 + 0.45 * Math.sin(holdT0 * 0.8);
-            // ほぼ感じない程度に色生を立ち上げ
-            var pre = (t - STAGE2_START) / (STAGE2_RAMP_IN - STAGE2_START);
-            u.uColorBirth.value = 0.02 * easeOutCubic(pre);
-            u.uLiquid.value     = 0;
-        } else if (t < STAGE2_RAMP_END) {
-            // 2.95–4.0s: uColorBirth が 0 → 1 (ease-in-out cubic) で開花、液体感も付与
-            var p2 = (t - STAGE2_RAMP_IN) / (STAGE2_RAMP_END - STAGE2_RAMP_IN);
-            var e2 = easeInOutCubic(p2);
-            // 3% 呼吸スケール
-            state.mesh.scale.setScalar(1.0 + 0.03 * Math.sin(p2 * Math.PI));
-            u.uTaichiMix.value  = 1;
-            u.uGreyMix.value    = 0.85;
-            u.uPrism.value      = 0.8 + 0.4 * e2;
-            u.uColorBirth.value = e2;
-            u.uLiquid.value     = e2;
-        } else if (t < STAGE2_END) {
-            // 4.0–4.2s: settle (光がふっと締まる)
-            var p3 = (t - STAGE2_RAMP_END) / (STAGE2_END - STAGE2_RAMP_END);
-            // settle ライトパルス
-            var puls = 1.0 + 0.04 * (1.0 - p3);
-            state.mesh.scale.setScalar(puls);
-            u.uTaichiMix.value  = 1;
-            u.uGreyMix.value    = 0.85;
-            u.uPrism.value      = 1.2 - 0.2 * p3; // 1.2 → 1.0
-            u.uColorBirth.value = 1;
-            u.uLiquid.value     = 1;
+            u.uReveal.value    = reveal;
         } else {
-            // 4.2s+: RGBCMY オーブを保持。微呼吸 + 内部色循環は uTime で自動
-            state.mesh.scale.setScalar(1);
-            u.uTaichiMix.value  = 1;
-            u.uGreyMix.value    = 0.85;
-            var holdT2 = t - STAGE2_END;
-            u.uPrism.value      = 0.9 + 0.25 * Math.sin(holdT2 * 0.7);
-            u.uColorBirth.value = 1;
-            u.uLiquid.value     = 1;
-            // 段階2完了イベント (一度だけ)
+            // ── Hold (4.2s+): reveal=1, microbreath, event fire ──
+            const hold = t - MORPH_END;
+            state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(hold * 1.2));
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
             if (!state.stage2Fired) {
                 state.stage2Fired = true;
                 try {
@@ -552,16 +532,23 @@
             }
         }
 
-        // 2026-05-17 段階2.1: rcSphere を base と同期 (uniform/rotation/scale)
-        //   uAlpha は base 側で確定した uColorBirth を直結 → 最終的に 1.0 で
-        //   P3 i ドットロゴ球と同一の不透明描画になる。
+        // 旧 uniforms を reveal から派生 (後方互換 — 他コードが参照しても破綻しないように)
+        const rv = u.uReveal.value;
+        u.uGreyMix.value    = Math.min(1, rv / 0.48) * 0.85;
+        u.uPrism.value      = 0.3 + 0.9 * rv;
+        u.uColorBirth.value = smoothstepJS(0.38, 0.92, rv);
+        u.uLiquid.value     = smoothstepJS(0.45, 1.0, rv);
+
+        // ── rcSphere アシスタント (uAlpha ≤ 0.18, reveal>0.62 で出現) ──
         if (state.rcMesh && state.rcMat) {
-            var ru = state.rcMat.uniforms;
+            const ru = state.rcMat.uniforms;
             ru.u_time.value   = t;
             ru.u_hover.value  = 0;
             ru.u_clickT.value = 0;
             ru.u_morph.value  = 0;
-            ru.uAlpha.value   = Math.max(0, Math.min(1, u.uColorBirth.value));
+            const assistAlpha = smoothstepJS(0.62, 1.0, rv) * 0.18;
+            ru.uAlpha.value   = assistAlpha;
+            state.rcMesh.visible = rv > 0.62;
             state.rcMesh.rotation.y = state.mesh.rotation.y;
             state.rcMesh.scale.copy(state.mesh.scale);
         }
@@ -576,13 +563,11 @@
         }
         if (state.geo)  state.geo.dispose();
         if (state.mat)  state.mat.dispose();
-        // 2026-05-17 段階2.1: rcSphere (第二メッシュ) も破棄
         if (state.rcMesh && state.scene) {
             state.scene.remove(state.rcMesh);
         }
         if (state.rcGeo) state.rcGeo.dispose();
         if (state.rcMat) state.rcMat.dispose();
-        // 隠した既存球を元に戻す
         state.hiddenLegacy.forEach(function(o) { try { o.visible = true; } catch(e){} });
         state.hiddenLegacy = [];
         state.mesh = null;
@@ -599,9 +584,6 @@
         dispose: dispose,
     };
 
-    // 2026-05-17 段階1.2: フラグは登録試行前に即セット
-    // → renderPhase1 がまだ走っていない段階でも、後から inryokuP1 が
-    //   作られた瞬間に stage1Enabled=true を上書きする。
     function setEnabled() {
         if (window.inryokuP1) {
             window.inryokuP1.stage1Enabled = true;
@@ -609,24 +591,19 @@
     }
     setEnabled();
 
-    // 登録: window.inryokuP1 が後から定義される場合に備えてポーリング
     function tryRegister(attempts) {
         if (window.inryokuP1 && typeof window.inryokuP1.registerStage1Handler === 'function') {
-            // 2026-05-17 段階1.2: registerStage1Handler 呼び出し前に必ずフラグを立てる
             window.inryokuP1.stage1Enabled = true;
             window.inryokuP1.registerStage1Handler(initStage1);
             return;
         }
-        // 2026-05-17 段階1.2: inryokuP1 がまだ無くてもポーリング中に出来たら即フラグセット
         setEnabled();
         if (attempts <= 0) return;
         setTimeout(function() { tryRegister(attempts - 1); }, 100);
     }
-    tryRegister(50); // 最大 5 秒
+    tryRegister(50);
 
-    // フォールバック: イベント直接購読（registerStage1Handler 取りこぼし対策）
     window.addEventListener('inryoku:p1_50percent', function(ev) {
-        // 2026-05-17 段階1.2: イベント経由でも必ずフラグを立てる
         if (window.inryokuP1) window.inryokuP1.stage1Enabled = true;
         if (!state.running && !state.disposed) {
             initStage1(ev.detail);
