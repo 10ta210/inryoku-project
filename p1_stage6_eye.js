@@ -1,12 +1,13 @@
 // 2026-05-18 P1 Stage 6: Eye (観測の眼)
-// inryoku:p1stage5complete を受信 → 1.5s の eye フェーズ → inryoku:p1stage6complete 発火
+// 2026-05-18 段階8: 時間倍増 — 神聖な weight を与え、開眼の瞬間に divine flash + chord
+// inryoku:p1stage5complete を受信 → 2.7s の eye フェーズ → inryoku:p1stage6complete 発火
 //
-// 0.0-0.5s: 眼が閉じた状態で出現 (uEyeOpen=0, uEyeAlpha 0→1)
-// 0.5-0.9s: 閉じたままホールド
-// 0.9-1.15s: 開く (uEyeOpen 0→1, easeOutCubic)
-// 1.15-1.5s: 開いた状態でマウスを追う (uGaze)
+// 0.0-0.6s: 閉じた状態で fade-in (uEyeOpen=0, uEyeAlpha 0→1)
+// 0.6-1.6s: HOLD CLOSED (1.0s anticipation — sacred deliberateness)
+// 1.6-2.2s: SLOW OPEN (0.6s, easeOutCubic — weighted)
+// 2.2-2.7s: 開いた状態でマウスを追う (uGaze) + divine flash @ 2.2s
 //
-// audio: 100-140ms の静寂 → 開く瞬間に短い高音 (~1200Hz)
+// audio: 開く瞬間 (~2.2s) に divine chime (high tone + 5th)
 
 (function p1Stage6IIFE() {
     'use strict';
@@ -21,10 +22,16 @@
             || (typeof window.matchMedia === 'function'
                 && window.matchMedia('(pointer: coarse)').matches));
 
-    const DUR_TOTAL = 1.5;
-    const T_FADE_IN_END = 0.5;
-    const T_HOLD_CLOSED_END = 0.9;
-    const T_OPEN_END = 1.15;
+    // 旧 (段階6): 1.5s 総尺。素早すぎて重みが足りなかった。
+    // const DUR_TOTAL = 1.5;
+    // const T_FADE_IN_END = 0.5;
+    // const T_HOLD_CLOSED_END = 0.9;
+    // const T_OPEN_END = 1.15;
+    // 2026-05-18 段階8: doubled weight
+    const DUR_TOTAL = 2.7;
+    const T_FADE_IN_END = 0.6;
+    const T_HOLD_CLOSED_END = 1.6;
+    const T_OPEN_END = 2.2;
 
     function smoothstep(a, b, x) {
         const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
@@ -73,6 +80,7 @@
         targetGaze: { x: 0, y: 0 },
         smoothedGaze: { x: 0, y: 0 },
         openCueFired: false,
+        divineFlashFired: false,   // 2026-05-18 段階8
     };
 
     function onPointerMove(ev) {
@@ -106,21 +114,58 @@
     }
 
     function playOpenCue() {
+        // 2026-05-18 段階8: divine chime (root + 5th, soft 8va)
         if (REDUCE_MOTION) return;
         try {
             const Ctx = window.AudioContext || window.webkitAudioContext;
             if (!Ctx) return;
             const ctx = new Ctx();
             const now = ctx.currentTime;
-            const osc = ctx.createOscillator();
-            const g = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 1200;
-            g.gain.setValueAtTime(0.0001, now);
-            g.gain.exponentialRampToValueAtTime(0.05, now + 0.02);
-            g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-            osc.connect(g).connect(ctx.destination);
-            osc.start(now); osc.stop(now + 0.32);
+            // high note (~1200 Hz, E6)
+            const freqs = [1318.51, 1975.53]; // E6 + B6 (perfect fifth)
+            for (let i = 0; i < freqs.length; i++) {
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freqs[i];
+                g.gain.setValueAtTime(0.0001, now);
+                g.gain.exponentialRampToValueAtTime(i === 0 ? 0.06 : 0.035, now + 0.04);
+                g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+                osc.connect(g).connect(ctx.destination);
+                osc.start(now); osc.stop(now + 1.0);
+            }
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階8: divine flash overlay at full-open moment
+    function triggerDivineFlash(centerXFrac, centerYFrac) {
+        try {
+            const cx = (typeof centerXFrac === 'number') ? centerXFrac : 0.5;
+            const cy = (typeof centerYFrac === 'number') ? centerYFrac : 0.5;
+            const flash = document.createElement('div');
+            flash.className = 'p1-divine-flash';
+            Object.assign(flash.style, {
+                position: 'fixed',
+                inset: '0',
+                zIndex: '2147483050',
+                pointerEvents: 'none',
+                background: 'radial-gradient(circle at ' + (cx * 100) + '% ' + (cy * 100) + '%, '
+                    + 'rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 15%, transparent 45%)',
+                opacity: '0',
+                transition: 'opacity 150ms ease-out'
+            });
+            document.body.appendChild(flash);
+            requestAnimationFrame(function(){
+                try {
+                    flash.style.opacity = '1';
+                    setTimeout(function(){
+                        try {
+                            flash.style.opacity = '0';
+                            setTimeout(function(){ try { flash.remove(); } catch (e) {} }, 220);
+                        } catch (e) {}
+                    }, 120);
+                } catch (e) {}
+            });
         } catch (e) {}
     }
 
@@ -207,6 +252,11 @@
             }
         } else {
             alpha = 1; open = 1;
+            // 2026-05-18 段階8: 完全開眼の瞬間 divine flash
+            if (!state.divineFlashFired) {
+                state.divineFlashFired = true;
+                triggerDivineFlash(0.5, 0.5);
+            }
         }
         u.uEyeAlpha.value = alpha;
         u.uEyeOpen.value = open;

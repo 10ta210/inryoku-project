@@ -636,11 +636,14 @@
     }
 
     // 2026-05-18 段階4.2: P1 root 全体を clone → reality-frame-collapse 用 overlay
+    // 2026-05-18 段階8: fullscreen 化 (100vw/100vh) — 外枠を viewport 全体に拡張し
+    //   ingest collapse 後の外側残骸 (page 背景) を見せない。
     function createRealityFrameClone() {
         try {
             const source = discoverRealityFrameRoot();
             if (!source) return null;
-            const rect = source.getBoundingClientRect();
+            // 旧 (段階4.2): source rect サイズで clone — 外側に元 page 背景が見えていた
+            // const rect = source.getBoundingClientRect();
             const clone = source.cloneNode(true);
             clone.id = 'p1-reality-frame-clone';
             try {
@@ -650,10 +653,10 @@
             } catch (e) {}
             Object.assign(clone.style, {
                 position: 'fixed',
-                left: rect.left + 'px',
-                top:  rect.top  + 'px',
-                width:  rect.width  + 'px',
-                height: rect.height + 'px',
+                left: '0',
+                top:  '0',
+                width:  '100vw',      // 2026-05-18 段階8: fullscreen
+                height: '100vh',      // 2026-05-18 段階8: fullscreen
                 margin: '0',
                 zIndex: '2147483000',
                 pointerEvents: 'none',
@@ -665,6 +668,28 @@
             // 元の root を hide (レイアウトは保持)
             source.style.visibility = 'hidden';
             return { source: source, clone: clone };
+        } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階8: void backdrop — collapse 後の真の暗黒を保証
+    function createVoidBackdrop() {
+        try {
+            const v = document.createElement('div');
+            v.id = 'p1-void-backdrop';
+            Object.assign(v.style, {
+                position: 'fixed',
+                inset: '0',
+                zIndex: '2147482998',   // warp overlay の下
+                pointerEvents: 'none',
+                background: '#000',
+                opacity: '0',
+                transition: 'opacity 800ms ease-in'
+            });
+            document.body.appendChild(v);
+            requestAnimationFrame(function(){
+                setTimeout(function(){ try { v.style.opacity = '1'; } catch (e) {} }, 1200);
+            });
+            return v;
         } catch (e) { return null; }
     }
 
@@ -1497,6 +1522,17 @@
             state.uiIngestSource = pair.source;
             // フルスクリーン warp overlay
             state.screenWarp = createScreenWarpOverlay();
+            // 2026-05-18 段階8: void backdrop + body 黒化 + 残存 UI 隠蔽
+            try { document.body.style.background = '#000'; } catch (e) {}
+            try { state.voidBackdrop = createVoidBackdrop(); } catch (e) {}
+            try {
+                const runner = document.getElementById('exit-runner');
+                if (runner) {
+                    setTimeout(function(){
+                        try { runner.style.visibility = 'hidden'; runner.style.opacity = '0'; } catch (e) {}
+                    }, 1400);
+                }
+            } catch (e) {}
 
             state.ingestStartMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
             // 2026-05-18 段階2.5: alias for Codex text degradation sequence

@@ -1,8 +1,9 @@
 // 2026-05-18 P1 Stage 7: Cross Axis (RGB vertical / CMY horizontal) → P2 handoff
+// 2026-05-18 段階8: cross が eye の中心から POINT → BEAM として爆発成長する
 // inryoku:p1stage6complete を受信 → 1.7s cross + 0.9s P2 transition → inryoku:p1complete 発火
 //
-// 0.0-0.4s: cross が浮かび上がる (uCross 0→1)
-// 0.4-1.2s: ホールド (flash 減衰)
+// 0.0-0.6s: 中心の一点から十字光線が伸びる (uGrow 0→1, easeOutCubic)
+// 0.6-1.2s: peak brightness (divine hold)
 // 1.2-1.7s: 縦線優位 (CMY 横軸フェード、RGB 縦軸残る)
 // 1.7-2.6s: P2 へ橋渡し (window.__inryokuP1ToP2 を立てて p1complete 発火)
 //
@@ -21,7 +22,10 @@
             || (typeof window.matchMedia === 'function'
                 && window.matchMedia('(pointer: coarse)').matches));
 
-    const T_BUILD = 0.4;
+    // 旧 (段階7): T_BUILD=0.4s で 0→1 だけ。点→十字の概念がなかった。
+    // const T_BUILD = 0.4;
+    // 2026-05-18 段階8: 点→ビーム成長を 0.6s
+    const T_BUILD = 0.6;
     const T_HOLD  = 1.2;
     const T_VERTICAL = 1.7;
     const T_P2 = 2.6; // 1.7 + 0.9
@@ -47,10 +51,13 @@
         'uniform float uCross;',
         'uniform float uCrossTime;',
         'uniform float uHorizFade;',
+        'uniform float uGrow;',         // 2026-05-18 段階8: 0=point 1=full cross
         'void main(){',
         '    vec2 p = vUv * 2.0 - 1.0;',
-        '    float vertical = exp(-abs(p.x) * 70.0) * smoothstep(1.2, 0.0, abs(p.y));',
-        '    float horizontal = exp(-abs(p.y) * 70.0) * smoothstep(1.2, 0.0, abs(p.x));',
+        // 2026-05-18 段階8: beam length は uGrow で 0.05→1.2 に成長
+        '    float beamLen = mix(0.05, 1.2, uGrow);',
+        '    float vertical = exp(-abs(p.x) * 70.0) * smoothstep(beamLen, 0.0, abs(p.y));',
+        '    float horizontal = exp(-abs(p.y) * 70.0) * smoothstep(beamLen, 0.0, abs(p.x));',
         '    horizontal *= uHorizFade;',
         '    float core = exp(-dot(p,p) * 45.0);',
         '    vec3 rgbAxis = vec3(0.75, 0.88, 1.0);',
@@ -58,6 +65,8 @@
         '    vec3 col = vertical * rgbAxis + horizontal * cmyAxis + core * vec3(1.0) * 2.5;',
         '    float flash = uCross * exp(-uCrossTime * 1.8);',
         '    col *= 0.4 + flash * 2.8;',
+        // 2026-05-18 段階8: divine intensity boost during growth
+        '    col *= 1.0 + uGrow * 1.5;',
         '    float alpha = clamp(vertical + horizontal + core, 0.0, 1.0) * uCross;',
         '    gl_FragColor = vec4(col, alpha);',
         '}'
@@ -140,6 +149,7 @@
                 uCross: { value: 0 },
                 uCrossTime: { value: 0 },
                 uHorizFade: { value: 1 },
+                uGrow: { value: 0 },     // 2026-05-18 段階8
             },
             transparent: true,
             depthWrite: false,
@@ -192,6 +202,9 @@
 
         let cross;
         let horizFade = 1;
+        // 2026-05-18 段階8: uGrow は最初の 0.6s で 0→1 (point→full cross)
+        const growT = Math.min(1, t / T_BUILD);
+        u.uGrow.value = easeOutCubic(growT);
         if (t < T_BUILD) {
             cross = easeOutCubic(t / T_BUILD);
         } else if (t < T_HOLD) {
