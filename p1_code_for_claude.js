@@ -57,6 +57,27 @@ function updateWin95Status(text) {
 // ═══ PHASE 1 ═══
 function renderPhase1() {
     currentPhase = 1;
+    // 2026-05-17 段階0: 拡張シーン登録API
+    // 将来の段階1+ がここに handler を登録する
+    (function setupP1ExtensionAPI() {
+        if (window.inryokuP1) return; // 多重初期化防止
+        window.inryokuP1 = {
+            _handler: null,
+            registerStage1Handler: function(fn) {
+                if (typeof fn !== 'function') {
+                    console.warn('[P1 ext] handler must be a function');
+                    return;
+                }
+                window.inryokuP1._handler = fn;
+            },
+            _invokeStage1: function(detail) {
+                if (window.inryokuP1._handler) {
+                    try { window.inryokuP1._handler(detail); }
+                    catch(e) { console.warn('[P1 ext] handler error', e); }
+                }
+            }
+        };
+    })();
     const root = document.getElementById('root');
     root.className = 'phase-1';
     root.innerHTML = `<div id="p0-wrapper" style="
@@ -2710,7 +2731,27 @@ function renderPhase1() {
                 // bDot/wDotは純黒・純白のまま維持（50%衝突まで混ざらない）
                 bDotMat.uniforms.u_greyMix.value = 0.0;
                 wDotMat.uniforms.u_greyMix.value = 0.0;
-                if (prog >= 50) { phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; singDimSwitched = false; singShakeFrame = 0; triggerBarGlitch(); }
+                if (prog >= 50) {
+                    phase = PH.EVENT_SING; eventTimer = 0; prog = 50; showProg(50); progPaused = true; singDimSwitched = false; singShakeFrame = 0; triggerBarGlitch();
+                    // 2026-05-17 段階0: P1拡張シーン起動フック
+                    // 50%達成（白黒衝突 → グレー誕生）の瞬間に発火
+                    // 既存挙動は変更しない。未登録時は何も起きない。
+                    try {
+                        if (!window._inryokuP1_50fired) {
+                            window._inryokuP1_50fired = true;
+                            var detail = {
+                                timestamp: performance.now(),
+                                scene: scene,
+                                camera: camera,
+                                renderer: renderer
+                            };
+                            window.dispatchEvent(new CustomEvent('inryoku:p1_50percent', { detail: detail }));
+                            if (window.inryokuP1 && typeof window.inryokuP1._invokeStage1 === 'function') {
+                                window.inryokuP1._invokeStage1(detail);
+                            }
+                        }
+                    } catch(e) { console.warn('[P1 stage0 hook]', e); }
+                }
 
                 // ═══ PHASE 3: EVENT_SING (50% — 6s) — 白黒融合→グレー球（一瞬の陰陽） ═══
             } else if (phase === PH.EVENT_SING) {
