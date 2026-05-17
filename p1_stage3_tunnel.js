@@ -28,12 +28,17 @@
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap, UV speed reduction)
     const IS_MOBILE = (typeof navigator !== 'undefined')
-        && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')
+            || (typeof window !== 'undefined' && window.innerWidth < 640)
+            || (typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+                && window.matchMedia('(pointer: coarse)').matches));
 
     // 2026-05-17 段階3.1: FOV cap mobile 60, desktop 72
     const FOV_DELTA_MAX = IS_MOBILE ? 10 : 22;  // 50 → 60 (mobile) / 50 → 72 (desktop)
     // 2026-05-17 段階3.1: モバイルは UV speed を 30% 削減
     const SPEED_SCALE = IS_MOBILE ? 0.7 : 1.0;
+    // 2026-05-18 段階4: kaleidoscope fractal iterations (mobile 2, desktop 4)
+    const FRACTAL_ITERS = IS_MOBILE ? 2 : 4;
 
     const TUNNEL_VERT = [
         'varying vec2 vUv;',
@@ -43,14 +48,21 @@
         '}'
     ].join('\n');
 
+    // 2026-05-18 段階4: KALEIDOSCOPE PSYCHEDELIC tunnel (Codex C)
+    //   旧 spiral+rings tunnel を 6-segment kaleidoscope + fractal + 6軸ビーム に置換。
+    //   uCenter で sphere screen-space 中心から放射、uBang で爆ぜる瞬間にブースト。
+    //   FRACTAL_ITER_COUNT は ShaderMaterial.defines で注入 (mobile 2 / desktop 4)。
     const TUNNEL_FRAG = [
         'precision highp float;',
+        'varying vec2 vUv;',
         'uniform float uTime;',
         'uniform float uTunnelProgress;',
         'uniform float uSpeed;',
         'uniform float uWarp;',
         'uniform float uPulse;',
-        'varying vec2 vUv;',
+        'uniform float uTunnel;',
+        'uniform float uBang;',
+        'uniform vec2  uCenter;',
         '',
         'vec3 hsv2rgb(vec3 c){',
         '    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);',
@@ -59,33 +71,51 @@
         '}',
         '',
         'void main(){',
-        '    vec2 uv = vUv - 0.5;',
+        '    // 球の screen-space 中心からの放射 (uCenter は NDC -1..1)',
+        '    vec2 uv = (vUv - 0.5 - uCenter * 0.5) * 2.0;',
         '    float r = length(uv);',
-        '    float angle = atan(uv.y, uv.x);',
+        '    float a = atan(uv.y, uv.x);',
         '',
-        '    // tunnel depth (1/r)',
-        '    float depth = 1.0 / max(r, 0.05);',
+        '    // ── Kaleidoscope 6 segments ──',
+        '    float segments = 6.0;',
+        '    float sector = 6.2831853 / segments;',
+        '    float aMod = mod(a + sector * 0.5, sector) - sector * 0.5;',
+        '    aMod = abs(aMod);',
+        '    vec2 k = vec2(cos(aMod), sin(aMod)) * r;',
         '',
-        '    // scrolling rings into the distance',
-        '    float spiral = sin(angle * 6.0 + depth * 8.0 * uWarp - uTime * uSpeed * 5.0);',
-        '    float ring   = sin(depth * 20.0 - uTime * uSpeed * 8.0);',
-        '    float tunnel = smoothstep(0.2, 1.0, spiral * ring);',
+        '    // ── Lightweight fractal (define で 2 or 4 iters) ──',
+        '    vec2 z = k * (2.0 + uTunnel * 1.5);',
+        '    float f = 0.0;',
+        '    float amp = 0.5;',
+        '    for (int i = 0; i < FRACTAL_ITER_COUNT; i++) {',
+        '        z = abs(z) / dot(z, z) - 0.72;',
+        '        f += amp * exp(-abs(length(z) - 1.0) * 2.2);',
+        '        amp *= 0.55;',
+        '    }',
         '',
-        '    // 6 波長 (RGBCMY) を意識した hue cycle',
-        '    float hue = fract(angle / 6.283 + depth * 0.05 + uTime * 0.04);',
-        '    vec3 col = hsv2rgb(vec3(hue, 0.9, 1.0));',
-        '    col *= tunnel;',
+        '    // ── Spiral + ring interference ──',
+        '    float spiral = sin(a * 18.0 + r * 28.0 - uTime * (2.0 + uTunnel * 8.0));',
+        '    float rings  = sin(r * r * 90.0 - uTime * 5.0);',
+        '    float interference = smoothstep(0.15, 1.0, spiral * 0.45 + rings * 0.45 + f * 0.35);',
         '',
-        '    // 中央の白核 (Scene E への橋渡し)',
-        '    float focal = exp(-r * r * 12.0) * (0.6 + uPulse * 0.8);',
-        '    col += vec3(0.9, 0.92, 1.0) * focal;',
+        '    // ── 6-axis radial beams ──',
+        '    float axis = pow(abs(cos(a * 6.0)), 12.0);',
+        '    float beam = axis * smoothstep(1.2, 0.0, r);',
         '',
-        '    // 外周フェード (矩形端の干渉を消す)',
-        '    float outerFade = 1.0 - smoothstep(0.45, 0.7, r);',
-        '    col *= outerFade;',
+        '    // ── HSV hue rotation with fractal influence ──',
+        '    float hue = fract(a / 6.2831853 * 6.0 + r * 1.8 - uTime * 0.10 + f * 0.18);',
+        '    vec3 col = hsv2rgb(vec3(hue, 0.96, 1.0));',
         '',
-        '    float a = uTunnelProgress * (tunnel * 0.85 + focal);',
-        '    gl_FragColor = vec4(col * uTunnelProgress, clamp(a, 0.0, 1.0));',
+        '    // ── Center focal ──',
+        '    float center = smoothstep(0.7, 0.04, r);',
+        '',
+        '    float alpha = (interference * 0.75 + beam * 0.65 + center * 0.35) * uTunnel;',
+        '    col *= 1.0 + uBang * 1.2;',
+        '    alpha += uBang * center * 0.5;',
+        '',
+        '    // 旧 uTunnelProgress も乗算 (互換: prewarp で薄く / breakthrough で full)',
+        '    alpha *= max(uTunnelProgress, uTunnel);',
+        '    gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));',
         '}'
     ].join('\n');
 
@@ -187,6 +217,8 @@
         // tunnel plane 生成
         state.tunnelGeo = buildTunnelPlane(state.camera);
         state.tunnelMat = new THREE.ShaderMaterial({
+            // 2026-05-18 段階4: kaleidoscope fractal iteration count (mobile 2 / desktop 4)
+            defines: { FRACTAL_ITER_COUNT: FRACTAL_ITERS },
             vertexShader:   TUNNEL_VERT,
             fragmentShader: TUNNEL_FRAG,
             uniforms: {
@@ -195,6 +227,10 @@
                 uSpeed:           { value: 0 },
                 uWarp:            { value: 1.0 },
                 uPulse:           { value: 0 },
+                // 2026-05-18 段階4: shared with sphere shader (via window._p1ShaderShared)
+                uTunnel:          { value: 0 },
+                uBang:            { value: 0 },
+                uCenter:          { value: new THREE.Vector2(0, 0) },
             },
             transparent: true,
             depthWrite:  false,
@@ -273,6 +309,28 @@
         if (!state.tunnelMat) return;
         const u = state.tunnelMat.uniforms;
         u.uTime.value = t;
+        // 2026-05-18 段階4: shared bus (sphere → tunnel) で uBang / uTunnel / uCenter を同期
+        try {
+            const sh = (typeof window !== 'undefined') ? window._p1ShaderShared : null;
+            if (sh) {
+                if (typeof sh.uBang === 'number')   u.uBang.value   = sh.uBang;
+                if (typeof sh.uTunnel === 'number') u.uTunnel.value = sh.uTunnel;
+                if (typeof sh.centerX === 'number' && typeof sh.centerY === 'number') {
+                    u.uCenter.value.set(sh.centerX, sh.centerY);
+                }
+            }
+        } catch (e) {}
+        // Fallback: scene 経由で sphere を毎フレーム引いて NDC を計算
+        if (state.scene && state.camera) {
+            try {
+                const sphere = state.scene.getObjectByName('p1Stage1TaichiSphere');
+                if (sphere) {
+                    const wp = sphere.getWorldPosition(new THREE.Vector3());
+                    wp.project(state.camera);
+                    u.uCenter.value.set(wp.x, wp.y);
+                }
+            } catch (e) {}
+        }
 
         let progress, speed, warp, pulse;
         let orbScale = 1, orbAlpha = 1, baseMix = 1;
@@ -425,6 +483,28 @@
         }
         state.prewarpActive = true;
         state.prewarpStartTime = performance.now();
+    });
+
+    // 2026-05-18 段階4: BIG BANG イベント (14.4s @ ingest end)
+    //   tunnel を即 full alpha に押し上げ、bang flash と同期して emerge from sphere center
+    window.addEventListener('inryoku:p1_bigbang', function(ev) {
+        if (state.disposed) return;
+        if (!state.running) {
+            initStage3();
+        }
+        state.breakthroughActive = true;
+        state.breakthroughStartTime = performance.now();
+        state.startTime = performance.now();
+        // uTunnel をすぐ 1 に近づける (shared bus 経由でも上書きされる)
+        if (state.tunnelMat) {
+            try {
+                state.tunnelMat.uniforms.uTunnel.value = 1.0;
+                if (ev && ev.detail && ev.detail.centerNdc) {
+                    state.tunnelMat.uniforms.uCenter.value.set(
+                        ev.detail.centerNdc.x, ev.detail.centerNdc.y);
+                }
+            } catch (e) {}
+        }
     });
 
     // 2026-05-17 段階3.1: breakthrough イベント (11.7s)

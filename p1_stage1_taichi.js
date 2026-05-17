@@ -48,7 +48,13 @@
     //   12.4 +      : stage2complete → stage3 takes over
     const BREAKTHROUGH_T = 11.7;
     const SETTLE_END     = 12.0;
+    // 2026-05-18 段階4: ingest 1.35s → 2.4s に延長、BANG は ingest 終了 (14.1s) で発火
+    // 旧 STAGE2_FIRE_T = 12.4 (互換のため保持)
     const STAGE2_FIRE_T  = 12.4;
+    const INGEST_START_T = 12.0;   // settle end = ingest start
+    const INGEST_DUR     = 2.4;    // 2400ms
+    const BANG_T         = INGEST_START_T + INGEST_DUR; // 14.4s
+    const BANG_RAMP_DUR  = 0.7;    // 700ms uBang 0→1
 
     const RADIUS = 0.42;
 
@@ -207,6 +213,11 @@
         uniform float uLiquid;
         // ── 新: 主駆動 ──
         uniform float uReveal; // 0 → 1
+        // ── 2026-05-18 段階4: big bang / compression / tunnel sync ──
+        uniform float uCompression; // 0=normal, 1=fully compressed (anticipation)
+        uniform float uBang;        // 0=normal, 1=fully exploded (0.7s ramp)
+        uniform float uTunnel;      // 0=invisible, 1=full tunnel
+        uniform vec2  uCenter;      // sphere NDC center (-1..1)
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -325,8 +336,26 @@
             col += prism * fresnel * (0.10 + colorBirth * 0.34);
             col += prism * boundary * (1.0 - greyMix) * 0.05;
 
+            // ── 2026-05-18 段階4: 6色 CRACK radiation (big bang) ──
+            //   uBang 0→1 で球表面が方向別 (RGBCMY 6セクター) に裂け、
+            //   亀裂から色光が漏れ出す。alpha も bang で減衰 (爆ぜて消える)。
+            float crackSeed = fbm(p * 8.0 + uTime * 0.2);
+            float crack = smoothstep(0.72, 0.86, crackSeed + uBang * 0.55);
+            float fissure = pow(crack, 3.0);
+            vec3 dirCol;
+            float aAng = atan(p.y, p.x);
+            float sector = floor(fract(aAng / 6.2831853 + 0.5) * 6.0);
+            if (sector < 1.0)      dirCol = vec3(1.0, 0.0, 0.0);   // R
+            else if (sector < 2.0) dirCol = vec3(1.0, 1.0, 0.0);   // Y
+            else if (sector < 3.0) dirCol = vec3(0.0, 1.0, 0.0);   // G
+            else if (sector < 4.0) dirCol = vec3(0.0, 1.0, 1.0);   // C
+            else if (sector < 5.0) dirCol = vec3(0.0, 0.15, 1.0);  // B
+            else                   dirCol = vec3(1.0, 0.0, 1.0);   // M
+            col += dirCol * fissure * uBang * 2.0;
+
             // ── 旧 alpha ロジック互換: taichi 出現スケール ──
-            gl_FragColor = vec4(col * uTaichiMix, uTaichiMix);
+            float alphaOut = uTaichiMix * (1.0 - smoothstep(0.45, 1.0, uBang) * 0.85);
+            gl_FragColor = vec4(col * uTaichiMix, alphaOut);
         }
     `;
 
@@ -426,6 +455,17 @@
         lastTime: 0,             // dt 計算用 (performance.now ms)
         glitchTextFired: false,  // breakthrough 直前 1-2 フレームの "10█%" 表示
         glitchAudioDucked: false,// 120ms 無音化済みか
+        // 2026-05-18 段階4: big bang / ingest extended timeline
+        bangFired: false,
+        bangStart: 0,
+        ingestStartMs: 0,        // applyIngestClass 呼ばれた瞬間 (performance.now)
+        gooSvgInjected: false,
+        audio_bangFired: false,
+        audio_gooFired: false,
+        audio_tunnelRiseFired: false,
+        easterCmyInked: false,
+        easterGreyPointFired: false,
+        easterRunnerLastFired: false,
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
@@ -437,6 +477,51 @@
     // 2026-05-18 段階3.2: モバイル妥協値 (spark 数 / blur 強度)
     const SPARK_COUNT  = IS_MOBILE ? 8 : 18;
     const INGEST_BLUR  = IS_MOBILE ? 2 : 7;
+    // 2026-05-18 段階4: mobile-tuned constants
+    const GOO_SCALE_MAX  = IS_MOBILE ? 24 : 44;   // feDisplacementMap peak
+    const GOO_SCALE_PEAK = IS_MOBILE ? 14 : 18;   // ramp-up peak
+    const BLOOM_STRENGTH_MAX = IS_MOBILE ? 1.5 : 2.2;
+    const FOV_MAX_LOCAL  = IS_MOBILE ? 60 : 72;
+
+    // 2026-05-18 段階4: SVG goo filter (feTurbulence + feDisplacementMap)
+    //   UI の最終消失を「液体が落ちて消える」表現に置き換える。
+    //   旧: clip-path circle + filter blur (.is-ingesting)
+    //   新: filter: url(#p1-goo-ingest-filter) + clip-path ellipse (.p1-goo-ingest)
+    function ensureP1GooFilter() {
+        if (state.gooSvgInjected) return;
+        if (typeof document === 'undefined') return;
+        try {
+            if (document.getElementById('p1-goo-filter-svg')) {
+                state.gooSvgInjected = true;
+                return;
+            }
+            const peak = GOO_SCALE_PEAK;
+            const apex = GOO_SCALE_MAX;
+            // SVG namespace 必須 (innerHTML だと filter が機能しないことがあるが
+            //  ここでは body 直下に挿入するため動作する)
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:fixed;width:0;height:0;pointer-events:none;';
+            wrap.innerHTML =
+                '<svg id="p1-goo-filter-svg" width="0" height="0" '
+                + 'xmlns="http://www.w3.org/2000/svg" style="position:fixed;pointer-events:none;">'
+                +   '<filter id="p1-goo-ingest-filter">'
+                +     '<feTurbulence type="fractalNoise" baseFrequency="0.012 0.028" '
+                +       'numOctaves="3" seed="7" result="noise">'
+                +       '<animate attributeName="baseFrequency" dur="2.4s" '
+                +         'values="0.012 0.028;0.045 0.090;0.018 0.055" fill="freeze" />'
+                +     '</feTurbulence>'
+                +     '<feDisplacementMap in="SourceGraphic" in2="noise" scale="0" '
+                +       'xChannelSelector="R" yChannelSelector="G">'
+                +       '<animate attributeName="scale" dur="2.4s" '
+                +         'values="0;' + peak + ';' + apex + ';' + Math.round(apex * 0.27)
+                +         ';0" keyTimes="0;0.28;0.64;0.86;1" fill="freeze" />'
+                +     '</feDisplacementMap>'
+                +   '</filter>'
+                + '</svg>';
+            document.body.appendChild(wrap);
+            state.gooSvgInjected = true;
+        } catch (e) {}
+    }
 
     // 2026-05-18 段階3.2: Win95 ルート DOM 探索 (Codex)
     //   ID/class が安定しない問題に対する fallback。
@@ -697,6 +782,46 @@
                 '}',
                 '@keyframes p1Spark {',
                 '  to { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) scale(.2); filter: blur(1px); }',
+                '}',
+                // ── 2026-05-18 段階4: SVG goo ingest (liquid UI 吸引) ──
+                //   旧 .is-ingesting (1350ms) → 新 .p1-goo-ingest (2400ms)
+                '.p1-goo-ingest {',
+                '  transform-origin: 50% 50%;',
+                '  will-change: transform, opacity, filter, clip-path;',
+                '  filter: url(#p1-goo-ingest-filter);',
+                '  animation: p1GooIngest 2400ms cubic-bezier(.72,0,.12,1) forwards;',
+                '}',
+                '@keyframes p1GooIngest {',
+                '  0%   { opacity: 1; transform: scale(1) rotate(0deg);',
+                '         clip-path: ellipse(145% 120% at 50% 50%); border-radius: 0; }',
+                '  22%  { opacity: .98; transform: scale(.97, .91) rotate(.2deg);',
+                '         clip-path: ellipse(105% 84% at 50% 50%); border-radius: 14px; }',
+                '  48%  { opacity: .92; transform: scale(.72, .46) rotate(-1.6deg);',
+                '         clip-path: ellipse(68% 38% at 50% 50%); border-radius: 42% 58% 48% 52%; }',
+                '  70%  { opacity: .76; transform: scale(.34, .16) rotate(7deg);',
+                '         clip-path: ellipse(30% 12% at 50% 50%); border-radius: 65% 35% 60% 40%; }',
+                '  88%  { opacity: .45; transform: scale(.09, .035) rotate(-18deg);',
+                '         clip-path: ellipse(8% 3% at 50% 50%); border-radius: 50%; }',
+                '  100% { opacity: 0; transform: scale(.012) rotate(-42deg);',
+                '         clip-path: ellipse(1% 1% at 50% 50%); }',
+                '}',
+                // ── 2026-05-18 段階4: CMY ink bleed easter egg (最初の 600ms) ──
+                // ── 2026-05-18 段階4: runner as last particle ──
+                '#exit-runner.is-final-particle {',
+                '  filter: brightness(2.8) drop-shadow(0 0 6px #fff)',
+                '          drop-shadow(0 0 12px rgba(255,255,255,.8));',
+                '  animation: runnerFinalParticle 1200ms ease-in forwards;',
+                '}',
+                '@keyframes runnerFinalParticle {',
+                '  0%   { opacity: 1; transform: translate(-50%, -50%) scale(1); }',
+                '  60%  { opacity: 1; transform: translate(calc(-50% + 2px), calc(-50% - 2px)) scale(.6); }',
+                '  100% { opacity: 0; transform: translate(-50%, -50%) scale(.05); }',
+                '}',
+                '.p1-goo-ingest.is-cmy-ink {',
+                '  filter: url(#p1-goo-ingest-filter)',
+                '          drop-shadow(2px 0 rgba(0,255,255,.55))',
+                '          drop-shadow(-2px 0 rgba(255,0,255,.55))',
+                '          drop-shadow(0 2px rgba(255,255,0,.45));',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -746,6 +871,112 @@
             ng.gain.value = 0.18;
             noise.connect(hp).connect(ng).connect(state.audioMaster);
             noise.start(now + 0.02);
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階4: BIG BANG cue (kick 58Hz + 6音和音 [C D E F# G# A#])
+    function playBigBangCue() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            // Kick: 58Hz sine, exp decay 0.55s
+            const kickOsc = ctx.createOscillator();
+            const kickGain = ctx.createGain();
+            kickOsc.type = 'sine';
+            kickOsc.frequency.setValueAtTime(180, now);
+            kickOsc.frequency.exponentialRampToValueAtTime(58, now + 0.08);
+            kickGain.gain.setValueAtTime(0.0001, now);
+            kickGain.gain.exponentialRampToValueAtTime(0.55, now + 0.01);
+            kickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+            kickOsc.connect(kickGain).connect(state.audioMaster);
+            kickOsc.start(now); kickOsc.stop(now + 0.6);
+            // 6音和音 (C4 D4 E4 F#4 G#4 A#4)
+            const freqs = [261.63, 293.66, 329.63, 369.99, 415.30, 466.16];
+            const chordGain = ctx.createGain();
+            chordGain.gain.setValueAtTime(0.0001, now);
+            chordGain.gain.exponentialRampToValueAtTime(0.7, now + 0.04);
+            chordGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+            chordGain.connect(state.audioMaster);
+            for (let i = 0; i < freqs.length; i++) {
+                const o = ctx.createOscillator();
+                o.type = 'sine';
+                o.frequency.value = freqs[i];
+                o.connect(chordGain);
+                o.start(now); o.stop(now + 1.5);
+            }
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階4: goo ingest rumble (low rumble + filter sweep)
+    function playGooRumbleCue() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            const bufSize = Math.floor(ctx.sampleRate * 2.4);
+            const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = ctx.createBufferSource();
+            noise.buffer = buf;
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass';
+            bp.frequency.setValueAtTime(220, now);
+            bp.frequency.exponentialRampToValueAtTime(3200, now + 2.3);
+            bp.Q.value = 4;
+            const ng = ctx.createGain();
+            ng.gain.setValueAtTime(0.0001, now);
+            ng.gain.exponentialRampToValueAtTime(0.14, now + 0.6);
+            // 2.3-2.4s pre-bang 100ms silence
+            ng.gain.exponentialRampToValueAtTime(0.14, now + 2.30);
+            ng.gain.linearRampToValueAtTime(0.0001, now + 2.40);
+            noise.connect(bp).connect(ng).connect(state.audioMaster);
+            noise.start(now); noise.stop(now + 2.45);
+            // Low rumble sine drone underneath
+            const lo = ctx.createOscillator();
+            const loG = ctx.createGain();
+            lo.type = 'sine'; lo.frequency.value = 48;
+            loG.gain.setValueAtTime(0.0001, now);
+            loG.gain.exponentialRampToValueAtTime(0.18, now + 0.5);
+            loG.gain.exponentialRampToValueAtTime(0.22, now + 2.0);
+            loG.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+            lo.connect(loG).connect(state.audioMaster);
+            lo.start(now); lo.stop(now + 2.5);
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階4: tunnel rise (2.8s 後に filtered noise + sine 220→880Hz)
+    function playTunnelRiseCue() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            const dur = 2.8;
+            const lo = ctx.createOscillator();
+            const loG = ctx.createGain();
+            lo.type = 'sine';
+            lo.frequency.setValueAtTime(220, now);
+            lo.frequency.exponentialRampToValueAtTime(880, now + dur);
+            loG.gain.setValueAtTime(0.0001, now);
+            loG.gain.exponentialRampToValueAtTime(0.10, now + 0.4);
+            loG.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+            lo.connect(loG).connect(state.audioMaster);
+            lo.start(now); lo.stop(now + dur + 0.1);
+            // filtered noise rising
+            const bufSize = Math.floor(ctx.sampleRate * dur);
+            const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+            const ns = ctx.createBufferSource();
+            ns.buffer = buf;
+            const hp = ctx.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.setValueAtTime(600, now);
+            hp.frequency.exponentialRampToValueAtTime(4000, now + dur);
+            const ng = ctx.createGain();
+            ng.gain.setValueAtTime(0.0001, now);
+            ng.gain.exponentialRampToValueAtTime(0.08, now + 0.5);
+            ng.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+            ns.connect(hp).connect(ng).connect(state.audioMaster);
+            ns.start(now); ns.stop(now + dur);
         } catch (e) {}
     }
 
@@ -803,17 +1034,31 @@
             if (!src) return;
             // prewarp class は元に付いている可能性があるので外す
             try { src.classList.remove('p1-window-prewarp'); } catch (e) {}
+            // 2026-05-18 段階4: SVG goo filter を保証
+            ensureP1GooFilter();
             const pair = createUiIngestClone(src);
             if (!pair) return;
             state.uiIngestClone = pair.clone;
             state.uiIngestSource = pair.source;
-            // 次フレームで is-ingesting を付与 (animation を確実に開始)
+            state.ingestStartMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+            // 次フレームで .p1-goo-ingest を付与 (2400ms 液体吸引)
+            // 旧コード: is-ingesting (1350ms clip-path circle) → 段階4 で置換
             requestAnimationFrame(function(){
-                try { pair.clone.classList.add('is-ingesting'); } catch (e) {}
-                // 1.5s 後に clone を片付ける (アニメ完了後)
+                try {
+                    pair.clone.classList.add('p1-goo-ingest');
+                    // Easter Egg 1: CMY ink bleed (最初の 600ms)
+                    if (!REDUCE_MOTION) {
+                        pair.clone.classList.add('is-cmy-ink');
+                        state.easterCmyInked = true;
+                        setTimeout(function(){
+                            try { pair.clone.classList.remove('is-cmy-ink'); } catch (e) {}
+                        }, 600);
+                    }
+                } catch (e) {}
+                // ingest dur (2.4s) + 余裕 0.2s 後に clone を片付ける
                 setTimeout(function(){
                     try { pair.clone.remove(); } catch (e) {}
-                }, 1500);
+                }, 2600);
             });
         } catch (e) {}
     }
@@ -1059,6 +1304,11 @@
                 uReveal:     { value: 0 },
                 // 2026-05-17 段階3.1: 100% plateau 駆動 (0→1 across 10.2→11.7)
                 uHundredPlateau: { value: 0 },
+                // 2026-05-18 段階4: big bang / compression / tunnel / center
+                uCompression: { value: 0 },
+                uBang:        { value: 0 },
+                uTunnel:      { value: 0 },
+                uCenter:      { value: new THREE.Vector2(0, 0) },
             },
             transparent: true,
             depthWrite: false,
@@ -1167,6 +1417,19 @@
         // 回転 ~12°/sec
         state.mesh.rotation.y = t * 0.2094;
 
+        // 2026-05-18 段階4: 毎フレーム sphere の NDC を shared bus に公開
+        //   (tunnel が uCenter として読み込み、球から放射されるよう同期)
+        if (state.camera && state.mesh) {
+            try {
+                const cv = state.mesh.getWorldPosition(new THREE.Vector3());
+                cv.project(state.camera);
+                u.uCenter.value.set(cv.x, cv.y);
+                window._p1ShaderShared = window._p1ShaderShared || {};
+                window._p1ShaderShared.centerX = cv.x;
+                window._p1ShaderShared.centerY = cv.y;
+            } catch (e) {}
+        }
+
         // ── Scene A (0.0 → 1.2s): taichi 出現 ──
         if (t < 0.4) {
             const p = easeOutCubic(t / 0.4);
@@ -1218,38 +1481,134 @@
             u.uReveal.value    = 1.0 + 0.01 * easeOutCubic(bp);
             u.uHundredPlateau.value = 1.0;
             state.mesh.scale.setScalar(1.0 + 0.012 * Math.sin(t * 1.4));
-        } else if (t < STAGE2_FIRE_T) {
-            // ── 2026-05-17 段階3.1: settle 101% (12.0 → 12.4s) ──
-            // UI ingest start, tunnel sprout (prewarp event 後に stage3 が takeover)
+        } else if (t < BANG_T) {
+            // ── 2026-05-18 段階4: INGEST (12.0 → 14.4s, 2400ms) ──
+            //   旧 SETTLE_END→STAGE2_FIRE_T (12.0→12.4 = 400ms) を 2400ms に拡張。
+            //   1) goo ingest 開始 (t=12.0s)
+            //   2) anticipation 圧縮 (ingestElapsed 1.5→2.4s, sphere shrink 22% + uCompression)
+            //   3) pre-bang grey-point easter (t=2.3-2.4s)
+            //   4) BANG @ t=14.4s (uBang ramp + dispatch events)
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1.01;
             u.uHundredPlateau.value = 1.0;
-            state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(t * 1.2));
             if (!state.ingestFired) {
                 state.ingestFired = true;
-                // ingest を breakthrough+~0.3s で発動
                 applyIngestClass();
                 if (!REDUCE_MOTION && !state.audio_ingestFired) {
                     state.audio_ingestFired = true;
                     playIngestCue();
                 }
+                if (!REDUCE_MOTION && !state.audio_gooFired) {
+                    state.audio_gooFired = true;
+                    playGooRumbleCue();
+                }
+                // Easter Egg 3: runner becomes last bright dot (centered on sphere)
+                try {
+                    const r = state.runner || document.getElementById('exit-runner');
+                    if (r) {
+                        state.runner = r;
+                        r.classList.add('is-final-particle');
+                    }
+                } catch (e) {}
+            }
+            const ingestElapsed = t - INGEST_START_T;
+            // anticipation compression (1.5 → 2.4s into ingest)
+            const compressT = Math.max(0, Math.min(1, (ingestElapsed - 1.5) / 0.9));
+            const compress = compressT * compressT * (3 - 2 * compressT);
+            const scaleBase = 1.0 - compress * 0.22 + Math.sin(t * 0.042 * 1000) * compress * 0.006;
+            state.mesh.scale.setScalar(scaleBase + 0.008 * Math.sin(t * 1.2) * (1 - compress));
+            u.uCompression.value = compress;
+            // Easter Egg 2: brief grey-point at ingestElapsed 2.3-2.4s (100ms desat)
+            if (!state.easterGreyPointFired && ingestElapsed >= 2.30 && ingestElapsed < 2.40) {
+                state.easterGreyPointFired = true;
+                // reveal を一時的に 0 に戻す (グレーに見える瞬間)
+                u.uReveal.value = 0.0;
+                state.mesh.scale.setScalar(0.04); // 小さなグレー点
             }
         } else {
-            // ── 2026-05-17 段階3.1: stage2complete 発火 (≈12.4s) ──
+            // ── 2026-05-18 段階4: BIG BANG + tunnel + stage2complete (≥14.4s) ──
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1.01;
             u.uHundredPlateau.value = 1.0;
-            state.mesh.scale.setScalar(1.0 + 0.005 * Math.sin(t * 1.1));
-            if (!state.stage2Fired) {
-                state.stage2Fired = true;
-                if (!state.audio_fadedOut) {
-                    state.audio_fadedOut = true;
-                    fadeOutAllAudio(1.2);
-                }
+            // BANG initial fire (一度だけ)
+            if (!state.bangFired) {
+                state.bangFired = true;
+                state.bangStart = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+                // Shared uniform bus for tunnel
                 try {
-                    window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
+                    window._p1ShaderShared = window._p1ShaderShared || {};
+                    window._p1ShaderShared.bangStart = state.bangStart;
+                    window._p1ShaderShared.bangActive = true;
                 } catch (e) {}
+                // Compute sphere screen-space center (NDC) — sphere is at z=0.7
+                let cx = 0, cy = 0;
+                if (state.camera && state.mesh) {
+                    try {
+                        const v = state.mesh.getWorldPosition(new THREE.Vector3());
+                        v.project(state.camera);
+                        cx = v.x; cy = v.y;
+                    } catch (e) {}
+                }
+                u.uCenter.value.set(cx, cy);
+                try {
+                    window._p1ShaderShared.centerX = cx;
+                    window._p1ShaderShared.centerY = cy;
+                } catch (e) {}
+                if (!REDUCE_MOTION && !state.audio_bangFired) {
+                    state.audio_bangFired = true;
+                    playBigBangCue();
+                }
+                if (!REDUCE_MOTION && !state.audio_tunnelRiseFired) {
+                    state.audio_tunnelRiseFired = true;
+                    setTimeout(playTunnelRiseCue, 100);
+                }
+                // Dispatch bigbang + stage2complete (stage3 listens for stage2complete)
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1_bigbang', {
+                        detail: {
+                            scene: state.scene,
+                            camera: state.camera,
+                            renderer: state.renderer,
+                            centerNdc: { x: cx, y: cy }
+                        }
+                    }));
+                } catch (e) {}
+                if (!state.stage2Fired) {
+                    state.stage2Fired = true;
+                    if (!state.audio_fadedOut) {
+                        state.audio_fadedOut = true;
+                        fadeOutAllAudio(1.2);
+                    }
+                    try {
+                        window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
+                    } catch (e) {}
+                }
             }
+            // BANG ramp (0 → 1 over 700ms)
+            const nowB = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+            const bangT = Math.min(1, (nowB - state.bangStart) / (BANG_RAMP_DUR * 1000));
+            u.uBang.value = bangT;
+            u.uTunnel.value = Math.min(1, bangT * 1.3);
+            try {
+                window._p1ShaderShared = window._p1ShaderShared || {};
+                window._p1ShaderShared.uBang   = bangT;
+                window._p1ShaderShared.uTunnel = u.uTunnel.value;
+            } catch (e) {}
+            // Sphere: brief expansion at bang then collapse to invisible
+            const expand = bangT < 0.25 ? (1.0 + bangT * 4.0 * 0.4) : (1.4 - (bangT - 0.25) * 2.0);
+            state.mesh.scale.setScalar(Math.max(0.01, expand));
+            // ── Bloom safety: ramp up at bang, decay over 200ms after ──
+            try {
+                const w = window;
+                const bloomRef = w.bloom || (w.inryokuP1 && w.inryokuP1.bloom);
+                if (bloomRef) {
+                    const flashElapsed = Math.min(1, (nowB - state.bangStart) / 200);
+                    const bangFlash = 1.0 - flashElapsed;
+                    bloomRef.threshold = 0.22;
+                    bloomRef.strength = 0.75 + (BLOOM_STRENGTH_MAX - 0.75) * bangFlash;
+                    bloomRef.radius   = 0.35 + 0.27 * bangFlash;
+                }
+            } catch (e) {}
         }
 
         // 旧 uniforms を reveal から派生 (後方互換 — 他コードが参照しても破綻しないように)
