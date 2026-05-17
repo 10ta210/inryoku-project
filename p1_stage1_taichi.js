@@ -172,6 +172,20 @@
                     obj.visible = false;
                 }
             }
+            // 2026-05-17 追加: 既存の旧トンネル / halo / warpTunnel も hide
+            // 既存シェーダーの特徴的な uniform を持つ Mesh を検出
+            if (obj.isMesh && obj.material && obj.material.uniforms) {
+                var u = obj.material.uniforms;
+                var isLegacyTunnel = (u.u_radius !== undefined) ||
+                                     (u.u_rainbow !== undefined) ||
+                                     (u.u_ringDensity !== undefined) ||
+                                     (u.u_scrollMul !== undefined);
+                var isLegacyHalo = (u.u_glow !== undefined) && (u.u_time !== undefined) && !u.u_radius;
+                if ((isLegacyTunnel || isLegacyHalo) && obj.visible) {
+                    state.hiddenLegacy.push(obj);
+                    obj.visible = false;
+                }
+            }
         });
     }
 
