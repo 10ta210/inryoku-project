@@ -31,10 +31,16 @@
 
     // 2026-05-17 段階2.2: 新タイムライン (Codex)
     //   0.0 → 1.2s : Scene A (taichi 出現)
-    //   1.2 → 4.2s : MorphScene (uReveal 0 → 1, easeInOutCubic)
+    //   1.2 → 4.2s : MorphScene (uReveal 0 → 1, easeInOutCubic)  ← 旧
     //   4.2s +    : Hold, rcSphere assistant 0.18, microbreath, event fire
+    // 2026-05-17 段階2.4: Codex C' — 9s non-linear pacing curve + 1.5s 余韻
+    //   0.0 → 1.2s : Scene A (taichi 出現)
+    //   1.2 → 10.2s: MorphScene (uReveal 0 → 1, p101Curve 4-phase)
+    //   10.2 → 11.7s: Hold (余韻)
+    //   11.7s+     : fire inryoku:p1stage2complete
     const MORPH_START = 1.2;
-    const MORPH_END   = 4.2;
+    const MORPH_END   = 10.2;
+    const HOLD_END    = 11.7;
 
     const RADIUS = 0.42;
 
@@ -321,9 +327,45 @@
     function easeInOutCubic(t) {
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
+    // 2026-05-17 段階2.4: easeOutExpo 追加 (跳躍フェーズ用)
+    function easeOutExpo(x) {
+        return x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+    }
     function smoothstepJS(edge0, edge1, x) {
         const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
         return t * t * (3 - 2 * t);
+    }
+
+    // 2026-05-17 段階2.4: p101Curve (Codex C')
+    //   4-phase: タメ(0-22%) → 内部上昇(22-72%) → 急跳躍(72-86%) → 101%余韻(86-100%)
+    //   t は 0..1 (MorphScene 9.0s 全体に対する正規化時間)
+    function p101Curve(t) {
+        if (t < 0.22) {
+            // 50% で止まっているように見えるタメ (0 → 0.05)
+            return 0.05 * easeOutCubic(t / 0.22);
+        }
+        if (t < 0.72) {
+            // 内部から色が増える (0.05 → 0.67)
+            return 0.05 + 0.62 * easeInOutCubic((t - 0.22) / 0.50);
+        }
+        if (t < 0.86) {
+            // 跳躍 (0.67 → 1.0)
+            return 0.67 + 0.33 * easeOutExpo((t - 0.72) / 0.14);
+        }
+        // 101% 余韻
+        return 1.0;
+    }
+
+    // 2026-05-17 段階2.4: milestone-based text snapping
+    const P101_MILESTONES = [50, 51, 55, 64, 72, 88, 101];
+    function nearestMilestone(pct) {
+        let best = P101_MILESTONES[0];
+        let bestD = Math.abs(best - pct);
+        for (let i = 1; i < P101_MILESTONES.length; i++) {
+            const d = Math.abs(P101_MILESTONES[i] - pct);
+            if (d < bestD) { best = P101_MILESTONES[i]; bestD = d; }
+        }
+        return best;
     }
 
     let state = {
@@ -342,6 +384,18 @@
         rcMesh: null,
         rcMat:  null,
         rcGeo:  null,
+        // 2026-05-17 段階2.4: 音声ガード/コンテキスト
+        audioCtx: null,
+        audioMaster: null,
+        droneOsc: null,
+        droneGain: null,
+        harmOsc: null,
+        harmGain: null,
+        audio_droneFired: false,
+        audio_harmFired: false,
+        audio_duckFired: false,
+        audio_arrivalFired: false,
+        audio_fadedOut: false,
     };
 
     // Web Audio (オプション)
@@ -379,6 +433,107 @@
             padOsc2.start(now + 2.8);
             padOsc.stop(now + 6.0);
             padOsc2.stop(now + 6.0);
+        } catch (e) {}
+    }
+
+    // 2026-05-17 段階2.4: morph 用音声 (drone → harmonics → duck → arrival)
+    function ensureMorphAudio() {
+        if (state.audioCtx) return state.audioCtx;
+        try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return null;
+            state.audioCtx = new Ctx();
+            state.audioMaster = state.audioCtx.createGain();
+            state.audioMaster.gain.value = 1.0;
+            state.audioMaster.connect(state.audioCtx.destination);
+        } catch (e) { state.audioCtx = null; }
+        return state.audioCtx;
+    }
+    function startDrone() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            state.droneOsc = ctx.createOscillator();
+            state.droneGain = ctx.createGain();
+            state.droneOsc.type = 'sine';
+            state.droneOsc.frequency.value = 220; // A3
+            state.droneGain.gain.setValueAtTime(0.0001, now);
+            state.droneGain.gain.exponentialRampToValueAtTime(0.10, now + 0.6);
+            state.droneOsc.connect(state.droneGain).connect(state.audioMaster);
+            state.droneOsc.start(now);
+        } catch (e) {}
+    }
+    function startHarmonics() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            state.harmOsc = ctx.createOscillator();
+            const harmOsc2 = ctx.createOscillator();
+            state.harmGain = ctx.createGain();
+            state.harmOsc.type = 'sine';
+            harmOsc2.type = 'sine';
+            state.harmOsc.frequency.value = 220;      // A
+            harmOsc2.frequency.value = 277.18;        // C#4
+            state.harmGain.gain.setValueAtTime(0.0001, now);
+            state.harmGain.gain.exponentialRampToValueAtTime(0.08, now + 1.5);
+            state.harmOsc.connect(state.harmGain);
+            harmOsc2.connect(state.harmGain);
+            state.harmGain.connect(state.audioMaster);
+            state.harmOsc.start(now);
+            harmOsc2.start(now);
+        } catch (e) {}
+    }
+    function duckMaster() {
+        if (!state.audioCtx || !state.audioMaster) return;
+        try {
+            const ctx = state.audioCtx;
+            const now = ctx.currentTime;
+            const cur = state.audioMaster.gain.value || 1.0;
+            state.audioMaster.gain.cancelScheduledValues(now);
+            state.audioMaster.gain.setValueAtTime(cur, now);
+            state.audioMaster.gain.linearRampToValueAtTime(cur * 0.30, now + 0.04);
+            state.audioMaster.gain.linearRampToValueAtTime(cur, now + 0.16);
+        } catch (e) {}
+    }
+    function playArrivalChord() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            // RGBCMY → 6音: C4 D4 E4 F#4 G#4 A#4
+            const freqs = [261.63, 293.66, 329.63, 369.99, 415.30, 466.16];
+            const chordGain = ctx.createGain();
+            chordGain.gain.setValueAtTime(0.0001, now);
+            chordGain.gain.exponentialRampToValueAtTime(0.09, now + 0.05);
+            chordGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+            chordGain.connect(state.audioMaster);
+            for (let i = 0; i < freqs.length; i++) {
+                const o = ctx.createOscillator();
+                o.type = 'sine';
+                o.frequency.value = freqs[i];
+                o.connect(chordGain);
+                o.start(now);
+                o.stop(now + 1.0);
+            }
+        } catch (e) {}
+    }
+    function fadeOutAllAudio(durSec) {
+        if (!state.audioCtx) return;
+        try {
+            const ctx = state.audioCtx;
+            const now = ctx.currentTime;
+            [state.droneGain, state.harmGain].forEach(function(g){
+                if (!g) return;
+                try {
+                    const cur = g.gain.value || 0.001;
+                    g.gain.cancelScheduledValues(now);
+                    g.gain.setValueAtTime(Math.max(0.0001, cur), now);
+                    g.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
+                } catch (e) {}
+            });
+            setTimeout(function(){
+                try { if (state.droneOsc) state.droneOsc.stop(); } catch(e){}
+                try { if (state.harmOsc)  state.harmOsc.stop();  } catch(e){}
+            }, durSec * 1000 + 50);
         } catch (e) {}
     }
 
@@ -471,10 +626,13 @@
             state.mat.uniforms.uPrism.value      = 1.0;
             state.mat.uniforms.uColorBirth.value = 1;
             state.mat.uniforms.uLiquid.value     = 1;
-            try {
-                window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
-                state.stage2Fired = true;
-            } catch (e) {}
+            // 2026-05-17 段階2.4: REDUCE_MOTION は 200ms 後に発火 (即発火だと挙動共有が不安定)
+            state.stage2Fired = true;
+            setTimeout(function() {
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
+                } catch (e) {}
+            }, 200);
             return;
         }
 
@@ -510,22 +668,34 @@
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 0;
         } else if (t < MORPH_END) {
-            // ── MorphScene (1.2 → 4.2s): uReveal 0 → 1 easeInOutCubic ──
+            // ── 2026-05-17 段階2.4: MorphScene (1.2 → 10.2s, 9.0s) ──
+            //   p101Curve 4-phase (タメ → 内部上昇 → 急跳躍 → 余韻) で uReveal 駆動
             const raw = (t - MORPH_START) / (MORPH_END - MORPH_START);
-            const reveal = easeInOutCubic(Math.max(0, Math.min(1, raw)));
+            const reveal = p101Curve(Math.max(0, Math.min(1, raw)));
             // 微呼吸 (3%)
             const breath = 1.0 + 0.03 * Math.sin(raw * Math.PI);
             state.mesh.scale.setScalar(breath);
             u.uTaichiMix.value = 1;
             u.uReveal.value    = reveal;
+        } else if (t < HOLD_END) {
+            // ── 2026-05-17 段階2.4: Hold (10.2 → 11.7s) 1.5s 余韻 ──
+            const hold = t - MORPH_END;
+            state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(hold * 1.2));
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
         } else {
-            // ── Hold (4.2s+): reveal=1, microbreath, event fire ──
+            // ── 2026-05-17 段階2.4: 余韻終了 → 次ステージへ ──
             const hold = t - MORPH_END;
             state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(hold * 1.2));
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
             if (!state.stage2Fired) {
                 state.stage2Fired = true;
+                // 高周波残響のみ残してフェードアウト
+                if (!state.audio_fadedOut) {
+                    state.audio_fadedOut = true;
+                    fadeOutAllAudio(1.2);
+                }
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
                 } catch (e) {}
@@ -538,6 +708,26 @@
         u.uPrism.value      = 0.3 + 0.9 * rv;
         u.uColorBirth.value = smoothstepJS(0.38, 0.92, rv);
         u.uLiquid.value     = smoothstepJS(0.45, 1.0, rv);
+
+        // ── 2026-05-17 段階2.4: 音声キュー (drone → harmonics → duck → arrival) ──
+        if (!REDUCE_MOTION) {
+            if (!state.audio_droneFired && rv > 0.0 && rv < 0.05) {
+                state.audio_droneFired = true;
+                startDrone();
+            }
+            if (!state.audio_harmFired && rv > 0.25 && rv < 0.70) {
+                state.audio_harmFired = true;
+                startHarmonics();
+            }
+            if (!state.audio_duckFired && rv > 0.88 && rv < 1.0) {
+                state.audio_duckFired = true;
+                duckMaster();
+            }
+            if (!state.audio_arrivalFired && rv >= 1.0) {
+                state.audio_arrivalFired = true;
+                playArrivalChord();
+            }
+        }
 
         // ── 2026-05-17 段階2.3: ローディングバー morph 同期 ──
         // 50% → 101% を reveal で駆動。色も 陰陽 → グレー → RGBCMY と同期
@@ -577,8 +767,9 @@
                     }
                 }
                 if (pctEl) {
-                    const label = pv >= 101 ? '101' : pv;
-                    pctEl.textContent = 'Loading reality... ' + label + '%';
+                    // 2026-05-17 段階2.4: milestone snap (50/51/55/64/72/88/101)
+                    const shown = nearestMilestone(morphProg);
+                    pctEl.textContent = 'Loading reality... ' + shown + '%';
                 }
             }
         } catch (e) { /* DOM 未準備でも黙って続行 */ }
