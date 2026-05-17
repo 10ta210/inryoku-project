@@ -1096,21 +1096,22 @@
         border-radius: 16px;
       }
 
-      /* 2026-05-17: モバイルで服画像が巨大化する問題を修正 */
+      /* 2026-05-17: モバイルで服画像が巨大化する問題を修正
+         さらに縮小（タップ時も適切なサイズ感） */
       .product-image-wrap {
         min-height: 0;
-        padding: 16px 16px 8px;
+        padding: 12px 12px 4px;
         border-radius: 16px 16px 0 0;
       }
       .product-detail-img {
-        max-height: 38vh;     /* 画面高さの 38% に上限 */
-        max-width: 78%;       /* 横幅も詰めて余白を確保 */
+        max-height: 28vh;     /* 画面高さの 28% に上限（38→28） */
+        max-width: 62%;       /* 横幅も更に詰める（78→62） */
       }
       .product-info-wrap {
-        padding: 18px 20px 24px;
+        padding: 14px 18px 22px;
       }
       .product-title {
-        font-size: 16px;
+        font-size: 15px;
         letter-spacing: 1.5px;
       }
     }
@@ -1782,16 +1783,16 @@
       padding: 10px 0;
     }
     .carousel-scene {
-      /* 2026-04-24: mobile も大きく 108→140 / 170→220 */
-      width: 140px;
-      height: 220px;
-      perspective: 1100px;
-      margin-top: 60px;
+      /* 2026-05-17: モバイル一回り縮小 140→112 / 220→180 */
+      width: 112px;
+      height: 180px;
+      perspective: 1000px;
+      margin-top: 50px;
     }
     .carousel-item {
-      /* 2026-04-24: 92→118px */
-      width: 118px;
-      left: 11px;
+      /* 2026-05-17: 118→94px */
+      width: 94px;
+      left: 9px;
     }
     .item-grid {
       margin-top: 60px;
