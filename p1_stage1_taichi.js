@@ -2,6 +2,10 @@
 // Scene A (0.0–1.2s): 陰陽パターンが球面に出現・回転
 // Scene B (1.2–2.8s): 境界が溶けてグレーに侵食、リム虹干渉
 // 2.8s 以降: グレー球を保持し、次のステージを待つ
+// 2026-05-17 段階2: Scene C (2.8–4.2s) — グレー球が同一メッシュのまま
+//   RGBCMY 水滴オーブへ変容。6 metaball を球面に配置・field blend。
+//   中心には微小な太極核を保持 (101% は 50% を否定しない)。
+//   4.2s で inryoku:p1stage2complete 発火、以降は微呼吸＋色循環で保持。
 (function p1Stage1IIFE() {
     'use strict';
     if (typeof window === 'undefined') return;
@@ -14,6 +18,11 @@
     const SCENE_A_DUR = 1.2;
     const SCENE_B_DUR = 1.6; // 1.2 → 2.8
     const TOTAL_DUR   = SCENE_A_DUR + SCENE_B_DUR; // 2.8s
+    // 2026-05-17 段階2: Scene C タイムライン
+    const STAGE2_START   = 2.8;
+    const STAGE2_RAMP_IN = 2.95; // 0.15s ホールド余韻
+    const STAGE2_RAMP_END = 4.0; // 0 → 1 完了
+    const STAGE2_END      = 4.2; // settle 完了 → イベント発火
 
     const RADIUS = 0.42;
 
@@ -48,6 +57,9 @@
         uniform float uTaichiMix;
         uniform float uGreyMix;
         uniform float uPrism;
+        // 2026-05-17 段階2: 色生 (0=灰/太極, 1=RGBCMYオーブ) と液体歪み
+        uniform float uColorBirth;
+        uniform float uLiquid;
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -96,6 +108,60 @@
             vec3 rimColor = mix(prism, sixBand, 0.45);
             col += rimColor * rim * (boundary * 0.18 + 0.05) * uPrism;
 
+            // 2026-05-17 段階2: RGBCMY metaball オーブ
+            // 6 中心 (±X, ±Y, ±Z) を時間でゆっくり回し、色の位置を循環させる
+            if (uColorBirth > 0.001) {
+                vec3 centers[6];
+                centers[0] = vec3( 1.0, 0.0, 0.0); // R
+                centers[1] = vec3(-1.0, 0.0, 0.0); // G
+                centers[2] = vec3( 0.0, 1.0, 0.0); // B
+                centers[3] = vec3( 0.0,-1.0, 0.0); // C
+                centers[4] = vec3( 0.0, 0.0, 1.0); // M
+                centers[5] = vec3( 0.0, 0.0,-1.0); // Y
+
+                vec3 colorsArr[6];
+                colorsArr[0] = vec3(1.0, 0.0, 0.0);
+                colorsArr[1] = vec3(0.0, 1.0, 0.0);
+                colorsArr[2] = vec3(0.0, 0.0, 1.0);
+                colorsArr[3] = vec3(0.0, 1.0, 1.0);
+                colorsArr[4] = vec3(1.0, 0.0, 1.0);
+                colorsArr[5] = vec3(1.0, 1.0, 0.0);
+
+                float field = 0.0;
+                vec3 colorSum = vec3(0.0);
+                // 全中心を共通 Y 軸でゆるく回す (~8s で一周相当)
+                float ang = uTime * 0.08;
+                float ca = cos(ang);
+                float sa = sin(ang);
+                for (int i = 0; i < 6; i++) {
+                    vec3 c = centers[i];
+                    vec3 cr = vec3(c.x * ca - c.z * sa, c.y, c.x * sa + c.z * ca);
+                    float d = length(p - normalize(cr));
+                    float m = exp(-d * d * 4.0);
+                    field += m;
+                    colorSum += colorsArr[i] * m;
+                }
+                vec3 orb = colorSum / max(field, 0.001);
+
+                // 液体感: 球面方向の微小ノイズで明度を揺らす（normal 改変は省略・安全策）
+                float liqN = sin(p.x * 6.0 + uTime * 0.6) * sin(p.y * 5.0 - uTime * 0.5)
+                           * sin(p.z * 7.0 + uTime * 0.4);
+                orb *= (1.0 + 0.08 * uLiquid * liqN);
+
+                // 哲学: 中心に微小な太極核を残す (101% は 50% を消さない)
+                float coreMask = smoothstep(0.18, 0.04, length(p.xy));
+                vec3 taichiCore = mix(black, white, yin);
+                orb = mix(orb, taichiCore, coreMask * 0.18);
+
+                // 強い Fresnel (pow 2.5) のリムグロー
+                float strongRim = pow(1.0 - max(dot(normalize(vWorldNormal), viewDir), 0.0), 2.5);
+                vec3 orbRim = orb * strongRim * 0.8;
+
+                // ベースを orb に混ぜる
+                col = mix(col, orb, uColorBirth);
+                col += orbRim * uColorBirth;
+            }
+
             gl_FragColor = vec4(col * uTaichiMix, uTaichiMix);
         }
     `;
@@ -118,6 +184,7 @@
         running: false,
         disposed: false,
         hiddenLegacy: [], // 元の greySphere を保持
+        stage2Fired: false, // 2026-05-17 段階2: イベント二重発火防止
     };
 
     // Web Audio (オプション)
@@ -197,6 +264,9 @@
                 uPrism:     { value: 0 },
                 // 2026-05-17 段階1.2: 本物の Fresnel 用カメラ位置
                 uCameraPos: { value: new THREE.Vector3() },
+                // 2026-05-17 段階2: RGBCMY オーブ生成
+                uColorBirth: { value: 0 },
+                uLiquid:     { value: 0 },
             },
             transparent: true,
             depthWrite: false,
@@ -219,10 +289,17 @@
         state.running = true;
 
         if (REDUCE_MOTION) {
-            // 動きなし: 最終グレー状態を即時セット
-            state.mat.uniforms.uTaichiMix.value = 1;
-            state.mat.uniforms.uGreyMix.value   = 0.85;
-            state.mat.uniforms.uPrism.value     = 1.0;
+            // 動きなし: 最終 RGBCMY オーブ状態を即時セット (段階2 完了形)
+            state.mat.uniforms.uTaichiMix.value  = 1;
+            state.mat.uniforms.uGreyMix.value    = 0.85;
+            state.mat.uniforms.uPrism.value      = 1.0;
+            state.mat.uniforms.uColorBirth.value = 1;
+            state.mat.uniforms.uLiquid.value     = 1;
+            // 段階2完了イベントも即発火 (Stage 3 を待たせない)
+            try {
+                window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
+                state.stage2Fired = true;
+            } catch (e) {}
             return;
         }
 
@@ -268,14 +345,55 @@
             u.uTaichiMix.value = 1;
             u.uGreyMix.value   = 0.85 * p;
             u.uPrism.value     = 0.3 + 0.7 * p;
-        } else {
-            // 2.8s+: 静止グレー保持、ゆっくり回転継続
+        } else if (t < STAGE2_RAMP_IN) {
+            // 2.8–2.95s: Stage 1 から滑らかにバトンタッチ (ほぼホールド)
             state.mesh.scale.setScalar(1);
-            u.uTaichiMix.value = 1;
-            u.uGreyMix.value   = 0.85;
-            // 2026-05-17 段階1.2: ホールド中の微呼吸（リム虹がゆるく脈動）
-            var holdT = t - TOTAL_DUR;
-            u.uPrism.value = 0.55 + 0.45 * Math.sin(holdT * 0.8);
+            u.uTaichiMix.value  = 1;
+            u.uGreyMix.value    = 0.85;
+            var holdT0 = t - TOTAL_DUR;
+            u.uPrism.value      = 0.55 + 0.45 * Math.sin(holdT0 * 0.8);
+            // ほぼ感じない程度に色生を立ち上げ
+            var pre = (t - STAGE2_START) / (STAGE2_RAMP_IN - STAGE2_START);
+            u.uColorBirth.value = 0.02 * easeOutCubic(pre);
+            u.uLiquid.value     = 0;
+        } else if (t < STAGE2_RAMP_END) {
+            // 2.95–4.0s: uColorBirth が 0 → 1 (ease-in-out cubic) で開花、液体感も付与
+            var p2 = (t - STAGE2_RAMP_IN) / (STAGE2_RAMP_END - STAGE2_RAMP_IN);
+            var e2 = easeInOutCubic(p2);
+            // 3% 呼吸スケール
+            state.mesh.scale.setScalar(1.0 + 0.03 * Math.sin(p2 * Math.PI));
+            u.uTaichiMix.value  = 1;
+            u.uGreyMix.value    = 0.85;
+            u.uPrism.value      = 0.8 + 0.4 * e2;
+            u.uColorBirth.value = e2;
+            u.uLiquid.value     = e2;
+        } else if (t < STAGE2_END) {
+            // 4.0–4.2s: settle (光がふっと締まる)
+            var p3 = (t - STAGE2_RAMP_END) / (STAGE2_END - STAGE2_RAMP_END);
+            // settle ライトパルス
+            var puls = 1.0 + 0.04 * (1.0 - p3);
+            state.mesh.scale.setScalar(puls);
+            u.uTaichiMix.value  = 1;
+            u.uGreyMix.value    = 0.85;
+            u.uPrism.value      = 1.2 - 0.2 * p3; // 1.2 → 1.0
+            u.uColorBirth.value = 1;
+            u.uLiquid.value     = 1;
+        } else {
+            // 4.2s+: RGBCMY オーブを保持。微呼吸 + 内部色循環は uTime で自動
+            state.mesh.scale.setScalar(1);
+            u.uTaichiMix.value  = 1;
+            u.uGreyMix.value    = 0.85;
+            var holdT2 = t - STAGE2_END;
+            u.uPrism.value      = 0.9 + 0.25 * Math.sin(holdT2 * 0.7);
+            u.uColorBirth.value = 1;
+            u.uLiquid.value     = 1;
+            // 段階2完了イベント (一度だけ)
+            if (!state.stage2Fired) {
+                state.stage2Fired = true;
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
+                } catch (e) {}
+            }
         }
     }
 
