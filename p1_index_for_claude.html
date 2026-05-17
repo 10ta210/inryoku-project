@@ -81,6 +81,27 @@
         // デスクトップ: P0→P1→P2→P3 フルシーケンス
         renderPhase1();
 
+        // 2026-05-17 開発用: ?dev=1 or ?skip=intro で Welcome画面を自動スキップ
+        // → Win95ローディング直行（P1演出をすぐ見たい時用）
+        // 本番アクセスは無関係（パラメータ無しなら従来通り）
+        (function devSkipIntro() {
+            if (!/[\?&](dev=1|skip=intro)/.test(location.search)) return;
+            console.log('[P1 dev] auto-skip intro enabled');
+            var attempts = 0;
+            var iv = setInterval(function() {
+                attempts++;
+                var btn = document.getElementById('evolve-btn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('p0-disabled');
+                    btn.click();
+                    clearInterval(iv);
+                    console.log('[P1 dev] ENTER auto-clicked');
+                }
+                if (attempts > 150) { clearInterval(iv); } // 30秒で諦め
+            }, 200);
+        })();
+
         // P1完了 → P2起動
         window.addEventListener('inryoku:p1complete', () => {
           console.log('✅ P1 complete — starting P2');
