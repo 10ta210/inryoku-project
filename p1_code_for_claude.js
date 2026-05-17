@@ -63,6 +63,8 @@ function renderPhase1() {
         if (window.inryokuP1) return; // 多重初期化防止
         window.inryokuP1 = {
             _handler: null,
+            // 2026-05-17 段階1.2: 拡張ハンドラ有効フラグ。Stage1 がロード時に true にする。
+            stage1Enabled: false,
             registerStage1Handler: function(fn) {
                 if (typeof fn !== 'function') {
                     console.warn('[P1 ext] handler must be a function');
@@ -1468,6 +1470,7 @@ function renderPhase1() {
             new THREE.PlaneGeometry(sqWorld * 6, sqWorld * 6),
             warpTunnelMat
         );
+        warpTunnelPlane.name = 'p1-old-warp-tunnel'; // 2026-05-17 段階1.2
         warpTunnelPlane.position.z = -0.5;
         warpTunnelPlane.visible = false;
         scene.add(warpTunnelPlane);
@@ -2068,6 +2071,7 @@ function renderPhase1() {
             transparent: true, depthWrite: false, depthTest: false
         });
         const greySphere = new THREE.Mesh(greySphereGeo, greySphereMat);
+        greySphere.name = 'p1-old-grey-sphere'; // 2026-05-17 段階1.2: 拡張ハンドラから getObjectByName で参照
         greySphere.visible = false; greySphere.position.z = 0.5; scene.add(greySphere);
 
         // ── RGBCMY Tunnel (OVERSIZED — covers full screen for overflow) ──
@@ -2147,6 +2151,7 @@ function renderPhase1() {
             ].join('\n'), transparent: true, depthWrite: false
         });
         const tunnelPlane = new THREE.Mesh(new THREE.PlaneGeometry(tunnelSize, tunnelSize), tunnelMat);
+        tunnelPlane.name = 'p1-old-tunnel-plane'; // 2026-05-17 段階1.2
         // z=0: bgPlane(z=-1)の手前、greySphere(z=0.5)の奥 → 球の裏からにじみ出る
         tunnelPlane.visible = false; tunnelPlane.position.z = 0; scene.add(tunnelPlane);
 
@@ -2170,6 +2175,7 @@ function renderPhase1() {
             transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
         });
         const haloPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 1.8, sqWorld * 1.8), haloMat);
+        haloPlane.name = 'p1-old-halo-plane'; // 2026-05-17 段階1.2
         haloPlane.visible = false; haloPlane.position.z = 0.2; scene.add(haloPlane);
 
         // Stub objects so references in tick() don't error (solar cross removed — handled by eye shader u_cross)
@@ -2756,6 +2762,26 @@ function renderPhase1() {
 
                 // ═══ PHASE 3: EVENT_SING (50% — 6s) — 白黒融合→グレー球（一瞬の陰陽） ═══
             } else if (phase === PH.EVENT_SING) {
+                // 2026-05-17 段階1.2: 拡張ハンドラ有効時は旧演出を完全停止
+                // EVENT_SING 以降 (WARP_GROW/BREACH/CONSUME/COLLAPSE) は phase が進まないので
+                // ここで早期 return すれば全て止まる。renderLoop は tick 後に
+                // renderer.render を呼ぶので画面は描画され続ける。
+                if (window.inryokuP1 && window.inryokuP1.stage1Enabled) {
+                    if (!window._p1LegacyHidden) {
+                        window._p1LegacyHidden = true;
+                        ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel'].forEach(function(n){
+                            var o = scene.getObjectByName(n);
+                            if (o) o.visible = false;
+                        });
+                        // bDot / wDot / yyPlane も非表示にして残骸を残さない
+                        try { if (typeof bDot !== 'undefined' && bDot) bDot.visible = false; } catch(e){}
+                        try { if (typeof wDot !== 'undefined' && wDot) wDot.visible = false; } catch(e){}
+                        try { if (typeof yyPlane !== 'undefined' && yyPlane) yyPlane.visible = false; } catch(e){}
+                    }
+                    // 背景 u_time だけは更新（拡張ハンドラと共存できるよう静かに進める）
+                    bgMat.uniforms.u_time.value = globalTime;
+                    return;
+                }
                 eventTimer += dt;
                 const et = eventTimer;
 

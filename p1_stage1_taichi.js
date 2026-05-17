@@ -21,10 +21,17 @@
         varying vec3 vNormal;
         varying vec3 vPosition;
         varying vec2 vUv;
+        // 2026-05-17 段階1.2: ワールド空間出力 (本物の Fresnel 用)
+        varying vec3 vWorldPos;
+        varying vec3 vWorldNormal;
         void main() {
             vNormal = normalize(normalMatrix * normal);
             vPosition = position;
             vUv = uv;
+            // 2026-05-17 段階1.2: ワールド空間座標と法線
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+            vWorldNormal = normalize(mat3(modelMatrix) * normal);
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     `;
@@ -33,6 +40,10 @@
         precision highp float;
         varying vec3 vNormal;
         varying vec3 vPosition;
+        // 2026-05-17 段階1.2: ワールド空間入力 (本物の Fresnel 用)
+        varying vec3 vWorldPos;
+        varying vec3 vWorldNormal;
+        uniform vec3 uCameraPos;
         uniform float uTime;
         uniform float uTaichiMix;
         uniform float uGreyMix;
@@ -58,9 +69,9 @@
             vec3 taichi = mix(black, white, yin);
             vec3 col = mix(taichi, grey, uGreyMix);
 
-            // リム Fresnel
-            vec3 viewDir = vec3(0.0, 0.0, 1.0);
-            float rim = pow(1.0 - clamp(dot(normalize(vNormal), viewDir), 0.0, 1.0), 2.0);
+            // 2026-05-17 段階1.2: 本物の Fresnel — ワールド空間の view ベクトル
+            vec3 viewDir = normalize(uCameraPos - vWorldPos);
+            float rim = pow(1.0 - max(dot(normalize(vWorldNormal), viewDir), 0.0), 2.0);
 
             // 境界帯（陰陽の境）— 溶けるにつれ広がる
             float boundary = 1.0 - smoothstep(0.0, 0.12 + uGreyMix * 0.25, abs(s));
@@ -151,40 +162,15 @@
         }
     }
 
+    // 2026-05-17 段階1.2: 名前ベース hide のみ採用（ヒューリスティック / uniform 検出は廃止）
     function hideLegacyGreySphere(scene) {
-        if (!scene || typeof scene.traverse !== 'function') return;
-        scene.traverse(function(obj) {
-            if (!obj || obj === state.mesh) return;
-            // 名前/userData ベースで検索（既存実装には .name は無いが将来用に）
-            if (obj.name === 'greySphere' || (obj.userData && obj.userData.isGreySphere)) {
-                if (obj.visible) {
-                    state.hiddenLegacy.push(obj);
-                    obj.visible = false;
-                }
-                return;
-            }
-            // ヒューリスティック: 原点近傍 (z≈0.5) の SphereGeometry を疑似 greySphere とみなす
-            if (obj.isMesh && obj.geometry && obj.geometry.type === 'SphereGeometry') {
-                const pos = obj.position;
-                if (Math.abs(pos.x) < 0.05 && Math.abs(pos.y) < 0.05 &&
-                    pos.z > 0.3 && pos.z < 0.7 && obj.visible) {
-                    state.hiddenLegacy.push(obj);
-                    obj.visible = false;
-                }
-            }
-            // 2026-05-17 追加: 既存の旧トンネル / halo / warpTunnel も hide
-            // 既存シェーダーの特徴的な uniform を持つ Mesh を検出
-            if (obj.isMesh && obj.material && obj.material.uniforms) {
-                var u = obj.material.uniforms;
-                var isLegacyTunnel = (u.u_radius !== undefined) ||
-                                     (u.u_rainbow !== undefined) ||
-                                     (u.u_ringDensity !== undefined) ||
-                                     (u.u_scrollMul !== undefined);
-                var isLegacyHalo = (u.u_glow !== undefined) && (u.u_time !== undefined) && !u.u_radius;
-                if ((isLegacyTunnel || isLegacyHalo) && obj.visible) {
-                    state.hiddenLegacy.push(obj);
-                    obj.visible = false;
-                }
+        if (!scene || typeof scene.getObjectByName !== 'function') return;
+        const names = ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel'];
+        names.forEach(function(n){
+            var o = scene.getObjectByName(n);
+            if (o && o.visible) {
+                state.hiddenLegacy.push(o);
+                o.visible = false;
             }
         });
     }
@@ -209,6 +195,8 @@
                 uTaichiMix: { value: 0 },
                 uGreyMix:   { value: 0 },
                 uPrism:     { value: 0 },
+                // 2026-05-17 段階1.2: 本物の Fresnel 用カメラ位置
+                uCameraPos: { value: new THREE.Vector3() },
             },
             transparent: true,
             depthWrite: false,
@@ -252,6 +240,10 @@
         if (!state.mat || !state.mesh) return;
         const u = state.mat.uniforms;
         u.uTime.value = t;
+        // 2026-05-17 段階1.2: 毎フレーム camera 位置を uniform に反映 (本物の Fresnel)
+        if (state.camera && u.uCameraPos) {
+            u.uCameraPos.value.copy(state.camera.position);
+        }
 
         // 回転 ~12°/sec = 0.2094 rad/s
         state.mesh.rotation.y = t * 0.2094;
@@ -281,7 +273,9 @@
             state.mesh.scale.setScalar(1);
             u.uTaichiMix.value = 1;
             u.uGreyMix.value   = 0.85;
-            u.uPrism.value     = 1.0;
+            // 2026-05-17 段階1.2: ホールド中の微呼吸（リム虹がゆるく脈動）
+            var holdT = t - TOTAL_DUR;
+            u.uPrism.value = 0.55 + 0.45 * Math.sin(holdT * 0.8);
         }
     }
 
@@ -308,12 +302,26 @@
         dispose: dispose,
     };
 
+    // 2026-05-17 段階1.2: フラグは登録試行前に即セット
+    // → renderPhase1 がまだ走っていない段階でも、後から inryokuP1 が
+    //   作られた瞬間に stage1Enabled=true を上書きする。
+    function setEnabled() {
+        if (window.inryokuP1) {
+            window.inryokuP1.stage1Enabled = true;
+        }
+    }
+    setEnabled();
+
     // 登録: window.inryokuP1 が後から定義される場合に備えてポーリング
     function tryRegister(attempts) {
         if (window.inryokuP1 && typeof window.inryokuP1.registerStage1Handler === 'function') {
+            // 2026-05-17 段階1.2: registerStage1Handler 呼び出し前に必ずフラグを立てる
+            window.inryokuP1.stage1Enabled = true;
             window.inryokuP1.registerStage1Handler(initStage1);
             return;
         }
+        // 2026-05-17 段階1.2: inryokuP1 がまだ無くてもポーリング中に出来たら即フラグセット
+        setEnabled();
         if (attempts <= 0) return;
         setTimeout(function() { tryRegister(attempts - 1); }, 100);
     }
@@ -321,6 +329,8 @@
 
     // フォールバック: イベント直接購読（registerStage1Handler 取りこぼし対策）
     window.addEventListener('inryoku:p1_50percent', function(ev) {
+        // 2026-05-17 段階1.2: イベント経由でも必ずフラグを立てる
+        if (window.inryokuP1) window.inryokuP1.stage1Enabled = true;
         if (!state.running && !state.disposed) {
             initStage1(ev.detail);
         }
