@@ -417,11 +417,148 @@
         audio_breakthroughFired: false,
         audio_ingestFired: false,
         isMobile: false,
+        // 2026-05-18 段階3.2: discovery / clone / quantized bar / runner / glitch
+        win95Root: null,         // discoverWin95Root() の結果 (DOM clone source)
+        uiIngestClone: null,     // body に append された clone 要素
+        uiIngestSource: null,    // 元 DOM (visibility hidden で隠した参照)
+        runner: null,            // #exit-runner キャッシュ
+        visualPct: 50,           // バーの視覚追従値 (50 → 101)
+        lastTime: 0,             // dt 計算用 (performance.now ms)
+        glitchTextFired: false,  // breakthrough 直前 1-2 フレームの "10█%" 表示
+        glitchAudioDucked: false,// 120ms 無音化済みか
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
     const IS_MOBILE = (typeof navigator !== 'undefined')
-        && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        && (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')
+            || (typeof window !== 'undefined' && window.innerWidth < 640)
+            || (typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+                && window.matchMedia('(pointer: coarse)').matches));
+    // 2026-05-18 段階3.2: モバイル妥協値 (spark 数 / blur 強度)
+    const SPARK_COUNT  = IS_MOBILE ? 8 : 18;
+    const INGEST_BLUR  = IS_MOBILE ? 2 : 7;
+
+    // 2026-05-18 段階3.2: Win95 ルート DOM 探索 (Codex)
+    //   ID/class が安定しない問題に対する fallback。
+    //   候補→大きさ→上半分中央性 で最有力候補をキャッシュ。
+    function discoverWin95Root() {
+        try {
+            const candidates = [
+                '#win95-main', '#win95-window', '.win95-window',
+                '#win95-bar', '#root .phase-1 > *'
+            ];
+            for (const sel of candidates) {
+                const el = document.querySelector(sel);
+                if (el && el.offsetWidth > 200 && el.offsetHeight > 100) return el;
+            }
+            // Fallback: 視野上 80% 内の最大可視中央要素
+            const all = Array.from(document.querySelectorAll('*'));
+            let best = null, bestArea = 0;
+            for (const el of all) {
+                const r = el.getBoundingClientRect();
+                if (r.width > 250 && r.height > 120
+                    && r.top < window.innerHeight * 0.8 && r.left > 0) {
+                    const area = r.width * r.height;
+                    if (area > bestArea) { bestArea = area; best = el; }
+                }
+            }
+            return best;
+        } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階3.2: DOM clone overlay (clip-path / transform を確実に乗せる)
+    function createUiIngestClone(source) {
+        if (!source) return null;
+        try {
+            const rect = source.getBoundingClientRect();
+            const clone = source.cloneNode(true);
+            clone.id = 'p1-ui-ingest-clone';
+            clone.classList.add('p1-ui-ingest-clone');
+            // 元の id 衝突を防ぐ: 子の id をリネーム
+            try {
+                const ids = clone.querySelectorAll('[id]');
+                ids.forEach(function(n){ n.id = 'cl-' + n.id; });
+                clone.id = 'p1-ui-ingest-clone';
+            } catch (e) {}
+            Object.assign(clone.style, {
+                position: 'fixed',
+                left: rect.left + 'px',
+                top:  rect.top  + 'px',
+                width:  rect.width  + 'px',
+                height: rect.height + 'px',
+                margin: '0',
+                zIndex: '2147483000',
+                pointerEvents: 'none',
+                transformOrigin: '50% 50%',
+                willChange: 'transform, opacity, filter, clip-path'
+            });
+            document.body.appendChild(clone);
+            // 元 DOM を隠す (レイアウトは維持)
+            source.style.visibility = 'hidden';
+            return { source: source, clone: clone };
+        } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階3.2: バーから RGBCMY スパーク放出
+    function emitBarSparks() {
+        try {
+            const bar = document.getElementById('p1-lb');
+            if (!bar) return;
+            const r = bar.getBoundingClientRect();
+            const x = r.right;
+            const y = r.top + r.height / 2;
+            const colors = ['#ff0000','#00ff00','#0000ff','#00ffff','#ff00ff','#ffff00'];
+            for (let i = 0; i < SPARK_COUNT; i++) {
+                const s = document.createElement('i');
+                s.className = 'p1-bar-spark';
+                s.style.left = x + 'px';
+                s.style.top  = y + 'px';
+                s.style.setProperty('--dx', ((Math.random() - 0.5) * 90) + 'px');
+                s.style.setProperty('--dy', ((Math.random() - 0.5) * 34) + 'px');
+                s.style.color      = colors[i % 6];
+                s.style.background = colors[i % 6];
+                document.body.appendChild(s);
+                s.addEventListener('animationend', function(){
+                    try { s.remove(); } catch (e) {}
+                }, { once: true });
+            }
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階3.2: 100% 直前 1-2 フレームのグリッチ文字
+    function showGlitchPercent(pctEl) {
+        if (!pctEl) return;
+        try {
+            const glyphs = ['█','▓','◢','✕'];
+            pctEl.textContent = 'Loading reality... 10'
+                + glyphs[Math.floor(Math.random() * glyphs.length)] + '%';
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階3.2: ローディングバー quantized milestones
+    //   width:x% の直接補間ではなく "packet" 単位で進ませる
+    const BAR_MILESTONES = [50, 51, 53, 55, 58, 62, 67, 72, 79, 88, 96, 99, 100, 101];
+    function quantizedPct(rawPct) {
+        let nearest = BAR_MILESTONES[0];
+        for (let i = 0; i < BAR_MILESTONES.length; i++) {
+            if (BAR_MILESTONES[i] <= rawPct) nearest = BAR_MILESTONES[i];
+        }
+        return nearest;
+    }
+
+    // 2026-05-18 段階3.2: breakthrough 120ms 前に master gain を一瞬絞る
+    function preBreakthroughSilence() {
+        if (!state.audioCtx || !state.audioMaster) return;
+        try {
+            const ctx = state.audioCtx;
+            const now = ctx.currentTime;
+            const prev = state.audioMaster.gain.value || 1.0;
+            state.audioMaster.gain.cancelScheduledValues(now);
+            state.audioMaster.gain.setValueAtTime(prev, now);
+            state.audioMaster.gain.linearRampToValueAtTime(0.0001, now + 0.02);
+            state.audioMaster.gain.linearRampToValueAtTime(prev,   now + 0.14);
+        } catch (e) {}
+    }
 
     // 2026-05-17 段階3.1: CSS 注入 (prewarp shake / ingest / bar burst)
     function injectStage31CSS() {
@@ -470,6 +607,96 @@
                 '  0%   { opacity: 0; }',
                 '  40%  { opacity: 0.85; }',
                 '  100% { opacity: 0; }',
+                '}',
+                // ── 2026-05-18 段階3.2: clone overlay ingest ──
+                '.p1-ui-ingest-clone {',
+                '  contain: paint;',
+                '  backface-visibility: hidden;',
+                '}',
+                '.p1-ui-ingest-clone.is-ingesting {',
+                '  animation: p1UiCollapse 1350ms cubic-bezier(.76,0,.14,1) forwards;',
+                '}',
+                '@keyframes p1UiCollapse {',
+                '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1) rotate(0deg);',
+                '         filter: contrast(1.05) saturate(1.1);',
+                '         clip-path: circle(145% at 50% 50%); }',
+                '  28%  { opacity: .98; transform: translate3d(0,-2px,0) scale(.98, .92) rotate(.2deg);',
+                '         filter: contrast(1.25) saturate(1.7)',
+                '                 drop-shadow(2px 0 rgba(255,0,0,.55))',
+                '                 drop-shadow(-2px 0 rgba(0,255,255,.42));',
+                '         clip-path: circle(96% at 50% 50%); }',
+                '  56%  { opacity: .88; transform: translate3d(0,4px,0) scale(.58, .34) rotate(-2.5deg);',
+                '         filter: contrast(1.8) saturate(2.6) blur(.35px);',
+                '         clip-path: circle(44% at 50% 50%); }',
+                '  78%  { opacity: .58; transform: translate3d(0,0,0) scale(.18, .08) rotate(12deg);',
+                '         filter: contrast(2.4) saturate(3.2) blur(1.6px) brightness(1.8);',
+                '         clip-path: circle(12% at 50% 50%); }',
+                '  100% { opacity: 0; transform: translate3d(0,0,0) scale(.015) rotate(36deg);',
+                '         filter: blur(' + INGEST_BLUR + 'px) brightness(3); clip-path: circle(1% at 50% 50%); }',
+                '}',
+                // ── 2026-05-18 段階3.2: runner (#exit-runner) plateau/breakthrough/ingest ──
+                '#exit-runner.is-plateau {',
+                '  animation: runnerWallHit 520ms cubic-bezier(.7,0,.3,1) infinite;',
+                '  filter: drop-shadow(1px 0 rgba(255,0,0,.55))',
+                '          drop-shadow(-1px 0 rgba(0,255,255,.45));',
+                '}',
+                '@keyframes runnerWallHit {',
+                '  0%,100% { transform: translateX(-2px) scale(1); }',
+                '  45% { transform: translateX(3px) scale(.96, 1.04); }',
+                '  60% { transform: translateX(-5px) scale(1.04, .96); }',
+                '}',
+                '#exit-runner.is-breakthrough {',
+                '  animation: runnerBreakthrough 680ms cubic-bezier(.18,0,.1,1) forwards;',
+                '  filter: brightness(2.8) drop-shadow(0 0 8px #fff)',
+                '          drop-shadow(4px 0 rgba(0,255,255,.55))',
+                '          drop-shadow(-4px 0 rgba(255,0,255,.45));',
+                '}',
+                '@keyframes runnerBreakthrough {',
+                '  0%   { transform: translateX(0) scale(1); opacity: 1; }',
+                '  26%  { transform: translateX(-8px) scale(.88,1.12); }',
+                '  42%  { transform: translateX(8px) scale(1.18,.82); }',
+                '  100% { transform: translateX(46px) scale(.65); opacity: .78; }',
+                '}',
+                '#exit-runner.is-ingesting {',
+                '  animation: runnerIngest 900ms cubic-bezier(.8,0,.12,1) forwards;',
+                '  transform-origin: center center;',
+                '}',
+                '@keyframes runnerIngest {',
+                '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(.8); }',
+                '  55%  { opacity: .95; transform: translate3d(18px,-8px,0) scale(.42) rotate(12deg); }',
+                '  100% { opacity: 0; transform: translate3d(42vw, -18vh, 0) scale(.02) rotate(80deg); filter: blur(5px) brightness(3); }',
+                '}',
+                // ── 2026-05-18 段階3.2: bar strain (plateau) + breakthrough burst ──
+                '#p1-lb.is-plateau {',
+                '  animation: p1BarStrain 420ms steps(2, end) infinite;',
+                '  transform-origin: left center;',
+                '}',
+                '@keyframes p1BarStrain {',
+                '  0%   { filter: saturate(1.4) brightness(1); transform: scaleX(1); }',
+                '  50%  { filter: saturate(2.4) brightness(1.35)',
+                '                 drop-shadow(1px 0 rgba(255,0,0,.55))',
+                '                 drop-shadow(-1px 0 rgba(0,255,255,.45));',
+                '         transform: scaleX(1.012) skewX(-1deg); }',
+                '  100% { filter: saturate(1.7) brightness(1.1); transform: scaleX(.998); }',
+                '}',
+                '#p1-lb.is-breakthrough {',
+                '  animation: p1BarBreak 480ms cubic-bezier(.2,0,.1,1) forwards;',
+                '}',
+                '@keyframes p1BarBreak {',
+                '  0%   { transform: scaleX(1); filter: brightness(1) saturate(1.5); }',
+                '  35%  { transform: scaleX(1.08); filter: brightness(2.2) saturate(3.2) blur(.2px); }',
+                '  58%  { transform: scaleX(.92); filter: brightness(3.4) saturate(4) blur(.8px); }',
+                '  100% { transform: scaleX(1); filter: brightness(1.4) saturate(2); }',
+                '}',
+                // ── 2026-05-18 段階3.2: sparks ──
+                '.p1-bar-spark {',
+                '  position: fixed; width: 2px; height: 2px;',
+                '  z-index: 2147483001; pointer-events: none;',
+                '  box-shadow: 0 0 8px currentColor;',
+                '  animation: p1Spark 520ms ease-out forwards;',
+                '}',
+                '@keyframes p1Spark {',
+                '  to { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) scale(.2); filter: blur(1px); }',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -557,12 +784,37 @@
         } catch (e) {}
     }
     function applyIngestClass() {
+        // 2026-05-18 段階3.2: DOM clone overlay 方式に切替
+        //   旧: #win95-main にクラスを付ける → 子の stacking context で clip-path/transform が壊れる
+        //   新: 可視 Win95 を clone → body 末尾に絶対配置 → 元 DOM は visibility:hidden
         try {
-            const win = document.getElementById('win95-main');
-            if (win) {
-                win.classList.remove('p1-window-prewarp');
-                win.classList.add('p1-window-ingest');
+            // discover (キャッシュ)
+            if (!state.win95Root) {
+                state.win95Root = discoverWin95Root();
+                if (state.win95Root) {
+                    try {
+                        console.log('[P1 stage3.2] discoverWin95Root →',
+                            state.win95Root,
+                            '(' + (state.win95Root.tagName || '') + '#' + (state.win95Root.id || '') + '.' + (state.win95Root.className || '') + ')');
+                    } catch (e) {}
+                }
             }
+            const src = state.win95Root;
+            if (!src) return;
+            // prewarp class は元に付いている可能性があるので外す
+            try { src.classList.remove('p1-window-prewarp'); } catch (e) {}
+            const pair = createUiIngestClone(src);
+            if (!pair) return;
+            state.uiIngestClone = pair.clone;
+            state.uiIngestSource = pair.source;
+            // 次フレームで is-ingesting を付与 (animation を確実に開始)
+            requestAnimationFrame(function(){
+                try { pair.clone.classList.add('is-ingesting'); } catch (e) {}
+                // 1.5s 後に clone を片付ける (アニメ完了後)
+                setTimeout(function(){
+                    try { pair.clone.remove(); } catch (e) {}
+                }, 1500);
+            });
         } catch (e) {}
     }
     function triggerBarBurst() {
@@ -592,6 +844,15 @@
         state.breakthroughFired = true;
         triggerBarBurst();
         triggerWhiteFlash();
+        // 2026-05-18 段階3.2: bar breakthrough animation + sparks
+        try {
+            const bar = document.getElementById('p1-lb');
+            if (bar) {
+                bar.classList.remove('is-plateau');
+                bar.classList.add('is-breakthrough');
+            }
+        } catch (e) {}
+        emitBarSparks();
         if (!REDUCE_MOTION && !state.audio_breakthroughFired) {
             state.audio_breakthroughFired = true;
             playBreakthroughCue();
@@ -893,6 +1154,10 @@
 
     function updateStage(t) {
         if (!state.mat || !state.mesh) return;
+        // 2026-05-18 段階3.2: dt 計算 (bar visualPct lerp 用)
+        const nowMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+        const dt = state.lastTime ? Math.min(0.1, (nowMs - state.lastTime) / 1000) : 0.016;
+        state.lastTime = nowMs;
         const u = state.mat.uniforms;
         u.uTime.value = t;
         if (state.camera && u.uCameraPos) {
@@ -1021,6 +1286,7 @@
         }
 
         // ── 2026-05-17 段階2.3: ローディングバー morph 同期 ──
+        // 2026-05-18 段階3.2: quantized milestones + visualPct lerp + strain
         // 50% → 101% を reveal で駆動。色も 陰陽 → グレー → RGBCMY と同期
         try {
             const barFill = document.getElementById('p1-lb');
@@ -1036,9 +1302,28 @@
                     morphProg = 101; // breakthrough: snap to 101
                 }
                 const pv = Math.round(morphProg);
+
+                // 2026-05-18 段階3.2: quantized milestones + 視覚追従
+                //   morphProg は raw、visualPct は packet-by-packet で追従。
+                //   plateau (99-101) では sin strain を加算してプルプル震わせる。
+                const target = quantizedPct(morphProg);
+                const speed  = morphProg >= 99 ? 18 : 36;
+                state.visualPct += (target - state.visualPct) * (1 - Math.exp(-dt * speed));
+                const plateau  = morphProg >= 99 && morphProg < 101;
+                const strain   = plateau ? Math.sin(performance.now() * 0.045) * 0.35 : 0;
+
                 if (barFill) {
-                    // バーは最大 100% (CSS で scaleX 1.08 が乗る)
-                    barFill.style.width = Math.min(100, morphProg) + '%';
+                    // 2026-05-18 段階3.2: quantized visualPct (旧: 直接 morphProg)
+                    // 旧コード: barFill.style.width = Math.min(100, morphProg) + '%';
+                    barFill.style.width = Math.min(100, state.visualPct + strain) + '%';
+                    // plateau class for strain animation
+                    if (plateau && !state.breakthroughFired) {
+                        if (!barFill.classList.contains('is-plateau')) {
+                            barFill.classList.add('is-plateau');
+                        }
+                    } else {
+                        barFill.classList.remove('is-plateau');
+                    }
                     if (rv < 0.04) {
                         // 50%: 陰陽 — 白黒ストライプ
                         barFill.style.background =
@@ -1068,18 +1353,62 @@
                 }
                 if (pctEl) {
                     // 2026-05-17 段階3.1: milestone snap, 100 plateau then 101 breakthrough
+                    // 2026-05-18 段階3.2: breakthrough 直前 (t ≈ BREAKTHROUGH_T - 40ms) で
+                    //   "10█%" のグリッチ文字を 1-2 フレームだけ出してから 101 にスナップ
+                    const preGlitchWindow = (t >= BREAKTHROUGH_T - 0.04) && (t < BREAKTHROUGH_T);
                     let shown;
-                    if (rv >= 1.0 && rv <= 1.0) {
-                        shown = 100; // 厳密な 100% snap
+                    if (preGlitchWindow && !state.glitchTextFired) {
+                        state.glitchTextFired = true;
+                        showGlitchPercent(pctEl);
+                        shown = null; // 上書きしない
                     } else if (rv > 1.0) {
                         shown = 101;
+                    } else if (rv >= 1.0) {
+                        shown = 100; // 厳密な 100% snap
                     } else {
                         shown = nearestMilestone(morphProg);
                     }
-                    pctEl.textContent = 'Loading reality... ' + shown + '%';
+                    if (shown !== null && shown !== undefined) {
+                        pctEl.textContent = 'Loading reality... ' + shown + '%';
+                    }
                 }
             }
         } catch (e) { /* DOM 未準備でも黙って続行 */ }
+
+        // ── 2026-05-18 段階3.2: runner (#exit-runner) を Stage1 から駆動 ──
+        // 旧 tick は EVENT_SING 以降バイパスされるため、ここで left を 50→101 まで
+        // 確実に進ませる。状態クラス (plateau/breakthrough/ingest) も同期。
+        try {
+            const runner = state.runner || document.getElementById('exit-runner');
+            if (runner) {
+                state.runner = runner;
+                runner.style.display    = 'block';
+                runner.style.visibility = 'visible';
+                runner.style.opacity    = '1';
+                // morphProg を再計算 (try ブロックの外なので)
+                let rp;
+                if (rv <= 1.0) rp = 50 + rv * 50; else rp = 101;
+                const p = Math.max(0, Math.min(1, (rp - 50) / 51));
+                runner.style.left = (p * 100) + '%';
+                // 状態クラス
+                const plateauNow = rp >= 99 && rp < 101;
+                runner.classList.toggle('is-plateau',
+                    plateauNow && !state.breakthroughFired);
+                runner.classList.toggle('is-breakthrough',
+                    state.breakthroughFired && !state.ingestFired);
+                runner.classList.toggle('is-ingesting',
+                    state.ingestFired === true);
+            }
+        } catch (e) {}
+
+        // ── 2026-05-18 段階3.2: breakthrough 120ms 前に audio を一瞬絞る ──
+        if (!state.glitchAudioDucked
+            && !REDUCE_MOTION
+            && t >= BREAKTHROUGH_T - 0.12
+            && t < BREAKTHROUGH_T) {
+            state.glitchAudioDucked = true;
+            preBreakthroughSilence();
+        }
 
         // ── rcSphere アシスタント (uAlpha ≤ 0.18, reveal>0.62 で出現) ──
         if (state.rcMesh && state.rcMat) {
