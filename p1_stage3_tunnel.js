@@ -16,14 +16,24 @@
         ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
         : false;
 
-    // タイムライン (この file のローカル時計: stage2complete = 0 起点)
-    // 元のグローバル時間軸 4.2s → 6.6s に対応 = 0.0s → 2.4s
-    const DUR_TOTAL    = 2.4;  // 4.2 → 6.6
-    const SHRINK_END   = 1.2;  // 4.2 → 5.4: orb 縮小 + tunnel フェードイン
-    const RUSH_END     = 2.2;  // 5.4 → 6.4: フルラッシュ
-    const FLASH_END    = 2.4;  // 6.4 → 6.6: 白フラッシュ
+    // 2026-05-17 段階3.1: timeline 4.0s (was 2.4s)
+    //   0.0 → 1.6 : orb 縮小 + tunnel フェードイン (旧 SHRINK)
+    //   1.6 → 3.4 : フルラッシュ
+    //   3.4 → 4.0 : 白フラッシュ
+    // const DUR_TOTAL_OLD = 2.4; // 旧 (互換のため残置)
+    const DUR_TOTAL    = 4.0;
+    const SHRINK_END   = 1.6;
+    const RUSH_END     = 3.4;
+    const FLASH_END    = 4.0;
 
-    const FOV_DELTA_MAX = 22;  // 50 → 72
+    // 2026-05-17 段階3.1: モバイル検出 (FOV cap, UV speed reduction)
+    const IS_MOBILE = (typeof navigator !== 'undefined')
+        && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+    // 2026-05-17 段階3.1: FOV cap mobile 60, desktop 72
+    const FOV_DELTA_MAX = IS_MOBILE ? 10 : 22;  // 50 → 60 (mobile) / 50 → 72 (desktop)
+    // 2026-05-17 段階3.1: モバイルは UV speed を 30% 削減
+    const SPEED_SCALE = IS_MOBILE ? 0.7 : 1.0;
 
     const TUNNEL_VERT = [
         'varying vec2 vUv;',
@@ -99,6 +109,12 @@
         stage3Fired: false,
         savedFov: null,
         usePerspective: false,
+        // 2026-05-17 段階3.1: pre-warp / breakthrough event state
+        prewarpActive: false,    // event 受信したか (fade-in start)
+        breakthroughActive: false, // event 受信したか (full alpha ramp start)
+        prewarpStartTime: 0,
+        breakthroughStartTime: 0,
+        fullscreenOverlay: true, // フルスクリーン覆い被せ
     };
 
     // tunnel plane のサイズ算出: camera から一定距離前にカメラビューを満たす
@@ -111,8 +127,8 @@
             const vFov = (camera.fov * Math.PI) / 180.0;
             h = 2 * d * Math.tan(vFov / 2);
             w = h * aspect;
-            // FOV を後で広げる余裕分 (×1.6) 拡大しておく
-            w *= 1.6; h *= 1.6;
+            // 2026-05-17 段階3.1: フルスクリーン overlay (×2.2 拡大、FOV 72 でも端まで覆う)
+            w *= 2.2; h *= 2.2;
         } else if (camera && camera.isOrthographicCamera) {
             w = (camera.right - camera.left) * 1.1;
             h = (camera.top - camera.bottom) * 1.1;
@@ -182,10 +198,13 @@
             },
             transparent: true,
             depthWrite:  false,
+            depthTest:   false, // 2026-05-17 段階3.1: フルスクリーン overlay
             blending:    THREE.AdditiveBlending,
         });
         state.tunnelMesh = new THREE.Mesh(state.tunnelGeo, state.tunnelMat);
         state.tunnelMesh.name = 'p1Stage3TunnelPlane';
+        // 2026-05-17 段階3.1: フルスクリーン overlay (UI ingest 後の void を覆う)
+        state.tunnelMesh.frustumCulled = false;
         // カメラ前面に固定するため、camera が PerspectiveCamera なら
         // camera の child にする → カメラと一緒に動く / 常に正面
         if (state.camera && state.camera.isPerspectiveCamera) {
@@ -200,7 +219,8 @@
             state.tunnelMesh.position.set(0, 0, 0.3);
             state.scene.add(state.tunnelMesh);
         }
-        state.tunnelMesh.renderOrder = 800;
+        // 2026-05-17 段階3.1: renderOrder 9999 (球より上、フルスクリーン)
+        state.tunnelMesh.renderOrder = 9999;
 
         // sphere は前面 (renderOrder 999/1000 のまま) — Stage1 既に設定済み
 
@@ -322,9 +342,26 @@
             state.baseMat.uniforms.uTaichiMix.value = baseMix;
         }
 
-        // FOV 適用
+        // 2026-05-17 段階3.1: prewarp-only state では progress を 0.15 にクランプ
+        // (breakthrough 受信前はうっすら radial distortion だけ見せる)
+        if (state.prewarpActive && !state.breakthroughActive) {
+            u.uTunnelProgress.value = Math.min(0.15, progress);
+            u.uSpeed.value          = Math.min(0.2, speed) * SPEED_SCALE;
+        } else {
+            u.uSpeed.value *= SPEED_SCALE;
+        }
+
+        // 2026-05-17 段階3.1: breakthrough 後 1.2s かけて full alpha ramp
+        if (state.breakthroughActive) {
+            const elapsed = (performance.now() - state.breakthroughStartTime) / 1000;
+            const rampIn = Math.min(1, elapsed / 1.2);
+            u.uTunnelProgress.value = Math.max(u.uTunnelProgress.value, rampIn * progress);
+        }
+
+        // FOV 適用 (mobile cap 60)
         if (state.usePerspective && state.camera && state.savedFov != null) {
-            const newFov = Math.min(72, state.savedFov + fovExtra);
+            const fovCap = IS_MOBILE ? 60 : 72;
+            const newFov = Math.min(fovCap, state.savedFov + fovExtra);
             if (newFov !== state.camera.fov) {
                 state.camera.fov = newFov;
                 state.camera.updateProjectionMatrix();
@@ -377,5 +414,29 @@
         if (!state.running && !state.disposed) {
             initStage3();
         }
+    });
+
+    // 2026-05-17 段階3.1: pre-warp イベント (reveal>=0.72 で発火)
+    //   tunnel を早期 init して faint radial distortion を流し始める
+    window.addEventListener('inryoku:p1_prewarp', function() {
+        if (state.disposed) return;
+        if (!state.running) {
+            initStage3();
+        }
+        state.prewarpActive = true;
+        state.prewarpStartTime = performance.now();
+    });
+
+    // 2026-05-17 段階3.1: breakthrough イベント (11.7s)
+    //   tunnel が full alpha へ ramp、UI ingest が CSS 側で進行中
+    window.addEventListener('inryoku:p1_breakthrough', function() {
+        if (state.disposed) return;
+        if (!state.running) {
+            initStage3();
+        }
+        state.breakthroughActive = true;
+        state.breakthroughStartTime = performance.now();
+        // breakthrough を 0 起点として timeline をリスタート (4.0s)
+        state.startTime = performance.now();
     });
 })();

@@ -41,6 +41,14 @@
     const MORPH_START = 1.2;
     const MORPH_END   = 10.2;
     const HOLD_END    = 11.7;
+    // 2026-05-17 段階3.1: 100% plateau → breakthrough
+    //   10.2 → 11.7 : 100% plateau (uHundredPlateau 0→1, UI shake)
+    //   11.7 → 12.0 : BREAKTHROUGH (bar burst, white flash, glass shatter)
+    //   12.0 → 12.4 : settle 101%, UI ingest start
+    //   12.4 +      : stage2complete → stage3 takes over
+    const BREAKTHROUGH_T = 11.7;
+    const SETTLE_END     = 12.0;
+    const STAGE2_FIRE_T  = 12.4;
 
     const RADIUS = 0.42;
 
@@ -337,8 +345,8 @@
     }
 
     // 2026-05-17 段階2.4: p101Curve (Codex C')
-    //   4-phase: タメ(0-22%) → 内部上昇(22-72%) → 急跳躍(72-86%) → 101%余韻(86-100%)
-    //   t は 0..1 (MorphScene 9.0s 全体に対する正規化時間)
+    // 2026-05-17 段階3.1: 急跳躍 0.97 で着地、0.86→1.0 で drift 0.97→1.0
+    //   100% snap at t=1.0 (the breakthrough to 101% happens AFTER morph ends)
     function p101Curve(t) {
         if (t < 0.22) {
             // 50% で止まっているように見えるタメ (0 → 0.05)
@@ -349,15 +357,17 @@
             return 0.05 + 0.62 * easeInOutCubic((t - 0.22) / 0.50);
         }
         if (t < 0.86) {
-            // 跳躍 (0.67 → 1.0)
-            return 0.67 + 0.33 * easeOutExpo((t - 0.72) / 0.14);
+            // 跳躍 (0.67 → 0.97)
+            return 0.67 + 0.30 * easeOutExpo((t - 0.72) / 0.14);
         }
-        // 101% 余韻
-        return 1.0;
+        // "almost there..." 0.97 → 1.0 drift
+        const d = (t - 0.86) / 0.14;
+        return 0.97 + 0.03 * easeInOutCubic(Math.min(1, d));
     }
 
     // 2026-05-17 段階2.4: milestone-based text snapping
-    const P101_MILESTONES = [50, 51, 55, 64, 72, 88, 101];
+    // 2026-05-17 段階3.1: 100 milestone 追加 (plateau 表示用)
+    const P101_MILESTONES = [50, 51, 55, 64, 72, 88, 99, 100, 101];
     function nearestMilestone(pct) {
         let best = P101_MILESTONES[0];
         let bestD = Math.abs(best - pct);
@@ -396,7 +406,219 @@
         audio_duckFired: false,
         audio_arrivalFired: false,
         audio_fadedOut: false,
+        // 2026-05-17 段階3.1: plateau / breakthrough state
+        hundredPlateau: 0,        // 0 → 1 across 10.2 → 11.7
+        prewarpFired: false,      // CSS prewarp class added
+        prewarpEventFired: false, // inryoku:p1_prewarp event (reveal>=0.72)
+        breakthroughFired: false, // breakthrough event + visuals
+        ingestFired: false,       // UI ingest class applied
+        flashEl: null,            // white flash overlay
+        cssInjected: false,
+        audio_breakthroughFired: false,
+        audio_ingestFired: false,
+        isMobile: false,
     };
+
+    // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
+    const IS_MOBILE = (typeof navigator !== 'undefined')
+        && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+    // 2026-05-17 段階3.1: CSS 注入 (prewarp shake / ingest / bar burst)
+    function injectStage31CSS() {
+        if (state.cssInjected) return;
+        state.cssInjected = true;
+        try {
+            const css = [
+                '.p1-window-prewarp {',
+                '  animation: p1UiPrewarp 1.5s ease-in-out infinite;',
+                '}',
+                '.p1-window-ingest {',
+                '  animation: p1UiIngest 1.35s cubic-bezier(.72,0,.15,1) forwards;',
+                '  pointer-events: none;',
+                '}',
+                '.p1-bar-burst {',
+                '  transform-origin: 0 50%;',
+                '  transition: transform 0.18s cubic-bezier(.4,0,.6,1),',
+                '              filter 0.18s cubic-bezier(.4,0,.6,1);',
+                '}',
+                '.p1-bar-burst.is-burst {',
+                '  transform: scaleX(1.08);',
+                '  filter: brightness(1.8) saturate(2);',
+                '}',
+                '@keyframes p1UiPrewarp {',
+                '  0%, 100% { filter: contrast(1) saturate(1); transform: translate3d(0,0,0) skew(0deg); }',
+                '  50% { filter: contrast(1.12) saturate(1.35)',
+                '       drop-shadow(1px 0 rgba(255,0,0,.45))',
+                '       drop-shadow(-1px 0 rgba(0,255,255,.35));',
+                '       transform: translate3d(0,-1px,0) skew(.25deg); }',
+                '}',
+                '@keyframes p1UiIngest {',
+                '  0%   { opacity: 1; transform: scale(1); filter: contrast(1.1) saturate(1.4); clip-path: circle(120% at 50% 50%); }',
+                '  55%  { opacity: .92; transform: scale(.72) rotate(.8deg); filter: contrast(1.6) saturate(2.2) blur(.3px); clip-path: circle(58% at 50% 50%); }',
+                '  82%  { opacity: .62; transform: scale(.18) rotate(-8deg); filter: contrast(2.2) saturate(3.0) blur(1.2px); clip-path: circle(18% at 50% 50%); }',
+                '  100% { opacity: 0; transform: scale(.02) rotate(-30deg); filter: blur(4px) brightness(2.5); clip-path: circle(1% at 50% 50%); }',
+                '}',
+                '#p1-white-flash {',
+                '  position: fixed; inset: 0; background: #ffffff;',
+                '  opacity: 0; pointer-events: none; z-index: 99999;',
+                '  mix-blend-mode: screen;',
+                '}',
+                '#p1-white-flash.is-flashing {',
+                '  animation: p1WhiteFlash 0.2s ease-out forwards;',
+                '}',
+                '@keyframes p1WhiteFlash {',
+                '  0%   { opacity: 0; }',
+                '  40%  { opacity: 0.85; }',
+                '  100% { opacity: 0; }',
+                '}'
+            ].join('\n');
+            const style = document.createElement('style');
+            style.id = 'p1-stage31-css';
+            style.textContent = css;
+            document.head.appendChild(style);
+
+            // white flash overlay (モバイルではスキップ)
+            if (!IS_MOBILE) {
+                const flash = document.createElement('div');
+                flash.id = 'p1-white-flash';
+                document.body.appendChild(flash);
+                state.flashEl = flash;
+            }
+        } catch (e) {}
+    }
+
+    // 2026-05-17 段階3.1: ブレイクスルー音 (glass shatter ish)
+    function playBreakthroughCue() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            // ダウンワード whoosh
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+            osc.connect(gain).connect(state.audioMaster);
+            osc.start(now); osc.stop(now + 0.55);
+            // ノイズバースト (glass shatter)
+            const bufSize = Math.floor(ctx.sampleRate * 0.45);
+            const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 1.8);
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buf;
+            const hp = ctx.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.value = 1800;
+            const ng = ctx.createGain();
+            ng.gain.value = 0.18;
+            noise.connect(hp).connect(ng).connect(state.audioMaster);
+            noise.start(now + 0.02);
+        } catch (e) {}
+    }
+
+    // 2026-05-17 段階3.1: UI ingest sweep (band-pass 220 → 3200 Hz)
+    function playIngestCue() {
+        const ctx = ensureMorphAudio(); if (!ctx) return;
+        try {
+            const now = ctx.currentTime;
+            const bufSize = Math.floor(ctx.sampleRate * 1.1);
+            const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+            const noise = ctx.createBufferSource();
+            noise.buffer = buf;
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass';
+            bp.frequency.setValueAtTime(220, now);
+            bp.frequency.exponentialRampToValueAtTime(3200, now + 1.05);
+            bp.Q.value = 6;
+            const ng = ctx.createGain();
+            ng.gain.setValueAtTime(0.0001, now);
+            ng.gain.exponentialRampToValueAtTime(0.10, now + 0.5);
+            ng.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+            noise.connect(bp).connect(ng).connect(state.audioMaster);
+            noise.start(now); noise.stop(now + 1.15);
+        } catch (e) {}
+    }
+
+    // 2026-05-17 段階3.1: Win95 UI に prewarp/ingest クラスを適用
+    function applyPrewarpClass() {
+        try {
+            const win = document.getElementById('win95-main');
+            if (win && !win.classList.contains('p1-window-prewarp')) {
+                win.classList.add('p1-window-prewarp');
+            }
+        } catch (e) {}
+    }
+    function applyIngestClass() {
+        try {
+            const win = document.getElementById('win95-main');
+            if (win) {
+                win.classList.remove('p1-window-prewarp');
+                win.classList.add('p1-window-ingest');
+            }
+        } catch (e) {}
+    }
+    function triggerBarBurst() {
+        try {
+            const bar = document.getElementById('p1-lb');
+            if (bar) {
+                bar.classList.add('p1-bar-burst');
+                // force reflow then add is-burst
+                void bar.offsetWidth;
+                bar.classList.add('is-burst');
+            }
+        } catch (e) {}
+    }
+    function triggerWhiteFlash() {
+        if (IS_MOBILE) return; // モバイルではフラッシュ省略
+        if (!state.flashEl) return;
+        try {
+            state.flashEl.classList.remove('is-flashing');
+            void state.flashEl.offsetWidth;
+            state.flashEl.classList.add('is-flashing');
+        } catch (e) {}
+    }
+
+    // 2026-05-17 段階3.1: breakthrough 本体
+    function fireBreakthrough() {
+        if (state.breakthroughFired) return;
+        state.breakthroughFired = true;
+        triggerBarBurst();
+        triggerWhiteFlash();
+        if (!REDUCE_MOTION && !state.audio_breakthroughFired) {
+            state.audio_breakthroughFired = true;
+            playBreakthroughCue();
+        }
+        try {
+            window.dispatchEvent(new CustomEvent('inryoku:p1_breakthrough', {
+                detail: {
+                    scene:    state.scene,
+                    camera:   state.camera,
+                    renderer: state.renderer,
+                }
+            }));
+        } catch (e) {}
+    }
+    function firePrewarpEvent() {
+        if (state.prewarpEventFired) return;
+        state.prewarpEventFired = true;
+        try {
+            window.dispatchEvent(new CustomEvent('inryoku:p1_prewarp', {
+                detail: {
+                    scene:    state.scene,
+                    camera:   state.camera,
+                    renderer: state.renderer,
+                }
+            }));
+        } catch (e) {}
+    }
 
     // Web Audio (オプション)
     function playEntranceTone() {
@@ -574,6 +796,8 @@
                 uLiquid:     { value: 0 }, // 旧互換
                 // 2026-05-17 段階2.2: 新主駆動
                 uReveal:     { value: 0 },
+                // 2026-05-17 段階3.1: 100% plateau 駆動 (0→1 across 10.2→11.7)
+                uHundredPlateau: { value: 0 },
             },
             transparent: true,
             depthWrite: false,
@@ -612,6 +836,10 @@
 
         hideLegacyGreySphere(state.scene);
 
+        // 2026-05-17 段階3.1: CSS 注入 (prewarp / ingest / bar burst / flash)
+        state.isMobile = IS_MOBILE;
+        injectStage31CSS();
+
         if (!REDUCE_MOTION) playEntranceTone();
 
         state.startTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
@@ -627,7 +855,24 @@
             state.mat.uniforms.uColorBirth.value = 1;
             state.mat.uniforms.uLiquid.value     = 1;
             // 2026-05-17 段階2.4: REDUCE_MOTION は 200ms 後に発火 (即発火だと挙動共有が不安定)
+            // 2026-05-17 段階3.1: prewarp/breakthrough も即発火
             state.stage2Fired = true;
+            state.prewarpEventFired = true;
+            state.breakthroughFired = true;
+            setTimeout(function() {
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1_prewarp', {
+                        detail: { scene: state.scene, camera: state.camera, renderer: state.renderer }
+                    }));
+                } catch (e) {}
+            }, 80);
+            setTimeout(function() {
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1_breakthrough', {
+                        detail: { scene: state.scene, camera: state.camera, renderer: state.renderer }
+                    }));
+                } catch (e) {}
+            }, 140);
             setTimeout(function() {
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
@@ -677,21 +922,61 @@
             state.mesh.scale.setScalar(breath);
             u.uTaichiMix.value = 1;
             u.uReveal.value    = reveal;
-        } else if (t < HOLD_END) {
-            // ── 2026-05-17 段階2.4: Hold (10.2 → 11.7s) 1.5s 余韻 ──
+        } else if (t < BREAKTHROUGH_T) {
+            // ── 2026-05-17 段階3.1: 100% Plateau (10.2 → 11.7s, 1.5s) ──
+            // バーは EXACTLY 100% で停止、UI が微震、audio duck
             const hold = t - MORPH_END;
+            const plateau = Math.max(0, Math.min(1, hold / (BREAKTHROUGH_T - MORPH_END)));
             state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(hold * 1.2));
             u.uTaichiMix.value = 1;
-            u.uReveal.value    = 1;
+            u.uReveal.value    = 1.0; // snap to 100
+            u.uHundredPlateau.value = plateau;
+            state.hundredPlateau = plateau;
+            // prewarp class adoption (即時) + audio duck once
+            if (!state.prewarpFired) {
+                state.prewarpFired = true;
+                applyPrewarpClass();
+                if (!REDUCE_MOTION && !state.audio_duckFired) {
+                    state.audio_duckFired = true;
+                    duckMaster();
+                }
+            }
+        } else if (t < SETTLE_END) {
+            // ── 2026-05-17 段階3.1: BREAKTHROUGH (11.7 → 12.0s, 300ms) ──
+            // bar 突破: scaleX 1.08, white flash, glass-shatter audio, event fire
+            if (!state.breakthroughFired) {
+                fireBreakthrough();
+            }
+            const bp = (t - BREAKTHROUGH_T) / (SETTLE_END - BREAKTHROUGH_T);
+            // reveal を 1.0 → 1.01 へ overshoot 表示 (バー視覚のみ)
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1.0 + 0.01 * easeOutCubic(bp);
+            u.uHundredPlateau.value = 1.0;
+            state.mesh.scale.setScalar(1.0 + 0.012 * Math.sin(t * 1.4));
+        } else if (t < STAGE2_FIRE_T) {
+            // ── 2026-05-17 段階3.1: settle 101% (12.0 → 12.4s) ──
+            // UI ingest start, tunnel sprout (prewarp event 後に stage3 が takeover)
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1.01;
+            u.uHundredPlateau.value = 1.0;
+            state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(t * 1.2));
+            if (!state.ingestFired) {
+                state.ingestFired = true;
+                // ingest を breakthrough+~0.3s で発動
+                applyIngestClass();
+                if (!REDUCE_MOTION && !state.audio_ingestFired) {
+                    state.audio_ingestFired = true;
+                    playIngestCue();
+                }
+            }
         } else {
-            // ── 2026-05-17 段階2.4: 余韻終了 → 次ステージへ ──
-            const hold = t - MORPH_END;
-            state.mesh.scale.setScalar(1.0 + 0.008 * Math.sin(hold * 1.2));
+            // ── 2026-05-17 段階3.1: stage2complete 発火 (≈12.4s) ──
             u.uTaichiMix.value = 1;
-            u.uReveal.value    = 1;
+            u.uReveal.value    = 1.01;
+            u.uHundredPlateau.value = 1.0;
+            state.mesh.scale.setScalar(1.0 + 0.005 * Math.sin(t * 1.1));
             if (!state.stage2Fired) {
                 state.stage2Fired = true;
-                // 高周波残響のみ残してフェードアウト
                 if (!state.audio_fadedOut) {
                     state.audio_fadedOut = true;
                     fadeOutAllAudio(1.2);
@@ -704,6 +989,12 @@
 
         // 旧 uniforms を reveal から派生 (後方互換 — 他コードが参照しても破綻しないように)
         const rv = u.uReveal.value;
+
+        // ── 2026-05-17 段階3.1: prewarp event (reveal>=0.72 で 1 度だけ) ──
+        if (!state.prewarpEventFired && rv >= 0.72) {
+            firePrewarpEvent();
+        }
+
         u.uGreyMix.value    = Math.min(1, rv / 0.48) * 0.85;
         u.uPrism.value      = 0.3 + 0.9 * rv;
         u.uColorBirth.value = smoothstepJS(0.38, 0.92, rv);
@@ -735,10 +1026,19 @@
             const barFill = document.getElementById('p1-lb');
             const pctEl   = document.getElementById('p1-lpct');
             if (barFill || pctEl) {
-                const morphProg = 50 + rv * 51; // 50→101
+                // 2026-05-17 段階3.1: rv 1.0 = 100%, rv 1.01+ = 101%
+                //   rv ∈ [0, 1.0] → percent ∈ [50, 100] (50% start, 100% snap)
+                //   rv > 1.0     → percent = 101 (breakthrough)
+                let morphProg;
+                if (rv <= 1.0) {
+                    morphProg = 50 + rv * 50; // 50 → 100
+                } else {
+                    morphProg = 101; // breakthrough: snap to 101
+                }
                 const pv = Math.round(morphProg);
                 if (barFill) {
-                    barFill.style.width = morphProg + '%';
+                    // バーは最大 100% (CSS で scaleX 1.08 が乗る)
+                    barFill.style.width = Math.min(100, morphProg) + '%';
                     if (rv < 0.04) {
                         // 50%: 陰陽 — 白黒ストライプ
                         barFill.style.background =
@@ -767,8 +1067,15 @@
                     }
                 }
                 if (pctEl) {
-                    // 2026-05-17 段階2.4: milestone snap (50/51/55/64/72/88/101)
-                    const shown = nearestMilestone(morphProg);
+                    // 2026-05-17 段階3.1: milestone snap, 100 plateau then 101 breakthrough
+                    let shown;
+                    if (rv >= 1.0 && rv <= 1.0) {
+                        shown = 100; // 厳密な 100% snap
+                    } else if (rv > 1.0) {
+                        shown = 101;
+                    } else {
+                        shown = nearestMilestone(morphProg);
+                    }
                     pctEl.textContent = 'Loading reality... ' + shown + '%';
                 }
             }
