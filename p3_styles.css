@@ -1095,6 +1095,24 @@
         max-height: 95vh;
         border-radius: 16px;
       }
+
+      /* 2026-05-17: モバイルで服画像が巨大化する問題を修正 */
+      .product-image-wrap {
+        min-height: 0;
+        padding: 16px 16px 8px;
+        border-radius: 16px 16px 0 0;
+      }
+      .product-detail-img {
+        max-height: 38vh;     /* 画面高さの 38% に上限 */
+        max-width: 78%;       /* 横幅も詰めて余白を確保 */
+      }
+      .product-info-wrap {
+        padding: 18px 20px 24px;
+      }
+      .product-title {
+        font-size: 16px;
+        letter-spacing: 1.5px;
+      }
     }
 
     @media(max-width:768px) {
@@ -2077,17 +2095,64 @@
     margin-top: 0;
     padding: 0 20px;
 }
+/* 2026-05-17: CONTACT を目立たせる — pillボタン + ゆっくり脈動 + 虹色グロー */
 .contact-toggle {
     font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    color: rgba(255,255,255,0.3);
-    letter-spacing: 0.2em;
+    font-size: 12px;
+    color: #fff;
+    letter-spacing: 0.32em;
     cursor: pointer;
-    transition: color 0.3s;
+    display: inline-block;
+    padding: 14px 36px;
+    border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1),
+                background 0.4s ease,
+                border-color 0.4s ease,
+                box-shadow 0.4s ease,
+                letter-spacing 0.4s ease;
+    box-shadow:
+        0 0 18px rgba(0,255,255,0.18),
+        0 0 32px rgba(255,0,255,0.10);
+    animation: contactPulse 2.6s ease-in-out infinite;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
-.contact-toggle:hover {
-    color: rgba(255,255,255,0.6);
-    text-shadow: 0 0 12px rgba(0,255,255,0.2);
+@keyframes contactPulse {
+    0%, 100% {
+        box-shadow: 0 0 18px rgba(0,255,255,0.18), 0 0 32px rgba(255,0,255,0.10);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(0,255,255,0.32), 0 0 52px rgba(255,0,255,0.20), 0 0 80px rgba(255,255,0,0.08);
+        transform: scale(1.04);
+    }
+}
+.contact-toggle:hover,
+.contact-toggle:focus-visible {
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.85);
+    color: #fff;
+    letter-spacing: 0.4em;
+    box-shadow:
+        0 0 30px rgba(0,255,255,0.40),
+        0 0 60px rgba(255,0,255,0.25),
+        0 0 90px rgba(255,255,0,0.12);
+    transform: scale(1.06);
+    animation-play-state: paused;
+}
+.contact-toggle:active {
+    transform: scale(0.98);
+}
+@media (max-width: 768px) {
+    .contact-toggle {
+        font-size: 11px;
+        padding: 13px 30px;
+        letter-spacing: 0.28em;
+    }
 }
 .contact-body {
     max-width: 320px;
