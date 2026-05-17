@@ -218,6 +218,11 @@
         uniform float uBang;        // 0=normal, 1=fully exploded (0.7s ramp)
         uniform float uTunnel;      // 0=invisible, 1=full tunnel
         uniform vec2  uCenter;      // sphere NDC center (-1..1)
+        // 2026-05-18 段階5/6/7: 後続フェーズ駆動 (tunnel/white/eye/cross)
+        uniform float uTunnelPhase; // tunnel 中の球の表情変化 (0..1)
+        uniform float uWhitePhase;  // white world での tint (0..1)
+        uniform float uEyePhase;    // eye phase 中の瞳孔風 (0..1)
+        uniform float uCrossPhase;  // cross phase の中心グロー (0..1)
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -353,9 +358,27 @@
             else                   dirCol = vec3(1.0, 0.0, 1.0);   // M
             col += dirCol * fissure * uBang * 2.0;
 
+            // ── 2026-05-18 段階5/6/7: 後続フェーズによる球の表情 ──
+            // white world tint (RGB混合の白)
+            col = mix(col, vec3(1.0), uWhitePhase * 0.42);
+            col += fresnel * vec3(1.0) * uWhitePhase * 0.7;
+            // eye depth (中心に小さな暗い瞳孔)
+            float eyeDepth = uEyePhase * pow(facing, 5.0);
+            col = mix(col, vec3(0.02), eyeDepth * 0.18);
+            // cross center glow (RGBCMY 白光)
+            col += vec3(1.0) * uCrossPhase * fresnel * 1.2;
+            // tunnel phase: ほのかな微震/色循環ブースト
+            col += vec3(0.1, 0.1, 0.15) * uTunnelPhase * fresnel * 0.4;
+
             // ── 2026-05-18 段階4.1: 球は最後まで残す（観測の核）
             // 旧: uBang で 85% 消失 → 修正: 20% 微減衰のみ。常時可視
-            float alphaOut = uTaichiMix * (1.0 - smoothstep(0.45, 1.0, uBang) * 0.20);
+            // 2026-05-18 段階5以降: bang 後は alpha を 1.0 へ復元 (uWhitePhase/uEyePhase/uCrossPhase が立てば不透明)
+            float postBang = max(max(uWhitePhase, uEyePhase), uCrossPhase);
+            float alphaOut = uTaichiMix * mix(
+                1.0 - smoothstep(0.45, 1.0, uBang) * 0.20,
+                1.0,
+                postBang
+            );
             gl_FragColor = vec4(col * uTaichiMix, alphaOut);
         }
     `;
@@ -654,6 +677,17 @@
             const css = [
                 '.p1-window-prewarp {',
                 '  animation: p1UiPrewarp 1.5s ease-in-out infinite;',
+                '}',
+                /* 2026-05-18 段階5/6/7: 量子崩壊と並行で DOM 側もフェード */
+                '.p1-quantum-collapse {',
+                '  animation: p1QuantumSourceFade 1200ms ease-in forwards;',
+                '}',
+                '@keyframes p1QuantumSourceFade {',
+                '  0%   { opacity: 1; filter: contrast(1) saturate(1); }',
+                '  45%  { opacity: .92; filter: contrast(1.5) saturate(2.2)',
+                '         drop-shadow(2px 0 rgba(0,255,255,.45))',
+                '         drop-shadow(-2px 0 rgba(255,0,255,.38)); }',
+                '  100% { opacity: 0; filter: contrast(2.4) saturate(3) blur(2px); }',
                 '}',
                 '.p1-window-ingest {',
                 '  animation: p1UiIngest 1.35s cubic-bezier(.72,0,.15,1) forwards;',
@@ -1015,6 +1049,168 @@
             }
         } catch (e) {}
     }
+    // ── 2026-05-18 段階5/6/7: 量子崩壊パーティクルオーバーレイ (WebGL) ──
+    // UI ingest と並行して動く。CMY = particle path / RGB = wave path。
+    // uCollapse 0→1 で散らばった粒子が中心 (sphere) に収束する。
+    function buildQuantumCollapseParticles() {
+        if (!state.scene || !state.camera || typeof THREE === 'undefined') return null;
+        if (state.quantumPoints) return state.quantumPoints; // 二重生成防止
+        const COUNT = IS_MOBILE ? 900 : 1800;
+        const positions = new Float32Array(COUNT * 3);
+        const seeds     = new Float32Array(COUNT);
+        const sides     = new Float32Array(COUNT);
+        const starts    = new Float32Array(COUNT * 2);
+
+        // bgPlane (dual panels) の NDC をサンプリング。左半分=CMY, 右半分=RGB。
+        // Win95 window 中心は UI 用 side=2。
+        let win95Rect = null;
+        try {
+            const w = document.getElementById('win95-main');
+            if (w && w.getBoundingClientRect) {
+                const r = w.getBoundingClientRect();
+                const innerW = window.innerWidth || 1, innerH = window.innerHeight || 1;
+                win95Rect = {
+                    x0: (r.left  / innerW) * 2 - 1,
+                    x1: (r.right / innerW) * 2 - 1,
+                    y0: 1 - (r.bottom / innerH) * 2,
+                    y1: 1 - (r.top    / innerH) * 2,
+                };
+            }
+        } catch (e) {}
+
+        for (let i = 0; i < COUNT; i++) {
+            const r = Math.random();
+            let side;
+            let sx, sy;
+            if (r < 0.36) {
+                // CMY: 左半分
+                side = 0;
+                sx = -0.95 + Math.random() * 0.85; // -0.95..-0.10
+                sy = -0.9 + Math.random() * 1.8;
+            } else if (r < 0.72) {
+                // RGB: 右半分
+                side = 1;
+                sx = 0.10 + Math.random() * 0.85;
+                sy = -0.9 + Math.random() * 1.8;
+            } else {
+                // UI (win95): rect 内 or 中央近傍
+                side = 2;
+                if (win95Rect) {
+                    sx = win95Rect.x0 + Math.random() * (win95Rect.x1 - win95Rect.x0);
+                    sy = win95Rect.y0 + Math.random() * (win95Rect.y1 - win95Rect.y0);
+                } else {
+                    sx = -0.4 + Math.random() * 0.8;
+                    sy = -0.25 + Math.random() * 0.5;
+                }
+            }
+            positions[i * 3]     = 0;
+            positions[i * 3 + 1] = 0;
+            positions[i * 3 + 2] = 0;
+            seeds[i]    = Math.random();
+            sides[i]    = side;
+            starts[i*2] = sx;
+            starts[i*2+1] = sy;
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geo.setAttribute('aSeed',    new THREE.BufferAttribute(seeds, 1));
+        geo.setAttribute('aSide',    new THREE.BufferAttribute(sides, 1));
+        geo.setAttribute('aStart',   new THREE.BufferAttribute(starts, 2));
+
+        const QUANT_VERT = [
+            'uniform float uTime;',
+            'uniform float uCollapse;',
+            'attribute float aSeed;',
+            'attribute float aSide;',
+            'attribute vec2  aStart;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '    vec2 p = aStart;',
+            '    vec2 center = vec2(0.0);',
+            '    float t = uCollapse;',
+            '    float phase = aSeed * 6.28318;',
+            '    float uncertainty = (1.0 - t) * 0.08;',
+            '    p += vec2(sin(uTime*6.0+phase), cos(uTime*5.0+phase*1.7)) * uncertainty;',
+            '    vec2 particlePath = mix(p, center, smoothstep(0.15, 1.0, t));',
+            '    float wave = sin(length(p - center) * 34.0 - uTime * 8.0 + phase);',
+            '    vec2 tangent = normalize(vec2(-p.y, p.x) + 0.0001);',
+            '    vec2 wavePath = mix(p + tangent * wave * 0.10 * (1.0 - t), center, smoothstep(0.25, 1.0, t));',
+            '    vec2 finalP = mix(particlePath, wavePath, step(0.5, aSide));',
+            '    if (aSide > 1.5) {',
+            '        finalP = mix(particlePath, wavePath, 0.5 + 0.5 * sin(phase));',
+            '    }',
+            '    vec4 mv = modelViewMatrix * vec4(finalP.x * 4.0, finalP.y * 2.4, 0.0, 1.0);',
+            '    gl_Position = projectionMatrix * mv;',
+            '    float collapseGlow = smoothstep(0.65, 1.0, t);',
+            '    gl_PointSize = mix(2.0, 7.0, collapseGlow) * (1.0 + aSeed);',
+            '    vec3 cmy = mix(vec3(0,1,1), vec3(1,0,1), aSeed);',
+            '    vec3 rgb = mix(vec3(1,0,0), vec3(0,0.2,1), aSeed);',
+            '    vColor = mix(cmy, rgb, step(0.5, aSide));',
+            '    vAlpha = 0.35 + collapseGlow * 0.65;',
+            '}'
+        ].join('\n');
+        const QUANT_FRAG = [
+            'precision highp float;',
+            'varying vec3 vColor;',
+            'varying float vAlpha;',
+            'void main(){',
+            '    vec2 uv = gl_PointCoord - 0.5;',
+            '    float d = length(uv);',
+            '    float a = smoothstep(0.5, 0.05, d);',
+            '    gl_FragColor = vec4(vColor, a * vAlpha);',
+            '}'
+        ].join('\n');
+
+        const mat = new THREE.ShaderMaterial({
+            vertexShader:   QUANT_VERT,
+            fragmentShader: QUANT_FRAG,
+            uniforms: {
+                uTime:     { value: 0 },
+                uCollapse: { value: 0 },
+            },
+            transparent: true,
+            depthWrite:  false,
+            depthTest:   false,
+            blending:    THREE.AdditiveBlending,
+        });
+        const pts = new THREE.Points(geo, mat);
+        pts.name = 'p1QuantumCollapse';
+        pts.frustumCulled = false;
+        pts.renderOrder = 9997;
+        // camera の子にしてフルスクリーン固定
+        try {
+            if (state.camera && state.camera.isPerspectiveCamera) {
+                pts.position.set(0, 0, -0.6);
+                state.camera.add(pts);
+                if (!state.camera.parent) state.scene.add(state.camera);
+            } else {
+                pts.position.set(0, 0, 0.4);
+                state.scene.add(pts);
+            }
+        } catch (e) {
+            try { state.scene.add(pts); } catch (e2) {}
+        }
+        state.quantumPoints  = pts;
+        state.quantumMat     = mat;
+        state.quantumGeo     = geo;
+        state.quantumStartMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+        return pts;
+    }
+
+    function disposeQuantumCollapse() {
+        try {
+            if (state.quantumPoints) {
+                if (state.quantumPoints.parent) state.quantumPoints.parent.remove(state.quantumPoints);
+            }
+            if (state.quantumGeo) state.quantumGeo.dispose();
+            if (state.quantumMat) state.quantumMat.dispose();
+        } catch (e) {}
+        state.quantumPoints = null;
+        state.quantumGeo = null;
+        state.quantumMat = null;
+    }
+
     function applyIngestClass() {
         // 2026-05-18 段階3.2: DOM clone overlay 方式に切替
         //   旧: #win95-main にクラスを付ける → 子の stacking context で clip-path/transform が壊れる
@@ -1044,6 +1240,13 @@
             state.ingestStartMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
             // 次フレームで .p1-goo-ingest を付与 (2400ms 液体吸引)
             // 旧コード: is-ingesting (1350ms clip-path circle) → 段階4 で置換
+            // 2026-05-18 段階5/6/7: 量子崩壊 WebGL オーバーレイを同時起動
+            // 旧 SVG goo はそのまま (CSS) と並行。粒子は uCollapse 0→1 で中心収束。
+            try { buildQuantumCollapseParticles(); } catch (e) {}
+            // CSS フェード (p1-quantum-collapse) も #win95-main に付与
+            try {
+                if (src && src.classList) src.classList.add('p1-quantum-collapse');
+            } catch (e) {}
             requestAnimationFrame(function(){
                 try {
                     pair.clone.classList.add('p1-goo-ingest');
@@ -1311,6 +1514,11 @@
                 uBang:        { value: 0 },
                 uTunnel:      { value: 0 },
                 uCenter:      { value: new THREE.Vector2(0, 0) },
+                // 2026-05-18 段階5/6/7: 後続フェーズ駆動 (Stage5/6/7 が直接書き換え)
+                uTunnelPhase: { value: 0 },
+                uWhitePhase:  { value: 0 },
+                uEyePhase:    { value: 0 },
+                uCrossPhase:  { value: 0 },
             },
             transparent: true,
             depthWrite: false,
@@ -1514,6 +1722,12 @@
                 } catch (e) {}
             }
             const ingestElapsed = t - INGEST_START_T;
+            // 2026-05-18 段階5/6/7: 量子粒子の uCollapse を駆動 (0→1 over 1.4s, then hold)
+            if (state.quantumMat && state.quantumMat.uniforms) {
+                const qc = Math.max(0, Math.min(1, ingestElapsed / 1.4));
+                state.quantumMat.uniforms.uCollapse.value = qc;
+                state.quantumMat.uniforms.uTime.value = t;
+            }
             // anticipation compression (1.5 → 2.4s into ingest)
             const compressT = Math.max(0, Math.min(1, (ingestElapsed - 1.5) / 0.9));
             const compress = compressT * compressT * (3 - 2 * compressT);
@@ -1591,6 +1805,20 @@
             const bangT = Math.min(1, (nowB - state.bangStart) / (BANG_RAMP_DUR * 1000));
             u.uBang.value = bangT;
             u.uTunnel.value = Math.min(1, bangT * 1.3);
+            // 2026-05-18 段階5/6/7: tunnel phase mirror (sphere 表情)
+            u.uTunnelPhase.value = u.uTunnel.value;
+            // 2026-05-18 段階5/6/7: 量子粒子は bang 後 600ms かけて消える (中心に吸われる)
+            if (state.quantumMat && state.quantumMat.uniforms) {
+                const fadeMs = nowB - state.bangStart;
+                const fade = Math.max(0, 1.0 - fadeMs / 600);
+                state.quantumMat.uniforms.uTime.value = t;
+                state.quantumMat.uniforms.uCollapse.value = 1.0;
+                if (state.quantumPoints) state.quantumPoints.material.opacity = fade;
+                if (fadeMs > 900 && !state.quantumDisposed) {
+                    state.quantumDisposed = true;
+                    disposeQuantumCollapse();
+                }
+            }
             try {
                 window._p1ShaderShared = window._p1ShaderShared || {};
                 window._p1ShaderShared.uBang   = bangT;
@@ -1802,6 +2030,7 @@
         }
         if (state.rcGeo) state.rcGeo.dispose();
         if (state.rcMat) state.rcMat.dispose();
+        disposeQuantumCollapse();
         state.hiddenLegacy.forEach(function(o) { try { o.visible = true; } catch(e){} });
         state.hiddenLegacy = [];
         state.mesh = null;
@@ -1812,10 +2041,17 @@
         state.rcMat  = null;
     }
 
+    // 2026-05-18 段階5/6/7: Stage5/6/7 が scene/camera/sphere に直接アクセスするため
+    // getter で state を露出 (mutable 参照は避け、毎回現在値を返す)
     window.inryokuP1Stage1 = {
         init:    initStage1,
         update:  updateStage,
         dispose: dispose,
+        get scene()    { return state.scene;    },
+        get camera()   { return state.camera;   },
+        get renderer() { return state.renderer; },
+        get mesh()     { return state.mesh;     },
+        get mat()      { return state.mat;      },
     };
 
     function setEnabled() {
