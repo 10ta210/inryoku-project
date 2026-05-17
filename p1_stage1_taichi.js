@@ -539,6 +539,50 @@
         u.uColorBirth.value = smoothstepJS(0.38, 0.92, rv);
         u.uLiquid.value     = smoothstepJS(0.45, 1.0, rv);
 
+        // ── 2026-05-17 段階2.3: ローディングバー morph 同期 ──
+        // 50% → 101% を reveal で駆動。色も 陰陽 → グレー → RGBCMY と同期
+        try {
+            const barFill = document.getElementById('p1-lb');
+            const pctEl   = document.getElementById('p1-lpct');
+            if (barFill || pctEl) {
+                const morphProg = 50 + rv * 51; // 50→101
+                const pv = Math.round(morphProg);
+                if (barFill) {
+                    barFill.style.width = morphProg + '%';
+                    if (rv < 0.04) {
+                        // 50%: 陰陽 — 白黒ストライプ
+                        barFill.style.background =
+                            'repeating-linear-gradient(to right,' +
+                            '#ffffff 0px,#ffffff 5px,#000000 5px,#000000 10px)';
+                    } else if (rv < 1.0) {
+                        // 51%〜100%: グレーから rainbow が湧き出す
+                        const greyA   = (1 - rv) * 0.85;          // グレー側
+                        const colorA  = Math.min(1, rv * 1.15);   // 虹側 (少し早めに濃く)
+                        const stops = [
+                            'rgba(128,128,128,' + greyA + ')',
+                            'rgba(255,0,0,'   + (colorA * 0.85) + ')',
+                            'rgba(255,140,0,' + (colorA * 0.75) + ')',
+                            'rgba(255,255,0,' + (colorA * 0.85) + ')',
+                            'rgba(0,255,0,'   + (colorA * 0.85) + ')',
+                            'rgba(0,255,255,' + (colorA * 0.85) + ')',
+                            'rgba(0,0,255,'   + (colorA * 0.85) + ')',
+                            'rgba(255,0,255,' + (colorA * 0.85) + ')'
+                        ];
+                        barFill.style.background = 'linear-gradient(to right,' + stops.join(',') + ')';
+                    } else {
+                        // 101%: 完全 RGBCMY 虹
+                        barFill.style.background =
+                            'linear-gradient(to right,' +
+                            '#ff0000,#ff8800,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff0000)';
+                    }
+                }
+                if (pctEl) {
+                    const label = pv >= 101 ? '101' : pv;
+                    pctEl.textContent = 'Loading reality... ' + label + '%';
+                }
+            }
+        } catch (e) { /* DOM 未準備でも黙って続行 */ }
+
         // ── rcSphere アシスタント (uAlpha ≤ 0.18, reveal>0.62 で出現) ──
         if (state.rcMesh && state.rcMat) {
             const ru = state.rcMat.uniforms;
