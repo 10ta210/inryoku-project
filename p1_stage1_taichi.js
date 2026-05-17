@@ -353,8 +353,9 @@
             else                   dirCol = vec3(1.0, 0.0, 1.0);   // M
             col += dirCol * fissure * uBang * 2.0;
 
-            // ── 旧 alpha ロジック互換: taichi 出現スケール ──
-            float alphaOut = uTaichiMix * (1.0 - smoothstep(0.45, 1.0, uBang) * 0.85);
+            // ── 2026-05-18 段階4.1: 球は最後まで残す（観測の核）
+            // 旧: uBang で 85% 消失 → 修正: 20% 微減衰のみ。常時可視
+            float alphaOut = uTaichiMix * (1.0 - smoothstep(0.45, 1.0, uBang) * 0.20);
             gl_FragColor = vec4(col * uTaichiMix, alphaOut);
         }
     `;
@@ -1267,7 +1268,8 @@
 
     function hideLegacyGreySphere(scene) {
         if (!scene || typeof scene.getObjectByName !== 'function') return;
-        const names = ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel'];
+        // 2026-05-18 段階4.1: 白/黒 dual パネル本体 (bgPlane) も hide 対象に追加
+        const names = ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel', 'p1-old-dual-bg'];
         names.forEach(function(n){
             var o = scene.getObjectByName(n);
             if (o && o.visible) {

@@ -1384,7 +1384,10 @@ function renderPhase1() {
         });
         // BACKUP: PlaneGeometry(sqWorld, sqWorld) — 正方形では横長viewport時に左右に黒余白が出る
         const bgPlane = new THREE.Mesh(new THREE.PlaneGeometry(sqWorld * 6, sqWorld), bgMat);
-        bgPlane.position.z = -1; scene.add(bgPlane);
+        bgPlane.position.z = -1;
+        // 2026-05-18 段階4.1: 拡張で hide できるよう name 付与（白/黒 dual panel 本体）
+        bgPlane.name = 'p1-old-dual-bg';
+        scene.add(bgPlane);
 
         // ── Newton Rings (Phase C 背景 — RGBCMY動的干渉縞) ──
         // ── Warp Tunnel Rings (WARP_GROW/CONSUME用: 9リング同心円・透視射影シミュレーション) ──
