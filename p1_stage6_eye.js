@@ -107,7 +107,7 @@
             const d = 0.5;
             const aspect = camera.aspect || 1.0;
             const vFov = (camera.fov * Math.PI) / 180.0;
-            h = 2 * d * Math.tan(vFov / 2) * 2.4;
+            h = 2 * d * Math.tan(vFov / 2) * 4.0;
             w = h * aspect;
         }
         return new THREE.PlaneGeometry(w, h, 1, 1);

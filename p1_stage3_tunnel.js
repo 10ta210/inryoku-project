@@ -157,8 +157,8 @@
             const vFov = (camera.fov * Math.PI) / 180.0;
             h = 2 * d * Math.tan(vFov / 2);
             w = h * aspect;
-            // 2026-05-17 段階3.1: フルスクリーン overlay (×2.2 拡大、FOV 72 でも端まで覆う)
-            w *= 2.2; h *= 2.2;
+            // 2026-05-18 段階8.2: 完全フルスクリーン (×4.0)。スクエアの「枠」を消す
+            w *= 4.0; h *= 4.0;
         } else if (camera && camera.isOrthographicCamera) {
             w = (camera.right - camera.left) * 1.1;
             h = (camera.top - camera.bottom) * 1.1;
