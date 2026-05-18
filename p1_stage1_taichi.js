@@ -556,6 +556,9 @@
         stage14Clone: null,
         stage14TitleSwapped: false,
         hundredShownAt: 0,
+        // 2026-05-19 段階17: concept-breaking moment (101 flash + bg ingest)
+        text101Fired: false,
+        bgEaten: false,
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
@@ -2176,6 +2179,41 @@
     // 2026-05-18 段階14: UI shell ingest — sphere absorbs Win95 shell at 7.2s
     //   Codex final plan: subject is sphere, UI is固定概念 → one thin DOM clone
     //   absorbed cleanly into the sphere center. Followed by scissor unlock.
+    // 2026-05-19 段階17: "101" text flash (concept-breaking moment)
+    function triggerStage17TextFlash() {
+        try {
+            if (typeof document === 'undefined') return;
+            const el = document.createElement('div');
+            el.id = 'p1-stage17-text';
+            el.textContent = '101';
+            Object.assign(el.style, {
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%) scale(0.5)',
+                font: '900 200px/1 ui-monospace, monospace',
+                color: '#fff',
+                letterSpacing: '-0.05em',
+                textShadow: '0 0 40px rgba(255,255,255,0.85), 0 0 80px rgba(255,255,255,0.55)',
+                zIndex: '2147483646',
+                pointerEvents: 'none',
+                opacity: '0',
+                transition: 'opacity 80ms ease-out, transform 280ms cubic-bezier(.16,1,.3,1)'
+            });
+            document.body.appendChild(el);
+            requestAnimationFrame(function () {
+                el.style.opacity = '1';
+                el.style.transform = 'translate(-50%, -50%) scale(1.0)';
+            });
+            setTimeout(function () {
+                el.style.transition = 'opacity 180ms ease-in, transform 280ms ease-in';
+                el.style.opacity = '0';
+                el.style.transform = 'translate(-50%, -50%) scale(2.0)';
+            }, 220);
+            setTimeout(function () { try { el.remove(); } catch (e) {} }, 500);
+        } catch (e) {}
+    }
+
     function startStage14UiIngest() {
         if (state.stage14IngestFired) return;
         state.stage14IngestFired = true;
@@ -2369,6 +2407,30 @@
             if (t >= 7.25 && !state.stage14IngestFired) {
                 startStage14UiIngest();
             }
+            // 2026-05-19 段階17: "101" text flash at t=7.05s (just before ingest)
+            if (t >= 7.05 && !state.text101Fired) {
+                state.text101Fired = true;
+                triggerStage17TextFlash();
+            }
+            // 2026-05-19 段階17: bgPlane (p1-old-dual-bg) を UI と同期で球に吸わせる
+            try {
+                const dualBg = state.scene && state.scene.getObjectByName('p1-old-dual-bg');
+                if (dualBg && dualBg.material && dualBg.material.uniforms) {
+                    const bu = dualBg.material.uniforms;
+                    if (bu.u_frameCollapse) {
+                        const c = Math.max(0, Math.min(1, (t - 7.2) / 1.3));
+                        // 既存値より小さくならないように max を取る (Stage9 経路と競合させない)
+                        bu.u_frameCollapse.value = Math.max(bu.u_frameCollapse.value || 0, c);
+                        if (bu.u_alpha) {
+                            bu.u_alpha.value = Math.min(bu.u_alpha.value, 1.0 - c * 0.95);
+                        }
+                    }
+                    if (t >= 8.5 && !state.bgEaten) {
+                        state.bgEaten = true;
+                        dualBg.visible = false; // 球 (state.mesh) は対象外 — bgPlane のみ
+                    }
+                }
+            } catch (e) {}
             // Phase C: 白光変容 (同じ mesh、uWhiteBirth で塗り替え)
             const p = (t - 7.2) / 1.5;
             const ep = easeInOutCubic(Math.max(0, Math.min(1, p)));
