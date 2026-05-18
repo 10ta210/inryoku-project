@@ -91,6 +91,53 @@
         // デスクトップ: P0→P1→P2→P3 フルシーケンス
         renderPhase1();
 
+        // 2026-05-18 開発用: ?dev=1 / ?skip=intro / ?at=50 時のみ画面右上に時間オーバーレイ表示
+        // フィードバック時「X.X秒地点が変」と具体的に伝えられるよう
+        (function devTimeOverlay() {
+            if (!/[\?&](dev=1|skip=intro|at=50)/.test(location.search)) return;
+            var div = document.createElement('div');
+            div.id = 'p1-dev-time-overlay';
+            Object.assign(div.style, {
+                position: 'fixed', top: '8px', right: '12px',
+                zIndex: '2147483647', pointerEvents: 'none',
+                font: '600 11px/1.3 ui-monospace, Menlo, Consolas, monospace',
+                color: 'rgba(255,255,255,0.78)',
+                background: 'rgba(0,0,0,0.55)',
+                padding: '6px 10px', borderRadius: '6px',
+                letterSpacing: '0.04em',
+                textShadow: '0 0 4px rgba(0,0,0,0.8)',
+                backdropFilter: 'blur(4px)',
+                userSelect: 'text'
+            });
+            div.textContent = 'P1 init...';
+            document.body.appendChild(div);
+            var t0 = performance.now();
+            var phases = [
+                { at: 0,    name: 'P1 start' },
+                { at: 1.2,  name: 'Scene A end / Morph start' },
+                { at: 5.7,  name: 'タメ→内部上昇' },
+                { at: 9.0,  name: '急跳躍 start' },
+                { at: 10.2, name: '100% plateau start' },
+                { at: 11.7, name: 'BREAKTHROUGH (101%)' },
+                { at: 14.1, name: 'Ingest end' },
+                { at: 14.4, name: 'BIG BANG' },
+                { at: 18.4, name: 'Tunnel end' },
+                { at: 19.5, name: 'White world end' },
+                { at: 22.2, name: 'Eye complete' },
+                { at: 24.8, name: 'Cross flash' }
+            ];
+            function tick() {
+                var s = (performance.now() - t0) / 1000;
+                var phase = phases[0].name;
+                for (var i = 0; i < phases.length; i++) {
+                    if (s >= phases[i].at) phase = phases[i].name;
+                }
+                div.textContent = 'P1 ' + s.toFixed(2) + 's | ' + phase;
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        })();
+
         // 2026-05-17 開発用: ?dev=1 or ?skip=intro で Welcome画面を自動スキップ
         // → Win95ローディング直行（P1演出をすぐ見たい時用）
         // 本番アクセスは無関係（パラメータ無しなら従来通り）
