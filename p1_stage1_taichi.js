@@ -534,6 +534,12 @@
         s13_crossFired: false,
         s13_p2Fired: false,
         s13_chaosHidden: false,
+        // 2026-05-18 段階14: UI shell ingest + fullscreen unlock guards
+        stage14UnlockFired: false,
+        stage14IngestFired: false,
+        stage14Clone: null,
+        stage14TitleSwapped: false,
+        hundredShownAt: 0,
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
@@ -852,7 +858,17 @@
             return;
         }
         if (rv >= 1.0) {
-            pctEl.textContent = 'Loading reality... 100%';
+            // 2026-05-18 段階14 Priority 1: 100% を 1 フレームだけ見せて 101% へ
+            if (!state.hundredShownAt) {
+                state.hundredShownAt = now;
+                pctEl.textContent = 'Loading reality... 100%';
+                return;
+            }
+            if ((now - state.hundredShownAt) < 40) {
+                pctEl.textContent = 'Loading reality... 100%';
+                return;
+            }
+            pctEl.textContent = 'Loading reality... 101%';
             return;
         }
         // normal: milestone snap (既存の nearestMilestone を流用)
@@ -1201,6 +1217,25 @@
                 '  68%  { transform: translateX(10px) scaleX(.8); }',
                 '  84%  { transform: translateX(-6px) scaleX(1.08); }',
                 '  100% { transform: translateX(4px); }',
+                '}',
+                // ── 2026-05-18 段階14: UI shell ingest (sphere absorbs Win95 shell) ──
+                '.p1-ui-shell-ingest {',
+                '  transform-origin: var(--core-x) var(--core-y);',
+                '  animation: p1UiShellIngest 1600ms cubic-bezier(.18,.82,.16,1) forwards;',
+                '  filter: contrast(1.08) saturate(0.85) brightness(1.15);',
+                '}',
+                '@keyframes p1UiShellIngest {',
+                '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1);',
+                '         clip-path: ellipse(75% 75% at 50% 50%); }',
+                '  55%  { opacity: .92; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.72);',
+                '         clip-path: ellipse(55% 36% at 50% 50%);',
+                '         filter: blur(.3px) contrast(1.2) saturate(.7); }',
+                '  82%  { opacity: .75; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.18);',
+                '         clip-path: ellipse(18% 9% at 50% 50%);',
+                '         filter: blur(1.2px) brightness(1.7); }',
+                '  100% { opacity: 0; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.02);',
+                '         clip-path: ellipse(2% 2% at 50% 50%);',
+                '         filter: blur(3px) brightness(3); }',
                 '}',
                 // ── 2026-05-18 段階8.1: 個別 UI 要素 hide (black-screen 修正) ──
                 '.p1-ui-hidden-after-collapse {',
@@ -2049,6 +2084,66 @@
         });
     }
 
+    // 2026-05-18 段階14: UI shell ingest — sphere absorbs Win95 shell at 7.2s
+    //   Codex final plan: subject is sphere, UI is固定概念 → one thin DOM clone
+    //   absorbed cleanly into the sphere center. Followed by scissor unlock.
+    function startStage14UiIngest() {
+        if (state.stage14IngestFired) return;
+        state.stage14IngestFired = true;
+        // runner is-ingesting toggle が外れないよう ingestFired を立てる
+        state.ingestFired = true;
+        try {
+            const win = document.getElementById('win95-main');
+            if (!win || !state.mesh || !state.camera) return;
+
+            // sphere → screen position
+            const v = state.mesh.position.clone().project(state.camera);
+            const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
+            const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
+            const rect = win.getBoundingClientRect();
+
+            const clone = win.cloneNode(true);
+            clone.id = 'p1-ui-shell-clone';
+            clone.querySelectorAll('[id]').forEach(function (el) {
+                el.id = 'shell-' + el.id;
+            });
+            clone.querySelectorAll('canvas').forEach(function (c) { c.remove(); });
+            clone.classList.add('p1-ui-shell-ingest');
+
+            Object.assign(clone.style, {
+                position:     'fixed',
+                left:         rect.left + 'px',
+                top:          rect.top + 'px',
+                width:        rect.width + 'px',
+                height:       rect.height + 'px',
+                margin:       '0',
+                zIndex:       '2147482000',
+                pointerEvents:'none'
+            });
+            clone.style.setProperty('--core-x', (sx - rect.left) + 'px');
+            clone.style.setProperty('--core-y', (sy - rect.top) + 'px');
+            clone.style.setProperty('--pull-x', (sx - rect.left - rect.width / 2) + 'px');
+            clone.style.setProperty('--pull-y', (sy - rect.top - rect.height / 2) + 'px');
+
+            document.body.appendChild(clone);
+            // 元の win95-main は非表示 (clone が吸引アニメを担う)
+            win.style.opacity = '0';
+            state.stage14Clone = clone;
+            // Priority 2: runner も球へ吸われる (既存 is-ingesting class を利用)
+            try {
+                const runner = document.getElementById('exit-runner');
+                if (runner) {
+                    runner.classList.remove('is-plateau');
+                    runner.classList.remove('is-breakthrough');
+                    runner.classList.add('is-ingesting');
+                }
+            } catch (e) {}
+            setTimeout(function () {
+                try { if (state.stage14Clone === clone) clone.remove(); } catch (e) {}
+            }, 1700);
+        } catch (e) {}
+    }
+
     // 2026-05-18 Stage 13: single linear cinematic timeline post-50%
     //   0.0-2.0s : legacy merge afterglow (sphere invisible)
     //   2.0-3.2s : 陰陽球出現 (scale 0→1, uTaichiMix 0→1)
@@ -2095,6 +2190,27 @@
             u.uReveal.value    = holdThenJump(Math.max(0, Math.min(1, raw)));
             u.uWhiteBirth.value = 0;
         } else if (t < 8.7) {
+            // 2026-05-18 段階14: PHASE C 開始時に fullscreen unlock + UI shell ingest
+            if (!state.stage14UnlockFired) {
+                state.stage14UnlockFired = true;
+                window.p1FullScreenUnlocked = true;
+                // タイトル文字を "REALITY.SYS BREACHED" に差し替え (Priority 3)
+                if (!state.stage14TitleSwapped) {
+                    state.stage14TitleSwapped = true;
+                    try {
+                        const win = document.getElementById('win95-main');
+                        if (win) {
+                            const titleSpan = win.querySelector('span');
+                            if (titleSpan) {
+                                titleSpan.textContent = 'REALITY.SYS BREACHED';
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+            if (t >= 7.25 && !state.stage14IngestFired) {
+                startStage14UiIngest();
+            }
             // Phase C: 白光変容 (同じ mesh、uWhiteBirth で塗り替え)
             const p = (t - 7.2) / 1.5;
             const ep = easeInOutCubic(Math.max(0, Math.min(1, p)));

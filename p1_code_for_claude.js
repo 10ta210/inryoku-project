@@ -3478,7 +3478,16 @@ function renderPhase1() {
                 }
             } catch (e) {}
 
-            if (fullViewportPhase) {
+            // 2026-05-18 段階14: fullscreen unlock at stage13 t>=7.2s
+            //   p1FullScreenUnlocked が立ったら scissor を恒久的に解除し、
+            //   updateScissorFromDOM の再適用も行わない。球の白光が画面全体を覆う。
+            if (window.p1FullScreenUnlocked === true) {
+                try {
+                    scissor.enabled = false;
+                    renderer.setScissorTest(false);
+                    renderer.setViewport(0, 0, W, H);
+                } catch (e) {}
+            } else if (fullViewportPhase) {
                 // 段階12: フル画面トンネル
                 scissor.enabled = false;
                 renderer.setScissorTest(false);
