@@ -3437,25 +3437,17 @@ function renderPhase1() {
         (function renderLoop() {
             if (!alive) return;
             tick();
-            // 2026-05-18 段階9: stage1 拡張中はスクエア境界 (scissor / sq-border) を捨て、
-            // フルビューポートに切り替える。Codex 診断: square-bound visuals の根本原因。
-            if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
-                updateScissorFromDOM(); // scissorをsq-borderにDOM同期
-                if (scissor.enabled) {
-                    renderer.setScissorTest(true);
-                    renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
-                    renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
-                } else {
-                    renderer.setScissorTest(false);
-                    renderer.setViewport(0, 0, W, H);
-                }
+            // 2026-05-18 段階10.3: B案では legacy 演出を復活させたので scissor も復活必須。
+            // scissor を切ると bgPlane (小 world 座標) が画面中央に小さく表示される。
+            // 段階9 で disable していたのを撤回 — 常に scissor 動かす。
+            updateScissorFromDOM();
+            if (scissor.enabled) {
+                renderer.setScissorTest(true);
+                renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
+                renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
             } else {
-                // 段階9: stage1 拡張中 — フルスクリーン強制、scissor 完全無効化
-                try {
-                    scissor.enabled = false;
-                    renderer.setScissorTest(false);
-                    renderer.setViewport(0, 0, renderer.domElement.width, renderer.domElement.height);
-                } catch(e) {}
+                renderer.setScissorTest(false);
+                renderer.setViewport(0, 0, W, H);
             }
             if (composer) composer.render(); else renderer.render(scene, camera);
             requestAnimationFrame(renderLoop);
