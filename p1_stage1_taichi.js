@@ -2102,6 +2102,15 @@
                 state.quantumMat.uniforms.uCollapse.value = qc;
                 state.quantumMat.uniforms.uTime.value = t;
             }
+            // 2026-05-18 段階9: legacy bgPlane (p1-old-dual-bg) を白/黒 swirl 素材として駆動
+            try {
+                const _bg = state.scene && state.scene.getObjectByName('p1-old-dual-bg');
+                if (_bg && _bg.material && _bg.material.uniforms && _bg.material.uniforms.u_frameCollapse) {
+                    _bg.visible = true; // bgPlane を残す
+                    const collapseT = Math.max(0, Math.min(1, ingestElapsed / 2.0));
+                    _bg.material.uniforms.u_frameCollapse.value = collapseT;
+                }
+            } catch (e) {}
             // anticipation compression (1.5 → 2.4s into ingest)
             const compressT = Math.max(0, Math.min(1, (ingestElapsed - 1.5) / 0.9));
             const compress = compressT * compressT * (3 - 2 * compressT);

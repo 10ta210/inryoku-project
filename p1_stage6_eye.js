@@ -47,6 +47,8 @@
         '}'
     ].join('\n');
 
+    // 2026-05-18 段階9: シェーダー rebuild — シンプル＆リアル
+    //   旧: lashes / noise / cosmic. → 削除。skin + sclera + iris + pupil + 2 catchlights のみ。
     const FRAG = [
         'precision highp float;',
         'varying vec2 vUv;',
@@ -54,21 +56,81 @@
         'uniform float uEyeOpen;',
         'uniform float uEyeAlpha;',
         'uniform vec2  uGaze;',
-        'void main(){',
-        '    vec2 p = vUv * 2.0 - 1.0;',
-        '    p.x *= 1.65;',
-        '    float open = uEyeOpen;',
-        '    float lid = smoothstep(open + 0.02, open - 0.02, abs(p.y) - (0.05 + open * 0.34));',
-        '    float eyeShape = smoothstep(1.0, 0.72, length(vec2(p.x, p.y * 2.2)));',
-        '    vec2 gaze = uGaze * 0.08;',
-        '    float iris = smoothstep(0.22, 0.18, length(p - gaze));',
-        '    float pupil = smoothstep(0.085, 0.055, length(p - gaze));',
-        '    vec3 col = vec3(1.0);',
-        '    col = mix(col, vec3(0.02), eyeShape * lid * 0.9);',
-        '    col = mix(col, vec3(0.55), iris * lid);',
-        '    col = mix(col, vec3(0.0), pupil * lid);',
-        '    float alpha = eyeShape * smoothstep(0.0, 0.1, open);',
-        '    gl_FragColor = vec4(col, alpha * uEyeAlpha);',
+        '',
+        'void main() {',
+        '  vec2 p = vUv * 2.0 - 1.0;',
+        '  p.x *= 1.65;',
+        '',
+        '  float open = uEyeOpen;',
+        '',
+        '  // Eyelid: only crisp black slit when closed',
+        '  float lidEdge = abs(p.y) - (0.03 + open * 0.36);',
+        '  float lid = smoothstep(0.012, -0.012, lidEdge);',
+        '',
+        '  // Eye contour',
+        '  float eyeShape = smoothstep(1.0, 0.75, length(vec2(p.x, p.y * 2.0)));',
+        '',
+        '  // White sclera (slightly warm)',
+        '  vec3 sclera = vec3(0.97, 0.96, 0.93);',
+        '',
+        '  // Iris (starts grey, color emerges after opening)',
+        '  vec2 gaze = uGaze * 0.10;',
+        '  vec2 ip = p - gaze;',
+        '  float irisR = length(ip);',
+        '  float iris = smoothstep(0.26, 0.20, irisR);',
+        '  // Iris color: grey at first, hint of rgb after 60% open',
+        '  float colorEmerge = smoothstep(0.5, 0.95, open);',
+        '  vec3 irisCol = mix(vec3(0.42, 0.46, 0.5),',
+        '                     vec3(0.18, 0.32, 0.55) + 0.10*sin(irisR * 80.0 + uTime),',
+        '                     colorEmerge);',
+        '',
+        '  // Pupil (slightly elliptical, wet black)',
+        '  float pupilR = length(ip * vec2(1.05, 0.95));',
+        '  float pupil = smoothstep(0.085, 0.070, pupilR);',
+        '',
+        '  // Two corneal highlights (catchlights)',
+        '  float hi1 = exp(-length((ip - vec2(-0.08, 0.07))) * 60.0);',
+        '  float hi2 = exp(-length((ip - vec2( 0.10,-0.04))) * 110.0);',
+        '  float catchlight = hi1 + hi2 * 0.6;',
+        '',
+        '  vec3 col = sclera;',
+        '  col = mix(col, irisCol, iris * lid);',
+        '  col = mix(col, vec3(0.02), pupil * lid);',
+        '  col += catchlight * lid * 0.85;',
+        '',
+        '  // Skin shape outside eye',
+        '  float skinMask = 1.0 - eyeShape;',
+        '  vec3 skinTone = vec3(0.18, 0.14, 0.12);',
+        '  col = mix(col, skinTone, skinMask);',
+        '',
+        '  // Closed: thin horizontal line where eyelid meets',
+        '  if (open < 0.05) {',
+        '    float closedLine = exp(-abs(p.y) * 90.0) * smoothstep(0.85, 0.0, abs(p.x));',
+        '    col = mix(col, vec3(0.04), closedLine * 0.7);',
+        '  }',
+        '',
+        '  float alpha = (eyeShape + skinMask * 0.6) * uEyeAlpha;',
+        '  gl_FragColor = vec4(col, alpha);',
+        '}'
+    ].join('\n');
+
+    // 2026-05-18 段階9: Sun flash plane — 開眼の瞬間に vertical/horizontal beams + corona
+    const SUN_FRAG = [
+        'precision highp float;',
+        'varying vec2 vUv;',
+        'uniform float uFlash;',
+        'void main() {',
+        '  vec2 p = vUv * 2.0 - 1.0;',
+        '  float r = length(p);',
+        '  float core = exp(-r*r*18.0);',
+        '  float vertical = exp(-p.x*p.x*900.0) * exp(-abs(p.y)*0.8);',
+        '  float horizontal = exp(-p.y*p.y*900.0) * exp(-abs(p.x)*0.8);',
+        '  float corona = exp(-r*r*2.2);',
+        '  vec3 col = vec3(1.0, 0.96, 0.86) * core * 2.5;',
+        '  col += vec3(1.0, 0.9, 0.55) * corona * 0.65;',
+        '  col += vec3(0.8, 0.92, 1.0) * vertical;',
+        '  col += vec3(1.0, 0.84, 0.72) * horizontal;',
+        '  gl_FragColor = vec4(col, (core + vertical + horizontal + corona) * uFlash);',
         '}'
     ].join('\n');
 
@@ -81,7 +143,31 @@
         smoothedGaze: { x: 0, y: 0 },
         openCueFired: false,
         divineFlashFired: false,   // 2026-05-18 段階8
+        // 2026-05-18 段階9: separate sun flash plane (open 0.95 で発火)
+        sunMesh: null, sunMat: null, sunGeo: null,
+        sunFlashFired: false,
+        sunFlashStart: 0,
     };
+
+    // 2026-05-18 段階9: sun flash plane factory
+    function createSunFlashPlane() {
+        const geo = new THREE.PlaneGeometry(20, 20);
+        const mat = new THREE.ShaderMaterial({
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+            uniforms: { uFlash: { value: 0 } },
+            vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+            fragmentShader: SUN_FRAG,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(0, 0, -1);
+        mesh.renderOrder = 10005;
+        mesh.frustumCulled = false;
+        mesh.name = 'p1Stage6SunFlash';
+        return { mesh: mesh, mat: mat, geo: geo };
+    }
 
     function onPointerMove(ev) {
         try {
@@ -205,6 +291,17 @@
             scene.add(state.mesh);
         }
 
+        // 2026-05-18 段階9: sun flash plane (camera 親子) — 開眼の瞬間に発火
+        try {
+            const sun = createSunFlashPlane();
+            state.sunMesh = sun.mesh; state.sunMat = sun.mat; state.sunGeo = sun.geo;
+            if (camera && camera.isPerspectiveCamera) {
+                camera.add(state.sunMesh);
+            } else {
+                scene.add(state.sunMesh);
+            }
+        } catch (e) {}
+
         window.addEventListener('mousemove', onPointerMove);
         window.addEventListener('touchstart', onTouchStart, { passive: true });
 
@@ -261,6 +358,25 @@
         u.uEyeAlpha.value = alpha;
         u.uEyeOpen.value = open;
 
+        // 2026-05-18 段階9: open が 0.95 を初めて越えた瞬間に sun flash 発火
+        if (!state.sunFlashFired && open >= 0.95) {
+            state.sunFlashFired = true;
+            state.sunFlashStart = t;
+        }
+        if (state.sunMat && state.sunFlashFired) {
+            const dt = t - state.sunFlashStart;
+            let flash = 0;
+            if (dt < 0.2) {
+                flash = dt / 0.2;            // 0 → 1 over 200ms (linear-ish in)
+            } else if (dt < 0.7) {
+                const dd = (dt - 0.2) / 0.5; // 1 → 0 over 500ms (ease-out)
+                flash = 1.0 - dd * dd;
+            } else {
+                flash = 0;
+            }
+            state.sunMat.uniforms.uFlash.value = Math.max(0, Math.min(1.4, flash));
+        }
+
         // Smooth gaze
         state.smoothedGaze.x += (state.targetGaze.x - state.smoothedGaze.x) * 0.12;
         state.smoothedGaze.y += (state.targetGaze.y - state.smoothedGaze.y) * 0.12;
@@ -296,6 +412,13 @@
         }
         if (state.geo) state.geo.dispose();
         if (state.mat) state.mat.dispose();
+        // 2026-05-18 段階9: sun flash plane cleanup
+        if (state.sunMesh) {
+            if (state.sunMesh.parent) state.sunMesh.parent.remove(state.sunMesh);
+        }
+        if (state.sunGeo) state.sunGeo.dispose();
+        if (state.sunMat) state.sunMat.dispose();
+        state.sunMesh = null; state.sunMat = null; state.sunGeo = null;
         try {
             const sphere = state.scene && state.scene.getObjectByName('p1Stage1TaichiSphere');
             if (sphere && sphere.material && sphere.material.uniforms

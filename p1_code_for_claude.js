@@ -1285,12 +1285,15 @@ function renderPhase1() {
 
         // ── Background split (square-sized plane) ──
         const bgMat = new THREE.ShaderMaterial({
-            uniforms: { u_grey: { value: 0 }, u_flash: { value: 0 }, u_time: { value: 0 }, u_pixelSize: { value: 8.0 }, u_vortex: { value: 0.0 }, u_vortexAngle: { value: 0.0 } },
+            // 2026-05-18 段階9: u_frameCollapse 追加 — Stage1 拡張時に reality frame を中心に swirl 収束
+            uniforms: { u_grey: { value: 0 }, u_flash: { value: 0 }, u_time: { value: 0 }, u_pixelSize: { value: 8.0 }, u_vortex: { value: 0.0 }, u_vortexAngle: { value: 0.0 }, u_frameCollapse: { value: 0 } },
             vertexShader: VS,
             fragmentShader: [
                 'precision highp float;',
                 'varying vec2 vUv;',
                 'uniform float u_grey, u_flash, u_time, u_pixelSize, u_vortex, u_vortexAngle;',
+                // 2026-05-18 段階9: frame collapse (Stage1 拡張から駆動)
+                'uniform float u_frameCollapse;',
                 '',
                 'vec2 pixelate(vec2 uv) {',
                 '  if(u_pixelSize <= 1.0) return uv;',
@@ -1333,6 +1336,17 @@ function renderPhase1() {
                 '',
                 'void main() {',
                 '  vec2 uv = pixelate(vUv);',
+                // 2026-05-18 段階9: frame collapse — 白/黒の境界を中心に巻き込み swirl
+                '  if (u_frameCollapse > 0.001) {',
+                '    vec2 _p = uv - 0.5;',
+                '    float _collapse = clamp(u_frameCollapse, 0.0, 1.0);',
+                '    float _corner = pow(abs(_p.x * _p.y) * 4.0, 0.55);',
+                '    _p -= normalize(_p + vec2(0.0001)) * _corner * _collapse * 0.34;',
+                '    float _twist = _collapse * (1.0 - length(_p)) * 2.8;',
+                '    float _a = atan(_p.y, _p.x) + _twist;',
+                '    _p = vec2(cos(_a), sin(_a)) * length(_p);',
+                '    uv = _p + 0.5;',
+                '  }',
                 // ── 墨流しモード（Suminagashi — 有機的インク混合） ──
                 '  float sumiAmt = 0.0;',
                 '  if(u_vortex > 0.001) {',
@@ -2076,6 +2090,23 @@ function renderPhase1() {
         const greySphere = new THREE.Mesh(greySphereGeo, greySphereMat);
         greySphere.name = 'p1-old-grey-sphere'; // 2026-05-17 段階1.2: 拡張ハンドラから getObjectByName で参照
         greySphere.visible = false; greySphere.position.z = 0.5; scene.add(greySphere);
+        // 2026-05-18 段階9: stage1 拡張中は legacy greySphere を強制非表示
+        //   (新 p1Stage1TaichiSphere と二重描画になり square-bound visuals の原因になる)
+        //   Object.defineProperty で .visible setter を override し、レガシーコードが true を入れても無視する。
+        (function() {
+            let _greyVisible = false;
+            Object.defineProperty(greySphere, 'visible', {
+                configurable: true,
+                get: function() { return _greyVisible; },
+                set: function(v) {
+                    if (window.inryokuP1 && window.inryokuP1.stage1Enabled) {
+                        _greyVisible = false; // stage1 中は常に hidden
+                    } else {
+                        _greyVisible = !!v;
+                    }
+                }
+            });
+        })();
 
         // ── RGBCMY Tunnel (OVERSIZED — covers full screen for overflow) ──
         // ── RGBCMY Tunnel 3D (demo_pattern_d移植 — u_scale=3.0固定、u_depth/u_ringDensity/u_scrollMul追加) ──
@@ -2907,7 +2938,10 @@ function renderPhase1() {
             } else if (phase === PH.WARP_GROW) {
                 if (!phaseCInited) {
                     phaseCInited = true;
-                    bgPlane.visible = false;
+                    // 2026-05-18 段階9: stage1 拡張時は bgPlane を残し、Stage4.2 reality frame collapse 素材として活用
+                    if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                        bgPlane.visible = false;
+                    }
                     tunnelPlane.visible = true;
                     // 渦巻きリセット
                     bgMat.uniforms.u_vortex.value = 0.0;
@@ -3138,7 +3172,10 @@ function renderPhase1() {
                     const scanlines = wrap.querySelector('div[style*="repeating-linear-gradient(0deg"]');
                     if (scanlines) scanlines.style.display = 'none';
                     // Hide all non-tunnel 3D objects
-                    bgPlane.visible = false;
+                    // 2026-05-18 段階9: stage1 拡張時は bgPlane を残す (collapse swirl 素材)
+                    if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                        bgPlane.visible = false;
+                    }
                     fieldPlane.visible = false;
                     bDot.visible = false; wDot.visible = false;
                     yyPlane.visible = false;
@@ -3237,7 +3274,10 @@ function renderPhase1() {
                     // 白い光の余韻 → ゆっくり暗闇へ
                     tunnelPlane.visible = false;
                     warpTunnelPlane.visible = false;
-                    bgPlane.visible = false;
+                    // 2026-05-18 段階9: stage1 拡張時は bgPlane を残す
+                    if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                        bgPlane.visible = false;
+                    }
                     scPlane.visible = false;
                     scissor.enabled = false;
                     if (t2 < 0.4) {
@@ -3249,8 +3289,11 @@ function renderPhase1() {
                         // 白→暗闇へ（目が閉じていく）
                         var blackT = (t2 - 0.4) / 0.6;
                         var easeBlack = blackT * blackT;
-                        whiteOv.style.background = 'linear-gradient(#000, #000)';
-                        whiteOv.style.opacity = String(easeBlack);
+                        // 2026-05-18 段階9: stage1 中は DOM 黒ベタを使わず WebGL シーンで暗闇を演出
+                        if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                            whiteOv.style.background = 'linear-gradient(#000, #000)';
+                            whiteOv.style.opacity = String(easeBlack);
+                        }
                         if (bloom) bloom.strength = Math.max(0, 1.0 * (1 - blackT));
                     }
                     renderer.setClearColor(0x000000, 1);
@@ -3258,8 +3301,11 @@ function renderPhase1() {
 
                 // Step 6 (8.5-11.5s): 暗闇の中 → 閉じた目が開く — 瞼シェーダー
                 if (et >= 8.5 && et < 11.5) {
-                    whiteOv.style.background = '#000';
-                    whiteOv.style.opacity = '1';
+                    // 2026-05-18 段階9: stage1 中は DOM 黒オーバーレイを使わない
+                    if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                        whiteOv.style.background = '#000';
+                        whiteOv.style.opacity = '1';
+                    }
                     renderer.setClearColor(0x000000, 1);
                     scissor.enabled = false;
                     var eyeT = (et - 8.5) / 3.0;
@@ -3313,8 +3359,11 @@ function renderPhase1() {
                     // bloom: 十字架の光が増す
                     if (bloom) bloom.strength = 0.6 + crossEase * 3.5;
                     // whiteOvを薄く → 背景光として使う
-                    whiteOv.style.background = '#000';
-                    whiteOv.style.opacity = String(Math.max(0, 1.0 - crossEase * 0.3));
+                    // 2026-05-18 段階9: stage1 中は DOM 黒オーバーレイを使わない
+                    if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                        whiteOv.style.background = '#000';
+                        whiteOv.style.opacity = String(Math.max(0, 1.0 - crossEase * 0.3));
+                    }
                 }
 
                 // Step 8 (13.5-14.5s): 太陽十字架が画面を飲み込む → ホワイトアウト → P2
@@ -3356,14 +3405,25 @@ function renderPhase1() {
         (function renderLoop() {
             if (!alive) return;
             tick();
-            updateScissorFromDOM(); // scissorをsq-borderにDOM同期
-            if (scissor.enabled) {
-                renderer.setScissorTest(true);
-                renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
-                renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
+            // 2026-05-18 段階9: stage1 拡張中はスクエア境界 (scissor / sq-border) を捨て、
+            // フルビューポートに切り替える。Codex 診断: square-bound visuals の根本原因。
+            if (!(window.inryokuP1 && window.inryokuP1.stage1Enabled)) {
+                updateScissorFromDOM(); // scissorをsq-borderにDOM同期
+                if (scissor.enabled) {
+                    renderer.setScissorTest(true);
+                    renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
+                    renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
+                } else {
+                    renderer.setScissorTest(false);
+                    renderer.setViewport(0, 0, W, H);
+                }
             } else {
-                renderer.setScissorTest(false);
-                renderer.setViewport(0, 0, W, H);
+                // 段階9: stage1 拡張中 — フルスクリーン強制、scissor 完全無効化
+                try {
+                    scissor.enabled = false;
+                    renderer.setScissorTest(false);
+                    renderer.setViewport(0, 0, renderer.domElement.width, renderer.domElement.height);
+                } catch(e) {}
             }
             if (composer) composer.render(); else renderer.render(scene, camera);
             requestAnimationFrame(renderLoop);
