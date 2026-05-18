@@ -1355,12 +1355,16 @@
 
     // 2026-05-17 段階3.1: Win95 UI に prewarp/ingest クラスを適用
     function applyPrewarpClass() {
-        try {
-            const win = document.getElementById('win95-main');
-            if (win && !win.classList.contains('p1-window-prewarp')) {
-                win.classList.add('p1-window-prewarp');
-            }
-        } catch (e) {}
+        // 2026-05-18 段階10.2: legacy phases (WARP_GROW/BREACH) が同時に走るため
+        // prewarp の skew/contrast 振動が win95-main を歪ませる → 無効化
+        return;
+        // 旧コード (フォールバック用に保持):
+        // try {
+        //     const win = document.getElementById('win95-main');
+        //     if (win && !win.classList.contains('p1-window-prewarp')) {
+        //         win.classList.add('p1-window-prewarp');
+        //     }
+        // } catch (e) {}
     }
     // ── 2026-05-18 段階5/6/7: 量子崩壊パーティクルオーバーレイ (WebGL) ──
     // UI ingest と並行して動く。CMY = particle path / RGB = wave path。

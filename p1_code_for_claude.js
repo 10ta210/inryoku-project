@@ -1245,6 +1245,33 @@ function renderPhase1() {
 `;
         document.body.appendChild(wrap);
 
+        // 2026-05-18 段階10.2: viewport resize に追従して win95-main を再センタリング
+        //   旧: W/H は init 時の window.innerWidth/Height で固定 → resize すると位置がズレる
+        //   新: resize/orientationchange で left/top/width/height を再計算
+        function _onP1Resize() {
+            try {
+                const W2 = window.innerWidth, H2 = window.innerHeight;
+                const winEl = document.getElementById('win95-main');
+                if (!winEl) return;
+                const _taskbarH2 = 28, _margin2 = 12;
+                const _baseW2 = 680, _baseH2 = 720;
+                const _maxW2 = Math.max(320, W2 - _margin2 * 2);
+                const _maxH2 = Math.max(320, H2 - _taskbarH2 - _margin2 * 2);
+                const ww = Math.min(_baseW2, _maxW2);
+                const hh = Math.min(_baseH2, _maxH2);
+                const ll = Math.max(_margin2, Math.round(W2 / 2 - ww / 2));
+                const tt = Math.max(_margin2, Math.round((H2 - _taskbarH2) / 2 - hh / 2));
+                winEl.style.width  = ww + 'px';
+                winEl.style.height = hh + 'px';
+                winEl.style.left   = ll + 'px';
+                winEl.style.top    = tt + 'px';
+            } catch (e) {}
+        }
+        window.addEventListener('resize', _onP1Resize);
+        window.addEventListener('orientationchange', _onP1Resize);
+        // 初回 render が centering より早く走った場合に備えて 1 回呼んでおく
+        setTimeout(_onP1Resize, 50);
+
         // sq-borderのDOMRectからscissorを計算（GL座標系: 原点が左下）
         function updateScissorFromDOM() {
             const sqEl = document.getElementById('sq-border');
@@ -3096,8 +3123,11 @@ function renderPhase1() {
                     const t2 = et / 1.5, ease = t2 * t2 * t2;
 
                     // Win95ウィンドウ: グリッチ破壊
+                    // 2026-05-18 段階10.2: legacy 演出が新 stage1 と二重で走ると
+                    // win95-main の transform/filter/backgroundImage が override されて
+                    // 「急にデカくなる/位置がズレる」現象が起きる → 無効化
                     const win95s = document.getElementById('win95-main');
-                    if (win95s && win95s.style.display !== 'none') {
+                    if (false && win95s && win95s.style.display !== 'none') {
                         // スクリーンティア: 水平方向のずれ
                         const tearOffset = Math.sin(et * 30) * ease * 20;
                         const tearY = Math.sin(et * 15) * ease * 10;
