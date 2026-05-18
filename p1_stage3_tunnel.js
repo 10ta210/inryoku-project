@@ -160,8 +160,8 @@
             // 2026-05-18 段階8.2: 完全フルスクリーン (×4.0)。スクエアの「枠」を消す
             w *= 4.0; h *= 4.0;
         } else if (camera && camera.isOrthographicCamera) {
-            w = (camera.right - camera.left) * 1.1;
-            h = (camera.top - camera.bottom) * 1.1;
+            w = (camera.right - camera.left) * 4.0;
+            h = (camera.top - camera.bottom) * 4.0;
         }
         return new THREE.PlaneGeometry(w, h, 1, 1);
     }
