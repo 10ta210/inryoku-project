@@ -91,33 +91,82 @@
         // デスクトップ: P0→P1→P2→P3 フルシーケンス
         renderPhase1();
 
-        // 2026-05-18 開発用: ?dev=1 / ?skip=intro / ?at=50 時のみ画面右上に時間オーバーレイ表示
-        // フィードバック時「X.X秒地点が変」と具体的に伝えられるよう
+        // 2026-05-18 開発用: ?dev=1 / ?skip=intro / ?at=50 / ?p1time=1 時のみ
+        // 画面右上に時間オーバーレイ + PAUSE/RESUME ボタン
         (function devTimeOverlay() {
-            if (!/[\?&](dev=1|skip=intro|at=50)/.test(location.search)) return;
+            if (!/[\?&](dev=1|skip=intro|at=50|p1time=1)/.test(location.search)) return;
+
+            // ── PAUSE 実装: rAF を捕獲して止める ──
+            var _origRAF = window.requestAnimationFrame.bind(window);
+            var _pendingCbs = [];
+            var _paused = false;
+            window.requestAnimationFrame = function(cb) {
+                if (_paused) { _pendingCbs.push(cb); return 0; }
+                return _origRAF(cb);
+            };
+            function setPaused(p) {
+                if (p === _paused) return;
+                _paused = p;
+                if (!_paused) {
+                    var cbs = _pendingCbs.slice(); _pendingCbs.length = 0;
+                    cbs.forEach(function(cb) { try { _origRAF(cb); } catch(e){} });
+                }
+                if (btn) {
+                    btn.textContent = _paused ? '▶ RESUME' : '⏸ PAUSE';
+                    btn.style.background = _paused ? 'rgba(0,200,80,0.85)' : 'rgba(220,30,30,0.85)';
+                }
+            }
+            window.__inryokuP1Debug = {
+                pause:  function() { setPaused(true); },
+                resume: function() { setPaused(false); },
+                toggle: function() { setPaused(!_paused); },
+                state:  function() { return { paused: _paused, pending: _pendingCbs.length }; }
+            };
+
+            // ── オーバーレイ DOM ──
             var div = document.createElement('div');
             div.id = 'p1-dev-time-overlay';
             Object.assign(div.style, {
                 position: 'fixed', top: '8px', right: '12px',
-                zIndex: '2147483647', pointerEvents: 'none',
+                zIndex: '2147483647',
                 font: '600 11px/1.3 ui-monospace, Menlo, Consolas, monospace',
-                color: 'rgba(255,255,255,0.78)',
-                background: 'rgba(0,0,0,0.55)',
+                color: 'rgba(255,255,255,0.88)',
+                background: 'rgba(0,0,0,0.62)',
                 padding: '6px 10px', borderRadius: '6px',
                 letterSpacing: '0.04em',
                 textShadow: '0 0 4px rgba(0,0,0,0.8)',
                 backdropFilter: 'blur(4px)',
-                userSelect: 'text'
+                userSelect: 'text',
+                pointerEvents: 'auto',
+                display: 'flex', flexDirection: 'column', gap: '4px',
+                alignItems: 'flex-end',
+                minWidth: '180px'
             });
-            div.textContent = 'P1 init...';
+            var lineTime = document.createElement('div'); lineTime.textContent = 'P1 init...';
+            div.appendChild(lineTime);
+            var btn = document.createElement('button');
+            btn.textContent = '⏸ PAUSE';
+            Object.assign(btn.style, {
+                font: '600 10px/1 ui-monospace, monospace',
+                color: '#fff',
+                background: 'rgba(220,30,30,0.85)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '4px',
+                padding: '4px 10px',
+                cursor: 'pointer',
+                letterSpacing: '0.1em'
+            });
+            btn.onclick = function(){ setPaused(!_paused); };
+            div.appendChild(btn);
             document.body.appendChild(div);
+
             var t0 = performance.now();
             var phases = [
                 { at: 0,    name: 'P1 start' },
                 { at: 1.2,  name: 'Scene A end / Morph start' },
                 { at: 5.7,  name: 'タメ→内部上昇' },
                 { at: 9.0,  name: '急跳躍 start' },
-                { at: 10.2, name: '100% plateau start' },
+                { at: 10.2, name: '100% plateau' },
                 { at: 11.7, name: 'BREAKTHROUGH (101%)' },
                 { at: 14.1, name: 'Ingest end' },
                 { at: 14.4, name: 'BIG BANG' },
@@ -132,10 +181,20 @@
                 for (var i = 0; i < phases.length; i++) {
                     if (s >= phases[i].at) phase = phases[i].name;
                 }
-                div.textContent = 'P1 ' + s.toFixed(2) + 's | ' + phase;
-                requestAnimationFrame(tick);
+                // 球の uReveal を読めれば %% も併記
+                var pct = '';
+                try {
+                    var s1 = window.inryokuP1Stage1;
+                    if (s1 && s1.mat && s1.mat.uniforms && s1.mat.uniforms.uReveal) {
+                        var rv = s1.mat.uniforms.uReveal.value;
+                        var prog = 50 + rv * 51;
+                        pct = ' | ' + prog.toFixed(1) + '%';
+                    }
+                } catch(e) {}
+                lineTime.textContent = 'P1 ' + s.toFixed(2) + 's | ' + phase + pct;
+                _origRAF(tick);   // pause 中でも時計は止めない
             }
-            requestAnimationFrame(tick);
+            _origRAF(tick);
         })();
 
         // 2026-05-17 開発用: ?dev=1 or ?skip=intro で Welcome画面を自動スキップ
