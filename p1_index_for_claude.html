@@ -160,7 +160,9 @@
             div.appendChild(btn);
             document.body.appendChild(div);
 
-            var t0 = performance.now();
+            // 2026-05-18: 時間累積方式に変更 — pause 中は進めない
+            var elapsedSec = 0;
+            var lastT = performance.now();
             var phases = [
                 { at: 0,    name: 'P1 start' },
                 { at: 1.2,  name: 'Scene A end / Morph start' },
@@ -176,7 +178,11 @@
                 { at: 24.8, name: 'Cross flash' }
             ];
             function tick() {
-                var s = (performance.now() - t0) / 1000;
+                var now = performance.now();
+                var dt = now - lastT;
+                lastT = now;
+                if (!_paused) elapsedSec += dt / 1000;
+                var s = elapsedSec;
                 var phase = phases[0].name;
                 for (var i = 0; i < phases.length; i++) {
                     if (s >= phases[i].at) phase = phases[i].name;
