@@ -234,6 +234,7 @@
         uniform float uCrossPhase;  // cross phase の中心グロー (0..1)
         // 2026-05-18 Stage 13: 球そのものが白光へ変容するブレンド係数
         uniform float uWhiteBirth;  // 0=RGBCMY 球 / 1=純白光球
+        uniform float uPremonitionAlpha; // 2026-05-18 段階15: 0-2s premonition core alpha (Codex P0-1)
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -374,12 +375,18 @@
             col = mix(col, vec3(1.0), uWhitePhase * 0.42);
             col += fresnel * vec3(1.0) * uWhitePhase * 0.7;
             // 2026-05-18 Stage 13: 球の白光変容
-            //   uWhiteBirth 0→1 で RGBCMY 表面が白核 + リム発光へ
-            vec3 whiteCore = vec3(1.0) * (1.2 + fresnel * 1.8);
-            float wbInner  = smoothstep(0.0, 1.0, uWhiteBirth);
-            float wbRim    = pow(1.0 - facing, 2.2);
-            col = mix(col, whiteCore, wbInner);
-            col += (1.0 - wbInner) * wbRim * 0.35;
+            //   旧: col = mix(col, whiteCore, wbInner) — RGBCMY が一気に白で覆われ「別の球」感
+            //   2026-05-18 段階15: innerPulse + spectralRim 方式 (Codex P1-1)
+            //   白は中心から湧き上がり、RGBCMY リムは生き残る
+            vec3 currentRgbcmyCol = col; // (snapshot)
+            float wbWhite = smoothstep(0.0, 1.0, uWhiteBirth);
+            float wbInner = smoothstep(0.15, 0.95, wbWhite - length(vPosition) * 0.22);
+            float wbFres  = pow(1.0 - facing, 2.4);
+            vec3 spectralRim = currentRgbcmyCol * wbFres * (1.0 - wbWhite * 0.65);
+            vec3 whiteLight  = vec3(1.0) * (1.1 + wbFres * 1.4);
+            col = mix(currentRgbcmyCol, whiteLight, wbInner);
+            col += spectralRim;
+            col += vec3(1.0) * pow(wbWhite, 2.0) * 0.25;
             // eye depth (中心に小さな暗い瞳孔)
             float eyeDepth = uEyePhase * pow(facing, 5.0);
             col = mix(col, vec3(0.02), eyeDepth * 0.18);
@@ -397,7 +404,12 @@
                 1.0,
                 postBang
             );
-            gl_FragColor = vec4(col * uTaichiMix, alphaOut);
+            // 2026-05-18 段階15 P0-1: premonition core alpha
+            //   0-2s フェーズで uTaichiMix=0 でも球が薄く見えるよう、低 alpha 出力。
+            //   uPremonitionAlpha=1.0 で従来動作と等価。
+            float baseAlpha = max(alphaOut, uPremonitionAlpha);
+            vec3  baseCol   = col * max(uTaichiMix, uPremonitionAlpha * 0.5);
+            gl_FragColor = vec4(baseCol, baseAlpha);
         }
     `;
 
@@ -1242,6 +1254,38 @@
                 '  opacity: 0 !important;',
                 '  visibility: hidden !important;',
                 '  pointer-events: none !important;',
+                '}',
+                // ── 2026-05-18 段階15 P0-2: loading bar wall / breach states ──
+                '#p1-lb.p1-bar-wall {',
+                '  filter: brightness(1.4) contrast(1.25);',
+                '  transform: scaleX(1.015);',
+                '}',
+                '#p1-lb.p1-bar-breach {',
+                '  filter: brightness(2.2) saturate(1.4);',
+                '  box-shadow: 0 0 18px rgba(255,255,255,.8);',
+                '}',
+                // ── 2026-05-18 段階15 P1-2: 強化された UI ingest (gravity crush) ──
+                '.p1-ui-shell-ingest-strong {',
+                '  transform-origin: var(--core-x) var(--core-y);',
+                '  animation: p1ShellGravityCrush 1280ms cubic-bezier(.12,.9,.08,1) forwards;',
+                '  will-change: transform, clip-path, filter, opacity;',
+                '}',
+                '@keyframes p1ShellGravityCrush {',
+                '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1) rotate(0deg);',
+                '         clip-path: polygon(0 0,100% 0,100% 100%,0 100%);',
+                '         filter: blur(0) contrast(1) brightness(1); }',
+                '  32%  { opacity: 1; transform: translate3d(calc(var(--pull-x) * .18), calc(var(--pull-y) * .18), 0) scaleX(1.08) scaleY(.82) rotate(-1.2deg);',
+                '         clip-path: polygon(3% 8%,98% 0,94% 93%,0 100%);',
+                '         filter: blur(.2px) contrast(1.25) brightness(1.15); }',
+                '  58%  { opacity: .95; transform: translate3d(calc(var(--pull-x) * .62), calc(var(--pull-y) * .62), 0) scaleX(.48) scaleY(.18) rotate(2.4deg);',
+                '         clip-path: polygon(20% 36%,83% 28%,76% 69%,16% 74%);',
+                '         filter: blur(1px) contrast(1.6) brightness(1.5); }',
+                '  82%  { opacity: .72; transform: translate3d(calc(var(--pull-x) * .9), calc(var(--pull-y) * .9), 0) scaleX(.16) scaleY(.045) rotate(-5deg);',
+                '         clip-path: ellipse(18% 6% at 50% 50%);',
+                '         filter: blur(2px) contrast(2) brightness(2.2); }',
+                '  100% { opacity: 0; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.015) rotate(18deg);',
+                '         clip-path: ellipse(2% 2% at 50% 50%);',
+                '         filter: blur(5px) brightness(4); }',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -1291,6 +1335,43 @@
             ng.gain.value = 0.18;
             noise.connect(hp).connect(ng).connect(state.audioMaster);
             noise.start(now + 0.02);
+
+            // 2026-05-18 段階15: 101% breakthrough cue (Codex audio P1)
+            //   low boom (42Hz, 0.55s) + air suck (band-passed noise sweep, 1.1s)
+            try {
+                const boom = ctx.createOscillator();
+                const boomG = ctx.createGain();
+                boom.type = 'sine';
+                boom.frequency.setValueAtTime(64, now);
+                boom.frequency.exponentialRampToValueAtTime(42, now + 0.12);
+                boomG.gain.setValueAtTime(0.0001, now);
+                boomG.gain.exponentialRampToValueAtTime(0.42, now + 0.015);
+                boomG.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+                boom.connect(boomG).connect(state.audioMaster);
+                boom.start(now); boom.stop(now + 0.6);
+
+                // air suck: filtered noise sweep with rising bandpass
+                const suckLen = Math.floor(ctx.sampleRate * 1.1);
+                const sBuf = ctx.createBuffer(1, suckLen, ctx.sampleRate);
+                const sData = sBuf.getChannelData(0);
+                for (let i = 0; i < suckLen; i++) {
+                    const env = Math.pow(i / suckLen, 0.7);
+                    sData[i] = (Math.random() * 2 - 1) * env;
+                }
+                const sSrc = ctx.createBufferSource();
+                sSrc.buffer = sBuf;
+                const bp = ctx.createBiquadFilter();
+                bp.type = 'bandpass';
+                bp.frequency.setValueAtTime(220, now);
+                bp.frequency.exponentialRampToValueAtTime(1800, now + 1.1);
+                bp.Q.value = 1.4;
+                const sG = ctx.createGain();
+                sG.gain.setValueAtTime(0.0001, now);
+                sG.gain.exponentialRampToValueAtTime(0.10, now + 0.6);
+                sG.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+                sSrc.connect(bp).connect(sG).connect(state.audioMaster);
+                sSrc.start(now);
+            } catch (e) {}
         } catch (e) {}
     }
 
@@ -1976,6 +2057,10 @@
                 uCrossPhase:  { value: 0 },
                 // 2026-05-18 Stage 13: white-birth (球そのものが白光へ変容)
                 uWhiteBirth:  { value: 0 },
+                // 2026-05-18 段階15: premonition core (0-2s) — Codex P0-1
+                uPremonitionAlpha: { value: 0.0 },
+                // 2026-05-18 段階15: gravity pulse (7.2-8.5s ingest punch) — Codex P1-2
+                uGravityPulse: { value: 0.0 },
             },
             transparent: true,
             depthWrite: false,
@@ -2108,7 +2193,9 @@
                 el.id = 'shell-' + el.id;
             });
             clone.querySelectorAll('canvas').forEach(function (c) { c.remove(); });
-            clone.classList.add('p1-ui-shell-ingest');
+            // 2026-05-18 段階15 P1-2: 強化版 ingest (shorter, gravity crush)
+            //   旧: clone.classList.add('p1-ui-shell-ingest');
+            clone.classList.add('p1-ui-shell-ingest-strong');
 
             Object.assign(clone.style, {
                 position:     'fixed',
@@ -2138,9 +2225,49 @@
                     runner.classList.add('is-ingesting');
                 }
             } catch (e) {}
+            // 2026-05-18 段階15 P1-2: cleanup を 1350ms に短縮 (旧 1700ms)
             setTimeout(function () {
                 try { if (state.stage14Clone === clone) clone.remove(); } catch (e) {}
-            }, 1700);
+            }, 1350);
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階15: Stage 13 loading bar sync (Codex P0-2)
+    //   バー (#p1-lb) とテキスト (#p1-lpct) を Stage 13 の 14s タイムラインに合わせて駆動。
+    //   50→99.5 → wall(100) → breach(101)
+    function stage13Progress(t) {
+        const p = Math.max(0, Math.min(1, t / 14.0));
+        if (p < 0.72) {
+            const k = p / 0.72;
+            // smoothstep ease (4k³ - 3k⁴)
+            const ease = 4 * Math.pow(k, 3) - 3 * Math.pow(k, 4);
+            return 50 + ease * 49.5; // 50 → 99.5
+        }
+        if (p < 0.78) return 100; // wall
+        const br = (p - 0.78) / 0.22;
+        return 100 + Math.min(1, 1 - Math.pow(1 - br, 3)); // 100 → 101
+    }
+    function updateStage13Bar(t) {
+        try {
+            const lb = document.getElementById('p1-lb');
+            const lpct = document.getElementById('p1-lpct');
+            if (!lb && !lpct) return;
+            const percent = stage13Progress(t);
+            const visual = Math.min(percent, 101);
+            if (lb) lb.style.width = visual + '%';
+            if (lpct) {
+                if (visual < 100) {
+                    lpct.textContent = 'Loading reality... ' + Math.round(visual) + '%';
+                } else if (visual < 100.5) {
+                    lpct.textContent = 'Loading reality... 100%';
+                } else {
+                    lpct.textContent = 'Loading reality... 101%';
+                }
+            }
+            if (lb) {
+                lb.classList.toggle('p1-bar-wall',   visual >= 99.5 && visual < 100.5);
+                lb.classList.toggle('p1-bar-breach', visual >= 100.5);
+            }
         } catch (e) {}
     }
 
@@ -2167,19 +2294,31 @@
             hideChaosOverlays();
         }
 
+        // 2026-05-18 段階15: loading bar / text を Stage 13 タイムラインに同期 (Codex P0-2)
+        updateStage13Bar(t);
+
+        // 2026-05-18 段階15 P0-1: 球は 0-2s でも消さず "premonition core" として薄く可視。
+        //   旧: state.mesh.visible = false; return;
+        state.mesh.visible = true;
         if (t < 2.0) {
-            // Phase 0: legacy merge afterglow — 球は完全に不可視
-            state.mesh.visible = false;
-            u.uTaichiMix.value = 0;
-            u.uReveal.value    = 0;
+            // Phase 0: legacy merge afterglow — 球は premonition core (uPremonitionAlpha 0.08→0.30)
+            const pre = Math.max(0, Math.min(1, t / 2.0));
+            const preEase = pre * pre * (3 - 2 * pre); // smoothstep
+            state.mesh.scale.setScalar(0.72 + preEase * 0.18);
+            if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 0.08 + preEase * 0.22;
+            u.uTaichiMix.value  = 0;
+            u.uReveal.value     = 0;
+            u.uWhiteBirth.value = 0;
             return;
         }
-        state.mesh.visible = true;
+        // 2s 以降は通常 alpha
+        if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 1.0;
 
         if (t < 3.2) {
             // Phase A: 陰陽球出現 (scale 0→1, taichiMix 0→1)
             const p = easeOutCubic((t - 2.0) / 1.2);
-            state.mesh.scale.setScalar(Math.max(0.001, p));
+            // premonition の 0.9 から 1.0 へ滑らかに繋ぐ
+            state.mesh.scale.setScalar(Math.max(0.9, 0.9 + p * 0.1));
             u.uTaichiMix.value = p;
             u.uReveal.value    = 0;
         } else if (t < 7.2) {
@@ -2214,7 +2353,18 @@
             // Phase C: 白光変容 (同じ mesh、uWhiteBirth で塗り替え)
             const p = (t - 7.2) / 1.5;
             const ep = easeInOutCubic(Math.max(0, Math.min(1, p)));
-            state.mesh.scale.setScalar(1.0 + 0.02 * Math.sin(t * 1.2));
+            // 2026-05-18 段階15 P1-1: uWhiteBirth に応じた呼吸 (滑らかな膨張、別球感を避ける)
+            //   旧: state.mesh.scale.setScalar(1.0 + 0.02 * Math.sin(t * 1.2));
+            const wbVal = ep;
+            let pcScale = 1.0 + Math.sin(wbVal * Math.PI) * 0.045;
+            // 2026-05-18 段階15 P1-2: gravity pulse (UI shell が球に吸われる衝撃)
+            if (t >= 7.2 && t <= 8.5) {
+                const gP = Math.min(1, Math.max(0, (t - 7.2) / 1.3));
+                const punch = Math.sin(gP * Math.PI);
+                pcScale += punch * 0.08;
+                if (u.uGravityPulse) u.uGravityPulse.value = punch;
+            }
+            state.mesh.scale.setScalar(pcScale);
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
             u.uWhiteBirth.value = ep;

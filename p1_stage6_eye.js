@@ -28,10 +28,21 @@
     // const T_HOLD_CLOSED_END = 0.9;
     // const T_OPEN_END = 1.15;
     // 2026-05-18 段階8: doubled weight
-    const DUR_TOTAL = 2.7;
-    const T_FADE_IN_END = 0.6;
-    const T_HOLD_CLOSED_END = 1.6;
-    const T_OPEN_END = 2.2;
+    // const DUR_TOTAL = 2.7;
+    // const T_FADE_IN_END = 0.6;
+    // const T_HOLD_CLOSED_END = 1.6;
+    // const T_OPEN_END = 2.2;
+    // 2026-05-18 段階15 P2-1: 凍結 (freeze) フェーズ追加で神聖感を強化 (Codex)
+    //   0.0-1.3s  fade-in (closed, darker)
+    //   1.3-2.0s  hold closed
+    //   2.0-2.2s  完全静止 (freeze, 0.2s)
+    //   2.2-2.5s  slow open (0.3s, sun flash trigger)
+    //   2.5-3.0s  open hold + gaze
+    const DUR_TOTAL = 3.0;
+    const T_FADE_IN_END = 1.3;
+    const T_HOLD_CLOSED_END = 2.0;
+    const T_FREEZE_END = 2.2;
+    const T_OPEN_END = 2.5;
 
     function smoothstep(a, b, x) {
         const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
@@ -335,13 +346,17 @@
 
         let alpha = 0, open = 0;
         if (t < T_FADE_IN_END) {
+            // 2026-05-18 段階15 P2-1: ややダークに fade-in (旧より深い闇)
             alpha = easeOutCubic(t / T_FADE_IN_END);
             open = 0;
         } else if (t < T_HOLD_CLOSED_END) {
             alpha = 1; open = 0;
+        } else if (t < T_FREEZE_END) {
+            // 2026-05-18 段階15 P2-1: 完全静止フェーズ (0.2s freeze)
+            alpha = 1; open = 0;
         } else if (t < T_OPEN_END) {
             alpha = 1;
-            const p = (t - T_HOLD_CLOSED_END) / (T_OPEN_END - T_HOLD_CLOSED_END);
+            const p = (t - T_FREEZE_END) / (T_OPEN_END - T_FREEZE_END);
             open = easeOutCubic(p);
             if (!state.openCueFired && p > 0.0) {
                 state.openCueFired = true;

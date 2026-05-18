@@ -56,13 +56,19 @@
         '    vec2 p = vUv * 2.0 - 1.0;',
         // 2026-05-18 段階8: beam length は uGrow で 0.05→1.2 に成長
         '    float beamLen = mix(0.05, 1.2, uGrow);',
+        // 2026-05-18 段階15 P2-1: bloom 風に細い beam + 広い soft halo を加算
         '    float vertical = exp(-abs(p.x) * 70.0) * smoothstep(beamLen, 0.0, abs(p.y));',
+        '    float verticalBloom = exp(-abs(p.x) * 18.0) * smoothstep(beamLen * 1.05, 0.0, abs(p.y)) * 0.55;',
+        '    vertical += verticalBloom;',
         '    float horizontal = exp(-abs(p.y) * 70.0) * smoothstep(beamLen, 0.0, abs(p.x));',
+        '    float horizontalBloom = exp(-abs(p.y) * 18.0) * smoothstep(beamLen * 1.05, 0.0, abs(p.x)) * 0.45;',
+        '    horizontal += horizontalBloom;',
         '    horizontal *= uHorizFade;',
         '    float core = exp(-dot(p,p) * 45.0);',
-        '    vec3 rgbAxis = vec3(0.75, 0.88, 1.0);',
-        '    vec3 cmyAxis = vec3(1.0, 0.82, 0.92);',
-        '    vec3 col = vertical * rgbAxis + horizontal * cmyAxis + core * vec3(1.0) * 2.5;',
+        // 2026-05-18 段階15 P2-1: 縦=白クリーム (より神聖) / 横=やや暖色 (世界軸の物質性)
+        '    vec3 rgbAxis = vec3(1.0, 0.985, 0.94);',
+        '    vec3 cmyAxis = vec3(1.0, 0.92, 0.82);',
+        '    vec3 col = vertical * rgbAxis + horizontal * cmyAxis + core * vec3(1.0) * 3.0;',
         '    float flash = uCross * exp(-uCrossTime * 1.8);',
         '    col *= 0.4 + flash * 2.8;',
         // 2026-05-18 段階8: divine intensity boost during growth
