@@ -1525,6 +1525,9 @@
     }
 
     function applyIngestClass() {
+        // 2026-05-18 段階10 B案: Stage 4 reality collapse / quantum particles を停止
+        // 旧 tunnelPlane / haloPlane / warpTunnel の自然な「飲み込み」演出を採用するため
+        return;
         // 2026-05-18 段階4.2: Reality Frame Collapse へ置換
         //   Codex: 101% は Win95 window だけではなく .phase-1 全域を溶解させる。
         //   旧 createUiIngestClone (#win95-main) は左右パネル/外枠が残り
@@ -1845,8 +1848,9 @@
 
     function hideLegacyGreySphere(scene) {
         if (!scene || typeof scene.getObjectByName !== 'function') return;
-        // 2026-05-18 段階4.1: 白/黒 dual パネル本体 (bgPlane) も hide 対象に追加
-        const names = ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel', 'p1-old-dual-bg'];
+        // 2026-05-18 段階10 B案: 旧 tunnel/halo/warp/bg は隠さず、legacy 演出を復活
+        // greySphere のみ非表示（新 sphere morph と二重表示しないため）
+        const names = ['p1-old-grey-sphere'];
         names.forEach(function(n){
             var o = scene.getObjectByName(n);
             if (o && o.visible) {

@@ -2800,21 +2800,15 @@ function renderPhase1() {
                 // EVENT_SING 以降 (WARP_GROW/BREACH/CONSUME/COLLAPSE) は phase が進まないので
                 // ここで早期 return すれば全て止まる。renderLoop は tick 後に
                 // renderer.render を呼ぶので画面は描画され続ける。
+                // 2026-05-18 段階10 B案: 早期 return を撤去。legacy 演出 (WARP_GROW/BREACH/CONSUME/COLLAPSE) を続行
+                // greySphere のみ非表示（新 sphere morph と二重描画を避ける）。tunnel/halo/warp/bg は表示維持。
                 if (window.inryokuP1 && window.inryokuP1.stage1Enabled) {
                     if (!window._p1LegacyHidden) {
                         window._p1LegacyHidden = true;
-                        ['p1-old-grey-sphere', 'p1-old-tunnel-plane', 'p1-old-halo-plane', 'p1-old-warp-tunnel'].forEach(function(n){
-                            var o = scene.getObjectByName(n);
-                            if (o) o.visible = false;
-                        });
-                        // bDot / wDot / yyPlane も非表示にして残骸を残さない
-                        try { if (typeof bDot !== 'undefined' && bDot) bDot.visible = false; } catch(e){}
-                        try { if (typeof wDot !== 'undefined' && wDot) wDot.visible = false; } catch(e){}
-                        try { if (typeof yyPlane !== 'undefined' && yyPlane) yyPlane.visible = false; } catch(e){}
+                        var gs = scene.getObjectByName('p1-old-grey-sphere');
+                        if (gs) gs.visible = false;
                     }
-                    // 背景 u_time だけは更新（拡張ハンドラと共存できるよう静かに進める）
-                    bgMat.uniforms.u_time.value = globalTime;
-                    return;
+                    // ↓ 旧 return; 撤去 — legacy phases を走らせる
                 }
                 eventTimer += dt;
                 const et = eventTimer;
