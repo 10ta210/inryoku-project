@@ -914,10 +914,18 @@ function renderPhase1() {
         document.head.appendChild(ldCSS);
 
         // UI container: square at center, other elements above
-        const winWidth = 680;
-        const winHeight = 720;
-        const winLeft = Math.round(W / 2 - winWidth / 2);
-        const winTop = Math.round(H / 2 - winHeight / 2) - 14; // 14px up for taskbar
+        // 2026-05-18 段階10.1: viewport より小さい画面でも中央配置
+        // 旧: 固定 680x720 だと小画面で left/top マイナス → 左上に切れる
+        // 新: viewport 内に収まるよう自動縮小 + 12px margin clamp + taskbar 28px 回避
+        const _taskbarH = 28;
+        const _margin = 12;
+        const _baseW = 680, _baseH = 720;
+        const _maxW = Math.max(320, W - _margin * 2);
+        const _maxH = Math.max(320, H - _taskbarH - _margin * 2);
+        const winWidth  = Math.min(_baseW, _maxW);
+        const winHeight = Math.min(_baseH, _maxH);
+        const winLeft = Math.max(_margin, Math.round(W / 2 - winWidth / 2));
+        const winTop  = Math.max(_margin, Math.round((H - _taskbarH) / 2 - winHeight / 2));
         // Three.js canvas area inside window (below header ~140px)
         const headerH = 140;
         const canvasAreaH = winHeight - headerH - 16; // 16px for window padding/borders
