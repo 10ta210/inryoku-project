@@ -2279,6 +2279,63 @@
         u.uColorBirth.value = smoothstepJS(0.38, 0.92, rv);
         u.uLiquid.value     = smoothstepJS(0.45, 1.0, rv);
 
+        // ── 2026-05-18 段階12: Sphere ↔ legacy tunnel sync (Codex plan) ──
+        //   旧 rainbow tunnel (tunnelPlane / tunnelMat) を「球から生まれる背景」
+        //   として復権させる。球の uReveal / uBang に応じて alpha / rainbow /
+        //   radius を駆動 → トンネルが球の状態を反映して立ち上がる。
+        //   ※ tunnelPlane.visible 自体は legacy phase ロジック側 (phase >= WARP_GROW)
+        //     で既に true になるが、stage1 時間軸で先行的に visible にしておくと
+        //     reveal 0.7+ で薄く立ち上がってブレイクスルー前後を繋げる。
+        try {
+            if (state.scene) {
+                const bangV = (u.uBang && typeof u.uBang.value === 'number') ? u.uBang.value : 0;
+                const tunnelObj = state.scene.getObjectByName('p1-old-tunnel-plane');
+                if (tunnelObj && tunnelObj.material && tunnelObj.material.uniforms) {
+                    const tu = tunnelObj.material.uniforms;
+                    // alpha: reveal<0.7 → 微か (~0.10) / 0.7-1.0 → 0.10→0.4
+                    //        rv>=1.0 (breakthrough) → 0.4→0.9 (bang で押し上げ)
+                    let tAlpha;
+                    if (rv < 0.7) {
+                        tAlpha = 0.10 * smoothstepJS(0.35, 0.70, rv);
+                    } else if (rv < 1.0) {
+                        tAlpha = 0.10 + (0.40 - 0.10) * smoothstepJS(0.70, 1.0, rv);
+                    } else {
+                        // breakthrough 以降は bang で 0.4 → 0.9 へ
+                        tAlpha = 0.40 + 0.50 * bangV;
+                    }
+                    if (tu.u_alpha) {
+                        // 既存 legacy ロジックの値が大きい場合は尊重 (上書きしすぎない)
+                        tu.u_alpha.value = Math.max(tu.u_alpha.value || 0, tAlpha);
+                    }
+                    if (tu.u_rainbow) {
+                        // rainbow: reveal で 0 → 0.7, bang で 0.7 → 1.0
+                        const tRainbow = Math.min(1.0,
+                            0.70 * smoothstepJS(0.55, 1.0, rv) + 0.30 * bangV);
+                        tu.u_rainbow.value = Math.max(tu.u_rainbow.value || 0, tRainbow);
+                    }
+                    if (tu.u_radius) {
+                        // radius: 球から滲み出る半径感
+                        const tRadius = 0.05
+                            + 0.35 * smoothstepJS(0.55, 1.0, rv)
+                            + 0.25 * bangV;
+                        tu.u_radius.value = Math.max(tu.u_radius.value || 0, tRadius);
+                    }
+                    // reveal 0.55+ で visible (球の準備完了で薄く立ち上げる)
+                    if (rv >= 0.55 && tunnelObj.visible === false) {
+                        tunnelObj.visible = true;
+                    }
+                }
+                // warpTunnelPlane: 「ぼんやり光」レイヤーは 30% に弱める
+                const warpObj = state.scene.getObjectByName('p1-old-warp-tunnel');
+                if (warpObj && warpObj.material && warpObj.material.uniforms) {
+                    const wu = warpObj.material.uniforms;
+                    if (wu.u_alpha && wu.u_alpha.value > 0.30) {
+                        wu.u_alpha.value = wu.u_alpha.value * 0.30;
+                    }
+                }
+            }
+        } catch (e) {}
+
         // ── 2026-05-17 段階2.4: 音声キュー (drone → harmonics → duck → arrival) ──
         if (!REDUCE_MOTION) {
             if (!state.audio_droneFired && rv > 0.0 && rv < 0.05) {

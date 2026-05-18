@@ -3451,17 +3451,46 @@ function renderPhase1() {
         (function renderLoop() {
             if (!alive) return;
             tick();
-            // 2026-05-18 段階10.3: B案では legacy 演出を復活させたので scissor も復活必須。
-            // scissor を切ると bgPlane (小 world 座標) が画面中央に小さく表示される。
-            // 段階9 で disable していたのを撤回 — 常に scissor 動かす。
-            updateScissorFromDOM();
-            if (scissor.enabled) {
-                renderer.setScissorTest(true);
-                renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
-                renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
-            } else {
+            // 2026-05-18 段階12: 101% 突破後は scissor を切ってトンネルをフル画面に
+            //   球が出てくる 0-100% は Win95 スクエア内 (scissor on)、
+            //   101% 以降 (BREACH/CONSUME/COLLAPSE) は scissor off + tunnelMesh を
+            //   ortho 全画面いっぱいに拡大。球は scissor 対象外なので残る。
+            const fullViewportPhase =
+                (phase === PH.EVENT_BREACH ||
+                 phase === PH.CONSUME ||
+                 phase === PH.EVENT_COLLAPSE ||
+                 phase === PH.DONE);
+
+            // tunnelMesh を full viewport phase で拡大
+            try {
+                const tunnelMesh = scene.getObjectByName('p1-old-tunnel-plane');
+                if (tunnelMesh) {
+                    if (fullViewportPhase) {
+                        // tunnelSize = max(camW,camH)*4 で作成済み。
+                        // 念のため少し余裕を持って 1.2 倍に。
+                        tunnelMesh.scale.setScalar(1.2);
+                    } else {
+                        tunnelMesh.scale.setScalar(1.0);
+                    }
+                }
+            } catch (e) {}
+
+            if (fullViewportPhase) {
+                // 段階12: フル画面トンネル
+                scissor.enabled = false;
                 renderer.setScissorTest(false);
                 renderer.setViewport(0, 0, W, H);
+            } else {
+                // 段階10.3: legacy 演出区間は scissor 維持 (sq-border 内に閉じ込め)
+                updateScissorFromDOM();
+                if (scissor.enabled) {
+                    renderer.setScissorTest(true);
+                    renderer.setScissor(scissor.x, scissor.y, scissor.w, scissor.h);
+                    renderer.setViewport(scissor.x, scissor.y, scissor.w, scissor.h);
+                } else {
+                    renderer.setScissorTest(false);
+                    renderer.setViewport(0, 0, W, H);
+                }
             }
             if (composer) composer.render(); else renderer.render(scene, camera);
             requestAnimationFrame(renderLoop);
