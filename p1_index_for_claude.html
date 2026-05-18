@@ -55,15 +55,15 @@
   </script>
   <div id="root"></div>
 
-  <!-- P1 Stage 1 拡張シーン (2026-05-17 太極→グレー溶解) -->
-  <script src="p1_stage1_taichi.js?v=20260517a"></script>
-  <!-- 2026-05-18 段階10 B案: Stage 3/5/6/7 を一旦無効化（旧 tunnelPlane を復活させる）
-       司さん指示: 「球は今のまま、周り（飲み込みアニメ）だけ元に戻す」
-  <script src="p1_stage3_tunnel.js?v=20260517"></script>
-  <script src="p1_stage5_white.js?v=20260518"></script>
-  <script src="p1_stage6_eye.js?v=20260518"></script>
-  <script src="p1_stage7_cross.js?v=20260518"></script>
-  -->
+  <!-- P1 Stage 1 拡張シーン (2026-05-17 太極→グレー溶解 / 2026-05-18 Stage 13 clean reset) -->
+  <script src="p1_stage1_taichi.js?v=20260518s13"></script>
+  <!-- 2026-05-18 Stage 13 (clean reset): Stage 6 (eye) / Stage 7 (cross) を再有効化。
+       Stage 5 (white world) は p1_stage1_taichi.js の uWhiteBirth に inlined されたため
+       一旦コメントアウト維持。Stage 3 (tunnel) は chaos 扱いで停止のまま。 -->
+  <!-- <script src="p1_stage3_tunnel.js?v=20260517"></script> -->
+  <!-- <script src="p1_stage5_white.js?v=20260518"></script> -->
+  <script src="p1_stage6_eye.js?v=20260518s13"></script>
+  <script src="p1_stage7_cross.js?v=20260518s13"></script>
 
   <!-- P1コード -->
   <script src="p1_code_for_claude.js?v=20260405onebit1"></script>

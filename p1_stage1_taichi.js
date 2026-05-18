@@ -15,6 +15,15 @@
     'use strict';
     if (typeof window === 'undefined') return;
 
+    // 2026-05-18 P1 Stage 13: clean reset — one linear cinematic timeline post-50%
+    //   When P1_STAGE13_RESET is true, all chaos overlays (tunnel/quantum/reality
+    //   frame/glitch/warp) are no-oped and a single unified timeline runs.
+    //   Set to false to restore previous Stage12 behavior (revert path).
+    window.P1_STAGE13_RESET = (typeof window.P1_STAGE13_RESET === 'boolean')
+        ? window.P1_STAGE13_RESET : true;
+    window.inryokuP1 = window.inryokuP1 || {};
+    window.inryokuP1.stage13Reset = window.P1_STAGE13_RESET;
+
     // prefers-reduced-motion 検出
     const REDUCE_MOTION = (typeof window.matchMedia === 'function')
         ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -223,6 +232,8 @@
         uniform float uWhitePhase;  // white world での tint (0..1)
         uniform float uEyePhase;    // eye phase 中の瞳孔風 (0..1)
         uniform float uCrossPhase;  // cross phase の中心グロー (0..1)
+        // 2026-05-18 Stage 13: 球そのものが白光へ変容するブレンド係数
+        uniform float uWhiteBirth;  // 0=RGBCMY 球 / 1=純白光球
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -362,6 +373,13 @@
             // white world tint (RGB混合の白)
             col = mix(col, vec3(1.0), uWhitePhase * 0.42);
             col += fresnel * vec3(1.0) * uWhitePhase * 0.7;
+            // 2026-05-18 Stage 13: 球の白光変容
+            //   uWhiteBirth 0→1 で RGBCMY 表面が白核 + リム発光へ
+            vec3 whiteCore = vec3(1.0) * (1.2 + fresnel * 1.8);
+            float wbInner  = smoothstep(0.0, 1.0, uWhiteBirth);
+            float wbRim    = pow(1.0 - facing, 2.2);
+            col = mix(col, whiteCore, wbInner);
+            col += (1.0 - wbInner) * wbRim * 0.35;
             // eye depth (中心に小さな暗い瞳孔)
             float eyeDepth = uEyePhase * pow(facing, 5.0);
             col = mix(col, vec3(0.02), eyeDepth * 0.18);
@@ -373,7 +391,7 @@
             // ── 2026-05-18 段階4.1: 球は最後まで残す（観測の核）
             // 旧: uBang で 85% 消失 → 修正: 20% 微減衰のみ。常時可視
             // 2026-05-18 段階5以降: bang 後は alpha を 1.0 へ復元 (uWhitePhase/uEyePhase/uCrossPhase が立てば不透明)
-            float postBang = max(max(uWhitePhase, uEyePhase), uCrossPhase);
+            float postBang = max(max(max(uWhitePhase, uEyePhase), uCrossPhase), uWhiteBirth);
             float alphaOut = uTaichiMix * mix(
                 1.0 - smoothstep(0.45, 1.0, uBang) * 0.20,
                 1.0,
@@ -385,6 +403,14 @@
 
     // イージング
     function easeOutCubic(t) { return 1.0 - Math.pow(1.0 - t, 3.0); }
+    // 2026-05-18 Stage 13: 陰陽→グレー→RGBCMY のホールド→ジャンプカーブ
+    function holdThenJump(t) {
+        if (t < 0.55) {
+            const k = t / 0.55;
+            return (4 * k * k - 3 * k * k * k) * 0.45;
+        }
+        return 0.45 + Math.pow((t - 0.55) / 0.45, 0.55) * 0.55;
+    }
     function easeInOutCubic(t) {
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
@@ -499,6 +525,15 @@
         realityFrame: null,       // { source, clone }
         screenWarp: null,         // fullscreen warp overlay element
         realityFrameRoot: null,   // discoverRealityFrameRoot() cached result
+        // 2026-05-18 Stage 13: clean reset linear timeline (post-50%)
+        stage13Started: false,
+        stage13T0: 0,
+        s13_whiteFired: false,
+        s13_eyeFired: false,
+        s13_eyeOpenFired: false,
+        s13_crossFired: false,
+        s13_p2Fired: false,
+        s13_chaosHidden: false,
     };
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
@@ -639,6 +674,7 @@
     // 2026-05-18 段階8: fullscreen 化 (100vw/100vh) — 外枠を viewport 全体に拡張し
     //   ingest collapse 後の外側残骸 (page 背景) を見せない。
     function createRealityFrameClone() {
+        if (window.P1_STAGE13_RESET) return null; // Stage 13: chaos overlay disabled
         try {
             const source = discoverRealityFrameRoot();
             if (!source) return null;
@@ -739,6 +775,7 @@
 
     // 2026-05-18 段階4.2: フルビューポート warp overlay (圧縮 blur gradient)
     function createScreenWarpOverlay() {
+        if (window.P1_STAGE13_RESET) return null; // Stage 13: chaos overlay disabled
         try {
             const overlay = document.createElement('div');
             overlay.className = 'p1-screen-warp';
@@ -1370,6 +1407,7 @@
     // UI ingest と並行して動く。CMY = particle path / RGB = wave path。
     // uCollapse 0→1 で散らばった粒子が中心 (sphere) に収束する。
     function buildQuantumCollapseParticles() {
+        if (window.P1_STAGE13_RESET) return null; // Stage 13: chaos overlay disabled
         if (!state.scene || !state.camera || typeof THREE === 'undefined') return null;
         if (state.quantumPoints) return state.quantumPoints; // 二重生成防止
         const COUNT = IS_MOBILE ? 900 : 1800;
@@ -1901,6 +1939,8 @@
                 uWhitePhase:  { value: 0 },
                 uEyePhase:    { value: 0 },
                 uCrossPhase:  { value: 0 },
+                // 2026-05-18 Stage 13: white-birth (球そのものが白光へ変容)
+                uWhiteBirth:  { value: 0 },
             },
             transparent: true,
             depthWrite: false,
@@ -1994,8 +2034,140 @@
         state.rafId = requestAnimationFrame(tick);
     }
 
+    // 2026-05-18 Stage 13: chaos overlay を強制非表示 (1 度だけ)
+    function hideChaosOverlays() {
+        if (!state.scene) return;
+        const names = [
+            'p1-old-tunnel-plane',
+            'p1-old-halo-plane',
+            'p1-old-warp-tunnel'
+            // bgPlane (p1-old-dual-bg) は legacy merge 表示のため残す
+        ];
+        names.forEach(function(n) {
+            const o = state.scene.getObjectByName(n);
+            if (o) o.visible = false;
+        });
+    }
+
+    // 2026-05-18 Stage 13: single linear cinematic timeline post-50%
+    //   0.0-2.0s : legacy merge afterglow (sphere invisible)
+    //   2.0-3.2s : 陰陽球出現 (scale 0→1, uTaichiMix 0→1)
+    //   3.2-7.2s : morph 陰陽 → グレー → RGBCMY (uReveal)
+    //   7.2-8.7s : RGBCMY → 白光変容 (uWhiteBirth)
+    //   8.7-10.2s: 白世界, eye fade-in (uEyePhase)
+    //   10.2-11.2s: 目が開く (time freeze)
+    //   11.2-12.7s: 十字架閃光 (uCrossPhase)
+    //   12.7-14.0s: vertical line → P2 transition
+    function updateStage13(t) {
+        const u = state.mat.uniforms;
+        u.uTime.value = t;
+        if (state.camera && u.uCameraPos) {
+            u.uCameraPos.value.copy(state.camera.position);
+        }
+        // 球はゆったり回転 (12°/s)
+        state.mesh.rotation.y = t * 0.2094;
+
+        if (!state.s13_chaosHidden) {
+            state.s13_chaosHidden = true;
+            hideChaosOverlays();
+        }
+
+        if (t < 2.0) {
+            // Phase 0: legacy merge afterglow — 球は完全に不可視
+            state.mesh.visible = false;
+            u.uTaichiMix.value = 0;
+            u.uReveal.value    = 0;
+            return;
+        }
+        state.mesh.visible = true;
+
+        if (t < 3.2) {
+            // Phase A: 陰陽球出現 (scale 0→1, taichiMix 0→1)
+            const p = easeOutCubic((t - 2.0) / 1.2);
+            state.mesh.scale.setScalar(Math.max(0.001, p));
+            u.uTaichiMix.value = p;
+            u.uReveal.value    = 0;
+        } else if (t < 7.2) {
+            // Phase B: morph 陰陽 → グレー → RGBCMY
+            const raw = (t - 3.2) / 4.0;
+            state.mesh.scale.setScalar(1.0 + 0.03 * Math.sin(raw * Math.PI));
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = holdThenJump(Math.max(0, Math.min(1, raw)));
+            u.uWhiteBirth.value = 0;
+        } else if (t < 8.7) {
+            // Phase C: 白光変容 (同じ mesh、uWhiteBirth で塗り替え)
+            const p = (t - 7.2) / 1.5;
+            const ep = easeInOutCubic(Math.max(0, Math.min(1, p)));
+            state.mesh.scale.setScalar(1.0 + 0.02 * Math.sin(t * 1.2));
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
+            u.uWhiteBirth.value = ep;
+            // p>0.5 で白世界 stage 起動 (Stage5 inlined — Stage6 はこれを待つ)
+            if (p > 0.5 && !state.s13_whiteFired) {
+                state.s13_whiteFired = true;
+                state.stage2Fired = true; // 互換: 旧 stage2complete を抑止
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
+                } catch (e) {}
+            }
+        } else if (t < 10.2) {
+            // Phase D: 白世界 + 瞳の影が浮かぶ (eye fade-in)
+            u.uWhiteBirth.value = 1;
+            const ep = Math.max(0, Math.min(1, (t - 8.7) / 1.5));
+            u.uEyePhase.value = ep;
+            state.mesh.scale.setScalar(1.0);
+            if (!state.s13_eyeFired) {
+                state.s13_eyeFired = true;
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1stage5complete'));
+                } catch (e) {}
+            }
+        } else if (t < 11.2) {
+            // Phase E: 目が開く瞬間 (time-freeze illusion — sphere 静止)
+            u.uWhiteBirth.value = 1;
+            u.uEyePhase.value = 1;
+            state.mesh.scale.setScalar(1.0);
+            if (!state.s13_eyeOpenFired) {
+                state.s13_eyeOpenFired = true;
+            }
+        } else if (t < 12.7) {
+            // Phase F: 十字架閃光 (cross flash)
+            u.uWhiteBirth.value = 1;
+            u.uEyePhase.value = 1;
+            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 11.2) / 1.5));
+            if (!state.s13_crossFired) {
+                state.s13_crossFired = true;
+                try {
+                    window.dispatchEvent(new CustomEvent('inryoku:p1stage6complete'));
+                } catch (e) {}
+            }
+        } else if (t < 14.0) {
+            // Phase G: vertical line → P2 transition
+            u.uCrossPhase.value = 1;
+            if (!state.s13_p2Fired) {
+                state.s13_p2Fired = true;
+                try {
+                    window.__inryokuP1ToP2 = {
+                        from: 'cross',
+                        ts: performance.now(),
+                        seedLine: { x: 0, y0: -1, y1: 1, color: 'white', phase: 'vertical-axis' }
+                    };
+                    window.dispatchEvent(new CustomEvent('inryoku:p1complete'));
+                } catch (e) {}
+            }
+        } else {
+            // hold
+            u.uCrossPhase.value = 1;
+        }
+    }
+
     function updateStage(t) {
         if (!state.mat || !state.mesh) return;
+        // 2026-05-18 Stage 13: clean reset — 単一線形タイムライン
+        if (window.P1_STAGE13_RESET) {
+            updateStage13(t);
+            return;
+        }
         // 2026-05-18 段階3.2: dt 計算 (bar visualPct lerp 用)
         const nowMs = (typeof performance !== 'undefined') ? performance.now() : Date.now();
         const dt = state.lastTime ? Math.min(0.1, (nowMs - state.lastTime) / 1000) : 0.016;

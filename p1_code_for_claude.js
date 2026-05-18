@@ -2975,7 +2975,10 @@ function renderPhase1() {
                     updateWin95Status('Entering warp tunnel...');
                 }
 
-                if (et >= 4.0) { phase = PH.WARP_GROW; progPaused = false; yyPlane.visible = false; }
+                // 2026-05-18 Stage 13 (clean reset): EVENT_SING 以降の legacy chaos (WARP_GROW /
+                //   EVENT_BREACH / CONSUME / EVENT_COLLAPSE) を完全停止。Stage1 の updateStage13 が
+                //   単一の cinematic timeline を駆動する。bgPlane (legacy merge) はそのまま残る。
+                if (et >= 4.0 && !window.P1_STAGE13_RESET) { phase = PH.WARP_GROW; progPaused = false; yyPlane.visible = false; }
 
                 // ═══ PHASE 4: WARP_GROW (50→75%) — グレー画面が徐々にチューブだと気づく ═══
             } else if (phase === PH.WARP_GROW) {
