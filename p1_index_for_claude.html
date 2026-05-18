@@ -238,14 +238,25 @@
             });
         })();
 
-        // P1完了 → P2起動
+        // 2026-05-18 段階16: P1-only mode flag — P2/P3 へ飛ばさない
+        window.P1_ONLY_MODE = true;
+
+        // P1完了 → P2起動 (P1_ONLY_MODE=true なら起動しない)
         window.addEventListener('inryoku:p1complete', () => {
+          if (window.P1_ONLY_MODE !== false) {
+            console.log('[P1-only] p1complete fired but P2 not started');
+            return;
+          }
           console.log('✅ P1 complete — starting P2');
           renderPhase2();
         });
 
-        // P2完了 → P3起動
+        // P2完了 → P3起動 (P1_ONLY_MODE=true なら起動しない)
         window.addEventListener('inryoku:p2complete', () => {
+          if (window.P1_ONLY_MODE !== false) {
+            console.log('[P1-only] p2complete fired but P3 not started');
+            return;
+          }
           console.log('✅ P2 complete — starting P3');
           renderPhase3();
         });

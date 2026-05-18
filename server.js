@@ -789,16 +789,30 @@ a{color:rgba(255,255,255,0.4);text-decoration:none;border-bottom:1px solid rgba(
     }
     // .envや機密ファイルへのアクセスを拒否
     const basename = path.basename(filePath);
-    if (basename === '.env' || basename === '.gitignore' || filePath.startsWith(path.join(__dirname, 'data'))) {
-        res.writeHead(403); return res.end('Forbidden');
-    }
-    // 開発用ディレクトリ・プロンプト・ドキュメントをブロック（公開しない）
-    if (filePath.startsWith(path.join(__dirname, '_dev')) ||
-        filePath.startsWith(path.join(__dirname, 'prompts')) ||
-        filePath.startsWith(path.join(__dirname, 'docs')) ||
-        filePath.startsWith(path.join(__dirname, '.superpowers')) ||
-        filePath.startsWith(path.join(__dirname, '.claude'))) {
-        res.writeHead(404); return res.end('Not Found');
+    // 2026-05-18 段階16: P1-only エントリ p1_index_for_claude.html を明示的に許可
+    //   ※ 後続の任意のブロックルールに先んじて allow する
+    const STAGE16_ALLOW = new Set([
+        'p1_index_for_claude.html',
+        'p1_code_for_claude.js',
+        'p1_stage1_taichi.js',
+        'p1_stage3_tunnel.js',
+        'p1_stage5_white.js',
+        'p1_stage6_eye.js',
+        'p1_stage7_cross.js'
+    ]);
+    const isStage16Allowed = STAGE16_ALLOW.has(basename);
+    if (!isStage16Allowed) {
+        if (basename === '.env' || basename === '.gitignore' || filePath.startsWith(path.join(__dirname, 'data'))) {
+            res.writeHead(403); return res.end('Forbidden');
+        }
+        // 開発用ディレクトリ・プロンプト・ドキュメントをブロック（公開しない）
+        if (filePath.startsWith(path.join(__dirname, '_dev')) ||
+            filePath.startsWith(path.join(__dirname, 'prompts')) ||
+            filePath.startsWith(path.join(__dirname, 'docs')) ||
+            filePath.startsWith(path.join(__dirname, '.superpowers')) ||
+            filePath.startsWith(path.join(__dirname, '.claude'))) {
+            res.writeHead(404); return res.end('Not Found');
+        }
     }
 
     fs.stat(filePath, (err, stats) => {

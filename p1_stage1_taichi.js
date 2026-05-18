@@ -374,19 +374,18 @@
             // white world tint (RGB混合の白)
             col = mix(col, vec3(1.0), uWhitePhase * 0.42);
             col += fresnel * vec3(1.0) * uWhitePhase * 0.7;
-            // 2026-05-18 Stage 13: 球の白光変容
-            //   旧: col = mix(col, whiteCore, wbInner) — RGBCMY が一気に白で覆われ「別の球」感
-            //   2026-05-18 段階15: innerPulse + spectralRim 方式 (Codex P1-1)
-            //   白は中心から湧き上がり、RGBCMY リムは生き残る
-            vec3 currentRgbcmyCol = col; // (snapshot)
-            float wbWhite = smoothstep(0.0, 1.0, uWhiteBirth);
-            float wbInner = smoothstep(0.15, 0.95, wbWhite - length(vPosition) * 0.22);
-            float wbFres  = pow(1.0 - facing, 2.4);
-            vec3 spectralRim = currentRgbcmyCol * wbFres * (1.0 - wbWhite * 0.65);
-            vec3 whiteLight  = vec3(1.0) * (1.1 + wbFres * 1.4);
-            col = mix(currentRgbcmyCol, whiteLight, wbInner);
-            col += spectralRim;
-            col += vec3(1.0) * pow(wbWhite, 2.0) * 0.25;
+            // 2026-05-18 段階16: 白光は内部から滲み出るが、球の固体感を消す
+            //   旧（段階15）: innerPulse + spectralRim で「別の白球」感が残った
+            //   新（段階16・Claude版回帰）: Fresnel halo で「白い光」として表現
+            //   uWhiteBirth: 0=RGBCMY球, 1=ほぼ消えて halo/glow だけ残る
+            float wb = uWhiteBirth;
+            vec3 whiteCore = vec3(1.0);
+            // Fresnel halo (球の周囲から光が漏れる)
+            float wbFres = pow(1.0 - facing, 1.8);
+            vec3 lightCol = col;
+            lightCol = mix(lightCol, whiteCore, wb * 0.7);   // 70%まで白寄せ
+            lightCol += whiteCore * wbFres * wb * 2.5;       // halo
+            col = lightCol;
             // eye depth (中心に小さな暗い瞳孔)
             float eyeDepth = uEyePhase * pow(facing, 5.0);
             col = mix(col, vec3(0.02), eyeDepth * 0.18);
@@ -409,7 +408,12 @@
             //   uPremonitionAlpha=1.0 で従来動作と等価。
             float baseAlpha = max(alphaOut, uPremonitionAlpha);
             vec3  baseCol   = col * max(uTaichiMix, uPremonitionAlpha * 0.5);
-            gl_FragColor = vec4(baseCol, baseAlpha);
+            // 2026-05-18 段階16: uWhiteBirth が上がるにつれて球の固体感を消す
+            //   完全な白い光になるので、中心部は薄く・リムは強く
+            float surfaceFade = 1.0 - smoothstep(0.4, 1.0, uWhiteBirth) * 0.7;
+            float rimGlow = wbFres * smoothstep(0.0, 0.6, uWhiteBirth);
+            float finalA = baseAlpha * surfaceFade + rimGlow * 0.4;
+            gl_FragColor = vec4(baseCol, clamp(finalA, 0.0, 1.0));
         }
     `;
 
@@ -2296,6 +2300,21 @@
 
         // 2026-05-18 段階15: loading bar / text を Stage 13 タイムラインに同期 (Codex P0-2)
         updateStage13Bar(t);
+
+        // 2026-05-18 段階16: 101% breakthrough 後は背景を黒に固定
+        if (t >= 7.2 && !state.bgBlackSet) {
+            state.bgBlackSet = true;
+            try {
+                if (state.renderer && state.renderer.setClearColor) {
+                    state.renderer.setClearColor(0x000000, 1);
+                }
+                if (typeof document !== 'undefined') {
+                    document.body.style.background = '#000';
+                    const root = document.querySelector('.phase-1');
+                    if (root) root.style.background = '#000';
+                }
+            } catch (e) {}
+        }
 
         // 2026-05-18 段階15 P0-1: 球は 0-2s でも消さず "premonition core" として薄く可視。
         //   旧: state.mesh.visible = false; return;
