@@ -2022,6 +2022,40 @@
             } catch (e) {}
         }
 
+        // 2026-05-18 段階11: 全 legacy material に「球の中心 UV」を配る
+        //   各 plane は world (0,0,*) 中心に置かれているので、球の world XY を
+        //   plane の幅高さで正規化して UV (0..1) を求める。
+        //   これで tunnel/halo/warp/bg-swirl の中心点が必ず球の位置になる。
+        try {
+            if (state.camera && state.mesh && state.scene) {
+                const wp = state.mesh.getWorldPosition(new THREE.Vector3());
+                const targets = [
+                    'p1-old-tunnel-plane',
+                    'p1-old-halo-plane',
+                    'p1-old-warp-tunnel',
+                    'p1-old-dual-bg'
+                ];
+                for (let i = 0; i < targets.length; i++) {
+                    const obj = state.scene.getObjectByName(targets[i]);
+                    if (!obj || !obj.material || !obj.material.uniforms) continue;
+                    if (!obj.material.uniforms.u_centerUV) continue;
+                    // plane の world サイズを推定（geometry.parameters.width/height × scale）
+                    const geom = obj.geometry;
+                    let pw = 1, ph = 1;
+                    if (geom && geom.parameters) {
+                        pw = (geom.parameters.width  || 1) * (obj.scale.x || 1);
+                        ph = (geom.parameters.height || 1) * (obj.scale.y || 1);
+                    }
+                    // plane の world 中心からのオフセットを正規化 → UV
+                    const localX = wp.x - obj.position.x;
+                    const localY = wp.y - obj.position.y;
+                    const uvx = 0.5 + (pw > 0 ? localX / pw : 0);
+                    const uvy = 0.5 + (ph > 0 ? localY / ph : 0);
+                    obj.material.uniforms.u_centerUV.value.set(uvx, uvy);
+                }
+            }
+        } catch (e) {}
+
         // ── Scene A (0.0 → 1.2s): taichi 出現 ──
         if (t < 0.4) {
             const p = easeOutCubic(t / 0.4);

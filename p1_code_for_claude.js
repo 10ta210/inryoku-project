@@ -1321,7 +1321,8 @@ function renderPhase1() {
         // ── Background split (square-sized plane) ──
         const bgMat = new THREE.ShaderMaterial({
             // 2026-05-18 段階9: u_frameCollapse 追加 — Stage1 拡張時に reality frame を中心に swirl 収束
-            uniforms: { u_grey: { value: 0 }, u_flash: { value: 0 }, u_time: { value: 0 }, u_pixelSize: { value: 8.0 }, u_vortex: { value: 0.0 }, u_vortexAngle: { value: 0.0 }, u_frameCollapse: { value: 0 } },
+            // 2026-05-18 段階11: u_centerUV 追加 — Stage1 球の screen UV を受け取り、frame collapse swirl を球中心へ
+            uniforms: { u_grey: { value: 0 }, u_flash: { value: 0 }, u_time: { value: 0 }, u_pixelSize: { value: 8.0 }, u_vortex: { value: 0.0 }, u_vortexAngle: { value: 0.0 }, u_frameCollapse: { value: 0 }, u_centerUV: { value: new THREE.Vector2(0.5, 0.5) } },
             vertexShader: VS,
             fragmentShader: [
                 'precision highp float;',
@@ -1329,6 +1330,8 @@ function renderPhase1() {
                 'uniform float u_grey, u_flash, u_time, u_pixelSize, u_vortex, u_vortexAngle;',
                 // 2026-05-18 段階9: frame collapse (Stage1 拡張から駆動)
                 'uniform float u_frameCollapse;',
+                // 2026-05-18 段階11: 球の screen UV (0..1) — swirl 中心
+                'uniform vec2 u_centerUV;',
                 '',
                 'vec2 pixelate(vec2 uv) {',
                 '  if(u_pixelSize <= 1.0) return uv;',
@@ -1372,15 +1375,16 @@ function renderPhase1() {
                 'void main() {',
                 '  vec2 uv = pixelate(vUv);',
                 // 2026-05-18 段階9: frame collapse — 白/黒の境界を中心に巻き込み swirl
+                // 2026-05-18 段階11: swirl 中心を球位置 (u_centerUV) へ
                 '  if (u_frameCollapse > 0.001) {',
-                '    vec2 _p = uv - 0.5;',
+                '    vec2 _p = uv - u_centerUV;',
                 '    float _collapse = clamp(u_frameCollapse, 0.0, 1.0);',
                 '    float _corner = pow(abs(_p.x * _p.y) * 4.0, 0.55);',
                 '    _p -= normalize(_p + vec2(0.0001)) * _corner * _collapse * 0.34;',
                 '    float _twist = _collapse * (1.0 - length(_p)) * 2.8;',
                 '    float _a = atan(_p.y, _p.x) + _twist;',
                 '    _p = vec2(cos(_a), sin(_a)) * length(_p);',
-                '    uv = _p + 0.5;',
+                '    uv = _p + u_centerUV;',
                 '  }',
                 // ── 墨流しモード（Suminagashi — 有機的インク混合） ──
                 '  float sumiAmt = 0.0;',
@@ -1396,8 +1400,8 @@ function renderPhase1() {
                 '    float flow3 = fbm(vec2(uv.y * 15.0 + t * 0.3, uv.x * 12.0 - t * 0.18)) - 0.5;',
                 //   合成: 振幅が時間とともに広がる
                 '    sumiAmt = (flow1 * 0.45 + flow2 * 0.3 + flow3 * 0.12) * intensity;',
-                //   緩やかな渦（墨流しの回転運動）
-                '    vec2 center = vec2(0.5);',
+                //   緩やかな渦（墨流しの回転運動） — 2026-05-18 段階11: 球位置を中心に
+                '    vec2 center = u_centerUV;',
                 '    vec2 toC = uv - center;',
                 '    float r = length(toC);',
                 '    float slowTwist = intensity * 3.0 * (1.0 - r * 0.8);',
@@ -1447,15 +1451,19 @@ function renderPhase1() {
                 u_direction: { value: 1.0 },  // 1=外向き(WARP_GROW), -1=内向き(CONSUME)
                 u_speed:     { value: 0.06 }, // リングスクロール速度 (シェーダー内で加速)
                 u_progress:  { value: 0.0 },  // フェーズ内進捗 0-1
+                // 2026-05-18 段階11: 球の screen UV (0..1) — トンネル中心
+                u_centerUV:  { value: new THREE.Vector2(0.5, 0.5) },
             },
             vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
             fragmentShader: [
                 'precision highp float;',
                 'varying vec2 vUv;',
                 'uniform float u_time, u_alpha, u_direction, u_speed, u_progress;',
+                // 2026-05-18 段階11: 球 screen UV を中心に
+                'uniform vec2 u_centerUV;',
                 '',
                 'void main(){',
-                '  vec2 p = (vUv - 0.5) * 2.0;',
+                '  vec2 p = (vUv - u_centerUV) * 2.0;',
                 '  float r = length(p);',
                 '',
                 '  // RGBCMY 6色 — 補色ペア順: R↔C, G↔M, B↔Y',
@@ -2154,15 +2162,19 @@ function renderPhase1() {
                 u_depth: { value: 0 },          // 奥行き (0=flat, 1=deep)
                 u_ringDensity: { value: 3.0 },   // リング密度
                 u_scrollMul: { value: 0.2 },     // スクロール速度倍率
-                u_rainbow: { value: 0.0 }        // 虹の滲み出し量 (0=グレー, 1=フルレインボー)
+                u_rainbow: { value: 0.0 },       // 虹の滲み出し量 (0=グレー, 1=フルレインボー)
+                // 2026-05-18 段階11: 球 screen UV (0..1) — トンネル放射中心
+                u_centerUV: { value: new THREE.Vector2(0.5, 0.5) }
             },
             vertexShader: VS,
             fragmentShader: [
                 'precision highp float;varying vec2 vUv;',
                 'uniform float u_time,u_radius,u_alpha,u_scale,u_depth,u_ringDensity,u_scrollMul,u_rainbow;',
+                // 2026-05-18 段階11: 球 screen UV を中心に
+                'uniform vec2 u_centerUV;',
                 '',
                 'void main(){',
-                '  vec2 p=(vUv-0.5)*2.0*u_scale;',
+                '  vec2 p=(vUv-u_centerUV)*2.0*u_scale;',
                 '  float r=length(p);',
                 '  float mask=1.0-smoothstep(u_radius-0.02,u_radius,r);',
                 '  if(mask<0.005)discard;',
@@ -2226,12 +2238,14 @@ function renderPhase1() {
 
         // ── Halo (demo_pattern_d移植 — 球の背後のグロー) ──
         const haloMat = new THREE.ShaderMaterial({
-            uniforms: { u_glow: { value: 0 }, u_time: { value: 0 } },
+            // 2026-05-18 段階11: u_centerUV 追加 — Halo 中心を球位置へ
+            uniforms: { u_glow: { value: 0 }, u_time: { value: 0 }, u_centerUV: { value: new THREE.Vector2(0.5, 0.5) } },
             vertexShader: VS,
             fragmentShader: [
                 'precision highp float;varying vec2 vUv;uniform float u_glow,u_time;',
+                'uniform vec2 u_centerUV;',
                 'void main(){',
-                '  vec2 p=(vUv-0.5)*2.0;float r=length(p);',
+                '  vec2 p=(vUv-u_centerUV)*2.0;float r=length(p);',
                 '  float glow=exp(-r*r*2.0)*u_glow;',
                 '  vec3 col=vec3(0.7);',
                 '  float angle=atan(p.y,p.x);',
