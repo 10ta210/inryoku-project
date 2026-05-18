@@ -651,6 +651,11 @@
                 ids.forEach(function(n){ n.id = 'rfc-' + n.id; });
                 clone.id = 'p1-reality-frame-clone';
             } catch (e) {}
+            // 2026-05-18 段階8.1: clone は UI シェルのみ。WebGL canvas を剥がして
+            //   下層 Three.js (sphere/tunnel/eye/cross) を遮蔽しないようにする。
+            try {
+                clone.querySelectorAll('canvas').forEach(function(c){ c.remove(); });
+            } catch (e) {}
             Object.assign(clone.style, {
                 position: 'fixed',
                 left: '0',
@@ -665,10 +670,49 @@
                 willChange: 'transform, opacity, filter, clip-path'
             });
             document.body.appendChild(clone);
-            // 元の root を hide (レイアウトは保持)
-            source.style.visibility = 'hidden';
+            // 2026-05-18 段階8.1: source.style.visibility='hidden' を撤去。
+            //   .phase-1 全体を隠すと中の Three.js canvas まで消えて black-screen 化する。
+            //   個別 UI 要素は hideP1UiOnly() で隠す。
+            // 旧コード: source.style.visibility = 'hidden';
             return { source: source, clone: clone };
         } catch (e) { return null; }
+    }
+
+    // 2026-05-18 段階8.1: 個別 UI 要素のみ隠す (.phase-1 root や canvas は触らない)
+    //   Codex root-cause fix: .phase-1 を visibility:hidden すると中の Three.js canvas
+    //   まで消えるので、UI セレクタ単位で hide する。canvas には絶対付与しない。
+    function hideP1UiOnly() {
+        try {
+            const phase = document.querySelector('.phase-1');
+            if (!phase) return;
+            const selectors = [
+                '#win95-main', '#p1-lpct', '#p1-lb', '#exit-runner',
+                '.p1-loader', '.p1-window', '.p1-panel',
+                '.p1-left-panel', '.p1-right-panel', '.p1-copy', '.p1-label'
+            ];
+            selectors.forEach(function(sel){
+                phase.querySelectorAll(sel).forEach(function(el){
+                    if (el.tagName === 'CANVAS') return; // never hide canvas
+                    el.classList.add('p1-ui-hidden-after-collapse');
+                });
+            });
+        } catch (e) {}
+    }
+
+    // 2026-05-18 段階8.1: 防御的に .phase-1 と canvas の visibility/opacity/z-index を持ち上げる
+    function liftP1Canvas() {
+        try {
+            const phase = document.querySelector('.phase-1');
+            if (phase) {
+                phase.style.visibility = 'visible';
+                phase.style.opacity = '1';
+            }
+            document.querySelectorAll('.phase-1 canvas').forEach(function(canvas){
+                canvas.style.visibility = 'visible';
+                canvas.style.opacity = '1';
+                canvas.style.zIndex = '20';
+            });
+        } catch (e) {}
     }
 
     // 2026-05-18 段階8: void backdrop — collapse 後の真の暗黒を保証
@@ -1120,6 +1164,12 @@
                 '  68%  { transform: translateX(10px) scaleX(.8); }',
                 '  84%  { transform: translateX(-6px) scaleX(1.08); }',
                 '  100% { transform: translateX(4px); }',
+                '}',
+                // ── 2026-05-18 段階8.1: 個別 UI 要素 hide (black-screen 修正) ──
+                '.p1-ui-hidden-after-collapse {',
+                '  opacity: 0 !important;',
+                '  visibility: hidden !important;',
+                '  pointer-events: none !important;',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -1522,9 +1572,21 @@
             state.uiIngestSource = pair.source;
             // フルスクリーン warp overlay
             state.screenWarp = createScreenWarpOverlay();
-            // 2026-05-18 段階8: void backdrop + body 黒化 + 残存 UI 隠蔽
-            try { document.body.style.background = '#000'; } catch (e) {}
-            try { state.voidBackdrop = createVoidBackdrop(); } catch (e) {}
+            // 2026-05-18 段階8.1: black-screen 修正
+            //   旧: body.background='#000' + createVoidBackdrop() + .phase-1 visibility:hidden
+            //        → 下層 Three.js canvas (sphere/tunnel/eye/cross) を全部黒で覆い隠していた。
+            //   新: void backdrop と body 黒化を撤去 (Three.js scene の暗背景がそのまま見える)、
+            //        個別 UI のみ hideP1UiOnly() で hide、canvas は liftP1Canvas() で持ち上げる。
+            // 旧コード:
+            //   try { document.body.style.background = '#000'; } catch (e) {}
+            //   try { state.voidBackdrop = createVoidBackdrop(); } catch (e) {}
+            try { hideP1UiOnly(); } catch (e) {}
+            try { liftP1Canvas(); } catch (e) {}
+            try {
+                console.log('[P1 stage8.1] canvases:',
+                    document.querySelectorAll('canvas').length,
+                    'phase:', !!document.querySelector('.phase-1'));
+            } catch (e) {}
             try {
                 const runner = document.getElementById('exit-runner');
                 if (runner) {
