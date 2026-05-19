@@ -2866,6 +2866,16 @@ function renderPhase1() {
                 if (!singDimSwitched) {
                     singDimSwitched = true;
                     renderer.setPixelRatio(window.devicePixelRatio);
+                    // 2026-05-19 段階19.10 (Codex Opus): pixelRatio 切替に composer/bloom を追従
+                    //   これを忘れると unlock 後に小さな RT を全画面へ blit → 右上に miniature
+                    try {
+                        if (composer && composer.setSize) {
+                            composer.setSize(window.innerWidth, window.innerHeight);
+                        }
+                        if (bloom && bloom.setSize) {
+                            bloom.setSize(window.innerWidth, window.innerHeight);
+                        }
+                    } catch (e) { console.warn('[P1 19.10] composer resize', e); }
                     bgMat.uniforms.u_pixelSize.value = 1.0;
                     if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
                     // 2026-04-23: DUALITY の引き伸ばしはそのまま引き継ぐ (scale リセットしない)
@@ -3499,6 +3509,17 @@ function renderPhase1() {
                         camera.top    =  camHFull;
                         camera.bottom = -camHFull;
                         camera.updateProjectionMatrix();
+                        // 2026-05-19 段階19.10 (Codex Opus): unlock 時に renderer/composer/bloom
+                        //   を物理ピクセルに同期。これを抜くと「右上 miniature」現象が出る。
+                        try {
+                            renderer.setSize(window.innerWidth, window.innerHeight, false);
+                            if (composer && composer.setSize) {
+                                composer.setSize(window.innerWidth, window.innerHeight);
+                            }
+                            if (bloom && bloom.setSize) {
+                                bloom.setSize(window.innerWidth, window.innerHeight);
+                            }
+                        } catch (e) { console.warn('[P1 19.10 unlock]', e); }
                     }
                 } catch (e) {}
             } else if (fullViewportPhase) {
