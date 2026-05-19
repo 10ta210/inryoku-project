@@ -3532,6 +3532,31 @@ function renderPhase1() {
                                 });
                             }
                             console.log('[P1 19.11 unlock OK]', { iw, ih, pr: renderer.getPixelRatio(), buf: [renderer.domElement.width, renderer.domElement.height] });
+                            // 2026-05-20 段階19.12 (Codex Opus 予測 P-A): 旧 stage 残存 mesh 強制 cleanup
+                            //   right-upper miniature の真因候補: scene 内に旧 mesh が visible のまま残り
+                            //   ortho zoom=1 で右上に小さく描画されている。name + userData.stage で殲滅。
+                            try {
+                                const STALE_NAMES = [
+                                    'p1-old-tunnel-plane','p1-old-halo-plane','p1-old-warp-tunnel',
+                                    'p1-old-grey-sphere','yyPlane','haloPlane','tunnelPlane',
+                                    'warpTunnelPlane','bgPlane','greySphere','newtonRingPlane',
+                                    'accretionDisk'
+                                ];
+                                scene.traverse(function(o){
+                                    if (!o.isMesh && !o.isPoints && !o.isSprite) return;
+                                    const stale = STALE_NAMES.indexOf(o.name) >= 0
+                                        || (o.userData && (o.userData.stage === 1 || o.userData.stage === 2 ||
+                                                           o.userData.stage === 3 || o.userData.stage === 4));
+                                    // Stage 1 球 (p1Stage1TaichiSphere) は eye/cross にも使うので消さない
+                                    if (o.name === 'p1Stage1TaichiSphere') return;
+                                    if (stale) { o.visible = false; }
+                                });
+                                // ingest clone DOM の漏れも保険で除去
+                                document.querySelectorAll('#p1-ui-shell-clone,[data-p1-clone]').forEach(function(el){
+                                    try { el.remove(); } catch (e) {}
+                                });
+                                console.log('[P1 19.12] stale stage cleanup done');
+                            } catch (e) { console.warn('[P1 19.12 cleanup]', e); }
                         } catch (e) { console.warn('[P1 19.11 unlock]', e); }
                     } else {
                         // 毎フレーム viewport を保険で再設定 (B 仮説防御)

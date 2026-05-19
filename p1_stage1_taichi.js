@@ -319,7 +319,7 @@
             float angle = atan(p.y, p.x);
             float s = sin(angle + sin(p.y * 3.8 + uTime * 0.4) * 0.32 + p.z * 0.7);
             float yin = smoothstep(-0.06, 0.06, s);
-            vec3 taichi = mix(vec3(0.015), vec3(0.82), yin);
+            vec3 taichi = mix(vec3(0.0), vec3(1.0), yin);
             vec3 grey   = vec3(0.50);
             vec3 base   = mix(taichi, grey, greyMix);
 
