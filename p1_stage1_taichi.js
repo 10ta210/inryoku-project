@@ -2294,18 +2294,23 @@
     // 2026-05-18 段階15: Stage 13 loading bar sync (Codex P0-2)
     //   バー (#p1-lb) とテキスト (#p1-lpct) を Stage 13 の 14s タイムラインに合わせて駆動。
     //   50→99.5 → wall(100) → breach(101)
+    // 2026-05-19 段階19: 22s timeline (option A 中速) — bar progress 再設計
+    // 0-13s: 50→99.5 (smoothstep) / 13-14s: 100 wall / 14s+: 101 breach
     function stage13Progress(t) {
-        const p = Math.max(0, Math.min(1, t / 14.0));
-        if (p < 0.72) {
-            const k = p / 0.72;
-            // smoothstep ease (4k³ - 3k⁴)
-            const ease = 4 * Math.pow(k, 3) - 3 * Math.pow(k, 4);
+        if (t < 13.0) {
+            const p = Math.max(0, Math.min(1, t / 13.0));
+            const ease = p * p * (3 - 2 * p); // smoothstep
             return 50 + ease * 49.5; // 50 → 99.5
         }
-        if (p < 0.78) return 100; // wall
-        const br = (p - 0.78) / 0.22;
-        return 100 + Math.min(1, 1 - Math.pow(1 - br, 3)); // 100 → 101
+        if (t < 14.0) return 100;
+        if (t < 14.42) return 100; // hold during 101 flash setup
+        return 101;
     }
+    // 旧 stage13Progress (14s timeline) — 2026-05-19 段階19 で置換、保持コメント
+    // function stage13Progress(t) {
+    //     const p = Math.max(0, Math.min(1, t / 14.0));
+    //     if (p < 0.72) { ... 50→99.5 ... } if (p<0.78) return 100; ... 100→101
+    // }
     function updateStage13Bar(t) {
         try {
             const lb = document.getElementById('p1-lb');
@@ -2315,9 +2320,10 @@
             const visual = Math.min(percent, 101);
             if (lb) lb.style.width = visual + '%';
             if (lpct) {
-                if (visual < 100) {
+                // 2026-05-19 段階19: 22s timeline テキスト
+                if (t < 13.0) {
                     lpct.textContent = 'Loading reality... ' + Math.round(visual) + '%';
-                } else if (visual < 100.5) {
+                } else if (t < 14.0) {
                     lpct.textContent = 'Loading reality... 100%';
                 } else {
                     lpct.textContent = 'Loading reality... 101%';
@@ -2330,15 +2336,40 @@
         } catch (e) {}
     }
 
-    // 2026-05-18 Stage 13: single linear cinematic timeline post-50%
-    //   0.0-2.0s : legacy merge afterglow (sphere invisible)
-    //   2.0-3.2s : 陰陽球出現 (scale 0→1, uTaichiMix 0→1)
-    //   3.2-7.2s : morph 陰陽 → グレー → RGBCMY (uReveal)
-    //   7.2-8.7s : RGBCMY → 白光変容 (uWhiteBirth)
-    //   8.7-10.2s: 白世界, eye fade-in (uEyePhase)
-    //   10.2-11.2s: 目が開く (time freeze)
-    //   11.2-12.7s: 十字架閃光 (uCrossPhase)
-    //   12.7-14.0s: vertical line → P2 transition
+    // 2026-05-19 段階19: runner を stage13Progress に同期 (50→101 連続走行)
+    function updateStage13Runner(t) {
+        try {
+            const runner = state.runner || document.getElementById('exit-runner');
+            if (!runner) return;
+            state.runner = runner;
+            runner.style.display    = 'block';
+            runner.style.visibility = 'visible';
+            runner.style.opacity    = '1';
+            const percent = stage13Progress(t);
+            const leftPct = Math.min(101, Math.max(50, percent));
+            runner.style.left = leftPct + '%';
+            // 状態クラス
+            runner.classList.toggle('is-plateau',
+                percent >= 99.5 && percent < 100.5);
+            runner.classList.toggle('is-breakthrough',
+                percent >= 100.5 && t < 14.5);
+            runner.classList.toggle('is-ingesting', t >= 14.5);
+        } catch (e) {}
+    }
+
+    // 2026-05-19 段階19: 22s cinematic timeline (option A 中速) — replaces 14s ver
+    //   0-6s    legacy merge play (bar 50→78%, runner走, sphere premonition core)
+    //   6-9s    陰陽 sphere clearly visible (3s yin-yang hold)
+    //   9-13s   陰陽 → grey → RGBCMY morph (uReveal 0→1)
+    //   13-14s  bar 99→100% wall
+    //   14-14.42s "101" text flash
+    //   14.5-17s UI shell ingest + bg fade (smooth opacity, no snap)
+    //   17-19s  white light alone (sphere breathes)
+    //   19-21s  closed eye fades in
+    //   21-22s  eye opens
+    //   22-23s  cross flash
+    //   23s     P1 end
+    // 旧 14s timeline 実装は git history 参照 (2026-05-18 Stage 13)
     function updateStage13(t) {
         const u = state.mat.uniforms;
         u.uTime.value = t;
@@ -2353,132 +2384,168 @@
             hideChaosOverlays();
         }
 
-        // 2026-05-18 段階15: loading bar / text を Stage 13 タイムラインに同期 (Codex P0-2)
+        // 2026-05-19 段階19: loading bar + runner 同期
         updateStage13Bar(t);
+        updateStage13Runner(t);
 
-        // 2026-05-18 段階16: 101% breakthrough 後は背景を黒に固定
-        if (t >= 7.2 && !state.bgBlackSet) {
-            state.bgBlackSet = true;
-            try {
-                if (state.renderer && state.renderer.setClearColor) {
-                    state.renderer.setClearColor(0x000000, 1);
-                }
-                if (typeof document !== 'undefined') {
-                    document.body.style.background = '#000';
-                    const root = document.querySelector('.phase-1');
-                    if (root) root.style.background = '#000';
-                }
-            } catch (e) {}
+        // sphere は常に可視 (premonition → full)
+        state.mesh.visible = true;
+
+        // PHASE 0: legacy merge play (0-6s) — sphere premonition core
+        if (t < 6.0) {
+            const pre = Math.min(1, t / 6.0);
+            const preEase = pre * pre * (3 - 2 * pre);
+            state.mesh.scale.setScalar(0.65 + preEase * 0.20);
+            if (u.uPremonitionAlpha) {
+                u.uPremonitionAlpha.value = 0.05 + preEase * 0.25;
+            }
+            u.uReveal.value     = 0;
+            u.uWhiteBirth.value = 0;
+            u.uTaichiMix.value  = 0;
+            return;
         }
 
-        // 2026-05-18 段階15 P0-1: 球は 0-2s でも消さず "premonition core" として薄く可視。
-        //   旧: state.mesh.visible = false; return;
-        state.mesh.visible = true;
-        if (t < 2.0) {
-            // Phase 0: legacy merge afterglow — 球は premonition core (uPremonitionAlpha 0.08→0.30)
-            const pre = Math.max(0, Math.min(1, t / 2.0));
-            const preEase = pre * pre * (3 - 2 * pre); // smoothstep
-            state.mesh.scale.setScalar(0.72 + preEase * 0.18);
-            if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 0.08 + preEase * 0.22;
-            u.uTaichiMix.value  = 0;
+        // t>=6s: 通常 alpha + full scale
+        state.mesh.scale.setScalar(1.0);
+        if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 1.0;
+
+        // PHASE A: 陰陽球がはっきり見える (6-9s)
+        if (t < 9.0) {
+            const p = (t - 6.0) / 3.0;
+            u.uTaichiMix.value  = Math.min(1, p * 1.5); // 加速して 1 で hold
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
             return;
         }
-        // 2s 以降は通常 alpha
-        if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 1.0;
 
-        if (t < 3.2) {
-            // Phase A: 陰陽球出現 (scale 0→1, taichiMix 0→1)
-            const p = easeOutCubic((t - 2.0) / 1.2);
-            // premonition の 0.9 から 1.0 へ滑らかに繋ぐ
-            state.mesh.scale.setScalar(Math.max(0.9, 0.9 + p * 0.1));
-            u.uTaichiMix.value = p;
-            u.uReveal.value    = 0;
-        } else if (t < 7.2) {
-            // Phase B: morph 陰陽 → グレー → RGBCMY
-            const raw = (t - 3.2) / 4.0;
-            state.mesh.scale.setScalar(1.0 + 0.03 * Math.sin(raw * Math.PI));
-            u.uTaichiMix.value = 1;
-            u.uReveal.value    = holdThenJump(Math.max(0, Math.min(1, raw)));
+        // PHASE B: 陰陽 → グレー → RGBCMY (9-13s)
+        if (t < 13.0) {
+            u.uTaichiMix.value  = 1;
+            const raw = (t - 9.0) / 4.0;
+            u.uReveal.value     = holdThenJump(Math.max(0, Math.min(1, raw)));
             u.uWhiteBirth.value = 0;
-        } else if (t < 8.7) {
-            // 2026-05-18 段階14: PHASE C 開始時に fullscreen unlock + UI shell ingest
+            return;
+        }
+
+        // PHASE C: bar 99→100 wall (13-14s, sphere holds RGBCMY)
+        if (t < 14.0) {
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
+            return;
+        }
+
+        // PHASE D: "101" text flash (14-14.42s)
+        if (t < 14.42) {
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
+            if (!state.text101Fired) {
+                state.text101Fired = true;
+                triggerStage17TextFlash();
+            }
+            return;
+        }
+
+        // PHASE E: UI ingest + bg fade (14.42-17s, ingest起動は14.5)
+        if (t < 17.0) {
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
             if (!state.stage14UnlockFired) {
                 state.stage14UnlockFired = true;
                 window.p1FullScreenUnlocked = true;
-                // タイトル文字を "REALITY.SYS BREACHED" に差し替え (Priority 3)
                 if (!state.stage14TitleSwapped) {
                     state.stage14TitleSwapped = true;
                     try {
                         const win = document.getElementById('win95-main');
                         if (win) {
                             const titleSpan = win.querySelector('span');
-                            if (titleSpan) {
-                                titleSpan.textContent = 'REALITY.SYS BREACHED';
-                            }
+                            if (titleSpan) titleSpan.textContent = 'REALITY.SYS BREACHED';
                         }
                     } catch (e) {}
                 }
             }
-            if (t >= 7.25 && !state.stage14IngestFired) {
+            if (t >= 14.5 && !state.stage14IngestFired) {
                 startStage14UiIngest();
             }
-            // 2026-05-19 段階17: "101" text flash at t=7.05s (just before ingest)
-            if (t >= 7.05 && !state.text101Fired) {
-                state.text101Fired = true;
-                triggerStage17TextFlash();
-            }
-            // 2026-05-19 段階17: bgPlane (p1-old-dual-bg) を UI と同期で球に吸わせる
+            // Smooth bg fade — opacity / u_alpha 経由 (snap visible=false 回避)
             try {
                 const dualBg = state.scene && state.scene.getObjectByName('p1-old-dual-bg');
-                if (dualBg && dualBg.material && dualBg.material.uniforms) {
-                    const bu = dualBg.material.uniforms;
-                    if (bu.u_frameCollapse) {
-                        const c = Math.max(0, Math.min(1, (t - 7.2) / 1.3));
-                        // 既存値より小さくならないように max を取る (Stage9 経路と競合させない)
+                if (dualBg && dualBg.material) {
+                    const c = Math.max(0, Math.min(1, (t - 14.5) / 2.5));
+                    if (dualBg.material.uniforms && dualBg.material.uniforms.u_frameCollapse) {
+                        const bu = dualBg.material.uniforms;
                         bu.u_frameCollapse.value = Math.max(bu.u_frameCollapse.value || 0, c);
                         if (bu.u_alpha) {
-                            bu.u_alpha.value = Math.min(bu.u_alpha.value, 1.0 - c * 0.95);
+                            bu.u_alpha.value = Math.min(
+                                bu.u_alpha.value !== undefined ? bu.u_alpha.value : 1.0,
+                                1.0 - c
+                            );
+                        } else {
+                            if (!dualBg.material.transparent) {
+                                dualBg.material.transparent = true;
+                                dualBg.material.needsUpdate = true;
+                            }
+                            dualBg.material.opacity = Math.max(0.0, 1.0 - c);
                         }
-                    }
-                    if (t >= 8.5 && !state.bgEaten) {
-                        state.bgEaten = true;
-                        dualBg.visible = false; // 球 (state.mesh) は対象外 — bgPlane のみ
+                    } else {
+                        // uniforms 無し fallback
+                        if (!dualBg.material.transparent) {
+                            dualBg.material.transparent = true;
+                            dualBg.material.needsUpdate = true;
+                        }
+                        dualBg.material.opacity = Math.max(0.0, 1.0 - c);
                     }
                 }
             } catch (e) {}
-            // Phase C: 白光変容 (同じ mesh、uWhiteBirth で塗り替え)
-            const p = (t - 7.2) / 1.5;
-            const ep = easeInOutCubic(Math.max(0, Math.min(1, p)));
-            // 2026-05-18 段階15 P1-1: uWhiteBirth に応じた呼吸 (滑らかな膨張、別球感を避ける)
-            //   旧: state.mesh.scale.setScalar(1.0 + 0.02 * Math.sin(t * 1.2));
-            const wbVal = ep;
-            let pcScale = 1.0 + Math.sin(wbVal * Math.PI) * 0.045;
-            // 2026-05-18 段階15 P1-2: gravity pulse (UI shell が球に吸われる衝撃)
-            if (t >= 7.2 && t <= 8.5) {
-                const gP = Math.min(1, Math.max(0, (t - 7.2) / 1.3));
-                const punch = Math.sin(gP * Math.PI);
-                pcScale += punch * 0.08;
-                if (u.uGravityPulse) u.uGravityPulse.value = punch;
+            // White birth ramp (14.5-17s)
+            if (t >= 14.5) {
+                const w = Math.min(1, (t - 14.5) / 2.5);
+                u.uWhiteBirth.value = w;
             }
-            state.mesh.scale.setScalar(pcScale);
-            u.uTaichiMix.value = 1;
-            u.uReveal.value    = 1;
-            u.uWhiteBirth.value = ep;
-            // p>0.5 で白世界 stage 起動 (Stage5 inlined — Stage6 はこれを待つ)
-            if (p > 0.5 && !state.s13_whiteFired) {
+            // Force black bg from 14.5
+            if (!state.bgBlackSet && t >= 14.5) {
+                state.bgBlackSet = true;
+                try {
+                    if (state.renderer && state.renderer.setClearColor) {
+                        state.renderer.setClearColor(0x000000, 1);
+                    }
+                    if (typeof document !== 'undefined') {
+                        document.body.style.background = '#000';
+                        const root = document.querySelector('.phase-1');
+                        if (root) root.style.background = '#000';
+                    }
+                } catch (e) {}
+            }
+            return;
+        }
+
+        // PHASE F: white light alone (17-19s) — sphere breathes
+        if (t < 19.0) {
+            u.uTaichiMix.value  = 1;
+            u.uReveal.value     = 1;
+            u.uWhiteBirth.value = 1;
+            state.mesh.scale.setScalar(1.0 + Math.sin((t - 17.0) * 2.0) * 0.03);
+            // bgPlane を完全に隠す (fade完了後のみ)
+            if (!state.bgEaten) {
+                state.bgEaten = true;
+                try {
+                    const dualBg = state.scene && state.scene.getObjectByName('p1-old-dual-bg');
+                    if (dualBg) dualBg.visible = false; // ← bgPlane のみ。球(state.mesh)は対象外
+                } catch (e) {}
+            }
+            if (!state.s13_whiteFired) {
                 state.s13_whiteFired = true;
-                state.stage2Fired = true; // 互換: 旧 stage2complete を抑止
+                state.stage2Fired = true;
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
                 } catch (e) {}
             }
-        } else if (t < 10.2) {
-            // Phase D: 白世界 + 瞳の影が浮かぶ (eye fade-in)
+            return;
+        }
+
+        // PHASE G: eye fade-in (19-21s)
+        if (t < 21.0) {
             u.uWhiteBirth.value = 1;
-            const ep = Math.max(0, Math.min(1, (t - 8.7) / 1.5));
-            u.uEyePhase.value = ep;
+            u.uEyePhase.value   = Math.min(1, (t - 19.0) / 2.0);
             state.mesh.scale.setScalar(1.0);
             if (!state.s13_eyeFired) {
                 state.s13_eyeFired = true;
@@ -2486,42 +2553,45 @@
                     window.dispatchEvent(new CustomEvent('inryoku:p1stage5complete'));
                 } catch (e) {}
             }
-        } else if (t < 11.2) {
-            // Phase E: 目が開く瞬間 (time-freeze illusion — sphere 静止)
+            return;
+        }
+
+        // PHASE H: eye opens + solar flash (21-22s)
+        if (t < 22.0) {
             u.uWhiteBirth.value = 1;
-            u.uEyePhase.value = 1;
-            state.mesh.scale.setScalar(1.0);
+            u.uEyePhase.value   = 1;
             if (!state.s13_eyeOpenFired) {
                 state.s13_eyeOpenFired = true;
             }
-        } else if (t < 12.7) {
-            // Phase F: 十字架閃光 (cross flash)
+            return;
+        }
+
+        // PHASE I: cross flash (22-23s)
+        if (t < 23.0) {
             u.uWhiteBirth.value = 1;
-            u.uEyePhase.value = 1;
-            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 11.2) / 1.5));
+            u.uEyePhase.value   = 1;
+            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 22.0)));
             if (!state.s13_crossFired) {
                 state.s13_crossFired = true;
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1stage6complete'));
                 } catch (e) {}
             }
-        } else if (t < 14.0) {
-            // Phase G: vertical line → P2 transition
-            u.uCrossPhase.value = 1;
-            if (!state.s13_p2Fired) {
-                state.s13_p2Fired = true;
-                try {
-                    window.__inryokuP1ToP2 = {
-                        from: 'cross',
-                        ts: performance.now(),
-                        seedLine: { x: 0, y0: -1, y1: 1, color: 'white', phase: 'vertical-axis' }
-                    };
-                    window.dispatchEvent(new CustomEvent('inryoku:p1complete'));
-                } catch (e) {}
-            }
-        } else {
-            // hold
-            u.uCrossPhase.value = 1;
+            return;
+        }
+
+        // PHASE J: end (P1_ONLY_MODE blocks renderPhase2)
+        u.uCrossPhase.value = 1;
+        if (!state.s13_p2Fired) {
+            state.s13_p2Fired = true;
+            try {
+                window.__inryokuP1ToP2 = {
+                    from: 'cross',
+                    ts: performance.now(),
+                    seedLine: { x: 0, y0: -1, y1: 1, color: 'white', phase: 'vertical-axis' }
+                };
+                window.dispatchEvent(new CustomEvent('inryoku:p1complete'));
+            } catch (e) {}
         }
     }
 
