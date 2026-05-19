@@ -374,18 +374,27 @@
             // white world tint (RGB混合の白)
             col = mix(col, vec3(1.0), uWhitePhase * 0.42);
             col += fresnel * vec3(1.0) * uWhitePhase * 0.7;
-            // 2026-05-18 段階16: 白光は内部から滲み出るが、球の固体感を消す
-            //   旧（段階15）: innerPulse + spectralRim で「別の白球」感が残った
-            //   新（段階16・Claude版回帰）: Fresnel halo で「白い光」として表現
-            //   uWhiteBirth: 0=RGBCMY球, 1=ほぼ消えて halo/glow だけ残る
+            // 2026-05-19 段階18: 白「光」化 — 球の固体感を消して光源として見せる
+            //   旧（段階16）: 70%白寄せ + halo 2.5x → 「白い球」感が残った
+            //   新（段階18）: 表面パターン80%抑制 / 白ブレンド50% / halo 1.5x強化 / 中心放射追加
+            //   uWhiteBirth: 0=RGBCMY球, 1=暗闇に浮かぶ光源そのもの
             float wb = uWhiteBirth;
             vec3 whiteCore = vec3(1.0);
-            // Fresnel halo (球の周囲から光が漏れる)
-            float wbFres = pow(1.0 - facing, 1.8);
-            vec3 lightCol = col;
-            lightCol = mix(lightCol, whiteCore, wb * 0.7);   // 70%まで白寄せ
-            lightCol += whiteCore * wbFres * wb * 2.5;       // halo
+            vec3 viewDir18 = normalize(uCameraPos - vWorldPos);
+            float wbFres = pow(1.0 - max(dot(normalize(vWorldNormal), viewDir18), 0.0), 1.6);
+            // 表面パターン (yin-yang/fbm/rgbcmy) を中間グレーへフェード (80%)
+            vec3 fadedSurface = mix(col, vec3(0.5), wb * 0.8);
+            // 白へのブレンドは控えめ (50%まで)
+            vec3 lightCol = mix(fadedSurface, whiteCore, wb * 0.5);
+            // Fresnel halo 強化 (旧2.5x → 3.75x = 1.5倍)
+            lightCol += whiteCore * wbFres * wb * 3.75;
+            // 中心の発光感 (内側から外側へ放射)
+            float coreGlow = (1.0 - smoothstep(0.0, 0.7, length(vPosition))) * wb * 0.8;
+            lightCol += whiteCore * coreGlow;
             col = lightCol;
+            // 旧: float wbFres = pow(1.0 - facing, 1.8);
+            // 旧: lightCol = mix(lightCol, whiteCore, wb * 0.7);
+            // 旧: lightCol += whiteCore * wbFres * wb * 2.5;
             // eye depth (中心に小さな暗い瞳孔)
             float eyeDepth = uEyePhase * pow(facing, 5.0);
             col = mix(col, vec3(0.02), eyeDepth * 0.18);
@@ -408,11 +417,14 @@
             //   uPremonitionAlpha=1.0 で従来動作と等価。
             float baseAlpha = max(alphaOut, uPremonitionAlpha);
             vec3  baseCol   = col * max(uTaichiMix, uPremonitionAlpha * 0.5);
-            // 2026-05-18 段階16: uWhiteBirth が上がるにつれて球の固体感を消す
-            //   完全な白い光になるので、中心部は薄く・リムは強く
-            float surfaceFade = 1.0 - smoothstep(0.4, 1.0, uWhiteBirth) * 0.7;
+            // 2026-05-19 段階18: 白光化で球本体をさらに半透明化、リムは強く
+            //   旧（段階16）: surfaceFade 0.4→1.0 で 70%減衰 / rimGlow 0.4倍
+            //   新（段階18）: surfaceFade 0.2→1.0 で 65%減衰 (0.35残し) / rimGlow 0.6倍
+            float surfaceFade = 1.0 - smoothstep(0.2, 1.0, uWhiteBirth) * 0.65;
             float rimGlow = wbFres * smoothstep(0.0, 0.6, uWhiteBirth);
-            float finalA = baseAlpha * surfaceFade + rimGlow * 0.4;
+            float finalA = baseAlpha * surfaceFade + rimGlow * 0.6;
+            // 旧: float surfaceFade = 1.0 - smoothstep(0.4, 1.0, uWhiteBirth) * 0.7;
+            // 旧: float finalA = baseAlpha * surfaceFade + rimGlow * 0.4;
             gl_FragColor = vec4(baseCol, clamp(finalA, 0.0, 1.0));
         }
     `;
@@ -1290,6 +1302,10 @@
                 '  82%  { opacity: .72; transform: translate3d(calc(var(--pull-x) * .9), calc(var(--pull-y) * .9), 0) scaleX(.16) scaleY(.045) rotate(-5deg);',
                 '         clip-path: ellipse(18% 6% at 50% 50%);',
                 '         filter: blur(2px) contrast(2) brightness(2.2); }',
+                // 2026-05-19 段階18: 最後の 5% で更に「snap」を入れる (Codex tweak)
+                '  95%  { opacity: .3; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.04) rotate(12deg);',
+                '         clip-path: ellipse(6% 3% at 50% 50%);',
+                '         filter: blur(3px) brightness(3); }',
                 '  100% { opacity: 0; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.015) rotate(18deg);',
                 '         clip-path: ellipse(2% 2% at 50% 50%);',
                 '         filter: blur(5px) brightness(4); }',
@@ -2209,8 +2225,9 @@
                 el.style.transition = 'opacity 180ms ease-in, transform 280ms ease-in';
                 el.style.opacity = '0';
                 el.style.transform = 'translate(-50%, -50%) scale(2.0)';
-            }, 220);
-            setTimeout(function () { try { el.remove(); } catch (e) {} }, 500);
+            // 2026-05-19 段階18: 101 flash を 200ms → 360ms 程度に延長 (220→420, 500→700)
+            }, 420);
+            setTimeout(function () { try { el.remove(); } catch (e) {} }, 700);
         } catch (e) {}
     }
 

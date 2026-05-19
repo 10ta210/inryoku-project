@@ -344,14 +344,23 @@
 
         let alpha = 0, open = 0;
         if (t < T_FADE_IN_END) {
-            // 2026-05-18 段階15 P2-1: ややダークに fade-in (旧より深い闇)
-            alpha = easeOutCubic(t / T_FADE_IN_END);
+            // 2026-05-19 段階18: 閉眼フェーズは「ぼんやり影」として 0.25→0.45 へ
+            //   旧: easeOutCubic(t/1.3) で 0→1 まで一気に上がる → 主張が強すぎ
+            //   新: 0.25 から始まり 0.45 まで微増 (subtle shadow)
+            // alpha = easeOutCubic(t / T_FADE_IN_END);
+            alpha = 0.25 + 0.20 * easeOutCubic(t / T_FADE_IN_END);
             open = 0;
         } else if (t < T_HOLD_CLOSED_END) {
-            alpha = 1; open = 0;
+            // 0.25→0.45 維持から 1.0 へ向けてランプ開始 (1.3→2.0s で 0.45→0.85)
+            const p = (t - T_FADE_IN_END) / (T_HOLD_CLOSED_END - T_FADE_IN_END);
+            alpha = 0.45 + 0.40 * easeOutCubic(p);
+            open = 0;
         } else if (t < T_FREEZE_END) {
             // 2026-05-18 段階15 P2-1: 完全静止フェーズ (0.2s freeze)
-            alpha = 1; open = 0;
+            // 2026-05-19 段階18: freeze 中に 0.85→1.0 を埋める
+            const p = (t - T_HOLD_CLOSED_END) / (T_FREEZE_END - T_HOLD_CLOSED_END);
+            alpha = 0.85 + 0.15 * p;
+            open = 0;
         } else if (t < T_OPEN_END) {
             alpha = 1;
             const p = (t - T_FREEZE_END) / (T_OPEN_END - T_FREEZE_END);
