@@ -2197,37 +2197,48 @@
     //   absorbed cleanly into the sphere center. Followed by scissor unlock.
     // 2026-05-19 段階17: "101" text flash (concept-breaking moment)
     function triggerStage17TextFlash() {
+        // 2026-05-19 段階19.1: バー位置 + 虹フォント。中央巨大表示は廃止 (安っぽい)
         try {
             if (typeof document === 'undefined') return;
+            // バー要素を起点に配置
+            const bar = document.getElementById('p1-lb');
+            const lpct = document.getElementById('p1-lpct');
+            const anchor = lpct || bar;
+            if (!anchor) return;
+            const rect = anchor.getBoundingClientRect();
             const el = document.createElement('div');
             el.id = 'p1-stage17-text';
             el.textContent = '101';
             Object.assign(el.style, {
                 position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%) scale(0.5)',
-                font: '900 200px/1 ui-monospace, monospace',
-                color: '#fff',
-                letterSpacing: '-0.05em',
-                textShadow: '0 0 40px rgba(255,255,255,0.85), 0 0 80px rgba(255,255,255,0.55)',
+                left: (rect.right + 8) + 'px',
+                top:  (rect.top - 4) + 'px',
+                font: '900 28px/1 ui-monospace, monospace',
+                background: 'linear-gradient(90deg,#ff0000,#ff8800,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff)',
+                'background-clip': 'text',
+                '-webkit-background-clip': 'text',
+                color: 'transparent',
+                '-webkit-text-fill-color': 'transparent',
+                letterSpacing: '-0.02em',
+                textShadow: '0 0 18px rgba(255,255,255,0.65)',
+                filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.45))',
                 zIndex: '2147483646',
                 pointerEvents: 'none',
                 opacity: '0',
-                transition: 'opacity 80ms ease-out, transform 280ms cubic-bezier(.16,1,.3,1)'
+                transform: 'translateY(2px) scale(0.92)',
+                transition: 'opacity 120ms ease-out, transform 220ms cubic-bezier(.16,1,.3,1)'
             });
             document.body.appendChild(el);
             requestAnimationFrame(function () {
                 el.style.opacity = '1';
-                el.style.transform = 'translate(-50%, -50%) scale(1.0)';
+                el.style.transform = 'translateY(0) scale(1.0)';
             });
             setTimeout(function () {
-                el.style.transition = 'opacity 180ms ease-in, transform 280ms ease-in';
+                el.style.transition = 'opacity 220ms ease-in, transform 260ms ease-in';
                 el.style.opacity = '0';
-                el.style.transform = 'translate(-50%, -50%) scale(2.0)';
-            // 2026-05-19 段階18: 101 flash を 200ms → 360ms 程度に延長 (220→420, 500→700)
-            }, 420);
-            setTimeout(function () { try { el.remove(); } catch (e) {} }, 700);
+                el.style.transform = 'translateY(-2px) scale(1.04)';
+            }, 520);
+            setTimeout(function () { try { el.remove(); } catch (e) {} }, 820);
         } catch (e) {}
     }
 
