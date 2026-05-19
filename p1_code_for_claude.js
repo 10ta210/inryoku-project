@@ -3493,33 +3493,49 @@ function renderPhase1() {
             //   updateScissorFromDOM の再適用も行わない。球の白光が画面全体を覆う。
             if (window.p1FullScreenUnlocked === true) {
                 try {
+                    // 2026-05-19 段階19.11 (Codex Opus 再診断):
+                    //   真因は viewport vs drawingBuffer のスケール不整合だった。
+                    //   setSize より「先に」scissor/viewport を full reset、
+                    //   その後 setSize → composer/bloom → 最後にもう一度 viewport を
+                    //   論理 px (innerW,innerH) で再設定。three.js r160 の setViewport は
+                    //   内部で pixelRatio を掛けるので必ず論理 px を渡す。
                     scissor.enabled = false;
                     renderer.setScissorTest(false);
-                    const Wnow = renderer.domElement.width || window.innerWidth;
-                    const Hnow = renderer.domElement.height || window.innerHeight;
-                    renderer.setViewport(0, 0, Wnow, Hnow);
-                    // 2026-05-19 段階19.2: scissor→fullscreen でアスペクト変わると
-                    // 球が 縦長/横長 に見える問題を解消。カメラ frustum を viewport に合わせる。
+
                     if (!window._p1CamFixedForFull) {
                         window._p1CamFixedForFull = true;
-                        const aspectFull = Wnow / Hnow;
-                        const camHFull = camH; // 5 を維持
+                        const iw = window.innerWidth, ih = window.innerHeight;
+                        const aspectFull = iw / ih;
+                        const camHFull = camH;
                         camera.left   = -camHFull * aspectFull;
                         camera.right  =  camHFull * aspectFull;
                         camera.top    =  camHFull;
                         camera.bottom = -camHFull;
+                        camera.zoom   = 1; // 念のため zoom リセット (H 仮説防御)
                         camera.updateProjectionMatrix();
-                        // 2026-05-19 段階19.10 (Codex Opus): unlock 時に renderer/composer/bloom
-                        //   を物理ピクセルに同期。これを抜くと「右上 miniature」現象が出る。
                         try {
-                            renderer.setSize(window.innerWidth, window.innerHeight, false);
-                            if (composer && composer.setSize) {
-                                composer.setSize(window.innerWidth, window.innerHeight);
+                            // pixelRatio は singDimSwitched で devicePixelRatio に
+                            // 切り替わっている。setSize に論理 px を渡せば
+                            // drawingBuffer は pixelRatio 倍で正しく確保される。
+                            renderer.setSize(iw, ih, false);
+                            // setSize 直後に viewport を full に再設定 (論理 px)。
+                            // setSize は内部 _viewport を上書きするケースがある。
+                            renderer.setViewport(0, 0, iw, ih);
+                            if (composer && composer.setSize) composer.setSize(iw, ih);
+                            if (bloom && bloom.setSize) bloom.setSize(iw, ih);
+                            if (caPass && caPass.setSize) caPass.setSize(iw, ih);
+                            // EffectComposer の各 pass の uniforms.resolution 更新漏れ防御
+                            if (composer && composer.passes) {
+                                composer.passes.forEach(p => {
+                                    if (p.uniforms && p.uniforms.resolution)
+                                        p.uniforms.resolution.value && p.uniforms.resolution.value.set(iw, ih);
+                                });
                             }
-                            if (bloom && bloom.setSize) {
-                                bloom.setSize(window.innerWidth, window.innerHeight);
-                            }
-                        } catch (e) { console.warn('[P1 19.10 unlock]', e); }
+                            console.log('[P1 19.11 unlock OK]', { iw, ih, pr: renderer.getPixelRatio(), buf: [renderer.domElement.width, renderer.domElement.height] });
+                        } catch (e) { console.warn('[P1 19.11 unlock]', e); }
+                    } else {
+                        // 毎フレーム viewport を保険で再設定 (B 仮説防御)
+                        renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
                     }
                 } catch (e) {}
             } else if (fullViewportPhase) {
