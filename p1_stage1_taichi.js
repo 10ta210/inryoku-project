@@ -1298,78 +1298,176 @@
                 '  filter: brightness(2.2) saturate(1.4);',
                 '  box-shadow: 0 0 18px rgba(255,255,255,.8);',
                 '}',
-                // ── 2026-05-19 段階19.5: ブラックホール吸い込み (spaghettification + spiral + redshift) ──
+                // ── 2026-05-19 段階19.7: BLACK HOLE 強化版 ──
+                // 司さんフィードバック「吸い込みありえないくらいしょぼい」
+                // → duration 1800ms→2800ms / 回転 -720→-1440 / scale .002→.0005
+                // → skewX 35→60deg / blur 8→24px / ピクセル化 + chromatic aberration
                 '.p1-ui-shell-ingest-strong {',
                 '  transform-origin: var(--core-x) var(--core-y);',
-                '  animation: p1ShellBlackHole 1800ms cubic-bezier(.42,.0,.7,1.0) forwards;',
+                '  animation: p1ShellBlackHole 2800ms cubic-bezier(.55,.0,.85,1.0) forwards;',
                 '  will-change: transform, clip-path, filter, opacity;',
                 '}',
+                // event horizon の擬似 chromatic aberration
+                '.p1-ui-shell-ingest-strong::before,',
+                '.p1-ui-shell-ingest-strong::after {',
+                '  content: ""; position: absolute; inset: 0;',
+                '  background: inherit; pointer-events: none;',
+                '  mix-blend-mode: screen;',
+                '}',
                 '@keyframes p1ShellBlackHole {',
-                // 0%: 通常状態
+                // 0%: 通常
                 '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1) rotate(0deg);',
                 '         clip-path: ellipse(85% 85% at 50% 50%);',
-                '         filter: blur(0) contrast(1) brightness(1); }',
-                // 15%: 時間膨張 - ゆっくり引力を感じ始める
-                '  15%  { opacity: 1;',
-                '         transform: translate3d(calc(var(--pull-x) * .08), calc(var(--pull-y) * .08), 0)',
-                '                    scaleX(1.06) scaleY(.92) rotate(-32deg) skewX(2deg);',
-                '         clip-path: ellipse(80% 70% at 50% 50%);',
-                '         filter: blur(.2px) contrast(1.12) brightness(1.0); }',
-                // 35%: スパゲッティ化開始 - 横に伸びて縦に潰れる
-                '  35%  { opacity: .96;',
-                '         transform: translate3d(calc(var(--pull-x) * .28), calc(var(--pull-y) * .28), 0)',
-                '                    scaleX(1.22) scaleY(.55) rotate(-130deg) skewX(8deg);',
-                '         clip-path: ellipse(78% 40% at 50% 50%);',
-                '         filter: blur(.4px) contrast(1.35) brightness(.92); }',
-                // 55%: 重力に飲まれて螺旋落下
-                '  55%  { opacity: .86;',
-                '         transform: translate3d(calc(var(--pull-x) * .58), calc(var(--pull-y) * .58), 0)',
-                '                    scaleX(.95) scaleY(.20) rotate(-280deg) skewX(18deg);',
-                '         clip-path: ellipse(55% 18% at 50% 50%);',
-                '         filter: blur(.8px) contrast(1.65) brightness(.78) hue-rotate(15deg); }',
-                // 72%: event horizon に近づき細く長く (spaghettification 最大)
-                '  72%  { opacity: .62;',
-                '         transform: translate3d(calc(var(--pull-x) * .82), calc(var(--pull-y) * .82), 0)',
-                '                    scaleX(.42) scaleY(.05) rotate(-460deg) skewX(28deg);',
-                '         clip-path: ellipse(28% 4% at 50% 50%);',
-                '         filter: blur(1.6px) contrast(2.0) brightness(.55) hue-rotate(-20deg); }',
-                // 88%: redshift / event horizon ぎりぎり
-                '  88%  { opacity: .32;',
+                '         filter: blur(0) contrast(1) brightness(1) saturate(1); }',
+                // 8%: 重力波到達 - 全体が震える
+                '  8%   { opacity: 1;',
+                '         transform: translate3d(2px, -1px, 0) scale(1.02) rotate(-3deg) skewX(1deg);',
+                '         filter: blur(.3px) contrast(1.08) brightness(.98) saturate(1.05); }',
+                // 18%: 時間膨張開始
+                '  18%  { opacity: 1;',
+                '         transform: translate3d(calc(var(--pull-x) * .10), calc(var(--pull-y) * .10), 0)',
+                '                    scaleX(1.12) scaleY(.84) rotate(-58deg) skewX(4deg);',
+                '         clip-path: ellipse(82% 64% at 50% 50%);',
+                '         filter: blur(.5px) contrast(1.2) brightness(.95) saturate(1.2)',
+                '                 drop-shadow(2px 0 0 rgba(255,0,0,.5)) drop-shadow(-2px 0 0 rgba(0,200,255,.5)); }',
+                // 32%: スパゲッティ化開始 - 横に伸びて縦に薄く
+                '  32%  { opacity: .98;',
+                '         transform: translate3d(calc(var(--pull-x) * .26), calc(var(--pull-y) * .26), 0)',
+                '                    scaleX(1.42) scaleY(.42) rotate(-180deg) skewX(15deg);',
+                '         clip-path: ellipse(78% 30% at 50% 50%);',
+                '         filter: blur(.9px) contrast(1.5) brightness(.85) saturate(1.4) hue-rotate(8deg)',
+                '                 drop-shadow(4px 0 0 rgba(255,0,40,.55)) drop-shadow(-4px 0 0 rgba(0,180,255,.55)); }',
+                // 48%: 螺旋落下加速
+                '  48%  { opacity: .9;',
+                '         transform: translate3d(calc(var(--pull-x) * .48), calc(var(--pull-y) * .48), 0)',
+                '                    scaleX(1.18) scaleY(.16) rotate(-360deg) skewX(28deg);',
+                '         clip-path: ellipse(60% 14% at 50% 50%);',
+                '         filter: blur(1.5px) contrast(1.8) brightness(.7) saturate(1.6) hue-rotate(18deg)',
+                '                 drop-shadow(6px 0 0 rgba(255,0,80,.6)) drop-shadow(-6px 0 0 rgba(0,140,255,.6)); }',
+                // 62%: event horizon 近接 - 重力レンズ歪み
+                '  62%  { opacity: .8;',
+                '         transform: translate3d(calc(var(--pull-x) * .68), calc(var(--pull-y) * .68), 0)',
+                '                    scaleX(.78) scaleY(.06) rotate(-560deg) skewX(45deg);',
+                '         clip-path: ellipse(40% 6% at 50% 50%);',
+                '         filter: blur(2.5px) contrast(2.2) brightness(.55) saturate(1.4) hue-rotate(-5deg)',
+                '                 drop-shadow(8px 0 0 rgba(255,0,100,.65)) drop-shadow(-8px 0 0 rgba(0,100,255,.65)); }',
+                // 76%: spaghetti 最大 - 細く長く引き伸ばされる
+                '  76%  { opacity: .55;',
+                '         transform: translate3d(calc(var(--pull-x) * .84), calc(var(--pull-y) * .84), 0)',
+                '                    scaleX(.32) scaleY(.018) rotate(-820deg) skewX(58deg);',
+                '         clip-path: ellipse(18% 2.2% at 50% 50%);',
+                '         filter: blur(4px) contrast(2.6) brightness(.38) saturate(1.0) hue-rotate(-30deg)',
+                '                 drop-shadow(10px 0 0 rgba(255,30,140,.55)) drop-shadow(-10px 0 0 rgba(80,60,255,.55)); }',
+                // 88%: redshift / 重力赤方偏移
+                '  88%  { opacity: .25;',
                 '         transform: translate3d(calc(var(--pull-x) * .94), calc(var(--pull-y) * .94), 0)',
-                '                    scaleX(.10) scaleY(.012) rotate(-620deg) skewX(35deg);',
-                '         clip-path: ellipse(10% 1.5% at 50% 50%);',
-                '         filter: blur(3px) contrast(2.5) brightness(.28) hue-rotate(-45deg); }',
-                // 100%: singularity に吸い込まれて消滅 (時間膨張で減速)
+                '                    scaleX(.08) scaleY(.005) rotate(-1100deg) skewX(70deg);',
+                '         clip-path: ellipse(5% .8% at 50% 50%);',
+                '         filter: blur(10px) contrast(3) brightness(.18) saturate(.7) hue-rotate(-70deg); }',
+                // 100%: singularity 消滅
                 '  100% { opacity: 0;',
                 '         transform: translate3d(var(--pull-x), var(--pull-y), 0)',
-                '                    scale(.002) rotate(-720deg);',
-                '         clip-path: ellipse(0.4% 0.4% at 50% 50%);',
-                '         filter: blur(8px) brightness(.05); }',
+                '                    scale(.0005) rotate(-1440deg);',
+                '         clip-path: ellipse(0.1% 0.1% at 50% 50%);',
+                '         filter: blur(24px) brightness(.01) hue-rotate(-180deg); }',
                 '}',
-                // 着差円盤 (accretion disk) — UI 吸収中に球の周りに光輪
+                // 重力レンズ - 画面全体が一瞬歪む
+                '@keyframes p1GravitationalLens {',
+                '  0%   { backdrop-filter: blur(0) hue-rotate(0); }',
+                '  35%  { backdrop-filter: blur(2px) hue-rotate(10deg); }',
+                '  70%  { backdrop-filter: blur(6px) hue-rotate(-20deg); }',
+                '  100% { backdrop-filter: blur(0) hue-rotate(0); }',
+                '}',
+                '.p1-grav-lens {',
+                '  position: fixed; inset: 0; pointer-events: none;',
+                '  z-index: 2147480500;',
+                '  animation: p1GravitationalLens 2800ms ease-in-out forwards;',
+                '}',
+                // 着差円盤 (accretion disk) — 強化版 (480px / より長い / 多重リング)
                 '.p1-accretion-disk {',
                 '  position: fixed;',
-                '  width: 220px; height: 220px;',
+                '  width: 480px; height: 480px;',
                 '  left: var(--disk-left); top: var(--disk-top);',
-                '  margin-left: -110px; margin-top: -110px;',
+                '  margin-left: -240px; margin-top: -240px;',
                 '  border-radius: 50%;',
                 '  background: conic-gradient(from 0deg,',
-                '    rgba(255,0,0,.0) 0%, rgba(255,140,0,.55) 8%,',
-                '    rgba(255,255,0,.75) 18%, rgba(0,255,128,.65) 32%,',
-                '    rgba(0,200,255,.75) 50%, rgba(80,0,255,.55) 68%,',
-                '    rgba(255,0,180,.45) 82%, rgba(255,0,0,.0) 100%);',
-                '  filter: blur(14px) saturate(1.6);',
+                '    rgba(255,255,255,.0) 0%, rgba(255,80,40,.85) 6%,',
+                '    rgba(255,180,0,.95) 16%, rgba(255,255,80,1) 26%,',
+                '    rgba(80,255,160,.95) 40%, rgba(0,220,255,1) 54%,',
+                '    rgba(80,80,255,.9) 68%, rgba(255,40,200,.85) 82%,',
+                '    rgba(255,255,255,.0) 100%);',
+                '  filter: blur(18px) saturate(2.2) brightness(1.6);',
                 '  z-index: 2147481000;',
                 '  pointer-events: none;',
                 '  opacity: 0;',
-                '  animation: p1AccretionDisk 1800ms cubic-bezier(.3,.1,.7,1) forwards;',
+                '  animation: p1AccretionDisk 2800ms cubic-bezier(.2,.1,.7,1) forwards;',
+                '  mix-blend-mode: screen;',
+                '}',
+                // 内側のホット・リング (Doppler beaming 効果)
+                '.p1-accretion-disk::before {',
+                '  content: ""; position: absolute; inset: 25%; border-radius: 50%;',
+                '  background: conic-gradient(from 90deg,',
+                '    rgba(255,255,255,1) 0%, rgba(255,255,200,.9) 20%,',
+                '    rgba(255,80,80,.7) 50%, rgba(80,80,255,.4) 80%,',
+                '    rgba(255,255,255,1) 100%);',
+                '  filter: blur(8px); opacity: .9;',
+                '  animation: p1AccretionInner 2800ms cubic-bezier(.3,.1,.7,1) forwards;',
+                '}',
+                // event horizon (中央の暗黒円)
+                '.p1-accretion-disk::after {',
+                '  content: ""; position: absolute; inset: 38%; border-radius: 50%;',
+                '  background: radial-gradient(circle, #000 60%, rgba(0,0,0,.7) 85%, transparent 100%);',
+                '  box-shadow: inset 0 0 40px rgba(255,140,0,.6);',
+                '  animation: p1EventHorizon 2800ms ease-in forwards;',
                 '}',
                 '@keyframes p1AccretionDisk {',
-                '  0%   { opacity: 0; transform: rotate(0deg) scale(.6); }',
-                '  20%  { opacity: .55; transform: rotate(180deg) scale(.95); }',
-                '  60%  { opacity: .85; transform: rotate(540deg) scale(1.15); filter: blur(18px) saturate(1.8); }',
-                '  85%  { opacity: .65; transform: rotate(900deg) scale(.7); filter: blur(22px) saturate(1.5); }',
-                '  100% { opacity: 0; transform: rotate(1080deg) scale(.15); filter: blur(28px); }',
+                '  0%   { opacity: 0; transform: rotate(0deg) scale(.3); }',
+                '  12%  { opacity: .4; transform: rotate(160deg) scale(.7); }',
+                '  35%  { opacity: .95; transform: rotate(540deg) scale(1.1);',
+                '         filter: blur(14px) saturate(2.4) brightness(1.8); }',
+                '  62%  { opacity: 1; transform: rotate(1080deg) scale(1.35);',
+                '         filter: blur(22px) saturate(2.8) brightness(2.0); }',
+                '  82%  { opacity: .75; transform: rotate(1620deg) scale(.85);',
+                '         filter: blur(28px) saturate(2.0) brightness(1.5) hue-rotate(-30deg); }',
+                '  100% { opacity: 0; transform: rotate(2160deg) scale(.08);',
+                '         filter: blur(40px) brightness(.4) hue-rotate(-80deg); }',
+                '}',
+                '@keyframes p1AccretionInner {',
+                '  0%   { opacity: 0; transform: rotate(0deg) scale(.5); }',
+                '  40%  { opacity: 1; transform: rotate(-540deg) scale(1.0); }',
+                '  75%  { opacity: .8; transform: rotate(-1080deg) scale(.6); }',
+                '  100% { opacity: 0; transform: rotate(-1620deg) scale(.05); }',
+                '}',
+                '@keyframes p1EventHorizon {',
+                '  0%   { opacity: 0; transform: scale(.2); }',
+                '  30%  { opacity: 1; transform: scale(1); }',
+                '  80%  { opacity: 1; transform: scale(1.4); }',
+                '  100% { opacity: 0; transform: scale(2.2); }',
+                '}',
+                // ── 2026-05-19 段階19.7: 101% Newton リング漏れ (Direction C) ──
+                '.p1-newton-leak {',
+                '  position: fixed;',
+                '  left: var(--leak-x); top: var(--leak-y);',
+                '  width: 8px; height: 8px;',
+                '  margin-left: -4px; margin-top: -4px;',
+                '  border-radius: 50%;',
+                '  pointer-events: none;',
+                '  z-index: 2147481200;',
+                '  background: radial-gradient(circle,',
+                '    rgba(255,255,255,1) 0%, rgba(255,255,255,.85) 8%,',
+                '    rgba(255,40,40,.9) 18%, rgba(255,180,0,.85) 28%,',
+                '    rgba(255,255,80,.8) 38%, rgba(80,255,160,.78) 50%,',
+                '    rgba(0,220,255,.78) 62%, rgba(80,80,255,.7) 75%,',
+                '    rgba(255,40,200,.6) 88%, transparent 100%);',
+                '  mix-blend-mode: screen;',
+                '  filter: blur(.5px);',
+                '  animation: p1NewtonLeak 520ms cubic-bezier(.05,.7,.1,1) forwards;',
+                '}',
+                '@keyframes p1NewtonLeak {',
+                '  0%   { transform: scale(1); opacity: 1; filter: blur(0); }',
+                '  20%  { transform: scale(8); opacity: .95; filter: blur(.5px); }',
+                '  60%  { transform: scale(36); opacity: .55; filter: blur(1.5px); }',
+                '  100% { transform: scale(80); opacity: 0; filter: blur(4px); }',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -2256,50 +2354,49 @@
     // 2026-05-18 段階14: UI shell ingest — sphere absorbs Win95 shell at 7.2s
     //   Codex final plan: subject is sphere, UI is固定概念 → one thin DOM clone
     //   absorbed cleanly into the sphere center. Followed by scissor unlock.
-    // 2026-05-19 段階17: "101" text flash (concept-breaking moment)
+    // 2026-05-19 段階19.7: Newton リング漏れ (Codex Direction C)
+    //   バー右端の1点から同心円干渉縞 (RGBCMY) が画面へ滲み出す
+    //   「見えない波 (精神) が見える波 (光) になる瞬間」
+    //   微小な「101」テキストをリング中心に重ねる (ピクセル等倍)
     function triggerStage17TextFlash() {
-        // 2026-05-19 段階19.1: バー位置 + 虹フォント。中央巨大表示は廃止 (安っぽい)
         try {
             if (typeof document === 'undefined') return;
-            // バー要素を起点に配置
             const bar = document.getElementById('p1-lb');
-            const lpct = document.getElementById('p1-lpct');
-            const anchor = lpct || bar;
-            if (!anchor) return;
-            const rect = anchor.getBoundingClientRect();
-            const el = document.createElement('div');
-            el.id = 'p1-stage17-text';
-            el.textContent = '101';
-            Object.assign(el.style, {
+            if (!bar) return;
+            const rect = bar.getBoundingClientRect();
+            // バー右端 = 漏れの起点
+            const leakX = rect.right;
+            const leakY = rect.top + rect.height / 2;
+            // Newton リング
+            const ring = document.createElement('div');
+            ring.className = 'p1-newton-leak';
+            ring.style.setProperty('--leak-x', leakX + 'px');
+            ring.style.setProperty('--leak-y', leakY + 'px');
+            document.body.appendChild(ring);
+            // 微小 101 テキスト (リング中心、スケールしない)
+            const txt = document.createElement('div');
+            txt.textContent = '101';
+            Object.assign(txt.style, {
                 position: 'fixed',
-                left: (rect.right + 8) + 'px',
-                top:  (rect.top - 4) + 'px',
-                font: '900 28px/1 ui-monospace, monospace',
-                background: 'linear-gradient(90deg,#ff0000,#ff8800,#ffff00,#00ff00,#00ffff,#0000ff,#ff00ff)',
-                'background-clip': 'text',
-                '-webkit-background-clip': 'text',
-                color: 'transparent',
-                '-webkit-text-fill-color': 'transparent',
-                letterSpacing: '-0.02em',
-                textShadow: '0 0 18px rgba(255,255,255,0.65)',
-                filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.45))',
-                zIndex: '2147483646',
+                left: leakX + 'px', top: leakY + 'px',
+                transform: 'translate(-50%, -50%)',
+                font: '700 10px/1 ui-monospace, monospace',
+                color: '#fff',
+                textShadow: '0 0 4px rgba(255,255,255,.9), 0 0 8px rgba(255,80,180,.7)',
+                letterSpacing: '0',
+                mixBlendMode: 'screen',
                 pointerEvents: 'none',
+                zIndex: '2147481300',
                 opacity: '0',
-                transform: 'translateY(2px) scale(0.92)',
-                transition: 'opacity 120ms ease-out, transform 220ms cubic-bezier(.16,1,.3,1)'
+                transition: 'opacity 80ms linear'
             });
-            document.body.appendChild(el);
-            requestAnimationFrame(function () {
-                el.style.opacity = '1';
-                el.style.transform = 'translateY(0) scale(1.0)';
-            });
+            document.body.appendChild(txt);
+            requestAnimationFrame(function () { txt.style.opacity = '1'; });
+            setTimeout(function () { txt.style.opacity = '0'; }, 380);
             setTimeout(function () {
-                el.style.transition = 'opacity 220ms ease-in, transform 260ms ease-in';
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(-2px) scale(1.04)';
-            }, 520);
-            setTimeout(function () { try { el.remove(); } catch (e) {} }, 820);
+                try { ring.remove(); } catch (e) {}
+                try { txt.remove(); } catch (e) {}
+            }, 600);
         } catch (e) {}
     }
 
@@ -2348,7 +2445,7 @@
             win.style.opacity = '0';
             state.stage14Clone = clone;
 
-            // 2026-05-19 段階19.5: accretion disk — 球の周りに光輪が高速回転して吸い込みを示唆
+            // 2026-05-19 段階19.7: accretion disk + gravity lens
             try {
                 const disk = document.createElement('div');
                 disk.className = 'p1-accretion-disk';
@@ -2356,9 +2453,15 @@
                 disk.style.setProperty('--disk-top', sy + 'px');
                 document.body.appendChild(disk);
                 state.stage14Disk = disk;
+                // 重力レンズ - 画面全体歪み
+                const lens = document.createElement('div');
+                lens.className = 'p1-grav-lens';
+                document.body.appendChild(lens);
+                state.stage14Lens = lens;
                 setTimeout(function () {
                     try { if (state.stage14Disk === disk) disk.remove(); } catch (e) {}
-                }, 1900);
+                    try { if (state.stage14Lens === lens) lens.remove(); } catch (e) {}
+                }, 2900);
             } catch (e) {}
             // Priority 2: runner も球へ吸われる (既存 is-ingesting class を利用)
             try {

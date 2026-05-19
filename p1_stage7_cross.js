@@ -92,8 +92,12 @@
     };
 
     function buildPlane(camera) {
+        // 2026-05-19 段階19.7: ortho camera 対応
         let w = 5.0, h = 2.8;
-        if (camera && camera.isPerspectiveCamera) {
+        if (camera && camera.isOrthographicCamera) {
+            w = (camera.right - camera.left) * 1.05;
+            h = (camera.top - camera.bottom) * 1.05;
+        } else if (camera && camera.isPerspectiveCamera) {
             const d = 0.45;
             const aspect = camera.aspect || 1.0;
             const vFov = (camera.fov * Math.PI) / 180.0;
