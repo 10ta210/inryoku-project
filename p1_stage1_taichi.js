@@ -1298,32 +1298,78 @@
                 '  filter: brightness(2.2) saturate(1.4);',
                 '  box-shadow: 0 0 18px rgba(255,255,255,.8);',
                 '}',
-                // ── 2026-05-18 段階15 P1-2: 強化された UI ingest (gravity crush) ──
+                // ── 2026-05-19 段階19.5: ブラックホール吸い込み (spaghettification + spiral + redshift) ──
                 '.p1-ui-shell-ingest-strong {',
                 '  transform-origin: var(--core-x) var(--core-y);',
-                '  animation: p1ShellGravityCrush 1280ms cubic-bezier(.12,.9,.08,1) forwards;',
+                '  animation: p1ShellBlackHole 1800ms cubic-bezier(.42,.0,.7,1.0) forwards;',
                 '  will-change: transform, clip-path, filter, opacity;',
                 '}',
-                '@keyframes p1ShellGravityCrush {',
+                '@keyframes p1ShellBlackHole {',
+                // 0%: 通常状態
                 '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1) rotate(0deg);',
-                '         clip-path: polygon(0 0,100% 0,100% 100%,0 100%);',
+                '         clip-path: ellipse(85% 85% at 50% 50%);',
                 '         filter: blur(0) contrast(1) brightness(1); }',
-                '  32%  { opacity: 1; transform: translate3d(calc(var(--pull-x) * .18), calc(var(--pull-y) * .18), 0) scaleX(1.08) scaleY(.82) rotate(-1.2deg);',
-                '         clip-path: polygon(3% 8%,98% 0,94% 93%,0 100%);',
-                '         filter: blur(.2px) contrast(1.25) brightness(1.15); }',
-                '  58%  { opacity: .95; transform: translate3d(calc(var(--pull-x) * .62), calc(var(--pull-y) * .62), 0) scaleX(.48) scaleY(.18) rotate(2.4deg);',
-                '         clip-path: polygon(20% 36%,83% 28%,76% 69%,16% 74%);',
-                '         filter: blur(1px) contrast(1.6) brightness(1.5); }',
-                '  82%  { opacity: .72; transform: translate3d(calc(var(--pull-x) * .9), calc(var(--pull-y) * .9), 0) scaleX(.16) scaleY(.045) rotate(-5deg);',
-                '         clip-path: ellipse(18% 6% at 50% 50%);',
-                '         filter: blur(2px) contrast(2) brightness(2.2); }',
-                // 2026-05-19 段階18: 最後の 5% で更に「snap」を入れる (Codex tweak)
-                '  95%  { opacity: .3; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.04) rotate(12deg);',
-                '         clip-path: ellipse(6% 3% at 50% 50%);',
-                '         filter: blur(3px) brightness(3); }',
-                '  100% { opacity: 0; transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.015) rotate(18deg);',
-                '         clip-path: ellipse(2% 2% at 50% 50%);',
-                '         filter: blur(5px) brightness(4); }',
+                // 15%: 時間膨張 - ゆっくり引力を感じ始める
+                '  15%  { opacity: 1;',
+                '         transform: translate3d(calc(var(--pull-x) * .08), calc(var(--pull-y) * .08), 0)',
+                '                    scaleX(1.06) scaleY(.92) rotate(-32deg) skewX(2deg);',
+                '         clip-path: ellipse(80% 70% at 50% 50%);',
+                '         filter: blur(.2px) contrast(1.12) brightness(1.0); }',
+                // 35%: スパゲッティ化開始 - 横に伸びて縦に潰れる
+                '  35%  { opacity: .96;',
+                '         transform: translate3d(calc(var(--pull-x) * .28), calc(var(--pull-y) * .28), 0)',
+                '                    scaleX(1.22) scaleY(.55) rotate(-130deg) skewX(8deg);',
+                '         clip-path: ellipse(78% 40% at 50% 50%);',
+                '         filter: blur(.4px) contrast(1.35) brightness(.92); }',
+                // 55%: 重力に飲まれて螺旋落下
+                '  55%  { opacity: .86;',
+                '         transform: translate3d(calc(var(--pull-x) * .58), calc(var(--pull-y) * .58), 0)',
+                '                    scaleX(.95) scaleY(.20) rotate(-280deg) skewX(18deg);',
+                '         clip-path: ellipse(55% 18% at 50% 50%);',
+                '         filter: blur(.8px) contrast(1.65) brightness(.78) hue-rotate(15deg); }',
+                // 72%: event horizon に近づき細く長く (spaghettification 最大)
+                '  72%  { opacity: .62;',
+                '         transform: translate3d(calc(var(--pull-x) * .82), calc(var(--pull-y) * .82), 0)',
+                '                    scaleX(.42) scaleY(.05) rotate(-460deg) skewX(28deg);',
+                '         clip-path: ellipse(28% 4% at 50% 50%);',
+                '         filter: blur(1.6px) contrast(2.0) brightness(.55) hue-rotate(-20deg); }',
+                // 88%: redshift / event horizon ぎりぎり
+                '  88%  { opacity: .32;',
+                '         transform: translate3d(calc(var(--pull-x) * .94), calc(var(--pull-y) * .94), 0)',
+                '                    scaleX(.10) scaleY(.012) rotate(-620deg) skewX(35deg);',
+                '         clip-path: ellipse(10% 1.5% at 50% 50%);',
+                '         filter: blur(3px) contrast(2.5) brightness(.28) hue-rotate(-45deg); }',
+                // 100%: singularity に吸い込まれて消滅 (時間膨張で減速)
+                '  100% { opacity: 0;',
+                '         transform: translate3d(var(--pull-x), var(--pull-y), 0)',
+                '                    scale(.002) rotate(-720deg);',
+                '         clip-path: ellipse(0.4% 0.4% at 50% 50%);',
+                '         filter: blur(8px) brightness(.05); }',
+                '}',
+                // 着差円盤 (accretion disk) — UI 吸収中に球の周りに光輪
+                '.p1-accretion-disk {',
+                '  position: fixed;',
+                '  width: 220px; height: 220px;',
+                '  left: var(--disk-left); top: var(--disk-top);',
+                '  margin-left: -110px; margin-top: -110px;',
+                '  border-radius: 50%;',
+                '  background: conic-gradient(from 0deg,',
+                '    rgba(255,0,0,.0) 0%, rgba(255,140,0,.55) 8%,',
+                '    rgba(255,255,0,.75) 18%, rgba(0,255,128,.65) 32%,',
+                '    rgba(0,200,255,.75) 50%, rgba(80,0,255,.55) 68%,',
+                '    rgba(255,0,180,.45) 82%, rgba(255,0,0,.0) 100%);',
+                '  filter: blur(14px) saturate(1.6);',
+                '  z-index: 2147481000;',
+                '  pointer-events: none;',
+                '  opacity: 0;',
+                '  animation: p1AccretionDisk 1800ms cubic-bezier(.3,.1,.7,1) forwards;',
+                '}',
+                '@keyframes p1AccretionDisk {',
+                '  0%   { opacity: 0; transform: rotate(0deg) scale(.6); }',
+                '  20%  { opacity: .55; transform: rotate(180deg) scale(.95); }',
+                '  60%  { opacity: .85; transform: rotate(540deg) scale(1.15); filter: blur(18px) saturate(1.8); }',
+                '  85%  { opacity: .65; transform: rotate(900deg) scale(.7); filter: blur(22px) saturate(1.5); }',
+                '  100% { opacity: 0; transform: rotate(1080deg) scale(.15); filter: blur(28px); }',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -2301,6 +2347,19 @@
             // 元の win95-main は非表示 (clone が吸引アニメを担う)
             win.style.opacity = '0';
             state.stage14Clone = clone;
+
+            // 2026-05-19 段階19.5: accretion disk — 球の周りに光輪が高速回転して吸い込みを示唆
+            try {
+                const disk = document.createElement('div');
+                disk.className = 'p1-accretion-disk';
+                disk.style.setProperty('--disk-left', sx + 'px');
+                disk.style.setProperty('--disk-top', sy + 'px');
+                document.body.appendChild(disk);
+                state.stage14Disk = disk;
+                setTimeout(function () {
+                    try { if (state.stage14Disk === disk) disk.remove(); } catch (e) {}
+                }, 1900);
+            } catch (e) {}
             // Priority 2: runner も球へ吸われる (既存 is-ingesting class を利用)
             try {
                 const runner = document.getElementById('exit-runner');
