@@ -250,11 +250,26 @@
         // 2026-05-18 Stage 13: 球そのものが白光へ変容するブレンド係数
         uniform float uWhiteBirth;  // 0=RGBCMY 球 / 1=純白光球
         uniform float uPremonitionAlpha; // 2026-05-18 段階15: 0-2s premonition core alpha (Codex P0-1)
+        // 2026-05-19 段階19.8: P3 コアルック収束 (uReveal=1 近傍だけ Newton ring + fresnel)
+        uniform float uP3Mix; // 0=既存 / 1=P3 ルック完全収束
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
             vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
             return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+        }
+
+        // 2026-05-19 段階19.8: P3 コア球と同一の 6色スペクトル (R→Y→G→C→B→M→R)
+        vec3 spectrumP3(float t) {
+            vec3 c = vec3(0.0);
+            float tt = fract(t) * 6.0;
+            if (tt < 1.0)      c = mix(vec3(1.0,0.0,0.0), vec3(1.0,1.0,0.0), tt);
+            else if (tt < 2.0) c = mix(vec3(1.0,1.0,0.0), vec3(0.0,1.0,0.0), tt - 1.0);
+            else if (tt < 3.0) c = mix(vec3(0.0,1.0,0.0), vec3(0.0,1.0,1.0), tt - 2.0);
+            else if (tt < 4.0) c = mix(vec3(0.0,1.0,1.0), vec3(0.0,0.0,1.0), tt - 3.0);
+            else if (tt < 5.0) c = mix(vec3(0.0,0.0,1.0), vec3(1.0,0.0,1.0), tt - 4.0);
+            else               c = mix(vec3(1.0,0.0,1.0), vec3(1.0,0.0,0.0), tt - 5.0);
+            return c;
         }
 
         // 軽量 fbm: 3 オクターブの sin-noise (外部ライブラリ不使用)
@@ -355,6 +370,25 @@
             float surfaceMask = innerMask * surfaceOpen;
             vec3 col = mix(base, rgbcmy, surfaceMask);
             col += innerGlow;
+
+            // ── 2026-05-19 段階19.8: P3 コア収束 (Newton ring + fresnel iridescent) ──
+            //   uReveal=1 近傍だけ P3 ルックへ mix。後段フェーズ立てば JS 側で uP3Mix=0
+            if (uP3Mix > 0.001) {
+                vec3 nrm = normalize(vWorldNormal);
+                float theta = acos(clamp(nrm.y, -1.0, 1.0));
+                float phi   = atan(nrm.z, nrm.x);
+                float ringFreq = 8.0;
+                float ring = (sin(theta * ringFreq + uTime * 0.3) * 0.5 + 0.5)
+                           * (sin(phi * 6.0 - uTime * 0.5) * 0.3 + 0.7);
+                vec3 rainbow  = spectrumP3(theta * 0.5 + phi * 0.15 + uTime * 0.08);
+                vec3 rainbow2 = spectrumP3(theta * 0.3 - phi * 0.2 + uTime * 0.12 + 0.5);
+                vec3 iridescent = mix(rainbow, rainbow2, ring * 0.4);
+                vec3 greyP3 = vec3(0.45);
+                vec3 p3col = mix(greyP3, iridescent, fresnel * 0.85 + 0.15);
+                float edgeGlow = pow(fresnel, 4.0);
+                p3col += iridescent * edgeGlow * 0.6;
+                col = mix(col, p3col, uP3Mix);
+            }
 
             // ── 中心深層の太極核 (記憶。表面残像ではない) ──
             float coreMask = pow(facing, 5.0) * coreRemain;
@@ -2241,6 +2275,7 @@
                 uWhiteBirth:  { value: 0 },
                 // 2026-05-18 段階15: premonition core (0-2s) — Codex P0-1
                 uPremonitionAlpha: { value: 0.0 },
+                uP3Mix:      { value: 0.0 },
                 // 2026-05-18 段階15: gravity pulse (7.2-8.5s ingest punch) — Codex P1-2
                 uGravityPulse: { value: 0.0 },
             },
@@ -2571,6 +2606,21 @@
         }
         // 球はゆったり回転 (12°/s)
         state.mesh.rotation.y = t * 0.2094;
+
+        // 2026-05-19 段階19.8: P3 コアルック収束係数を動的計算
+        //   uReveal 0.85→1.0 で立ち上がり、後段フェーズ (white/eye/cross/bang) で自動抑制
+        if (u.uP3Mix) {
+            const rv = u.uReveal.value;
+            const wb = u.uWhiteBirth ? u.uWhiteBirth.value : 0;
+            const ep = u.uEyePhase   ? u.uEyePhase.value   : 0;
+            const cp = u.uCrossPhase ? u.uCrossPhase.value : 0;
+            const bg = u.uBang       ? u.uBang.value       : 0;
+            const rampIn  = Math.max(0, Math.min(1, (rv - 0.85) / 0.15));
+            const rampSm  = rampIn * rampIn * (3 - 2 * rampIn);
+            const suppress = Math.max(wb, ep, cp);
+            const bangSup  = Math.max(0, Math.min(1, bg / 0.3));
+            u.uP3Mix.value = rampSm * (1 - suppress) * (1 - bangSup);
+        }
 
         if (!state.s13_chaosHidden) {
             state.s13_chaosHidden = true;
