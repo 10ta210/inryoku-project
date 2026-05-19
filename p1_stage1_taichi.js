@@ -2418,13 +2418,18 @@
         state.mesh.visible = true;
 
         // PHASE 0: legacy merge play (0-6s) — sphere premonition core
+        // 2026-05-19 段階19.4: 球を見える状態に。司さん「50-75% 球がない 真っ暗」フィードバック対応
+        // 旧: alpha 0.05-0.30 (faint) → 新: alpha 0.65-1.0 (clearly visible)
+        // scale も 0.85-1.0 で大きめに
         if (t < 6.0) {
             const pre = Math.min(1, t / 6.0);
             const preEase = pre * pre * (3 - 2 * pre);
-            state.mesh.scale.setScalar(0.65 + preEase * 0.20);
+            state.mesh.scale.setScalar(0.85 + preEase * 0.15);
             if (u.uPremonitionAlpha) {
-                u.uPremonitionAlpha.value = 0.05 + preEase * 0.25;
+                u.uPremonitionAlpha.value = 0.65 + preEase * 0.35;
             }
+            // 陰陽パターンも薄く出現 (0 → 0.4) — 完全透明じゃなく予兆として見える
+            u.uTaichiMix.value = preEase * 0.4;
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
             u.uTaichiMix.value  = 0;
@@ -2436,9 +2441,12 @@
         if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 1.0;
 
         // PHASE A: 陰陽球がはっきり見える (6-9s)
+        // 2026-05-19 段階19.4: PHASE 0 で uTaichiMix が 0.4 まで上がってるので
+        // 0.4 → 1.0 へ繋ぐ (急降下しないよう)
         if (t < 9.0) {
             const p = (t - 6.0) / 3.0;
-            u.uTaichiMix.value  = Math.min(1, p * 1.5); // 加速して 1 で hold
+            const eased = p * p * (3 - 2 * p); // smoothstep
+            u.uTaichiMix.value  = 0.4 + 0.6 * eased; // 0.4 → 1.0
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
             return;
