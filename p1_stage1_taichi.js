@@ -2382,13 +2382,18 @@
     // 2026-05-19 段階19: 22s timeline (option A 中速) — bar progress 再設計
     // 0-13s: 50→99.5 (smoothstep) / 13-14s: 100 wall / 14s+: 101 breach
     function stage13Progress(t) {
-        if (t < 13.0) {
-            const p = Math.max(0, Math.min(1, t / 13.0));
-            const ease = p * p * (3 - 2 * p); // smoothstep
-            return 50 + ease * 49.5; // 50 → 99.5
+        // 2026-05-19 段階19.6: 融合演出を見せるため bar も遅らせる
+        // 0-4s: 50% で停滞 (legacy fusion 演出中)
+        // 4-16s: 50 → 99.5 (12 秒かけて緩やかに上昇)
+        // 16-17s: 100 wall / 17-17.5s: 101 hold
+        if (t < 4.0) return 50;
+        if (t < 16.0) {
+            const p = (t - 4.0) / 12.0;
+            const ease = p * p * (3 - 2 * p);
+            return 50 + ease * 49.5;
         }
-        if (t < 14.0) return 100;
-        if (t < 14.42) return 100; // hold during 101 flash setup
+        if (t < 17.0) return 100;
+        if (t < 17.5) return 100;
         return 101;
     }
     // 旧 stage13Progress (14s timeline) — 2026-05-19 段階19 で置換、保持コメント
@@ -2438,7 +2443,7 @@
                 percent >= 99.5 && percent < 100.5);
             runner.classList.toggle('is-breakthrough',
                 percent >= 100.5 && t < 14.5);
-            runner.classList.toggle('is-ingesting', t >= 14.5);
+            runner.classList.toggle('is-ingesting', t >= 17.6);
         } catch (e) {}
     }
 
@@ -2476,59 +2481,75 @@
         // sphere は常に可視 (premonition → full)
         state.mesh.visible = true;
 
-        // PHASE 0: legacy merge play (0-6s) — sphere premonition core
-        // 2026-05-19 段階19.4: 球を見える状態に。司さん「50-75% 球がない 真っ暗」フィードバック対応
-        // 旧: alpha 0.05-0.30 (faint) → 新: alpha 0.65-1.0 (clearly visible)
-        // scale も 0.85-1.0 で大きめに
-        if (t < 6.0) {
-            const pre = Math.min(1, t / 6.0);
+        // 2026-05-19 段階19.6: 司さんフィードバック「融合してないのに球体が存在する」
+        // → 0-4s: 球体完全非表示 (legacy fusion 演出に専念)
+        //   4-7s: フェードイン (陰陽パターン弱)
+        //   7-10s: 陰陽はっきり
+        //   10-15s: 陰陽 → グレー → RGBCMY
+        //   15-16s: RGBCMY 確定 (bar 99→100 直前)
+        //   16-17s: bar 100 wall
+        //   17-17.5s: 101 flash
+        //   17.5-20s: ingest + bg fade
+        //   20-22s: white light breathing
+        //   22+: eye/cross 等
+        // PHASE 0: 融合中 (0-4s) — 球体非表示
+        if (t < 4.0) {
+            state.mesh.visible = false;
+            return;
+        }
+        // 4s以降は可視
+        state.mesh.visible = true;
+
+        // PHASE 0.5: フェードイン (4-7s) — premonition alpha 0 → 1
+        if (t < 7.0) {
+            const pre = (t - 4.0) / 3.0;
             const preEase = pre * pre * (3 - 2 * pre);
-            state.mesh.scale.setScalar(0.85 + preEase * 0.15);
-            if (u.uPremonitionAlpha) {
-                u.uPremonitionAlpha.value = 0.65 + preEase * 0.35;
-            }
-            // 陰陽パターンも薄く出現 (0 → 0.4) — 完全透明じゃなく予兆として見える
-            u.uTaichiMix.value = preEase * 0.4;
+            state.mesh.scale.setScalar(0.6 + preEase * 0.4);
+            if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = preEase;
+            u.uTaichiMix.value  = preEase * 0.5;
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
-            u.uTaichiMix.value  = 0;
             return;
         }
 
-        // t>=6s: 通常 alpha + full scale
+        // PHASE A: 陰陽はっきり (7-10s)
         state.mesh.scale.setScalar(1.0);
         if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 1.0;
-
-        // PHASE A: 陰陽球がはっきり見える (6-9s)
-        // 2026-05-19 段階19.4: PHASE 0 で uTaichiMix が 0.4 まで上がってるので
-        // 0.4 → 1.0 へ繋ぐ (急降下しないよう)
-        if (t < 9.0) {
-            const p = (t - 6.0) / 3.0;
-            const eased = p * p * (3 - 2 * p); // smoothstep
-            u.uTaichiMix.value  = 0.4 + 0.6 * eased; // 0.4 → 1.0
+        if (t < 10.0) {
+            const p = (t - 7.0) / 3.0;
+            const eased = p * p * (3 - 2 * p);
+            u.uTaichiMix.value  = 0.5 + 0.5 * eased; // 0.5 → 1.0
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
             return;
         }
 
-        // PHASE B: 陰陽 → グレー → RGBCMY (9-13s)
-        if (t < 13.0) {
+        // PHASE B: 陰陽 → グレー → RGBCMY (10-15s)
+        if (t < 15.0) {
             u.uTaichiMix.value  = 1;
-            const raw = (t - 9.0) / 4.0;
+            const raw = (t - 10.0) / 5.0;
             u.uReveal.value     = holdThenJump(Math.max(0, Math.min(1, raw)));
             u.uWhiteBirth.value = 0;
             return;
         }
 
-        // PHASE C: bar 99→100 wall (13-14s, sphere holds RGBCMY)
-        if (t < 14.0) {
+        // PHASE B2: RGBCMY 確定保持 (15-16s)
+        if (t < 16.0) {
+            u.uTaichiMix.value = 1;
+            u.uReveal.value    = 1;
+            u.uWhiteBirth.value = 0;
+            return;
+        }
+
+        // PHASE C: bar 99→100 wall (16-17s, sphere holds RGBCMY)
+        if (t < 17.0) {
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
             return;
         }
 
-        // PHASE D: "101" text flash (14-14.42s)
-        if (t < 14.42) {
+        // PHASE D: "101" text flash (17-17.5s)
+        if (t < 17.5) {
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
             if (!state.text101Fired) {
@@ -2538,8 +2559,8 @@
             return;
         }
 
-        // PHASE E: UI ingest + bg fade (14.42-17s, ingest起動は14.5)
-        if (t < 17.0) {
+        // PHASE E: UI ingest + bg fade (17.5-20s, ingest起動は17.6)
+        if (t < 20.0) {
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
             if (!state.stage14UnlockFired) {
@@ -2556,14 +2577,14 @@
                     } catch (e) {}
                 }
             }
-            if (t >= 14.5 && !state.stage14IngestFired) {
+            if (t >= 17.6 && !state.stage14IngestFired) {
                 startStage14UiIngest();
             }
             // Smooth bg fade — opacity / u_alpha 経由 (snap visible=false 回避)
             try {
                 const dualBg = state.scene && state.scene.getObjectByName('p1-old-dual-bg');
                 if (dualBg && dualBg.material) {
-                    const c = Math.max(0, Math.min(1, (t - 14.5) / 2.5));
+                    const c = Math.max(0, Math.min(1, (t - 17.6) / 2.5));
                     if (dualBg.material.uniforms && dualBg.material.uniforms.u_frameCollapse) {
                         const bu = dualBg.material.uniforms;
                         bu.u_frameCollapse.value = Math.max(bu.u_frameCollapse.value || 0, c);
@@ -2590,12 +2611,12 @@
                 }
             } catch (e) {}
             // White birth ramp (14.5-17s)
-            if (t >= 14.5) {
-                const w = Math.min(1, (t - 14.5) / 2.5);
+            if (t >= 17.6) {
+                const w = Math.min(1, (t - 17.6) / 2.5);
                 u.uWhiteBirth.value = w;
             }
             // Force black bg from 14.5
-            if (!state.bgBlackSet && t >= 14.5) {
+            if (!state.bgBlackSet && t >= 17.6) {
                 state.bgBlackSet = true;
                 try {
                     if (state.renderer && state.renderer.setClearColor) {
@@ -2611,12 +2632,12 @@
             return;
         }
 
-        // PHASE F: white light alone (17-19s) — sphere breathes
-        if (t < 19.0) {
+        // PHASE F: white light alone (20-22s) — sphere breathes
+        if (t < 22.0) {
             u.uTaichiMix.value  = 1;
             u.uReveal.value     = 1;
             u.uWhiteBirth.value = 1;
-            state.mesh.scale.setScalar(1.0 + Math.sin((t - 17.0) * 2.0) * 0.03);
+            state.mesh.scale.setScalar(1.0 + Math.sin((t - 20.0) * 2.0) * 0.03);
             // bgPlane を完全に隠す (fade完了後のみ)
             if (!state.bgEaten) {
                 state.bgEaten = true;
@@ -2635,10 +2656,10 @@
             return;
         }
 
-        // PHASE G: eye fade-in (19-21s)
-        if (t < 21.0) {
+        // PHASE G: eye fade-in (22-24s)
+        if (t < 24.0) {
             u.uWhiteBirth.value = 1;
-            u.uEyePhase.value   = Math.min(1, (t - 19.0) / 2.0);
+            u.uEyePhase.value   = Math.min(1, (t - 22.0) / 2.0);
             state.mesh.scale.setScalar(1.0);
             if (!state.s13_eyeFired) {
                 state.s13_eyeFired = true;
@@ -2649,8 +2670,8 @@
             return;
         }
 
-        // PHASE H: eye opens + solar flash (21-22s)
-        if (t < 22.0) {
+        // PHASE H: eye opens + solar flash (24-25s)
+        if (t < 25.0) {
             u.uWhiteBirth.value = 1;
             u.uEyePhase.value   = 1;
             if (!state.s13_eyeOpenFired) {
@@ -2659,11 +2680,11 @@
             return;
         }
 
-        // PHASE I: cross flash (22-23s)
-        if (t < 23.0) {
+        // PHASE I: cross flash (25-26s)
+        if (t < 26.0) {
             u.uWhiteBirth.value = 1;
             u.uEyePhase.value   = 1;
-            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 22.0)));
+            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 25.0)));
             if (!state.s13_crossFired) {
                 state.s13_crossFired = true;
                 try {
