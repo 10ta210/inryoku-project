@@ -23,6 +23,21 @@
         ? window.P1_STAGE13_RESET : true;
     window.inryokuP1 = window.inryokuP1 || {};
     window.inryokuP1.stage13Reset = window.P1_STAGE13_RESET;
+    // 2026-05-19 段階19.3 重大バグ修正:
+    // legacy の setupP1ExtensionAPI が `if (window.inryokuP1) return;` で早期 return するため、
+    // ここで stage1 が window.inryokuP1 を作ると registerStage1Handler / _invokeStage1 が作られない。
+    // 結果: 50%トリガー発火しても球が初期化されず、画面が空。これを防ぐため API スタブを先置きする。
+    if (!window.inryokuP1.registerStage1Handler) {
+        window.inryokuP1._handler = null;
+        window.inryokuP1.registerStage1Handler = function(fn) {
+            if (typeof fn === 'function') window.inryokuP1._handler = fn;
+        };
+        window.inryokuP1._invokeStage1 = function(detail) {
+            if (window.inryokuP1._handler) {
+                try { window.inryokuP1._handler(detail); } catch(e) { console.warn('[P1 ext] handler error', e); }
+            }
+        };
+    }
 
     // prefers-reduced-motion 検出
     const REDUCE_MOTION = (typeof window.matchMedia === 'function')
