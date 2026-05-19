@@ -371,25 +371,6 @@
             vec3 col = mix(base, rgbcmy, surfaceMask);
             col += innerGlow;
 
-            // ── 2026-05-19 段階19.8: P3 コア収束 (Newton ring + fresnel iridescent) ──
-            //   uReveal=1 近傍だけ P3 ルックへ mix。後段フェーズ立てば JS 側で uP3Mix=0
-            if (uP3Mix > 0.001) {
-                vec3 nrm = normalize(vWorldNormal);
-                float theta = acos(clamp(nrm.y, -1.0, 1.0));
-                float phi   = atan(nrm.z, nrm.x);
-                float ringFreq = 8.0;
-                float ring = (sin(theta * ringFreq + uTime * 0.3) * 0.5 + 0.5)
-                           * (sin(phi * 6.0 - uTime * 0.5) * 0.3 + 0.7);
-                vec3 rainbow  = spectrumP3(theta * 0.5 + phi * 0.15 + uTime * 0.08);
-                vec3 rainbow2 = spectrumP3(theta * 0.3 - phi * 0.2 + uTime * 0.12 + 0.5);
-                vec3 iridescent = mix(rainbow, rainbow2, ring * 0.4);
-                vec3 greyP3 = vec3(0.45);
-                vec3 p3col = mix(greyP3, iridescent, fresnel * 0.85 + 0.15);
-                float edgeGlow = pow(fresnel, 4.0);
-                p3col += iridescent * edgeGlow * 0.6;
-                col = mix(col, p3col, uP3Mix);
-            }
-
             // ── 中心深層の太極核 (記憶。表面残像ではない) ──
             float coreMask = pow(facing, 5.0) * coreRemain;
             vec3 hiddenTaichi = mix(vec3(0.03), vec3(0.88), yin);
@@ -401,6 +382,28 @@
             vec3 prism = hsv2rgb(vec3(fract(newton * 0.16 + angle * 0.08), 0.82, 1.0));
             col += prism * fresnel * (0.10 + colorBirth * 0.34);
             col += prism * boundary * (1.0 - greyMix) * 0.05;
+
+            // ── 2026-05-19 段階19.9: P3 コア収束 (ortho-safe rim + Newton ring r²) ──
+            //   Codex 再診断: 旧版は ortho では fresnel≈0 → 灰色化、かつ prism に上書きされていた
+            //   新版: rimO = length(nrm.xy) で球全面に虹分布、prism の後に注入
+            if (uP3Mix > 0.001) {
+                vec3 nrm = normalize(vWorldNormal);
+                float rimO  = length(nrm.xy);
+                float fres2 = pow(rimO, 1.4);
+                float theta = acos(clamp(nrm.y, -1.0, 1.0));
+                float phi   = atan(nrm.z, nrm.x);
+                // Newton ring (r² ∝ nλR — 物理式) 全面 banding
+                float r2   = rimO * rimO;
+                float ring = sin(r2 * 38.0 - uTime * 1.8) * 0.5 + 0.5;
+                vec3 iri  = spectrumP3(ring + phi * 0.10 + uTime * 0.08);
+                vec3 iri2 = spectrumP3(ring * 1.3 - theta * 0.25 + uTime * 0.12 + 0.33);
+                vec3 iridescent = mix(iri, iri2, 0.5);
+                // base saturation 高 (0.55→1.0) + rim 強発光 + 干渉縞全面
+                vec3 p3col = mix(vec3(0.55), iridescent, 0.55 + fres2 * 0.45);
+                p3col += iridescent * pow(rimO, 3.0) * 1.4;
+                p3col += iridescent * (ring - 0.5) * 0.35;
+                col = mix(col, p3col, uP3Mix);
+            }
 
             // ── 2026-05-18 段階4: 6色 CRACK radiation (big bang) ──
             //   uBang 0→1 で球表面が方向別 (RGBCMY 6セクター) に裂け、
@@ -2286,6 +2289,9 @@
         state.mesh = new THREE.Mesh(state.geo, state.mat);
         state.mesh.name = 'p1Stage1TaichiSphere';
         state.mesh.position.set(0, 0, 0.7);
+        // 2026-05-19 段階19.9: DEBUG — console から uP3Mix を強制操作可能に
+        //   window.__p1mat.uniforms.uP3Mix.value = 1.0 で P3 ルック即確認
+        try { window.__p1mat = state.mat; } catch (e) {}
         state.mesh.renderOrder = 999;
         state.mesh.scale.setScalar(REDUCE_MOTION ? 1 : 0.001);
         state.scene.add(state.mesh);
