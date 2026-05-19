@@ -3485,7 +3485,21 @@ function renderPhase1() {
                 try {
                     scissor.enabled = false;
                     renderer.setScissorTest(false);
-                    renderer.setViewport(0, 0, W, H);
+                    const Wnow = renderer.domElement.width || window.innerWidth;
+                    const Hnow = renderer.domElement.height || window.innerHeight;
+                    renderer.setViewport(0, 0, Wnow, Hnow);
+                    // 2026-05-19 段階19.2: scissor→fullscreen でアスペクト変わると
+                    // 球が 縦長/横長 に見える問題を解消。カメラ frustum を viewport に合わせる。
+                    if (!window._p1CamFixedForFull) {
+                        window._p1CamFixedForFull = true;
+                        const aspectFull = Wnow / Hnow;
+                        const camHFull = camH; // 5 を維持
+                        camera.left   = -camHFull * aspectFull;
+                        camera.right  =  camHFull * aspectFull;
+                        camera.top    =  camHFull;
+                        camera.bottom = -camHFull;
+                        camera.updateProjectionMatrix();
+                    }
                 } catch (e) {}
             } else if (fullViewportPhase) {
                 // 段階12: フル画面トンネル
