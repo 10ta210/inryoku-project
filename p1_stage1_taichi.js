@@ -1329,14 +1329,84 @@
                 '  visibility: hidden !important;',
                 '  pointer-events: none !important;',
                 '}',
-                // ── 2026-05-18 段階15 P0-2: loading bar wall / breach states ──
-                '#p1-lb.p1-bar-wall {',
-                '  filter: brightness(1.4) contrast(1.25);',
-                '  transform: scaleX(1.015);',
+                // ── 2026-05-20 段階20: SOTA バー演出 (Codex Opus リサーチ) ──
+                //   @property + linear() で純 CSS の物理オーバーシュート
+                //   グレー → 虹 を --lb-sat で補間
+                '@property --lb-sat { syntax: "<percentage>"; inherits: false; initial-value: 0%; }',
+                '@property --lb-glow { syntax: "<number>"; inherits: false; initial-value: 0; }',
+                // 基底 (Win95 風青) + transform-origin
+                '#p1-lb {',
+                '  transform-origin: left center;',
+                '  will-change: width, transform, filter, background;',
+                '  transition: width 280ms linear(0, .35 25%, .72 55%, .94 80%, 1.0),',
+                '              transform 220ms linear(0, 1.04 60%, .985 85%, 1.01),',
+                '              --lb-sat 360ms linear(0, 1.0 80%, 1.0),',
+                '              --lb-glow 360ms linear(0, 1.0 80%, 1.0),',
+                '              filter 360ms ease-out;',
                 '}',
+                // Wall hit (100% で停止 + 圧縮振動 anticipation)
+                '#p1-lb.p1-bar-wall {',
+                '  animation: p1BarWallShake 180ms linear(0, -1 25%, 1 50%, -.6 75%, 0) 1;',
+                '  filter: brightness(1.35) contrast(1.2);',
+                '}',
+                '@keyframes p1BarWallShake {',
+                '  0%   { transform: translateX(0) scaleY(1); }',
+                '  20%  { transform: translateX(-.5px) scaleY(.94); }',
+                '  45%  { transform: translateX(.5px)  scaleY(1.06); }',
+                '  70%  { transform: translateX(-.3px) scaleY(.97); }',
+                '  100% { transform: translateX(0) scaleY(1); }',
+                '}',
+                // Breach (100→101): グレー → 虹 補間 + オーバーシュート + 発光
                 '#p1-lb.p1-bar-breach {',
-                '  filter: brightness(2.2) saturate(1.4);',
-                '  box-shadow: 0 0 18px rgba(255,255,255,.8);',
+                '  --lb-sat: 100%;',
+                '  --lb-glow: 1;',
+                '  background: linear-gradient(90deg,',
+                '    hsl(0   var(--lb-sat) 55%) 0%,',
+                '    hsl(45  var(--lb-sat) 58%) 15%,',
+                '    hsl(95  var(--lb-sat) 55%) 30%,',
+                '    hsl(170 var(--lb-sat) 52%) 48%,',
+                '    hsl(220 var(--lb-sat) 55%) 65%,',
+                '    hsl(285 var(--lb-sat) 55%) 82%,',
+                '    hsl(330 var(--lb-sat) 58%) 100%);',
+                '  background-size: 200% 100%;',
+                '  animation: p1BarRainbowFlow 1.6s linear infinite;',
+                '  filter: brightness(calc(1.4 + var(--lb-glow) * .8))',
+                '          saturate(calc(1 + var(--lb-glow) * .6));',
+                '  box-shadow: 0 0 calc(var(--lb-glow) * 12px) rgba(255,255,255,.55),',
+                '              0 0 calc(var(--lb-glow) * 28px) rgba(255,80,200,.35),',
+                '              0 0 calc(var(--lb-glow) * 48px) rgba(80,180,255,.25);',
+                '}',
+                '@keyframes p1BarRainbowFlow {',
+                '  0%   { background-position: 0% 50%; }',
+                '  100% { background-position: 200% 50%; }',
+                '}',
+                // Odometer 風 「100」→「101」 一の位だけ機械式回転
+                '#p1-lpct.p1-pct-odometer {',
+                '  font-family: "MS Sans Serif", Tahoma, monospace;',
+                '  font-weight: 700;',
+                '  letter-spacing: .02em;',
+                '}',
+                '.p1-odo-wrap {',
+                '  display: inline-block; height: 1em; line-height: 1; overflow: hidden;',
+                '  vertical-align: -.05em; position: relative; width: .6em;',
+                '}',
+                '.p1-odo-roll {',
+                '  display: block;',
+                '  transform: translateY(0);',
+                '  transition: transform 380ms linear(0, 1.15 70%, .97 88%, 1.0);',
+                '}',
+                '.p1-odo-roll.is-rolled { transform: translateY(-1em); }',
+                '.p1-odo-roll > span { display: block; height: 1em; line-height: 1; }',
+                // breach 時にテキスト自体も虹色化 (background-clip)
+                '#p1-lpct.p1-pct-breach {',
+                '  background: linear-gradient(90deg,#ff5a5a,#ffb800,#fff200,#3aff8c,#3ad4ff,#9a6dff,#ff5ad4);',
+                '  background-size: 200% 100%;',
+                '  -webkit-background-clip: text;',
+                '  background-clip: text;',
+                '  color: transparent;',
+                '  -webkit-text-fill-color: transparent;',
+                '  animation: p1BarRainbowFlow 2.4s linear infinite;',
+                '  text-shadow: 0 0 6px rgba(255,255,255,.35);',
                 '}',
                 // ── 2026-05-19 段階19.7: BLACK HOLE 強化版 ──
                 // 司さんフィードバック「吸い込みありえないくらいしょぼい」
@@ -2548,6 +2618,18 @@
     //     const p = Math.max(0, Math.min(1, t / 14.0));
     //     if (p < 0.72) { ... 50→99.5 ... } if (p<0.78) return 100; ... 100→101
     // }
+    // 2026-05-20 段階20: SOTA バー駆動 — odometer 風 100→101
+    function ensureOdometer(lpct) {
+        if (!lpct || lpct.querySelector('.p1-odo-wrap')) return;
+        // Loading reality... 10[X] の最後の桁を odometer 化
+        lpct.classList.add('p1-pct-odometer');
+        lpct.innerHTML =
+            'Loading reality... 10' +
+            '<span class="p1-odo-wrap">' +
+              '<span class="p1-odo-roll"><span>0</span><span>1</span></span>' +
+            '</span>' +
+            '<span class="p1-odo-pct">%</span>';
+    }
     function updateStage13Bar(t) {
         try {
             const lb = document.getElementById('p1-lb');
@@ -2555,20 +2637,29 @@
             if (!lb && !lpct) return;
             const percent = stage13Progress(t);
             const visual = Math.min(percent, 101);
+            const wall   = visual >= 99.5 && visual < 100.5;
+            const breach = visual >= 100.5;
+
             if (lb) lb.style.width = visual + '%';
+
             if (lpct) {
-                // 2026-05-19 段階19: 22s timeline テキスト
-                if (t < 13.0) {
-                    lpct.textContent = 'Loading reality... ' + Math.round(visual) + '%';
-                } else if (t < 14.0) {
-                    lpct.textContent = 'Loading reality... 100%';
+                if (wall || breach) {
+                    // Odometer モード (100 / 101 の段階)
+                    ensureOdometer(lpct);
+                    const roll = lpct.querySelector('.p1-odo-roll');
+                    if (roll) roll.classList.toggle('is-rolled', breach);
+                    lpct.classList.toggle('p1-pct-breach', breach);
                 } else {
-                    lpct.textContent = 'Loading reality... 101%';
+                    // 通常進捗テキスト
+                    if (lpct.classList.contains('p1-pct-odometer')) {
+                        lpct.classList.remove('p1-pct-odometer', 'p1-pct-breach');
+                    }
+                    lpct.textContent = 'Loading reality... ' + Math.round(visual) + '%';
                 }
             }
             if (lb) {
-                lb.classList.toggle('p1-bar-wall',   visual >= 99.5 && visual < 100.5);
-                lb.classList.toggle('p1-bar-breach', visual >= 100.5);
+                lb.classList.toggle('p1-bar-wall',   wall);
+                lb.classList.toggle('p1-bar-breach', breach);
             }
         } catch (e) {}
     }
