@@ -309,12 +309,15 @@
 
         void main() {
             // ── reveal から派生する段階マスク ──
-            float greyMix     = smoothstep(0.00, 0.48, uReveal);
+            // 2026-05-20 段階19.13 司さんフィードバック「陰陽消えるのやめて」
+            //   greyMix を 0.35 で頭打ち → 陰陽が完全に灰色化しない
+            //   surfaceOpen を 0.45 で頭打ち → RGBCMY が陰陽を完全置換しない
+            float greyMix     = smoothstep(0.00, 0.48, uReveal) * 0.35;
             float colorBirth  = smoothstep(0.38, 0.92, uReveal);
-            float surfaceOpen = smoothstep(0.58, 1.00, uReveal);
+            float surfaceOpen = smoothstep(0.58, 1.00, uReveal) * 0.45;
             float coreRemain  = 0.18 * smoothstep(0.70, 1.00, uReveal);
 
-            // ── Taichi → Grey ベース ──
+            // ── Taichi → Grey ベース (Grey に完全には移行しない) ──
             vec3 p = normalize(vPosition);
             float angle = atan(p.y, p.x);
             float s = sin(angle + sin(p.y * 3.8 + uTime * 0.4) * 0.32 + p.z * 0.7);
@@ -2625,7 +2628,8 @@
             const rampSm  = rampIn * rampIn * (3 - 2 * rampIn);
             const suppress = Math.max(wb, ep, cp);
             const bangSup  = Math.max(0, Math.min(1, bg / 0.3));
-            u.uP3Mix.value = rampSm * (1 - suppress) * (1 - bangSup);
+            // 2026-05-20 段階19.13: P3 ルックも陰陽を消さないよう上限 0.45 (旧 1.0)
+            u.uP3Mix.value = rampSm * (1 - suppress) * (1 - bangSup) * 0.45;
         }
 
         if (!state.s13_chaosHidden) {
