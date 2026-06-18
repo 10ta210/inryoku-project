@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — P1 · 目覚め (mezame)</title>
+<link rel="stylesheet" href="cosmos-a11y.css" />
+<style>
+  :root { color-scheme: dark; --ink:#e8e8ee; --dim:#9a9aaa; }
+  *,*::before,*::after { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:#080808;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; color:var(--ink); }
+  canvas { display:block; position:fixed; inset:0; }
+  #preroll { z-index:3; }
+  #crt { z-index:5; pointer-events:none; mix-blend-mode:screen; opacity:0; transition:opacity 1.2s ease 0.4s; }
+  body.crton #crt { opacity:1; }
+
+  /* The retro shell (existing-style Win95-ish chrome, rebuilt simply for the preview) */
+  #shell {
+    position:fixed; inset:0; z-index:4;
+    background:#808080;
+    background-image:
+      linear-gradient(45deg,#000 25%,transparent 25%),
+      linear-gradient(-45deg,#000 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#000 75%),
+      linear-gradient(-45deg,transparent 75%,#000 75%);
+    background-size:2px 2px;
+    background-position:0 0, 0 1px, 1px -1px, -1px 0px;
+    opacity:0; transition:opacity 1.0s ease 0.2s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  body.shellon #shell { opacity:1; }
+
+  .win {
+    width:min(640px, 84vw);
+    background:#c0c0c0;
+    border:2px solid;
+    border-color:#fff #000 #000 #fff;
+    box-shadow: 1px 1px 0 #404040, inset -1px -1px 0 #808080, inset 1px 1px 0 #dfdfdf;
+    font-family: 'Press Start 2P', ui-monospace, monospace;
+    color:#000;
+  }
+  .win .tb {
+    background:linear-gradient(90deg,#000080,#1084d0);
+    color:#fff; padding:6px 8px; font-size:11px; letter-spacing:1px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .win .tb .x { background:#c0c0c0; color:#000; padding:0 6px; border:1px solid; border-color:#fff #000 #000 #fff; }
+  .win .bd { padding:24px 28px; font-size:12px; line-height:2; }
+  .win .bar { height:14px; background:#fff; border:1px solid; border-color:#404040 #fff #fff #404040; padding:2px; margin-top:10px; }
+  .win .bar i { display:block; height:100%; background:repeating-linear-gradient(90deg,#000080 0 8px,transparent 8px 10px); transform-origin:left; transform:scaleX(0); transition:transform .12s linear; }
+  .win .stat { margin-top:14px; font-size:9px; letter-spacing:1px; color:#404040; min-height:14px; }
+  .win .blink { animation:bl 1s steps(2) infinite; }
+  @keyframes bl { 50% { opacity:0; } }
+
+  /* Easter overlay */
+  #flash {
+    position:fixed; inset:0; z-index:9; pointer-events:none; opacity:0;
+    background:radial-gradient(circle at center,
+      #00ffff 0%, #ff00ff 22%, #ffff00 44%, #ff0000 62%, #00ff00 78%, #0000ff 92%, transparent 100%);
+    mix-blend-mode:difference;
+  }
+  #flash.fire { animation:flash 800ms ease-out; }
+  @keyframes flash { 0%{opacity:0} 12%{opacity:1} 100%{opacity:0} }
+
+  /* Pre-roll caption */
+  #cap {
+    position:fixed; left:50%; bottom:14%; transform:translateX(-50%); z-index:6;
+    font-size:9px; letter-spacing:.55em; color:#9a9aa6; text-transform:uppercase;
+    pointer-events:none; opacity:0; transition:opacity .6s;
+  }
+  body.prerollin #cap { opacity:.7; }
+  body.shellon #cap { opacity:0; }
+
+  /* HUD */
+  #hud {
+    position:fixed; top:14px; right:14px; z-index:20;
+    padding:10px 12px; border:1px solid #2a2a32; border-radius:4px;
+    background:rgba(8,8,12,.7); backdrop-filter:blur(8px);
+    font-size:9px; letter-spacing:.18em; color:#9a9aa6; text-transform:uppercase; line-height:1.7;
+    min-width:200px;
+  }
+  #hud .row { display:flex; justify-content:space-between; gap:14px; }
+  #hud .row b { color:#e8e8ee; font-weight:400; }
+  #hud .hint { margin-top:8px; padding-top:8px; border-top:1px solid #2a2a32; color:#5a5a66; font-size:8px; }
+
+  /* Handoff cue */
+  #handoff {
+    position:fixed; inset:0; z-index:8; pointer-events:none; opacity:0;
+    background:radial-gradient(circle at center, #fff 0%, transparent 30%);
+    mix-blend-mode:screen;
+  }
+  body.handoff #handoff { opacity:1; transition:opacity .4s ease-in; }
+
+  /* Replay */
+  #replay {
+    position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:30;
+    border:1px solid #2a2a32; background:rgba(8,8,12,.7); color:#9a9aa6;
+    padding:6px 14px; border-radius:999px; font:inherit; font-size:9px; letter-spacing:.3em;
+    text-transform:uppercase; cursor:pointer; backdrop-filter:blur(8px);
+  }
+  #replay:hover { color:#e8e8ee; }
+</style>
+</head>
+<body>
+
+<a class="cosmos-skip-link" href="#main" data-i18n="cosmos.skip.link">本文へ移動</a>
+
+<canvas id="preroll" aria-hidden="true"></canvas>
+<canvas id="crt" aria-hidden="true"></canvas>
+
+<main id="main" tabindex="-1" aria-label="P1 目覚めの試演 / P1 awakening preview">
+  <h1 class="sr-only">inryokü P1 目覚めの試演</h1>
+</main>
+
+<div id="shell">
+  <div class="win">
+    <div class="tb"><span data-i18n="p1.boot.window">INRYOKÜ.SYS — 起動</span><span class="x" aria-hidden="true">×</span></div>
+    <div class="bd">
+      <div data-i18n="p1.boot.init">観測の場を整えています<span class="blink">_</span></div>
+      <div data-i18n="p1.boot.loading">円環粒子を読み込み中 ... <span id="lp">0%</span></div>
+      <div class="bar"><i id="bi"></i></div>
+      <div class="stat" id="stat">EVENT · 引き寄せ</div>
+      <div style="margin-top:14px; font-size:9px; color:#404040; letter-spacing:1px;">
+        RGB=BLACK · CMY=WHITE · YOU=RAINBOW
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="cap" role="status" aria-live="polite" data-i18n="p1.cap.preroll">意識 — まだ凝らない</div>
+
+<div id="flash" aria-hidden="true"></div>
+<div id="handoff" aria-hidden="true"></div>
+
+<div id="hud" role="status" aria-live="polite" aria-label="起動HUD / boot HUD">
+  <div class="row"><span data-i18n="cosmos.hud.phase">相</span><b id="hPhase">前奏</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.particles">粒子</span><b id="hCount">4500</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.state">状態</span><b id="hState" data-i18n="p1.state.drifting">漂う</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.audio">音</span><b id="hAudio" data-i18n="cosmos.hud.audio_silent">静寂</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.fps">fps</span><b id="hFps">--</b></div>
+  <div class="hint" data-i18n="p1.hint.reality">R-E-A-L-I-T-Y と打つ</div>
+</div>
+
+<button id="replay" type="button" aria-label="起動の場面を最初から観測する / replay the boot sequence" data-i18n="cosmos.replay.button">もう一度はじめる</button>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   P1 UPGRADE PREVIEW
+   Self-contained. No CDN dependencies. Plain canvas2D + WebGL.
+   Layers: pre-roll particles → existing-style shell → CRT post-FX →
+           handoff cue → 'REALITY' easter egg
+   ════════════════════════════════════════════════════════════════ */
+
+const W = () => innerWidth, H = () => innerHeight;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ----- DPR-aware canvas sizing ----- */
+function fit(c) { c.width = W() * devicePixelRatio; c.height = H() * devicePixelRatio; c.style.width = W()+'px'; c.style.height = H()+'px'; }
+const prerollC = document.getElementById('preroll');
+const crtC = document.getElementById('crt');
+fit(prerollC); fit(crtC);
+addEventListener('resize', () => { fit(prerollC); fit(crtC); buildLogoMask(); });
+
+/* ════════════════════════════════════════════════════════════════
+   LAYER 2 — PRE-ROLL PARTICLES (canvas2d)
+   ════════════════════════════════════════════════════════════════ */
+const pctx = prerollC.getContext('2d');
+const N = reduceMotion ? 800 : 4500;
+const parts = new Array(N);
+
+/* logo mask: sample where particles converge */
+let mask = null, maskW = 0, maskH = 0;
+function buildLogoMask() {
+  const mc = document.createElement('canvas');
+  maskW = 240; maskH = 120;
+  mc.width = maskW; mc.height = maskH;
+  const mctx = mc.getContext('2d');
+  mctx.fillStyle = '#000'; mctx.fillRect(0,0,maskW,maskH);
+  mctx.fillStyle = '#fff';
+  mctx.font = 'bold 64px ui-monospace, monospace';
+  mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
+  mctx.fillText('inryokü', maskW/2, maskH/2);
+  mask = mctx.getImageData(0,0,maskW,maskH).data;
+}
+buildLogoMask();
+
+function sampleMaskPoint() {
+  for (let tries = 0; tries < 40; tries++) {
+    const mx = Math.floor(Math.random() * maskW);
+    const my = Math.floor(Math.random() * maskH);
+    const a = mask[(my * maskW + mx) * 4];
+    if (a > 128) {
+      return [(mx / maskW - 0.5) * W() * 0.6 + W()/2,
+              (my / maskH - 0.5) * H() * 0.22 + H()/2];
+    }
+  }
+  return [W()/2, H()/2];
+}
+
+const palette = [
+  { r: 128, g: 128, b: 128, w: 0.60 },  // grey (dominant)
+  { r: 255, g: 80,  b: 80,  w: 0.07 },  // R
+  { r: 80,  g: 255, b: 100, w: 0.07 },  // G
+  { r: 90,  g: 130, b: 255, w: 0.06 },  // B
+  { r: 80,  g: 220, b: 230, w: 0.06 },  // C
+  { r: 230, g: 90,  b: 220, w: 0.07 },  // M
+  { r: 230, g: 220, b: 80,  w: 0.07 },  // Y
+];
+function pickColor() {
+  let r = Math.random();
+  for (const p of palette) { r -= p.w; if (r <= 0) return p; }
+  return palette[0];
+}
+
+function initParts() {
+  for (let i = 0; i < N; i++) {
+    const c = pickColor();
+    const tgt = sampleMaskPoint();
+    parts[i] = {
+      x: Math.random() * W(), y: Math.random() * H(),
+      vx: (Math.random()-0.5) * 0.2, vy: (Math.random()-0.5) * 0.2,
+      tx: tgt[0], ty: tgt[1],
+      r: c.r, g: c.g, b: c.b,
+      a: 0, s: 0.6 + Math.random() * 1.6,
+      seed: Math.random() * 1000,
+    };
+  }
+}
+initParts();
+
+/* 2-octave value noise for flow field */
+function hash(x, y) { return (Math.sin(x*127.1 + y*311.7) * 43758.5453) % 1; }
+function noise2(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const a = hash(ix, iy), b = hash(ix+1, iy), c = hash(ix, iy+1), d = hash(ix+1, iy+1);
+  const ux = fx*fx*(3-2*fx), uy = fy*fy*(3-2*fy);
+  return Math.abs(((a*(1-ux)+b*ux)*(1-uy) + (c*(1-ux)+d*ux)*uy));
+}
+
+let prerollT0 = performance.now();
+let prerollDone = false;
+
+function stepPreroll(now) {
+  const t = (now - prerollT0) / 1000;
+  if (t > 1.6) { prerollDone = true; return; }
+
+  pctx.globalCompositeOperation = 'source-over';
+  pctx.fillStyle = 'rgba(8,8,8,0.18)';
+  pctx.fillRect(0,0,prerollC.width, prerollC.height);
+  pctx.globalCompositeOperation = 'lighter';
+
+  /* phase: 0–0.6 drift, 0.6–1.2 attract, 1.2–1.5 collapse, 1.5–1.6 fade */
+  const alphaCurve = t < 0.6 ? t/0.6 * 0.7
+                   : t < 1.5 ? 0.7 + 0.3 * Math.min(1, (t-0.6)/0.6)
+                   : Math.max(0, 1 - (t - 1.5) / 0.1);
+  const attractK = t < 0.6 ? 0
+                 : t < 1.2 ? (t - 0.6) / 0.6 * 1.6
+                 : 1.6 + (t - 1.2) / 0.3 * 4.5;
+  const satCurve = t < 0.6 ? 0
+                 : Math.min(1, (t - 0.6) / 0.6);
+
+  const dpr = devicePixelRatio;
+  for (let i = 0; i < N; i++) {
+    const p = parts[i];
+    /* flow */
+    const fx = noise2(p.x * 0.004, p.y * 0.004 + t * 0.05) - 0.5;
+    const fy = noise2(p.x * 0.004 + 100, p.y * 0.004 + t * 0.05) - 0.5;
+    p.vx += fx * 0.12;
+    p.vy += fy * 0.12;
+    /* attract */
+    if (attractK > 0) {
+      const dx = p.tx - p.x, dy = p.ty - p.y;
+      const d = Math.max(8, Math.sqrt(dx*dx+dy*dy));
+      p.vx += dx / d * attractK;
+      p.vy += dy / d * attractK;
+    }
+    p.vx *= 0.86; p.vy *= 0.86;
+    p.x += p.vx; p.y += p.vy;
+    p.a = alphaCurve * (0.4 + 0.6 * Math.sin(now*0.003 + p.seed));
+
+    /* desaturate towards grey when sat low */
+    const r = 128 + (p.r - 128) * satCurve;
+    const g = 128 + (p.g - 128) * satCurve;
+    const b = 128 + (p.b - 128) * satCurve;
+    pctx.fillStyle = `rgba(${r|0},${g|0},${b|0},${p.a})`;
+    pctx.beginPath();
+    pctx.arc(p.x * dpr, p.y * dpr, p.s * dpr, 0, 6.283);
+    pctx.fill();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LAYER 5 — CRT POST-FX (WebGL fullscreen pass)
+   sourced from the rendered shell + preroll via texture-from-screen
+   trick: we draw a procedural CRT *atop* with mix-blend-mode: screen
+   ════════════════════════════════════════════════════════════════ */
+const gl = crtC.getContext('webgl', { premultipliedAlpha: false, alpha: true });
+function compile(src, type) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+  return s;
+}
+const vs = compile(`attribute vec2 a; varying vec2 v; void main(){ v=a*0.5+0.5; gl_Position=vec4(a,0.0,1.0); }`, gl.VERTEX_SHADER);
+const fs = compile(`
+  precision highp float;
+  varying vec2 v;
+  uniform float u_t;
+  uniform vec2 u_res;
+  uniform float u_strength;
+  float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+  void main(){
+    vec2 uv = v;
+    /* barrel */
+    vec2 cc = uv - 0.5;
+    uv += cc * dot(cc, cc) * 0.06;
+
+    /* scanlines: fine + coarse */
+    float scan = 1.0 - 0.18 * (0.5 + 0.5 * sin(uv.y * u_res.y * 3.14159));
+    float coarse = 1.0 - 0.06 * (0.5 + 0.5 * sin(uv.y * 320.0));
+    float lines = scan * coarse;
+
+    /* vignette */
+    float vig = 1.0 - smoothstep(0.5, 1.25, dot(cc, cc) * 2.0) * 0.45;
+
+    /* phosphor flicker */
+    float flick = 0.96 + 0.04 * hash(vec2(floor(u_t*60.0), 0.0));
+
+    /* chroma fringe (additive screen-blend feel) */
+    float chroma = 0.0015 * (0.6 + 0.4 * sin(u_t * 0.7));
+    vec3 fringe = vec3(
+      hash(uv + vec2( chroma, 0.0)) * 0.0,
+      0.0,
+      hash(uv - vec2( chroma, 0.0)) * 0.0
+    );
+
+    /* bright phosphor dots layer */
+    float dotPat = step(0.5, fract(uv.x * u_res.x * 0.5)) * step(0.5, fract(uv.y * u_res.y * 0.5));
+
+    vec3 col = vec3(0.0);
+    /* additive screen-blend strength: we WRITE light into the screen-mix */
+    col += vec3(0.02) * lines * vig * flick * u_strength;
+    col += fringe * u_strength;
+
+    /* soft scanline glow at edges */
+    float edge = smoothstep(0.95, 1.05, length(cc) * 2.0);
+    col += vec3(0.15, 0.05, 0.18) * edge * u_strength * 0.3;
+
+    gl_FragColor = vec4(col, 1.0);
+  }`, gl.FRAGMENT_SHADER);
+const prog = gl.createProgram(); gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const uT = gl.getUniformLocation(prog, 'u_t');
+const uRes = gl.getUniformLocation(prog, 'u_res');
+const uStr = gl.getUniformLocation(prog, 'u_strength');
+function drawCRT(t, strength) {
+  gl.viewport(0, 0, crtC.width, crtC.height);
+  gl.uniform1f(uT, t);
+  gl.uniform2f(uRes, crtC.width, crtC.height);
+  gl.uniform1f(uStr, strength);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LAYER 3 — SHELL BOOT (simplified placeholder for the existing
+   9-state engine — in production the original p1_code_for_claude.js
+   plays here, untouched)
+   ════════════════════════════════════════════════════════════════ */
+// 状態。漢字 + romaji（最初の出現のみ）/ id を保持して内部参照に互換。
+const STATES = [
+  ['ATTRACT', 0.30, '引き寄せ (hikiyose) — CMY と RGB が中心へ寄る'],
+  ['EVENT_FUSE', 0.32, '融合 (yūgō) — 二極がひとつの場で重なる'],
+  ['DUALITY', 0.50, '二極 — 黒と白が加速する'],
+  ['EVENT_SING', 0.52, 'ひとつのグレー — 全ての色を抱える地点'],
+  ['WARP_GROW', 0.75, '通路がひらく'],
+  ['EVENT_BREACH', 0.77, '境界がほどける'],
+  ['CONSUME', 1.00, '現実を呑む'],
+];
+// id → 日本語短ラベル（HUD 表示用）
+const STATE_JA = {
+  ATTRACT: '引き寄せ', EVENT_FUSE: '融合', DUALITY: '二極',
+  EVENT_SING: 'ひとつのグレー', WARP_GROW: '通路がひらく',
+  EVENT_BREACH: '境界がほどける', CONSUME: '現実を呑む'
+};
+const statEl = document.getElementById('stat');
+const lp = document.getElementById('lp');
+const bi = document.getElementById('bi');
+const hPhase = document.getElementById('hPhase');
+const hState = document.getElementById('hState');
+const hAudio = document.getElementById('hAudio');
+
+let shellT0 = 0, shellRunning = false;
+function startShell() {
+  shellT0 = performance.now();
+  shellRunning = true;
+  document.body.classList.add('shellon', 'crton');
+  hPhase.textContent = '殻 (kara)';
+}
+function stepShell(now) {
+  if (!shellRunning) return;
+  const t = (now - shellT0) / 1000;
+  const total = 7.0;
+  const p = Math.min(1, t / total);
+  bi.style.transform = `scaleX(${p})`;
+  lp.textContent = (p * 100).toFixed(0) + '%';
+  let cur = STATES[0];
+  for (const s of STATES) { if (p <= s[1]) { cur = s; break; } }
+  statEl.textContent = 'EVENT · ' + (STATE_JA[cur[0]] || cur[0]);
+  hState.textContent = STATE_JA[cur[0]] || cur[0].toLowerCase();
+  if (p >= 1 && !window.__p1done) {
+    window.__p1done = true;
+    fireHandoff();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LAYER 1 — AUDIO (modem hiss → tone)
+   ════════════════════════════════════════════════════════════════ */
+let actx = null;
+function armAudio() {
+  if (actx || reduceMotion) return;
+  document.addEventListener('pointerdown', startAudio, { once: true });
+  document.addEventListener('keydown', startAudio, { once: true });
+}
+function startAudio() {
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    hAudio.textContent = '鳴る';
+    /* segment 1: pink-ish noise hiss */
+    const buf = actx.createBuffer(1, actx.sampleRate * 1.6, actx.sampleRate);
+    const ch = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < ch.length; i++) { const wn = Math.random()*2-1; last = 0.98*last + 0.02*wn; ch[i] = last*4; }
+    const src = actx.createBufferSource(); src.buffer = buf;
+    const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 0.6;
+    const g = actx.createGain(); g.gain.setValueAtTime(0, actx.currentTime); g.gain.linearRampToValueAtTime(0.06, actx.currentTime + 0.4); g.gain.linearRampToValueAtTime(0, actx.currentTime + 1.6);
+    src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start();
+
+    /* segment 2: chirp 300→1400 */
+    const o = actx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(300, actx.currentTime + 1.6);
+    o.frequency.exponentialRampToValueAtTime(1400, actx.currentTime + 4.0);
+    const og = actx.createGain(); og.gain.setValueAtTime(0, actx.currentTime + 1.6);
+    og.gain.linearRampToValueAtTime(0.06, actx.currentTime + 1.8);
+    og.gain.linearRampToValueAtTime(0, actx.currentTime + 4.0);
+    o.connect(og); og.connect(actx.destination); o.start(actx.currentTime + 1.6); o.stop(actx.currentTime + 4.1);
+
+    /* segment 4: clean 1kHz handshake */
+    const h = actx.createOscillator(); h.type = 'sine'; h.frequency.value = 1000;
+    const hg = actx.createGain(); hg.gain.setValueAtTime(0, actx.currentTime + 6.6);
+    hg.gain.linearRampToValueAtTime(0.10, actx.currentTime + 6.8);
+    hg.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 7.4);
+    h.connect(hg); hg.connect(actx.destination); h.start(actx.currentTime + 6.6); h.stop(actx.currentTime + 7.5);
+  } catch (e) { console.warn('audio init failed', e); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LAYER 4 — 'REALITY' EASTER EGG
+   ════════════════════════════════════════════════════════════════ */
+const REALITY = 'reality';
+let typed = '';
+addEventListener('keydown', e => {
+  typed = (typed + e.key.toLowerCase()).slice(-REALITY.length);
+  if (typed === REALITY && !sessionStorage.getItem('__r_seen')) {
+    sessionStorage.setItem('__r_seen', '1');
+    fireReality();
+  }
+});
+function fireReality() {
+  const f = document.getElementById('flash');
+  f.classList.remove('fire'); void f.offsetWidth; f.classList.add('fire');
+  if (actx) {
+    const o = actx.createOscillator(); o.type = 'sine'; o.frequency.value = 1108;
+    const g = actx.createGain(); g.gain.setValueAtTime(0.18, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.6);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + 0.65);
+  }
+  console.log('観測された / observation registered.');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HANDOFF
+   ════════════════════════════════════════════════════════════════ */
+function fireHandoff() {
+  document.body.classList.add('handoff');
+  hPhase.textContent = 'handoff → P2';
+  /* snapshot 64 particles (just demo log) */
+  const snap = [];
+  for (let i = 0; i < 64; i++) {
+    const p = parts[i * Math.floor(N/64)];
+    snap.push({ x: p.x, y: p.y, r: p.r, g: p.g, b: p.b });
+  }
+  window.__inryokuHandoff = { particles: snap, bornAt: performance.now() };
+  console.log('handoff snapshot:', snap.length, 'particles');
+  /* in the real app, P2 reads __inryokuHandoff at start */
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MAIN LOOP
+   ════════════════════════════════════════════════════════════════ */
+document.body.classList.add('prerollin');
+armAudio();
+
+let fpsT = performance.now(), fpsN = 0;
+const hFps = document.getElementById('hFps');
+function loop(now) {
+  if (!prerollDone) stepPreroll(now);
+  else if (!shellRunning) { startShell(); }
+  stepShell(now);
+
+  /* CRT strength ramps up alongside the shell */
+  const crtStr = shellRunning ? Math.min(1, (now - shellT0) / 800) : 0;
+  drawCRT(now / 1000, crtStr);
+
+  fpsN++;
+  if (now - fpsT > 500) { hFps.textContent = Math.round(fpsN * 1000 / (now - fpsT)); fpsT = now; fpsN = 0; }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* replay */
+document.getElementById('replay').addEventListener('click', () => {
+  document.body.classList.remove('shellon', 'crton', 'handoff');
+  prerollDone = false; shellRunning = false;
+  window.__p1done = false;
+  prerollT0 = performance.now();
+  pctx.clearRect(0,0,prerollC.width, prerollC.height);
+  initParts();
+  hPhase.textContent = 'pre-roll';
+});
+</script>
+</body>
+</html>

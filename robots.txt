@@ -1,15 +1,61 @@
+# inryokü — robots.txt
+# 50% → 101% / 見えないものの可視化
+# https://inryoku.com/
+
 User-agent: *
 Allow: /
-Disallow: /api/
-Disallow: /data/
-Disallow: /prompts/
-Disallow: /.env
-Disallow: /card-demo.html
-Disallow: /design-options.html
-Disallow: /mac-skins-demo.html
+Disallow: /success.html
 Disallow: /p1_index_for_claude.html
-Disallow: /p2_index_for_claude.html
-Disallow: /p2_test.html
-Disallow: /p3_test.html
+Disallow: /card_concepts_preview.html
+Disallow: /p3_showcase_samples.html
+Disallow: /particle_glyphs_demo.html
+Disallow: /particle_rings_demo.html
+Disallow: /node_modules/
+Disallow: /tests/
+Disallow: /vendor/
+Disallow: /docs/
+Disallow: /.env
+Disallow: /*?*  # クエリ付き URL のクロールを抑制（重複コンテンツ回避）
 
-Sitemap: https://inryoku-project-production-f827.up.railway.app/sitemap.xml
+# 主要 SEO クローラ — 明示許可（速度上限なし）
+User-agent: Googlebot
+Allow: /
+Disallow: /success.html
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+Disallow: /success.html
+
+# AI クローラの方針 — 司さんの哲学に共鳴するならクロール OK
+# Anthropic / OpenAI / Common Crawl は学習に使われる可能性がある
+# 明示許可: 哲学を広めることがブランドの本質に合致するため
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# 攻撃的なスクレイパは拒否
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# Sitemap
+Sitemap: https://inryoku.com/sitemap.xml

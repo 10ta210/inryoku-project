@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü · brand font samples · 6 variants (RGBCMY)</title>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Major+Mono+Display&family=Orbitron:wght@500;700;900&family=VT323&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('vendor/fonts/press-start-2p.woff2') format('woff2');
+  }
+
+  /* 司の標準 RGBCMY パレット — p3_styles.css と完全同一 */
+  :root{
+    --c1: #808080;  /* i  grey   */
+    --c2: #FF0000;  /* n  red    */
+    --c3: #00FF00;  /* r  green  */
+    --c4: #0044FF;  /* y  blue   */
+    --c5: #00FFFF;  /* o  cyan   */
+    --c6: #FF00FF;  /* k  magenta*/
+    --c7: #FFFF00;  /* ü  yellow */
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{
+    background:#000;color:#eaeaea;
+    font-family:'IBM Plex Mono',monospace;
+    min-height:100vh;overflow-x:hidden;
+  }
+
+  .cosmos{
+    position:fixed;inset:0;z-index:-1;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,200,180,0.13) 0 1.1px, transparent 1.6px),
+      radial-gradient(circle at 35% 65%, rgba(180,200,255,0.16) 0 1.0px, transparent 1.4px),
+      radial-gradient(circle at 72% 30%, rgba(255,180,200,0.14) 0 1.0px, transparent 1.4px),
+      radial-gradient(circle at 85% 78%, rgba(200,255,200,0.12) 0 1.0px, transparent 1.4px),
+      radial-gradient(circle at 50% 90%, rgba(220,180,255,0.12) 0 1.0px, transparent 1.4px),
+      radial-gradient(ellipse at 50% 50%, #04040c 0%, #02020a 60%, #000 100%);
+    background-size: 240px 240px, 200px 200px, 180px 180px, 220px 220px, 260px 260px, 100% 100%;
+  }
+
+  .head{padding:32px 28px 20px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:6px}
+  .head h1{font-size:13px;font-weight:500;letter-spacing:0.34em;text-transform:uppercase;color:#ddd}
+  .head p{font-size:10px;color:#777;letter-spacing:0.18em;text-transform:uppercase}
+
+  .tabs{
+    display:flex;flex-wrap:wrap;gap:6px;padding:18px 28px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    position:sticky;top:0;z-index:50;
+    background:rgba(0,0,0,0.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  }
+  .tab{
+    background:transparent;color:rgba(234,234,234,0.5);
+    border:1px solid rgba(255,255,255,0.10);
+    padding:9px 14px;font:500 10px/1 'IBM Plex Mono',monospace;
+    letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.25s ease;
+  }
+  .tab:hover{color:#fff;border-color:rgba(255,255,255,0.32)}
+  .tab.active{color:#000;background:#fff;border-color:#fff}
+  .tab .num{opacity:0.5;margin-right:8px;font-size:9px}
+
+  .stage{
+    min-height:62vh;display:flex;align-items:center;justify-content:center;
+    padding:60px 28px;position:relative;
+  }
+  .panel{display:none;text-align:center;position:relative}
+  .panel.active{display:block}
+  .panel .label{margin-top:42px;font-size:10px;letter-spacing:0.32em;color:#666;text-transform:uppercase}
+  .panel .label strong{color:#aaa;font-weight:500;margin-right:10px}
+
+  .name{
+    display:inline-flex;align-items:flex-end;gap:0.02em;line-height:0.92;user-select:none;
+    transform-style:preserve-3d;perspective:900px;
+  }
+  .name span{display:inline-block;position:relative}
+
+  /* ─────────────────────────────────────
+     #1  PIXEL 3D — RGBCMY 立体押し出し
+  ───────────────────────────────────── */
+  .v1 .name{
+    font-family:'Press Start 2P',monospace;font-size:78px;letter-spacing:0.04em;
+    transform: rotateX(8deg) rotateY(-12deg);
+  }
+  .v1 .name span{
+    text-shadow:
+      1px 1px 0 rgba(0,0,0,0.55),
+      2px 2px 0 rgba(0,0,0,0.50),
+      3px 3px 0 rgba(0,0,0,0.45),
+      4px 4px 0 rgba(0,0,0,0.40),
+      5px 5px 0 rgba(0,0,0,0.36),
+      6px 6px 0 rgba(0,0,0,0.32),
+      7px 7px 0 rgba(0,0,0,0.28),
+      8px 8px 0 rgba(0,0,0,0.24),
+      9px 9px 0 rgba(0,0,0,0.20),
+     10px 10px 0 rgba(0,0,0,0.16),
+     11px 11px 0 rgba(0,0,0,0.12),
+     12px 12px 18px rgba(0,0,0,0.65);
+  }
+  .v1 .name span:nth-child(1){color:var(--c1)}
+  .v1 .name span:nth-child(2){color:var(--c2)}
+  .v1 .name span:nth-child(3){color:var(--c3)}
+  .v1 .name span:nth-child(4){color:var(--c4)}
+  .v1 .name span:nth-child(5){color:var(--c5)}
+  .v1 .name span:nth-child(6){color:var(--c6)}
+  .v1 .name span:nth-child(7){color:var(--c7)}
+
+  /* ─────────────────────────────────────
+     #2  CHROME SF — クローム + 各文字 RGBCMY オーラ
+  ───────────────────────────────────── */
+  .v2 .name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:96px;letter-spacing:0.02em}
+  .v2 .name span{
+    background:linear-gradient(180deg,
+      #ffffff 0%, #d8e0e8 18%, #6a7080 38%, #2a2e36 50%,
+      #0c0e12 52%, #2a2e36 56%, #6a7080 70%, #cfd6dd 86%, #f8fafc 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+  }
+  /* RGBCMY 各文字に対応色のオーラ */
+  .v2 .name span:nth-child(1){filter:drop-shadow(0 0 12px rgba(160,160,160,0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  .v2 .name span:nth-child(2){filter:drop-shadow(0 0 12px rgba(255, 30, 30,0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  .v2 .name span:nth-child(3){filter:drop-shadow(0 0 12px rgba( 40,255, 80,0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  .v2 .name span:nth-child(4){filter:drop-shadow(0 0 12px rgba( 40, 90,255,0.62)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  .v2 .name span:nth-child(5){filter:drop-shadow(0 0 12px rgba( 30,240,255,0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  .v2 .name span:nth-child(6){filter:drop-shadow(0 0 12px rgba(255, 30,220,0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  .v2 .name span:nth-child(7){filter:drop-shadow(0 0 12px rgba(255,235, 30,0.55)) drop-shadow(0 4px 20px rgba(0,0,0,0.55))}
+  /* スリットハイライト */
+  .v2 .name span::after{
+    content:attr(data-c);position:absolute;inset:0;
+    background:linear-gradient(180deg,
+      transparent 0%, transparent 38%,
+      rgba(255,255,255,0.55) 49%, rgba(255,255,255,0.55) 51%,
+      transparent 62%, transparent 100%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    mix-blend-mode:screen;pointer-events:none;
+  }
+
+  /* ─────────────────────────────────────
+     #3  HOLO PIXEL — RGBCMY 各文字 + 動くハイライト
+  ───────────────────────────────────── */
+  .v3 .name{font-family:'Press Start 2P',monospace;font-size:64px;letter-spacing:0.05em;position:relative}
+  .v3 .name span{
+    text-shadow:0 0 14px currentColor, 0 0 32px color-mix(in srgb, currentColor 55%, transparent);
+  }
+  .v3 .name span:nth-child(1){color:var(--c1)}
+  .v3 .name span:nth-child(2){color:var(--c2)}
+  .v3 .name span:nth-child(3){color:var(--c3)}
+  .v3 .name span:nth-child(4){color:var(--c4)}
+  .v3 .name span:nth-child(5){color:var(--c5)}
+  .v3 .name span:nth-child(6){color:var(--c6)}
+  .v3 .name span:nth-child(7){color:var(--c7)}
+  .v3 .name span::after{
+    content:attr(data-c);position:absolute;inset:0;
+    background:linear-gradient(110deg,
+      transparent 30%, rgba(255,255,255,0.85) 50%, transparent 70%);
+    background-size:300% 100%;
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;color:transparent;
+    mix-blend-mode:screen;pointer-events:none;
+    animation:holoSweep 5.4s linear infinite;
+  }
+  .v3 .name::before{
+    content:'';position:absolute;inset:-6%;pointer-events:none;
+    background:repeating-linear-gradient(0deg,
+      rgba(255,255,255,0.05) 0 1px, transparent 1px 3px);
+    mix-blend-mode:overlay;opacity:0.55;
+  }
+  @keyframes holoSweep{0%{background-position:0% 0%}100%{background-position:300% 0%}}
+
+  /* ─────────────────────────────────────
+     #4  WIREFRAME — RGBCMY ストロークアウトライン
+  ───────────────────────────────────── */
+  .v4 .name{font-family:'Audiowide',sans-serif;font-size:104px;letter-spacing:0.04em;font-weight:400}
+  .v4 .name span{
+    color:transparent;
+    text-shadow:0 0 18px currentColor, 0 0 36px color-mix(in srgb, currentColor 38%, transparent);
+  }
+  .v4 .name span:nth-child(1){-webkit-text-stroke:1px var(--c1);color:rgba(128,128,128,0.06)}
+  .v4 .name span:nth-child(2){-webkit-text-stroke:1px var(--c2);color:rgba(255,0,0,0.06)}
+  .v4 .name span:nth-child(3){-webkit-text-stroke:1px var(--c3);color:rgba(0,255,0,0.06)}
+  .v4 .name span:nth-child(4){-webkit-text-stroke:1px var(--c4);color:rgba(0,68,255,0.07)}
+  .v4 .name span:nth-child(5){-webkit-text-stroke:1px var(--c5);color:rgba(0,255,255,0.06)}
+  .v4 .name span:nth-child(6){-webkit-text-stroke:1px var(--c6);color:rgba(255,0,255,0.06)}
+  .v4 .name span:nth-child(7){-webkit-text-stroke:1px var(--c7);color:rgba(255,255,0,0.06)}
+  .v4::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px) 0 0/40px 40px,
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px) 0 0/40px 40px;
+    mask:radial-gradient(ellipse at center, #000 30%, transparent 78%);
+    -webkit-mask:radial-gradient(ellipse at center, #000 30%, transparent 78%);
+  }
+
+  /* ─────────────────────────────────────
+     #5  CRT TERMINAL — RGBCMY base + RGB split
+  ───────────────────────────────────── */
+  .v5 .name{
+    font-family:'VT323','IBM Plex Mono',monospace;
+    font-size:148px;font-weight:400;letter-spacing:0.005em;line-height:0.88;position:relative;
+  }
+  .v5 .name span{
+    text-shadow:
+      -1.5px 0 0 rgba(255,40,40,0.78),
+       1.5px 0 0 rgba(0,220,255,0.82),
+       0 0 10px currentColor,
+       0 0 28px color-mix(in srgb, currentColor 50%, transparent);
+    animation:crtFlicker 4.1s steps(1,end) infinite;
+  }
+  .v5 .name span:nth-child(1){color:#cccccc}
+  .v5 .name span:nth-child(2){color:var(--c2)}
+  .v5 .name span:nth-child(3){color:var(--c3)}
+  .v5 .name span:nth-child(4){color:#558cff}
+  .v5 .name span:nth-child(5){color:var(--c5)}
+  .v5 .name span:nth-child(6){color:var(--c6)}
+  .v5 .name span:nth-child(7){color:var(--c7)}
+  .v5::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,
+      rgba(0,0,0,0.32) 0 1px, transparent 1px 3px);
+    mix-blend-mode:multiply;
+  }
+  @keyframes crtFlicker{
+    0%,93%,97%,100%{opacity:1}
+    94%,96%{opacity:0.85}
+    95%{opacity:0.62}
+  }
+
+  /* ─────────────────────────────────────
+     #6  PRISM GLASS — 透明 + RGBCMY 4軸屈折 + 内部光
+  ───────────────────────────────────── */
+  .v6 .name{font-family:'Major Mono Display','IBM Plex Mono',monospace;font-size:108px;letter-spacing:-0.005em;font-weight:400}
+  .v6 .name span{
+    color:rgba(255,255,255,0.05);
+    text-shadow:
+       2px  0 0 rgba(255, 28, 28, 0.55),
+      -2px  0 0 rgba(  0,220,255, 0.55),
+       0  2px 0 rgba(255,  0,210, 0.45),
+       0 -2px 0 rgba(255,240,  0, 0.45),
+       0 0 24px currentColor,
+       0 0 48px color-mix(in srgb, currentColor 35%, transparent);
+  }
+  .v6 .name span:nth-child(1){color:rgba(180,180,180,0.10);-webkit-text-stroke:0.5px rgba(180,180,180,0.65)}
+  .v6 .name span:nth-child(2){color:rgba(255,80,80,0.12);-webkit-text-stroke:0.5px rgba(255,80,80,0.62)}
+  .v6 .name span:nth-child(3){color:rgba(80,255,120,0.10);-webkit-text-stroke:0.5px rgba(80,255,120,0.62)}
+  .v6 .name span:nth-child(4){color:rgba(80,140,255,0.14);-webkit-text-stroke:0.5px rgba(80,140,255,0.72)}
+  .v6 .name span:nth-child(5){color:rgba(80,240,255,0.10);-webkit-text-stroke:0.5px rgba(80,240,255,0.62)}
+  .v6 .name span:nth-child(6){color:rgba(255,80,220,0.10);-webkit-text-stroke:0.5px rgba(255,80,220,0.62)}
+  .v6 .name span:nth-child(7){color:rgba(255,240,80,0.10);-webkit-text-stroke:0.5px rgba(255,240,80,0.62)}
+
+  @media (max-width:760px){
+    .v1 .name{font-size:42px}
+    .v2 .name{font-size:54px}
+    .v3 .name{font-size:36px}
+    .v4 .name{font-size:58px}
+    .v5 .name{font-size:84px}
+    .v6 .name{font-size:60px}
+  }
+
+  .footnote{max-width:780px;margin:60px auto 80px;font-size:11px;line-height:1.85;color:#888;letter-spacing:0.04em;padding:0 28px}
+  .footnote strong{color:#ddd;font-weight:500}
+  .kbd{display:inline-block;padding:2px 7px;border:1px solid rgba(255,255,255,0.18);border-radius:3px;font-size:10px;color:#bbb;background:rgba(255,255,255,0.04)}
+</style>
+</head>
+<body>
+
+<div class="cosmos"></div>
+
+<header class="head">
+  <h1>inryokü · brand font · 6 variants · RGBCMY</h1>
+  <p>司の標準パレットで統一 / pixel 3D / chrome SF / holo / wireframe / CRT / prism</p>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-target="v1"><span class="num">01</span>PIXEL 3D</button>
+  <button class="tab" data-target="v2"><span class="num">02</span>CHROME SF</button>
+  <button class="tab" data-target="v3"><span class="num">03</span>HOLO PIXEL</button>
+  <button class="tab" data-target="v4"><span class="num">04</span>WIREFRAME</button>
+  <button class="tab" data-target="v5"><span class="num">05</span>CRT TERMINAL</button>
+  <button class="tab" data-target="v6"><span class="num">06</span>PRISM GLASS</button>
+</nav>
+
+<section class="stage">
+  <div class="panel v1 active" id="v1"><div class="name"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div><div class="label"><strong>01 · PIXEL 3D</strong>RGBCMY 各文字保持 / 11層 extrude</div></div>
+  <div class="panel v2" id="v2"><div class="name"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div><div class="label"><strong>02 · CHROME SF</strong>クローム + 各文字に RGBCMY 外光</div></div>
+  <div class="panel v3" id="v3"><div class="name"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div><div class="label"><strong>03 · HOLO PIXEL</strong>RGBCMY base + 動く銀ハイライト</div></div>
+  <div class="panel v4" id="v4"><div class="name"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div><div class="label"><strong>04 · WIREFRAME</strong>RGBCMY ストローク 1px + grid</div></div>
+  <div class="panel v5" id="v5"><div class="name"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div><div class="label"><strong>05 · CRT TERMINAL</strong>RGBCMY base + 重RGB split + flicker</div></div>
+  <div class="panel v6" id="v6"><div class="name"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div><div class="label"><strong>06 · PRISM GLASS</strong>透明屈折 + RGBCMY 4軸 chromatic</div></div>
+</section>
+
+<p class="footnote">
+  <strong>本番 (p3_test.html) でも同じ 6 パターンが切り替えられます。</strong><br>
+  右上の <code>FONT</code> パネル (1〜6) もしくはキーボード <span class="kbd">Shift+1</span>〜<span class="kbd">Shift+6</span>。<br>
+  デフォルト (現状の brand-char) に戻すには <span class="kbd">Shift+0</span>。
+</p>
+
+<script>
+  var tabs = document.querySelectorAll('.tab');
+  var panels = document.querySelectorAll('.panel');
+  function activate(target){
+    tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.target === target); });
+    panels.forEach(function(p){ p.classList.toggle('active', p.id === target); });
+    history.replaceState(null,'','#'+target);
+  }
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ activate(t.dataset.target); }); });
+  document.addEventListener('keydown', function(e){
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 6) activate('v'+n);
+  });
+  if (/^#v[1-6]$/.test(location.hash)) activate(location.hash.slice(1));
+</script>
+
+</body>
+</html>

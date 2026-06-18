@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>inryokü 粒子言語 v1 — Demo</title>
+  <link rel="stylesheet" href="particle_glyphs.css?v=20260428" />
+  <style>
+    body {
+      margin: 0;
+      padding: 32px 20px 80px;
+      background: #0a0a0a;
+      color: #cfcfcf;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      letter-spacing: 0.04em;
+    }
+    h1 { font-size: 14px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #888; margin: 0 0 24px; text-align: center; }
+    h2 { font-size: 11px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: #666; margin: 32px 0 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 14px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .cell {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 18px 8px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.012);
+    }
+    .cell .pglyph { width: 56px; height: 56px; }
+    .cell .label { font-size: 10px; color: #888; letter-spacing: 0.06em; }
+    .cell .name  { font-size: 9px;  color: #555; }
+
+    .speak-stage {
+      max-width: 600px;
+      margin: 16px auto 0;
+      min-height: 56px;
+      padding: 14px;
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: transparent;
+      color: #aaa;
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 8px 14px;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+    .controls { text-align: center; margin: 20px 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h1>inryokü particle language — v1</h1>
+
+  <h2>Core 10 — formed</h2>
+  <div id="grid-formed" class="grid"></div>
+
+  <h2>Core 10 — seed</h2>
+  <div id="grid-seed" class="grid"></div>
+
+  <h2>Core 10 — resonant</h2>
+  <div id="grid-resonant" class="grid"></div>
+
+  <h2>Punctuation</h2>
+  <div id="grid-punct" class="grid"></div>
+
+  <h2>Text → particles (一発文章変換)</h2>
+  <div style="max-width:600px;margin:0 auto 12px;text-align:center;color:#666;font-size:10px;letter-spacing:0.1em;">
+    A-Z 0-9 . , ! ? を粒子化 / [observe] [跳] [resonance] 等で概念記号挿入
+  </div>
+  <div class="controls">
+    <input id="text-input" type="text" value="HELLO [observe] WORLD [跳] 101"
+           style="background:#000;color:#ccc;border:1px solid rgba(255,255,255,0.18);padding:8px 12px;font-size:12px;width:380px;max-width:90vw;border-radius:4px;font-family:monospace;letter-spacing:0.1em;" />
+    <button id="btn-render-text">render</button>
+  </div>
+  <div id="text-stage" class="speak-stage" style="min-height:48px;"></div>
+
+  <h2>Speech demo</h2>
+  <div class="controls">
+    <button id="btn-speak">speak: 観 → 跳 → … → 共</button>
+    <button id="btn-summon">summon</button>
+    <button id="btn-clear">clear</button>
+  </div>
+  <div id="speak-stage" class="speak-stage"></div>
+
+  <script src="particle_glyphs.js?v=20260428"></script>
+  <script>
+    var KINDS_CORE = ['i','emit','recv','ma','circuit','observe','leap','resonance','shadow','summon'];
+    var KINDS_PUNCT = ['ellipsis','pause','breath'];
+
+    function buildGrid(containerId, kinds, state) {
+      var c = document.getElementById(containerId);
+      kinds.forEach(function(k) {
+        var cell = document.createElement('div');
+        cell.className = 'cell';
+        var svg = ParticleGlyphs.render(k, state);
+        var label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = ParticleGlyphs.GLYPH_DEFS[k].name;
+        var name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = k;
+        cell.appendChild(svg);
+        cell.appendChild(label);
+        cell.appendChild(name);
+        c.appendChild(cell);
+        if (state === 'formed') {
+          // re-trigger crystallize on click
+          cell.addEventListener('click', function() { ParticleGlyphs.crystallize(svg); });
+        }
+      });
+    }
+
+    buildGrid('grid-formed',   KINDS_CORE,  'formed');
+    buildGrid('grid-seed',     KINDS_CORE,  'seed');
+    buildGrid('grid-resonant', KINDS_CORE,  'resonant');
+    buildGrid('grid-punct',    KINDS_PUNCT, 'formed');
+
+    // crystallize all formed glyphs once on load
+    setTimeout(function() {
+      document.querySelectorAll('#grid-formed .pglyph').forEach(function(svg) {
+        ParticleGlyphs.crystallize(svg);
+      });
+    }, 100);
+
+    var stage = document.getElementById('speak-stage');
+    document.getElementById('btn-speak').addEventListener('click', function() {
+      stage.innerHTML = '';
+      ParticleGlyphs.speak(stage, [
+        { kind: 'observe' },
+        { kind: 'leap' },
+        { kind: 'ellipsis' },
+        { kind: 'resonance', state: 'resonant' }
+      ], { size: 36, gap: 500, onComplete: function(nodes) {
+        // 最後の記号を resonant 状態へ
+        ParticleGlyphs.setState(nodes[nodes.length - 1], 'resonant');
+      }});
+    });
+    document.getElementById('btn-summon').addEventListener('click', function() {
+      stage.innerHTML = '';
+      var svg = ParticleGlyphs.render('summon', 'resonant', { size: 80 });
+      stage.appendChild(svg);
+      ParticleGlyphs.crystallize(svg);
+    });
+    document.getElementById('btn-clear').addEventListener('click', function() {
+      stage.innerHTML = '';
+    });
+
+    var textStage = document.getElementById('text-stage');
+    var textInput = document.getElementById('text-input');
+    function doRenderText() {
+      ParticleGlyphs.renderText(textInput.value, textStage, {
+        size: 36, crystallize: true, staggerStep: 50
+      });
+    }
+    document.getElementById('btn-render-text').addEventListener('click', doRenderText);
+    textInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doRenderText();
+    });
+    // 初期描画
+    setTimeout(doRenderText, 200);
+  </script>
+</body>
+</html>

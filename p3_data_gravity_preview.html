@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>inryoku data gravity field preview</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #020508;
+    }
+
+    #data-gravity-field {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 76%, rgba(190, 230, 230, .12), transparent 26%),
+        radial-gradient(circle at 76% 20%, rgba(40, 85, 110, .16), transparent 34%),
+        linear-gradient(135deg, #05080a 0%, #020508 54%, #010204 100%);
+    }
+
+    #data-gravity-field canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="data-gravity-field" aria-hidden="true"></div>
+
+  <script src="vendor/three.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const host = document.getElementById('data-gravity-field');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setClearColor(0x000000, 0);
+    host.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -4, 4);
+    camera.position.z = 1;
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const RING_COUNT = isMobile ? 5200 : 12800;
+    const I_COUNT = isMobile ? 1250 : 3000;
+    const CORE_COUNT = isMobile ? 360 : 820;
+    const ONE_COUNT = RING_COUNT + I_COUNT + CORE_COUNT;
+
+    const bases = new Float32Array(ONE_COUNT * 3);
+    const textTargets = new Float32Array(ONE_COUNT * 2);
+    const scatters = new Float32Array(ONE_COUNT * 2);
+    const dirs = new Float32Array(ONE_COUNT * 2);
+    const seeds = new Float32Array(ONE_COUNT);
+    const sizes = new Float32Array(ONE_COUNT);
+    const tones = new Float32Array(ONE_COUNT);
+    const modes = new Float32Array(ONE_COUNT);
+    const variants = new Float32Array(ONE_COUNT);
+    const roles = new Float32Array(ONE_COUNT);
+    const colors = new Float32Array(ONE_COUNT * 3);
+
+    const CORE_Y = 0.085;
+    const coreGeometry = new THREE.PlaneGeometry(0.18, 0.18);
+    const coreMaterial = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uReveal: { value: 0 },
+      },
+      vertexShader: [
+        'varying vec2 vUv;',
+        'void main() {',
+        '  vUv = uv;',
+        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+        '}',
+      ].join('\n'),
+      fragmentShader: [
+        'precision highp float;',
+        'uniform float uTime;',
+        'uniform float uReveal;',
+        'varying vec2 vUv;',
+        'void main() {',
+        '  vec2 p = vUv - 0.5;',
+        '  float r = length(p);',
+        '  float pulse = sin(uTime * 1.55) * 0.5 + 0.5;',
+        '  if (r > 0.49) discard;',
+        '  vec3 n = normalize(vec3(p * 2.05, sqrt(max(0.0, 1.0 - dot(p * 2.05, p * 2.05)))));',
+        '  vec3 lightDir = normalize(vec3(-0.35, 0.55, 0.78));',
+        '  vec3 viewDir = vec3(0.0, 0.0, 1.0);',
+        '  float diffuse = clamp(dot(n, lightDir), 0.0, 1.0);',
+        '  float spec = pow(max(dot(reflect(-lightDir, n), viewDir), 0.0), 34.0);',
+        '  float rim = pow(1.0 - max(n.z, 0.0), 2.2);',
+        '  float band = clamp((n.y + 0.86) / 1.72 + sin(n.x * 2.1 + n.z * 0.7) * 0.025, 0.0, 1.0);',
+        '  vec3 red = vec3(1.0, 0.08, 0.05);',
+        '  vec3 yellow = vec3(1.0, 0.92, 0.06);',
+        '  vec3 green = vec3(0.05, 1.0, 0.20);',
+        '  vec3 cyan = vec3(0.05, 0.92, 1.0);',
+        '  vec3 blue = vec3(0.05, 0.20, 1.0);',
+        '  vec3 magenta = vec3(1.0, 0.06, 0.92);',
+        '  vec3 hueA = mix(red, yellow, smoothstep(0.00, 0.18, band));',
+        '  vec3 hueB = mix(hueA, green, smoothstep(0.18, 0.36, band));',
+        '  vec3 hueC = mix(hueB, cyan, smoothstep(0.36, 0.54, band));',
+        '  vec3 hueD = mix(hueC, blue, smoothstep(0.54, 0.72, band));',
+        '  vec3 sphereCol = mix(hueD, magenta, smoothstep(0.72, 1.0, band));',
+        '  sphereCol = mix(sphereCol, vec3(0.92, 0.96, 1.0), pow(max(n.z, 0.0), 5.0) * 0.18);',
+        '  float shell = smoothstep(0.49, 0.40, r);',
+        '  float aura = smoothstep(0.58, 0.18, r) * (1.0 - shell * 0.82);',
+        '  vec3 col = sphereCol * (0.30 + diffuse * 1.02) + vec3(1.0) * spec * 1.65 + sphereCol * rim * 0.22;',
+        '  col += vec3(0.90, 0.96, 1.0) * smoothstep(0.078, 0.014, length(p - vec2(0.11, 0.12))) * 1.10;',
+        '  col += sphereCol * aura * (0.18 + pulse * 0.05);',
+        '  float alpha = (shell * 0.86 + aura * 0.12) * smoothstep(0.16, 0.80, uReveal);',
+        '  gl_FragColor = vec4(col, clamp(alpha, 0.0, 0.90));',
+        '}',
+      ].join('\n'),
+    });
+    const core = new THREE.Mesh(coreGeometry, coreMaterial);
+    core.position.y = CORE_Y;
+    core.position.z = -0.05;
+    scene.add(core);
+    let layoutAspect = 1;
+
+    function setGlyph(i, x, y, z, dx, dy, size, tone, mode, role) {
+      const seed = rand() * 1000;
+      const len = Math.max(0.001, Math.sqrt(dx * dx + dy * dy));
+      const space = makeCosmicScatter();
+      const textPoint = sampleWordText(i);
+      bases[i * 3 + 0] = x;
+      bases[i * 3 + 1] = y;
+      bases[i * 3 + 2] = z;
+      textTargets[i * 2 + 0] = textPoint.x;
+      textTargets[i * 2 + 1] = textPoint.y;
+      scatters[i * 2 + 0] = space.x;
+      scatters[i * 2 + 1] = space.y;
+      dirs[i * 2 + 0] = dx / len;
+      dirs[i * 2 + 1] = dy / len;
+      seeds[i] = seed;
+      sizes[i] = size;
+      tones[i] = tone;
+      modes[i] = mode;
+      variants[i] = rand();
+      roles[i] = role || 0;
+      // v62: ランダム色ではなく、最終ロゴの担当色を最初から持たせる。
+      const corePalette = [
+        // v64: コア粒子は RGB + CMY の6色に固定する。
+        [1.00, 0.03, 0.03], // R
+        [0.03, 1.00, 0.12], // G
+        [0.04, 0.18, 1.00], // B
+        [0.03, 0.95, 1.00], // C
+        [1.00, 0.04, 0.92], // M
+        [1.00, 0.92, 0.03], // Y
+      ];
+      let pc;
+      if (role >= 0.90) {
+        pc = corePalette[Math.floor(rand() * corePalette.length)];
+      } else if (role >= 0.45) {
+        const shine = 0.76 + rand() * 0.20;
+        pc = [shine * 0.94, shine * 0.98, shine];
+      } else {
+        const shine = 0.56 + rand() * 0.30;
+        pc = [shine * 0.90, shine * 0.94, shine * 0.96];
+      }
+      colors[i * 3 + 0] = pc[0];
+      colors[i * 3 + 1] = pc[1];
+      colors[i * 3 + 2] = pc[2];
+    }
+
+    function makeCosmicScatter() {
+      const lane = rand();
+      let x;
+      let y;
+      if (lane < 0.62) {
+        // 旧 v30: shader 内 hash だけで初期位置を作っていた。v31 は生成時に広い宇宙座標を固定する。
+        const a = rand() * Math.PI * 2;
+        const r = Math.pow(rand(), 0.42);
+        x = Math.cos(a) * (0.18 + r * 0.92) + gaussian() * 0.10;
+        y = Math.sin(a) * (0.12 + r * 0.76) + gaussian() * 0.08;
+      } else if (lane < 0.86) {
+        const t = rand() * 2 - 1;
+        const bend = Math.sin(t * 2.8 + rand() * 1.2) * 0.18;
+        x = t * 1.06 + gaussian() * 0.09;
+        y = -t * 0.46 + bend + gaussian() * 0.10;
+      } else {
+        const a = rand() * Math.PI * 2;
+        const r = Math.pow(rand(), 0.72) * 0.34;
+        x = Math.cos(a) * r + gaussian() * 0.05;
+        y = CORE_Y + Math.sin(a) * r * 0.75 + gaussian() * 0.05;
+      }
+      return {
+        x: clamp(x, -1.08, 1.08),
+        y: clamp(y, -0.82, 0.82),
+      };
+    }
+
+    function rand() {
+      return Math.random();
+    }
+
+    function gaussian() {
+      let u = 0, v = 0;
+      while (u === 0) u = rand();
+      while (v === 0) v = rand();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function sampleSegment(x1, y1, x2, y2) {
+      const t = rand();
+      return {
+        x: x1 + (x2 - x1) * t + gaussian() * 0.0025,
+        y: y1 + (y2 - y1) * t + gaussian() * 0.0025,
+      };
+    }
+
+    function pickWeightedSegment(segments) {
+      let total = 0;
+      for (let i = 0; i < segments.length; i++) total += segments[i][4];
+      let r = rand() * total;
+      for (let i = 0; i < segments.length; i++) {
+        r -= segments[i][4];
+        if (r <= 0) return sampleSegment(segments[i][0], segments[i][1], segments[i][2], segments[i][3]);
+      }
+      const s = segments[segments.length - 1];
+      return sampleSegment(s[0], s[1], s[2], s[3]);
+    }
+
+    function sampleWordText(i) {
+      // v55: 最初に inryokU というコード文字列へ集まり、そこから糸のようにロゴへ収束する。
+      // v59: 文字段階で粒子が密集しすぎないよう、文字幅を広げて線のにじみを抑える。
+      // v60: 線分サンプリングだと遠目で縦柱に見えたため、コード粒子のドットマトリクス文字へ変更。
+      const letters = [
+        { w: 3, c: [0.50, 0.50, 0.50], p: ['010', '000', '110', '010', '010', '010', '111'] },
+        { w: 4, c: [1.00, 0.00, 0.00], p: ['0000', '0000', '1110', '1001', '1001', '1001', '1001'] },
+        { w: 4, c: [0.00, 1.00, 0.00], p: ['0000', '0000', '1011', '1100', '1000', '1000', '1000'] },
+        { w: 4, c: [0.00, 0.27, 1.00], p: ['0000', '0000', '1001', '1001', '0111', '0001', '1110'] },
+        { w: 4, c: [0.00, 1.00, 1.00], p: ['0000', '0000', '0110', '1001', '1001', '1001', '0110'] },
+        { w: 4, c: [1.00, 0.00, 1.00], p: ['1000', '1001', '1010', '1100', '1010', '1001', '1001'] },
+        { w: 5, c: [1.00, 1.00, 0.00], p: ['10001', '10001', '10001', '10001', '10001', '10001', '01110'] },
+      ];
+      const cell = 0.050;
+      const gap = 0.050;
+      const totalCells = letters.reduce(function (sum, l) { return sum + l.w; }, 0) + gap / cell * (letters.length - 1);
+      let x0 = -totalCells * cell * 0.5;
+      const letterPick = i % letters.length;
+      for (let j = 0; j < letterPick; j++) x0 += letters[j].w * cell + gap;
+      const letter = letters[letterPick];
+      const cells = [];
+      for (let y = 0; y < letter.p.length; y++) {
+        for (let x = 0; x < letter.w; x++) {
+          if (letter.p[y].charAt(x) === '1') cells.push({ x: x, y: y });
+        }
+      }
+      const cellPick = cells[Math.floor(rand() * cells.length)];
+      const pad = 0.70;
+      return {
+        x: x0 + (cellPick.x + 0.5 + (rand() - 0.5) * pad) * cell + gaussian() * 0.0014,
+        y: 0.25 - (cellPick.y + 0.5 + (rand() - 0.5) * pad) * cell + gaussian() * 0.0014,
+      };
+    }
+
+    function eggOuterValue(x, y) {
+      const yy = (y + 0.035) / 0.600;
+      const rx = 0.500 - Math.max(0, yy) * 0.055 + Math.max(0, -yy) * 0.025;
+      return (x * x) / (rx * rx) + yy * yy;
+    }
+
+    function eggInnerValue(x, y) {
+      const yy = (y + 0.040) / 0.420;
+      const rx = 0.318 - Math.max(0, yy) * 0.032 + Math.max(0, -yy) * 0.018;
+      return (x * x) / (rx * rx) + yy * yy;
+    }
+
+    function sampleLogoShell() {
+      // v54: rejection sampling ではなく、内外境界を同じ角度で補間して輪郭を整える。
+      const a = rand() * Math.PI * 2;
+      const sy = Math.sin(a);
+      const cy = Math.cos(a);
+      const outerRx = 0.500 - Math.max(0, sy) * 0.055 + Math.max(0, -sy) * 0.025;
+      const innerRx = 0.318 - Math.max(0, sy) * 0.032 + Math.max(0, -sy) * 0.018;
+      const outer = {
+        x: cy * outerRx,
+        y: sy * 0.600 - 0.035,
+      };
+      const inner = {
+        x: cy * innerRx,
+        y: sy * 0.420 - 0.040,
+      };
+      const t = 0.08 + Math.pow(rand(), 0.92) * 0.84;
+      const edge = Math.min(t, 1.0 - t);
+      return {
+        x: inner.x + (outer.x - inner.x) * t + gaussian() * 0.0010,
+        y: inner.y + (outer.y - inner.y) * t + gaussian() * 0.0012,
+        edge: edge * 0.24,
+      };
+    }
+
+    function sampleLogoI() {
+      for (let tries = 0; tries < 60; tries++) {
+        // 旧 v67: 上端まで太い柱状に見えたため、実ロゴ寄りの丸い天面＋細い滴形へ寄せる。
+        if (rand() < 0.24) {
+          const a = rand() * Math.PI * 2;
+          const r = Math.sqrt(rand());
+          return {
+            x: Math.cos(a) * r * 0.106 + gaussian() * 0.0010,
+            y: -0.055 + Math.sin(a) * r * 0.042 + gaussian() * 0.0012,
+            edge: 0.78 + (1.0 - r) * 0.22,
+          };
+        }
+        const h = Math.pow(rand(), 0.82);
+        let y = -0.435 + h * 0.365;
+        let width = 0.008 + Math.pow(h, 0.76) * 0.088;
+        if (h > 0.78) {
+          const cap = (h - 0.78) / 0.22;
+          width = 0.064 + Math.sin(cap * Math.PI) * 0.050;
+          y += Math.sin(cap * Math.PI) * 0.006;
+        }
+        if (h < 0.20) {
+          const foot = h / 0.20;
+          width *= 0.16 + foot * 0.84;
+          y += Math.sin(foot * Math.PI) * 0.012;
+        }
+        const x = (rand() * 2 - 1) * width;
+        const rounded = Math.abs(x) / Math.max(0.001, width);
+        if (rounded < 1.0 - Math.pow(rand(), 3.0) * 0.08) {
+          return {
+            x: x + gaussian() * 0.0012,
+            y: y + gaussian() * 0.0016,
+            edge: 1.0 - rounded,
+          };
+        }
+      }
+      return { x: gaussian() * 0.035, y: -0.18 + rand() * 0.20, edge: 0.4 };
+    }
+
+    function sampleLogoCore() {
+      // v62: コアもコード粒子の到達点を持たせ、RGB/CMYの光が実ロゴ位置へ集まるようにする。
+      const a = rand() * Math.PI * 2;
+      const r = Math.sqrt(rand()) * 0.084;
+      const x = Math.cos(a) * r;
+      const y = CORE_Y + Math.sin(a) * r * 0.92;
+      const edge = 1.0 - clamp(r / 0.084, 0, 1);
+      return {
+        x: x + gaussian() * 0.0010,
+        y: y + gaussian() * 0.0010,
+        z: 0.10 + edge * 0.44 + rand() * 0.08,
+        edge: edge,
+      };
+    }
+
+    function makeOne(i) {
+      const mode = rand();
+      // v52: 輪郭線ではなく、画像ロゴの銀の厚みを持つ卵型シェル面としてサンプリング。
+      const p = sampleLogoShell();
+      const x = p.x;
+      const y = p.y;
+      const z = -0.16 + p.edge * 2.2 + rand() * 0.08;
+
+      const centerPull = { x: -x, y: -y };
+      const tangent = { x: -y, y: x };
+      // Cosmic 0 motion: weak orbital drift, not a spiral collapse.
+      let dx = tangent.x * 0.42 + centerPull.x * 0.12 + gaussian() * 0.24;
+      let dy = tangent.y * 0.42 + centerPull.y * 0.12 + gaussian() * 0.22;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      dx /= len;
+      dy /= len;
+
+      const glyphSize = 0.0028 + rand() * 0.0048 + p.edge * 0.010;
+      const tone = clamp(0.46 + rand() * 0.46 + p.edge * 1.25, 0, 1);
+      setGlyph(i, x, y, z, dx, dy, glyphSize, tone, mode > 0.94 ? 1 : 0.35, 0);
+    }
+
+    function makeInnerI(i) {
+      const p = sampleLogoI();
+      const drift = { x: gaussian() * 0.012, y: gaussian() * 0.024 };
+      const size = 0.0028 + rand() * 0.0044 + p.edge * 0.0012;
+      const tone = clamp(0.56 + rand() * 0.38 + p.edge * 0.30, 0, 1);
+      setGlyph(i, p.x, p.y, -0.18 + p.edge * 0.38 + rand() * 0.12, drift.x, drift.y + 0.05, size, tone, 0.72, 0.5);
+    }
+
+    function makeCoreGlyph(i) {
+      const p = sampleLogoCore();
+      const drift = { x: gaussian() * 0.018, y: gaussian() * 0.018 };
+      const size = 0.0018 + rand() * 0.0028 + p.edge * 0.0016;
+      const tone = clamp(0.62 + rand() * 0.36 + p.edge * 0.42, 0, 1);
+      setGlyph(i, p.x, p.y, p.z, drift.x, drift.y, size, tone, 0.98, 1);
+    }
+
+    for (let i = 0; i < RING_COUNT; i++) makeOne(i);
+    for (let i = RING_COUNT; i < RING_COUNT + I_COUNT; i++) makeInnerI(i);
+    for (let i = RING_COUNT + I_COUNT; i < ONE_COUNT; i++) makeCoreGlyph(i);
+
+    const geometry = new THREE.InstancedBufferGeometry();
+    geometry.instanceCount = ONE_COUNT;
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+      -0.5, -0.5, 0,  0.5, -0.5, 0,  0.5, 0.5, 0,
+      -0.5, -0.5, 0,  0.5, 0.5, 0,  -0.5, 0.5, 0
+    ]), 3));
+    geometry.setAttribute('aUv', new THREE.BufferAttribute(new Float32Array([
+      0, 0,  1, 0,  1, 1,
+      0, 0,  1, 1,  0, 1
+    ]), 2));
+    geometry.setAttribute('aBase', new THREE.InstancedBufferAttribute(bases, 3));
+    geometry.setAttribute('aTextTarget', new THREE.InstancedBufferAttribute(textTargets, 2));
+    geometry.setAttribute('aScatter', new THREE.InstancedBufferAttribute(scatters, 2));
+    geometry.setAttribute('aDir', new THREE.InstancedBufferAttribute(dirs, 2));
+    geometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 1));
+    geometry.setAttribute('aSize', new THREE.InstancedBufferAttribute(sizes, 1));
+    geometry.setAttribute('aTone', new THREE.InstancedBufferAttribute(tones, 1));
+    geometry.setAttribute('aMode', new THREE.InstancedBufferAttribute(modes, 1));
+    geometry.setAttribute('aVariant', new THREE.InstancedBufferAttribute(variants, 1));
+    geometry.setAttribute('aRole', new THREE.InstancedBufferAttribute(roles, 1));
+    geometry.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
+
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.NormalBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uAspect: { value: 1 },
+        uBreath: { value: 0 },
+        uReveal: { value: 0 },
+        uBirth: { value: 0 },
+        uZoom: { value: 1 },
+        uPan: { value: new THREE.Vector2(0, 0) },
+      },
+      vertexShader: [
+        'attribute vec2 aUv;',
+        'attribute vec3 aBase;',
+        'attribute vec2 aTextTarget;',
+        'attribute vec2 aScatter;',
+        'attribute vec2 aDir;',
+        'attribute float aSeed;',
+        'attribute float aSize;',
+        'attribute float aTone;',
+        'attribute float aMode;',
+        'attribute float aVariant;',
+        'attribute float aRole;',
+        'attribute vec3 aColor;',
+        'uniform float uTime;',
+        'uniform float uAspect;',
+        'uniform float uBreath;',
+        'uniform float uReveal;',
+        'uniform float uBirth;',
+        'uniform float uZoom;',
+        'uniform vec2 uPan;',
+        'varying vec2 vUv;',
+        'varying float vTone;',
+        'varying float vFade;',
+        'varying float vVariant;',
+        'varying float vBar;',
+        'varying float vZeroGlyph;',
+        'varying float vRole;',
+        'varying vec3 vColor;',
+        'float hash(float n) { return fract(sin(n) * 43758.5453123); }',
+        'void main() {',
+        '  vec3 target = aBase;',
+        '  float speed = mix(0.30, 1.80, hash(aSeed + 7.0));',
+        '  float nodeMass = step(0.90, aMode);',
+        '  float innerI = smoothstep(0.62, 0.80, aMode) * (1.0 - nodeMass);',
+        '  float filamentMass = smoothstep(0.20, 0.45, aMode) * (1.0 - nodeMass);',
+        '  float distFromCenter = length(target.xy * vec2(1.0, 1.25));',
+        '  float birthOrder = mix(clamp(distFromCenter * 0.86 + hash(aSeed + 19.0) * 0.28, 0.0, 1.0), 0.72 + hash(aSeed + 11.0) * 0.18, innerI);',
+        '  float reveal = smoothstep(birthOrder - 0.10, birthOrder + 0.16, uReveal);',
+        '  float attract = smoothstep(0.04, 1.0, uBirth);',
+        '  vec2 corePoint = vec2(0.0, 0.085);',
+        '  vec2 cosmos = aScatter;',
+        '  cosmos.x *= min(1.0, uAspect * 1.20);',
+        '  float openDrift = 1.0 - smoothstep(0.18, 0.78, attract);',
+        '  cosmos += vec2(sin(uTime * (0.13 + hash(aSeed) * 0.18) + aSeed * 0.71), cos(uTime * (0.11 + hash(aSeed + 2.0) * 0.16) + aSeed * 0.63)) * openDrift * 0.040;',
+        '  vec2 textTarget = aTextTarget;',
+        '  vec2 toCore = corePoint - cosmos;',
+        '  float coreDist = max(0.001, length(toCore));',
+        '  float gravityWindow = smoothstep(0.08, 0.56, attract) * (1.0 - smoothstep(0.72, 0.98, attract));',
+        '  vec2 preGather = cosmos + normalize(toCore) * min(coreDist * 0.52, 0.34) * gravityWindow;',
+        '  float letterOrder = clamp((textTarget.x + 0.92) / 1.84, 0.0, 1.0);',
+        '  float letterDelay = letterOrder * 0.15;',
+        '  float wordGather = smoothstep(0.05 + letterDelay, 0.31 + letterDelay, attract);',
+        '  float logoGather = smoothstep(0.58, 1.0, attract);',
+        '  float wordHold = wordGather * (1.0 - smoothstep(0.50, 0.70, attract));',
+        '  float thread = smoothstep(0.48, 0.76, attract) * (1.0 - smoothstep(0.78, 0.98, attract));',
+        '  float wordMask = step(hash(aSeed + 101.0), 0.58);',
+        '  float wordDelay = hash(aSeed + 31.0) * 0.10 + letterDelay;',
+        '  vec2 wordPos = mix(preGather, textTarget, smoothstep(0.05 + wordDelay, 0.32 + wordDelay, attract));',
+        '  vec2 quietSpace = cosmos + normalize(toCore) * min(coreDist * 0.26, 0.16) * wordGather;',
+        '  wordPos = mix(quietSpace, wordPos, wordMask);',
+        '  float lineT = clamp(logoGather * 1.16 + hash(aSeed + 5.0) * 0.26 - 0.06 + letterOrder * 0.10, 0.0, 1.0);',
+        '  vec2 pullLine = mix(textTarget, target.xy, lineT);',
+        '  vec2 normalLine = normalize(vec2(target.y - textTarget.y, textTarget.x - target.x) + vec2(0.0001, 0.0));',
+        '  pullLine += normalLine * sin(lineT * 12.0 + aSeed * 0.07 + uTime * 0.36) * thread * 0.014;',
+        '  vec2 threadPos = mix(wordPos, target.xy, logoGather);',
+        '  vec3 p = vec3(mix(threadPos, pullLine, thread * 0.74), target.z);',
+        '  float drift = sin(uTime * speed + aSeed * 0.017) * mix(0.032, 0.016, nodeMass) * mix(1.0, 0.08, logoGather);',
+        '  vec2 flow = aDir.xy * drift;',
+        '  p.xy += flow;',
+        '  vec2 hubA = vec2(-0.34, 0.26);',
+        '  vec2 hubB = vec2(0.36, -0.24);',
+        '  vec2 relA = hubA - p.xy;',
+        '  vec2 relB = hubB - p.xy;',
+        '  float pullA = 0.0026 / max(0.10, dot(relA, relA));',
+        '  float pullB = 0.0022 / max(0.10, dot(relB, relB));',
+        '  p.xy += normalize(relA) * pullA * sin(uTime * 0.29 + aSeed) * ((1.0 - logoGather) * 0.70);',
+        '  p.xy += normalize(relB) * pullB * cos(uTime * 0.23 + aSeed * 0.7) * ((1.0 - logoGather) * 0.70);',
+        '  p.x += sin(uTime * (0.22 + hash(aSeed) * 0.62) + aSeed * 1.7) * mix(0.010, 0.0025, max(nodeMass, innerI)) * mix(1.0, 0.10, logoGather);',
+        '  p.y += cos(uTime * (0.18 + hash(aSeed + 3.0) * 0.52) + aSeed) * mix(0.010, 0.0030, max(nodeMass, innerI)) * mix(1.0, 0.10, logoGather);',
+        '  float scan = smoothstep(0.10, 0.70, sin(uTime * 0.46 + aSeed * 0.08) * 0.5 + 0.5);',
+        '  p.x *= mix(1.0, min(1.0, 1.0 / max(0.001, uAspect)), logoGather);',
+        '  float ringDist = abs(length(p.xy * vec2(1.0, 1.22)) - 0.50);',
+        '  float filamentA = smoothstep(0.16, 0.018, ringDist);',
+        '  float filamentB = smoothstep(0.26, 0.020, abs(length((p.xy - vec2(0.04, -0.02)) * vec2(1.08, 1.35)) - 0.34));',
+        '  float nodeGlow = smoothstep(0.24, 0.03, length((p.xy - hubA) * vec2(1.15, 1.55)))',
+        '                 + smoothstep(0.22, 0.03, length((p.xy - hubB) * vec2(1.20, 1.45)));',
+        '  float edge = (1.0 - smoothstep(0.82, 1.05, abs(p.x)))',
+        '             * (1.0 - smoothstep(0.82, 1.05, abs(p.y)));',
+        '  float depth = smoothstep(-0.70, 0.80, p.z);',
+        '  float angle = (hash(aSeed + 21.0) - 0.5) * mix(1.9, 0.18, nodeMass) + atan(aDir.y, aDir.x) * mix(0.35, 0.06, nodeMass);',
+        '  float s = sin(angle);',
+        '  float c = cos(angle);',
+        '  vec2 q = (aUv - 0.5) * vec2(0.64 + hash(aSeed + 2.0) * 0.50, 1.30 + hash(aSeed + 5.0) * 0.70);',
+        '  q = vec2(q.x * c - q.y * s, q.x * s + q.y * c);',
+        '  float px = aSize * (0.42 + reveal * 0.80) * (1.0 + uBreath * 0.10) * (1.0 + thread * 0.48) * mix(1.0, 0.34 + wordMask * 0.66, wordHold);',
+        '  p.xy += q * px;',
+        '  p.xy = (p.xy - uPan) * uZoom;',
+        '  vTone = aTone;',
+        '  float flicker = mix(0.72 + scan * 0.28, 1.0, nodeMass);',
+        '  float cosmicFade = 0.38 + smoothstep(0.00, 0.30, uBirth) * 0.18;',
+        '  float wordVisibility = mix(1.0, wordMask, wordHold);',
+        '  vFade = clamp((0.20 + nodeGlow * 0.52 + (filamentA + filamentB) * 0.30 + filamentMass * 0.20 + innerI * 0.46 + depth * 0.16 + thread * 0.34 + wordHold * (0.42 + wordMask * 2.10)) * edge * flicker * max(reveal, cosmicFade) * (0.72 + uBirth * 0.28) * wordVisibility, 0.0, 0.98);',
+        '  vUv = aUv;',
+        '  vVariant = aVariant;',
+        '  vBar = nodeMass;',
+        '  vZeroGlyph = innerI;',
+        '  vRole = aRole;',
+        '  float brandMix = clamp(wordHold + thread * 0.72 * (1.0 - logoGather), 0.0, 1.0);',
+        '  float li = floor(letterOrder * 6.999);',
+        '  vec3 wordCol = vec3(0.50, 0.50, 0.50);',
+        '  wordCol = mix(wordCol, vec3(1.00, 0.00, 0.00), step(0.5, li) * (1.0 - step(1.5, li)));',
+        '  wordCol = mix(wordCol, vec3(0.00, 1.00, 0.00), step(1.5, li) * (1.0 - step(2.5, li)));',
+        '  wordCol = mix(wordCol, vec3(0.00, 0.27, 1.00), step(2.5, li) * (1.0 - step(3.5, li)));',
+        '  wordCol = mix(wordCol, vec3(0.00, 1.00, 1.00), step(3.5, li) * (1.0 - step(4.5, li)));',
+        '  wordCol = mix(wordCol, vec3(1.00, 0.00, 1.00), step(4.5, li) * (1.0 - step(5.5, li)));',
+        '  wordCol = mix(wordCol, vec3(1.00, 1.00, 0.00), step(5.5, li));',
+        '  vColor = mix(aColor, wordCol, brandMix);',
+        '  gl_Position = vec4(p.xy, 0.0, 1.0);',
+        '}',
+      ].join('\n'),
+      fragmentShader: [
+        'precision highp float;',
+        'varying vec2 vUv;',
+        'varying float vTone;',
+        'varying float vFade;',
+        'varying float vVariant;',
+        'varying float vBar;',
+        'varying float vZeroGlyph;',
+        'varying float vRole;',
+        'varying vec3 vColor;',
+        'float rect(vec2 uv, vec2 mn, vec2 mx, float soft) {',
+        '  vec2 a = smoothstep(mn, mn + soft, uv);',
+        '  vec2 b = 1.0 - smoothstep(mx - soft, mx, uv);',
+        '  return a.x * a.y * b.x * b.y;',
+        '}',
+        'float digitOne(vec2 uv, float v) {',
+        '  float family = floor(fract(v * 17.13) * 12.0);',
+        '  float lean = (v - 0.5) * mix(0.08, 0.40, step(5.5, family));',
+        '  uv.x += (uv.y - 0.5) * lean;',
+        '  float w = mix(0.030, 0.135, fract(v * 6.13));',
+        '  float soft = mix(0.006, 0.032, fract(v * 8.37));',
+        '  float heightTop = mix(0.86, 0.98, fract(v * 4.91));',
+        '  float heightBottom = mix(0.02, 0.15, fract(v * 5.43));',
+        '  float xCenter = mix(0.43, 0.58, fract(v * 2.81));',
+        '  float stem = rect(uv, vec2(xCenter - w, heightBottom), vec2(xCenter + w, heightTop), soft);',
+        '  float topHook = rect(uv, vec2(xCenter - w * 3.0, heightTop - 0.16), vec2(xCenter + w * 1.2, heightTop), soft);',
+        '  float topBar = rect(uv, vec2(xCenter - w * 2.2, heightTop - 0.08), vec2(xCenter + w * 2.3, heightTop + 0.02), soft);',
+        '  float foot = rect(uv, vec2(xCenter - w * 3.0, heightBottom - 0.01), vec2(xCenter + w * 3.2, heightBottom + 0.10), soft);',
+        '  float dotHead = 1.0 - smoothstep(0.055, 0.078, length((uv - vec2(xCenter, heightTop - 0.06)) * vec2(1.0, 1.35)));',
+        '  float cut = rect(uv, vec2(xCenter - w * 0.35, heightBottom + 0.15), vec2(xCenter + w * 0.35, heightTop - 0.12), soft * 0.7);',
+        '  float thin = rect(uv, vec2(xCenter - w * 0.42, heightBottom), vec2(xCenter + w * 0.42, heightTop), soft);',
+        '  float slab = rect(uv, vec2(xCenter - w * 1.25, heightBottom), vec2(xCenter + w * 1.25, heightTop), soft);',
+        '  float hairline = rect(uv, vec2(xCenter - w * 0.22, heightBottom), vec2(xCenter + w * 0.22, heightTop), soft * 0.65);',
+        '  float shortOne = rect(uv, vec2(xCenter - w * 0.58, heightBottom + 0.18), vec2(xCenter + w * 0.58, heightTop - 0.10), soft);',
+        '  float longCap = rect(uv, vec2(xCenter - w * 1.8, heightTop - 0.05), vec2(xCenter + w * 1.9, heightTop + 0.03), soft);',
+        '  float baseDot = 1.0 - smoothstep(0.045, 0.070, length((uv - vec2(xCenter, heightBottom + 0.04)) * vec2(1.3, 1.0)));',
+        '  float split = max(rect(uv, vec2(xCenter - w * 1.3, heightBottom), vec2(xCenter - w * 0.62, heightTop), soft), rect(uv, vec2(xCenter + w * 0.62, heightBottom), vec2(xCenter + w * 1.3, heightTop), soft));',
+        '  float wedge = rect(uv, vec2(xCenter - w * 2.6, heightTop - 0.20), vec2(xCenter - w * 0.15, heightTop - 0.04), soft);',
+        '  float outGlyph = 0.0;',
+        '  outGlyph = mix(outGlyph, stem + topHook * 0.75 + foot * 0.55, 1.0 - step(0.5, family));',
+        '  outGlyph = mix(outGlyph, thin + topBar * 0.35, step(0.5, family) * (1.0 - step(1.5, family)));',
+        '  outGlyph = mix(outGlyph, slab + foot * 0.35, step(1.5, family) * (1.0 - step(2.5, family)));',
+        '  outGlyph = mix(outGlyph, stem + topHook + foot, step(2.5, family) * (1.0 - step(3.5, family)));',
+        '  outGlyph = mix(outGlyph, thin + dotHead * 0.65, step(3.5, family) * (1.0 - step(4.5, family)));',
+        '  outGlyph = mix(outGlyph, max(stem - cut * 0.45, 0.0) + topHook * 0.55, step(4.5, family) * (1.0 - step(5.5, family)));',
+        '  outGlyph = mix(outGlyph, stem + topBar + foot * 0.90, step(5.5, family) * (1.0 - step(6.5, family)));',
+        '  outGlyph = mix(outGlyph, hairline + longCap * 0.25, step(6.5, family) * (1.0 - step(7.5, family)));',
+        '  outGlyph = mix(outGlyph, shortOne + baseDot * 0.60, step(7.5, family) * (1.0 - step(8.5, family)));',
+        '  outGlyph = mix(outGlyph, split + topHook * 0.42, step(8.5, family) * (1.0 - step(9.5, family)));',
+        '  outGlyph = mix(outGlyph, hairline + wedge * 0.85 + foot * 0.25, step(9.5, family) * (1.0 - step(10.5, family)));',
+        '  outGlyph = mix(outGlyph, slab + max(topHook - cut * 0.35, 0.0), step(10.5, family));',
+        '  return clamp(outGlyph, 0.0, 1.0);',
+        '}',
+        'float digitZero(vec2 uv, float v) {',
+        '  float family = floor(fract(v * 13.71) * 8.0);',
+        '  vec2 p = uv - 0.5;',
+        '  float lean = (v - 0.5) * mix(0.04, 0.22, step(3.5, family));',
+        '  p.x += p.y * lean;',
+        '  float sx = mix(0.34, 0.46, fract(v * 4.31));',
+        '  float sy = mix(0.42, 0.52, fract(v * 5.17));',
+        '  float soft = mix(0.010, 0.030, fract(v * 7.29));',
+        '  float outer = 1.0 - smoothstep(1.00, 1.00 + soft, length(p / vec2(sx, sy)));',
+        '  float inner = 1.0 - smoothstep(0.58, 0.58 + soft, length(p / vec2(sx * 0.72, sy * 0.74)));',
+        '  float oval = max(outer - inner * 0.96, 0.0);',
+        '  float slabOuter = rect(uv, vec2(0.22, 0.08), vec2(0.78, 0.92), soft);',
+        '  float slabInner = rect(uv, vec2(0.34, 0.20), vec2(0.66, 0.80), soft);',
+        '  float slabZero = max(slabOuter - slabInner * 0.98, 0.0);',
+        '  float diagonal = rect(uv + vec2((uv.y - 0.5) * 0.20, 0.0), vec2(0.46, 0.16), vec2(0.55, 0.84), soft);',
+        '  float cut = 1.0 - smoothstep(0.20, 0.28, abs(p.x) + abs(p.y) * 0.24);',
+        '  float outGlyph = mix(oval, slabZero, step(4.0, family));',
+        '  outGlyph = mix(outGlyph, max(outGlyph, diagonal * 0.36), step(6.0, family));',
+        '  outGlyph = mix(outGlyph, max(outGlyph - cut * 0.20, 0.0), step(2.0, family) * (1.0 - step(3.0, family)));',
+        '  return clamp(outGlyph, 0.0, 1.0);',
+        '}',
+        'void main() {',
+        '  float oneGlyph = digitOne(vUv, vVariant);',
+        '  float zeroGlyph = digitZero(vUv, vVariant);',
+        '  float glyph = mix(oneGlyph, zeroGlyph, vZeroGlyph);',
+        '  vec2 tightUv = (vUv - 0.5) * 1.10 + 0.5;',
+        '  float tightOne = digitOne(tightUv, vVariant);',
+        '  float tightZero = digitZero(tightUv, vVariant);',
+        '  float tightGlyph = mix(tightOne, tightZero, vZeroGlyph);',
+        '  float oneGlow = digitOne((vUv - 0.5) * 0.86 + 0.5, vVariant);',
+        '  float zeroGlow = digitZero((vUv - 0.5) * 0.86 + 0.5, vVariant);',
+        '  float glow = mix(oneGlow, zeroGlow, vZeroGlyph) * 0.28;',
+        '  float ink = clamp(glyph + glow, 0.0, 1.0);',
+        '  ink = max(ink, 0.018);',
+        '  float safeFade = vFade;',
+        '  float bevel = clamp(glyph - tightGlyph * 0.82, 0.0, 1.0);',
+        '  float faceShade = smoothstep(-0.45, 0.82, (vUv.y - 0.5) * 1.10 - (vUv.x - 0.5) * 0.42);',
+        '  float scanSpec = pow(smoothstep(0.72, 1.0, sin((vUv.x + vUv.y) * 10.0 + vVariant * 16.0) * 0.5 + 0.5), 5.0);',
+        '  float microSpec = pow(smoothstep(0.42, 1.0, sin(vUv.x * 44.0 + vVariant * 31.0) * sin(vUv.y * 38.0 - vVariant * 17.0) * 0.5 + 0.5), 3.0);',
+        '  vec3 silverDark = vec3(0.16, 0.17, 0.18);',
+        '  vec3 silverMid = vec3(0.58, 0.63, 0.64);',
+        '  vec3 silverLight = vec3(0.98, 1.0, 0.98);',
+        '  float chromeBand = pow(abs(sin((vUv.y * 2.2 - vUv.x * 0.7 + vVariant * 0.21) * 3.14159)), 2.4);',
+        '  vec3 metal = mix(silverDark, silverMid, faceShade * 0.72 + vTone * 0.20);',
+        '  metal = mix(metal, silverLight, chromeBand * 0.68);',
+        '  vec3 rgbcmy = vColor;',
+        '  vec3 reflectedColor = mix(rgbcmy, vec3(1.0), mix(0.46, 0.08, vRole));',
+        '  vec3 col = metal * (0.66 + faceShade * 0.32);',
+        '  col = mix(col, reflectedColor, 0.24 + vZeroGlyph * 0.05 + vRole * 0.55);',
+        '  col += silverLight * bevel * (0.82 + vTone * 0.38);',
+        '  col += reflectedColor * glow * (0.28 + vRole * 0.36);',
+        '  col += vec3(1.0) * scanSpec * bevel * 0.58;',
+        '  col += reflectedColor * microSpec * glyph * (0.14 + vRole * 0.18);',
+        '  float alpha = clamp(safeFade * ink * (0.50 + vTone * 0.66 + vBar * 0.10) * mix(1.0, 0.58, vRole) + bevel * safeFade * 0.20, 0.0, 0.94);',
+        '  gl_FragColor = vec4(col, alpha);',
+        '}',
+      ].join('\n'),
+    });
+
+    const field = new THREE.Mesh(geometry, material);
+    scene.add(field);
+
+    const view = {
+      zoom: 1,
+      targetZoom: 1,
+      panX: 0,
+      panY: 0,
+      targetPanX: 0,
+      targetPanY: 0,
+    };
+
+    function clampZoom(v) {
+      return Math.max(0.65, Math.min(7.5, v));
+    }
+
+    host.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      const rect = host.getBoundingClientRect();
+      const ndcX = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
+      const ndcY = -(((e.clientY - rect.top) / Math.max(1, rect.height)) * 2 - 1);
+      const oldZoom = view.targetZoom;
+      const factor = Math.exp(-e.deltaY * 0.0016);
+      const nextZoom = clampZoom(oldZoom * factor);
+      const worldX = ndcX / oldZoom + view.targetPanX;
+      const worldY = ndcY / oldZoom + view.targetPanY;
+      view.targetZoom = nextZoom;
+      view.targetPanX = worldX - ndcX / nextZoom;
+      view.targetPanY = worldY - ndcY / nextZoom;
+    }, { passive: false });
+
+    host.addEventListener('dblclick', function () {
+      view.targetZoom = 1;
+      view.targetPanX = 0;
+      view.targetPanY = 0;
+    });
+
+    function resize() {
+      const w = host.clientWidth || window.innerWidth;
+      const h = host.clientHeight || window.innerHeight;
+      renderer.setSize(w, h, false);
+      const aspect = w / h;
+      layoutAspect = aspect;
+      material.uniforms.uAspect.value = aspect;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    const start = performance.now();
+    let alive = true;
+    function render() {
+      if (!alive) return;
+      const t = (performance.now() - start) / 1000;
+      view.zoom += (view.targetZoom - view.zoom) * 0.14;
+      view.panX += (view.targetPanX - view.panX) * 0.14;
+      view.panY += (view.targetPanY - view.panY) * 0.14;
+      material.uniforms.uTime.value = t;
+      material.uniforms.uBreath.value = Math.sin(t * 0.42) * 0.5 + 0.5;
+      const delayed = Math.max(0, t - 1.8);
+      const reveal = Math.min(1, delayed / 14.0);
+      material.uniforms.uReveal.value = reveal * reveal * (3 - 2 * reveal);
+      material.uniforms.uBirth.value = reveal;
+      material.uniforms.uZoom.value = view.zoom;
+      material.uniforms.uPan.value.set(view.panX, view.panY);
+      coreMaterial.uniforms.uTime.value = t;
+      const coreWake = Math.min(1, Math.max(0, t - 8.2) / 4.8);
+      coreMaterial.uniforms.uReveal.value = coreWake;
+      const coreAspectScale = 1 / Math.max(0.001, layoutAspect);
+      core.position.x = (0 - view.panX) * view.zoom;
+      core.position.y = (CORE_Y - view.panY) * view.zoom;
+      core.scale.set(coreAspectScale * view.zoom, view.zoom, 1);
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+
+    window.addEventListener('pagehide', function () {
+      alive = false;
+      geometry.dispose();
+      material.dispose();
+      coreGeometry.dispose();
+      coreMaterial.dispose();
+      renderer.dispose();
+    });
+  })();
+  </script>
+</body>
+</html>

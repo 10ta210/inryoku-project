@@ -60,32 +60,107 @@ if (typeof currentPhase === 'undefined') { window.currentPhase = 0; }
 if (typeof audioContext === 'undefined') { window.audioContext = null; }
 
 // ═══ SHOPIFY STOREFRONT API CONFIG ═══
-// 司さんがStorefront APIトークン取得後に設定
+// 2026-05-09: 072xjz-qn ストア + Headless チャネルの公開アクセストークンに更新
+// このトークンは Storefront API 公開アクセス専用 (公式に client-side 露出 OK)。
+// CSP / connect-src に *.myshopify.com を許可済 (server.js)。
 const SHOPIFY_CONFIG = {
-    storeDomain: '0xi10h-x1.myshopify.com',
-    storefrontToken: 'ce0dc399245e874fd85d218df2d9bb04', // Dev Dashboard クライアントID
-    apiVersion: '2024-10' // 2026-04 は存在しない。実 API バージョンに修正
+    storeDomain: '072xjz-qn.myshopify.com',
+    storefrontToken: '1a4aaf1ec1166f1e62d27f1ff0cc4b6a',
+    apiVersion: '2024-10'
 };
 
-// ═══ GELATO POD API CONFIG (Print-on-Demand) ═══
-// 各商品の gelato_product に bella_canvas_3001 等の UID が記録済み
-// サーバー側 /api/gelato/order に API キーを隠蔽して中継する方式
-const GELATO_CONFIG = {
-    apiEndpoint: '/api/gelato/order',
+// 商品ごとの variant GID をここにまとめて入れる
+// 2026-05-09 ENTER HOODIE 投入完了 (072xjz-qn ストア)
+const SHOPIFY_VARIANT_MAP = {
+    'enter-hoodie': {
+        'S':   'gid://shopify/ProductVariant/48005115412634',
+        'M':   'gid://shopify/ProductVariant/48005115445402',
+        'L':   'gid://shopify/ProductVariant/48005115478170',
+        'XL':  'gid://shopify/ProductVariant/48005115510938',
+        '2XL': 'gid://shopify/ProductVariant/48005115543706'
+    },
+    'logo-hoodie': {},
+    'enter-hoodie-white': {},
+    'logo-hoodie-oversized': {},
+    'enter-tee': {
+        'S':   'gid://shopify/ProductVariant/48008480751770',
+        'M':   'gid://shopify/ProductVariant/48008480784538',
+        'L':   'gid://shopify/ProductVariant/48008480817306',
+        'XL':  'gid://shopify/ProductVariant/48008480850074',
+        '2XL': 'gid://shopify/ProductVariant/48008480882842'
+    },
+    'logo-tee': {},
+    'enter-longsleeve': {},
+    'logo-longsleeve': {},
+    'enter-crewneck': {},
+    'logo-crewneck': {},
+    'enter-tank': {},
+    'logo-tank': {}
+};
+
+// ═══ POD (Print-on-Demand) API CONFIG ═══
+// 2026-05-09 司「ブランド世界観優先 — 業者名を client に露出しない」
+// 各商品の _pod に印刷業者の product UID を保持 (server-side のみで使用)。
+// API キーは .env に隠蔽。client は /api/pod/order を叩くだけ。
+const POD_CONFIG = {
+    apiEndpoint: '/api/pod/order',
     enabled: false  // 司さんが API キー設定後に true に
 };
 
-// Gelato productUid テンプレートから size を展開
-function gelatoBuildUid(template, size) {
+// 2026-05-21 P3 段階1.5: ?demo=1 グローバル判定 (アニメ確認専用)
+//   実購入フローは走らず、UI/アニメだけが「変える状態」に見える
+function __p3IsDemoMode() {
+    try { return /[?&]demo=1/.test(location.search); } catch (e) { return false; }
+}
+
+function hasMappedVariant(product, size) {
+    if (__p3IsDemoMode()) return true; // デモモード: 全 variant 有効化
+    return !!(product && product.shopifyVariants && product.shopifyVariants[size]);
+}
+
+function isProductPurchasable(product) {
+    if (__p3IsDemoMode()) return true; // デモモード: 全商品 purchasable
+    return !!(product && Array.isArray(product.sizes) && product.sizes.some(function(size) {
+        return hasMappedVariant(product, size);
+    }));
+}
+
+function getCheckoutStatus(product, size) {
+    if (!product) {
+        return { available: false, message: '商品情報を読み込めませんでした' };
+    }
+    if (!isProductPurchasable(product)) {
+        return { available: false, message: 'checkout準備中' };
+    }
+    if (!hasMappedVariant(product, size)) {
+        return { available: false, message: 'このサイズはチェックアウト準備中' };
+    }
+    return { available: true, message: '' };
+}
+
+function getDefaultPurchasableSize(product) {
+    if (!product || !Array.isArray(product.sizes) || product.sizes.length === 0) return '';
+    return product.sizes.find(function(size) {
+        return hasMappedVariant(product, size);
+    }) || product.sizes[0];
+}
+
+function getProductAvailabilityLabel(product) {
+    // 2026-05-09 EC launch: 文言を全UI surface で「チェックアウト準備中」に統一
+    return isProductPurchasable(product) ? 'available' : 'チェックアウト準備中';
+}
+
+// 印刷業者の productUid テンプレートから size を展開 (server-side で意味あり)
+function podBuildUid(template, size) {
     if (!template || !size) return null;
     return template.replace('{size}', size.toLowerCase());
 }
 
-function gelatoCreateOrder(cartItems, shipping) {
-    if (!GELATO_CONFIG.enabled) return Promise.reject(new Error('Gelato not configured'));
+function podCreateOrder(cartItems, shipping) {
+    if (!POD_CONFIG.enabled) return Promise.reject(new Error('POD not configured'));
     var items = cartItems.map(function(it) {
         var p = PRODUCTS.find(function(x) { return x.id === it.id; });
-        var uid = p && p.gelato_product ? gelatoBuildUid(p.gelato_product, it.size) : null;
+        var uid = p && p._pod ? podBuildUid(p._pod, it.size) : null;
         return {
             productUid: uid,
             size: it.size,
@@ -93,7 +168,7 @@ function gelatoCreateOrder(cartItems, shipping) {
             printFile: p && p.image ? (location.origin + '/' + p.image) : null
         };
     }).filter(function(x) { return x.productUid && x.printFile; });
-    return fetch(GELATO_CONFIG.apiEndpoint, {
+    return fetch(POD_CONFIG.apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: items, shipping: shipping })
@@ -143,19 +218,141 @@ function shopifyCheckout(cartItems) {
 // ═══ PRODUCT DATA ═══
 // shopifyVariants: サイズ→Shopify variant GIDのマッピング（司さんが商品登録後に埋める）
 const PRODUCTS = [
+    // ════════════════════════════════════════════════
+    // 2026-06-08 司さん新ライン (実物デザイン6型を追加)
+    //   画像は public/ に後で配置。ファイル名はここで予約。
+    //   (画像未配置の間は onerror で頭文字フォールバック表示)
+    // ════════════════════════════════════════════════
+    {
+        id: 'enter-the-inryoku-tee',
+        name: 'ENTER THE inryokü TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/enter_the_inryoku_tee.jpg',
+        description: 'グレーの中を、虹を曳いて走る。i は最初からそこにいた。',
+        details: '200gsm · Oversized Fit · DTF Print · Heather Grey',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Heather Grey',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'enter-pixel-tee',
+        name: 'ENTER (PIXEL) TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/enter_pixel_tee.jpg',
+        description: 'EXIT は出口じゃない。視点を変えれば ENTER。同じ記号、違う意味。',
+        details: '200gsm · Regular Fit · DTF Print · Sand Beige',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Sand Beige',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'heart-rocket-tee',
+        name: 'HEART ROCKET TEE',
+        price: '¥9,800',
+        priceNum: 9800,
+        image: 'public/heart_rocket_tee.jpg',
+        description: 'ドットの惑星に、心臓が灯る。ロケットは、まだ知らない自分へ向かう。',
+        details: '220gsm · Oversized Fit · DTF Print · Black',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Black',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'human-tee',
+        name: 'HUMAN TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/human_tee.jpg',
+        description: '作品名:Human / 制作年:現在 / 素材:衣服、記憶、選択。Hello world.',
+        details: '200gsm · Oversized Fit · DTF Print · Black',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Black',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'yes-i-am-tee',
+        name: 'YES. I am TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/yes_i_am_tee.jpg',
+        description: 'カーソルが問いかける。"Are you human?" — YES. I am.',
+        details: '200gsm · Regular Fit · DTF Print · Sky Blue',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Sky Blue',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'hello-world-tee',
+        name: 'HELLO WORLD TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/hello_world_tee.jpg',
+        description: 'HELLO WORLD — Space と Enter。最初の一歩は、いつもこの2つのキーから。',
+        details: '200gsm · Oversized Fit · DTF Print · Black',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Black',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'heart-pixel-tee',
+        name: 'HEART (PIXEL) TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/heart_pixel_tee.jpg',
+        description: 'サーモグラフィのドットの心臓。Human — 体温だけが、君が生きてる証。',
+        details: '200gsm · Regular Fit · DTF Print · Black',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Black',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'heart-thermo-tee',
+        name: 'HEART (THERMO) TEE',
+        price: '¥9,800',
+        priceNum: 9800,
+        image: 'public/heart_thermo_tee.jpg',
+        description: '有刺鉄線に巻かれても、心臓は熱を放つ。ロケットは、その熱で飛ぶ。',
+        details: '220gsm · Oversized Fit · DTF Print · Black',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Black',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    {
+        id: 'fuck-you-tee',
+        name: 'F*CK YOU (MIRROR) TEE',
+        price: '¥8,800',
+        priceNum: 8800,
+        image: 'public/fuck_you_tee.jpg',
+        description: '反転した言葉。鏡で読むと、意味が変わる。視点の転換 = 50%→101%。',
+        details: '200gsm · Oversized Fit · DTF Print · Black',
+        sizes: ['S', 'M', 'L', 'XL', '2XL'],
+        color: 'Black',
+        isQRT: false,
+        shopifyVariants: {}
+    },
+    // ── パーカー2型 (2026-06-19 司「パーカー追加」: 既存画像で復活) ──
     {
         id: 'enter-hoodie',
         name: 'ENTER HOODIE',
         price: '¥12,800',
         priceNum: 12800,
         image: 'public/enter_hoodie.png',
-        description: 'EXIT is not the only option. ENTER the unknown.',
+        description: 'EXIT は出口じゃない。未知へ ENTER する。重厚な一着。',
         details: 'Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Washed Black',
-        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
         isQRT: false,
-        shopifyVariants: {} // { 'S': 'gid://shopify/ProductVariant/xxx', 'M': 'gid://...', ... }
+        shopifyVariants: {}
     },
     {
         id: 'logo-hoodie',
@@ -163,155 +360,18 @@ const PRODUCTS = [
         price: '¥12,800',
         priceNum: 12800,
         image: 'public/info_logo_hoodie.png',
-        description: 'The origin point. Grey contains every color — you just have to look.',
+        description: '原点。グレーの中に、すべての色が眠っている。',
         details: 'Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes)',
         sizes: ['S', 'M', 'L', 'XL', '2XL'],
         color: 'Washed Black',
-        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'enter-hoodie-white',
-        name: 'ENTER HOODIE — GREY',
-        price: '¥12,800',
-        priceNum: 12800,
-        image: 'public/enter_hoodie.png',
-        description: 'The same door, different light. Grey is not absence — it is everything at once.',
-        details: 'Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Heather Grey',
-        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'logo-hoodie-oversized',
-        name: 'inryokü LOGO OVERSIZED',
-        price: '¥14,800',
-        priceNum: 14800,
-        image: 'public/info_logo_hoodie.png',
-        description: '101% oversized. When you stop fitting in, you start standing out.',
-        details: 'Heavyweight 450gsm · Ultra Oversized · DTF Print (50+ washes)',
-        sizes: ['M', 'L', 'XL', '2XL', '3XL'],
-        color: 'Washed Black',
-        gelato_product: 'apparel_product_gca_hoodie_gsc_pullover_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_independent_ss4500',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'enter-tee',
-        name: 'ENTER TEE',
-        price: '¥8,800',
-        priceNum: 8800,
-        image: 'public/enter_hoodie.png',
-        description: 'Lightweight signal. The door is always open.',
-        details: '200gsm · Regular Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Black',
-        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'logo-tee',
-        name: 'inryokü LOGO TEE',
-        price: '¥8,800',
-        priceNum: 8800,
-        image: 'public/info_logo_hoodie.png',
-        description: 'The mark. Minimal outside, infinite inside.',
-        details: '200gsm · Regular Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Black',
-        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'enter-longsleeve',
-        name: 'ENTER LONG SLEEVE',
-        price: '¥9,800',
-        priceNum: 9800,
-        image: 'public/enter_hoodie.png',
-        description: 'Long reach into the unknown. Every sleeve tells a story.',
-        details: '220gsm · Regular Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Black',
-        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'logo-longsleeve',
-        name: 'inryokü LOGO LONG SLEEVE',
-        price: '¥9,800',
-        priceNum: 9800,
-        image: 'public/info_logo_hoodie.png',
-        description: 'Extended wavelength. The signal carries further.',
-        details: '220gsm · Regular Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Black',
-        gelato_product: 'apparel_product_gca_t-shirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_bella-and-canvas_3003',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'enter-crewneck',
-        name: 'ENTER CREWNECK',
-        price: '¥11,800',
-        priceNum: 11800,
-        image: 'public/enter_hoodie.png',
-        description: 'No hood, no hiding. Face the door head-on.',
-        details: '360gsm · Oversized Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Washed Black',
-        gelato_product: 'apparel_product_gca_sweatshirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_champion_s1049',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'logo-crewneck',
-        name: 'inryokü LOGO CREWNECK',
-        price: '¥11,800',
-        priceNum: 11800,
-        image: 'public/info_logo_hoodie.png',
-        description: 'Clean orbit. The symbol speaks without shouting.',
-        details: '360gsm · Oversized Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL', '2XL'],
-        color: 'Washed Black',
-        gelato_product: 'apparel_product_gca_sweatshirt_gsc_crewneck_gcu_mens_gqa_prm_gsi_{size}_gco_black_gpr_4-0_champion_s1049',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'enter-tank',
-        name: 'ENTER TANK TOP',
-        price: '¥6,800',
-        priceNum: 6800,
-        image: 'public/enter_hoodie.png',
-        description: 'Stripped down. Pure signal, zero noise.',
-        details: '180gsm · Regular Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL'],
-        color: 'Black',
-        gelato_product: 'apparel_product_gca_t-shirt_gsc_tank-top_gcu_unisex_gqa_prm_gsi_{size}_gco_black_gpr_4-0_comfort-colours_9360',
-        isQRT: false,
-        shopifyVariants: {}
-    },
-    {
-        id: 'logo-tank',
-        name: 'inryokü LOGO TANK TOP',
-        price: '¥6,800',
-        priceNum: 6800,
-        image: 'public/info_logo_hoodie.png',
-        description: 'Bare minimum, maximum frequency.',
-        details: '180gsm · Regular Fit · DTF Print (50+ washes)',
-        sizes: ['S', 'M', 'L', 'XL'],
-        color: 'Black',
-        gelato_product: 'apparel_product_gca_t-shirt_gsc_tank-top_gcu_unisex_gqa_prm_gsi_{size}_gco_black_gpr_4-0_comfort-colours_9360',
         isQRT: false,
         shopifyVariants: {}
     }
 ];
+
+PRODUCTS.forEach(function(product) {
+    product.shopifyVariants = SHOPIFY_VARIANT_MAP[product.id] || product.shopifyVariants || {};
+});
 
 // ═══ Cart state management (localStorage) ═══
 const CART = {
@@ -331,18 +391,17 @@ const CART = {
     }
 };
 
+CART.items = CART.items.filter(function(item) {
+    var product = PRODUCTS.find(function(p) { return p.id === item.id; });
+    return product && getCheckoutStatus(product, item.size).available;
+});
+CART.save();
+
 // ═══ 共有AudioContext + AnalyserNode（音響リアクティブ用・グローバル） ═══
 var p3AudioCtx = null;
 var p3Analyser = null;
 var p3FreqData = null;
 var p3AudioEnergy = 0;
-// 2026-05-15: 音響シンクロ強化 — 帯域別の値とビート検出を公開
-var p3AudioBass = 0;   // 低音 0-1
-var p3AudioMid = 0;    // 中音 0-1
-var p3AudioHigh = 0;   // 高音 0-1
-var p3AudioBeat = 0;   // ビート（低音スパイク時に1→急減衰）
-var _p3BassPrev = 0;   // ビート検出用の前フレーム低音
-var _p3BassMA = 0;     // 低音の移動平均（適応閾値）
 
 function initP3Audio() {
     if (p3AudioCtx) return;
@@ -371,19 +430,14 @@ function updateAudioEnergy() {
     bass /= (bassEnd * 255);
     mid /= ((midEnd - bassEnd) * 255);
     high /= ((len - midEnd) * 255);
-    // 帯域別を公開（uniformやJSアニメから参照可能）
-    p3AudioBass = bass;
-    p3AudioMid = mid;
-    p3AudioHigh = high;
     p3AudioEnergy = bass * 0.5 + mid * 0.35 + high * 0.15;
-    // ビート検出: 低音が移動平均+閾値を超えた瞬間にパルス
-    _p3BassMA = _p3BassMA * 0.95 + bass * 0.05;
-    if (bass > _p3BassMA * 1.4 && bass > _p3BassPrev + 0.04 && bass > 0.18) {
-        p3AudioBeat = 1.0;
-    } else {
-        p3AudioBeat *= 0.88; // 急減衰
-    }
-    _p3BassPrev = bass;
+    // 2026-04-30: 帯域別 export（shader uniform / Light Bridge 頻度で使用）
+    // 非対称 EMA: 立ち上がり速・減衰遅 → ビート感を残しつつチラつき抑制
+    window.p3AudioBands = window.p3AudioBands || { bass: 0, mid: 0, high: 0 };
+    var _b = window.p3AudioBands;
+    _b.bass += (bass - _b.bass) * (bass > _b.bass ? 0.4 : 0.1);
+    _b.mid  += (mid  - _b.mid ) * 0.2;
+    _b.high += (high - _b.high) * (high > _b.high ? 0.5 : 0.15);
 }
 
 // ═══ 3Dロゴ球体（PNGを置き換え） ═══
@@ -393,13 +447,27 @@ function init3DLogoSphere() {
     // 2026-04-24: 司要望 — P2 の RGBCMY 球体 (rcSphere) と同じシェーダーを P3 ロゴに搭載
     // PNG img を非表示、canvas で i ドット位置に 3D 球を描画
     try {
-        if (window._p3LogoSphere3D) return window._p3LogoSphere3D; // 多重初期化防止
+        // 2026-04-30: WebGL context lost → 30 回連続再試行で「context could not be created」が
+        // コンソールを埋め尽くすバグの対策。renderer が掴めた時点で成功キャッシュ、
+        // 失敗時は _p3LogoSphere3DFailed フラグを立てて再呼出をブロック。
+        if (window._p3LogoSphere3D && window._p3LogoSphere3D.renderer) {
+            return window._p3LogoSphere3D; // 既に初期化済み（成功キャッシュ）
+        }
+        if (window._p3LogoSphere3DFailed) {
+            return null; // 1度失敗したら再試行しない（WebGL context type lock 回避）
+        }
 
         var imgEl = document.querySelector('.logo-sphere');
         var wrap  = document.querySelector('.logo-holo-wrap');
         if (!imgEl || !wrap || typeof THREE === 'undefined') return null;
 
+        // 2026-05-09: ロゴ巨大化バグの再発防止。p3_styles.css 未読込時の clamp(90, 12vw, 140) フォールバック。
+        // wrap.offsetWidth > 200 は CSS 制約が効いてない兆候 → 強制 140px に落とす。
         var wrapW = Math.max(wrap.offsetWidth, 60);
+        if (wrapW > 200) {
+            console.warn('[init3DLogoSphere] wrap too wide (' + wrapW + 'px), p3_styles.css 未読込の可能性。140px に clamp。');
+            wrapW = 140;
+        }
         var candleSize = Math.round(wrapW * 0.30); // 卵の i ドット — 司 30%
         var pxRatio = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -416,8 +484,8 @@ function init3DLogoSphere() {
             'height: ' + candleSize + 'px',
             'z-index: 3',
             'pointer-events: none',
-            // mix-blend-mode: screen 廃止 (glow halo 除去)
-            'opacity: 1'
+            // initBrandParticleReveal が黒背景の中で点灯させる
+            'opacity: 0'
         ].join(';');
 
         var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
@@ -450,6 +518,9 @@ function init3DLogoSphere() {
             'uniform float u_hover;',
             'uniform float u_clickT;',
             'uniform float u_morph;',
+            'uniform float u_phaseMix;',
+            'uniform float u_speechPulse;',
+            'uniform vec3 u_phaseColor;',
             'varying vec3 vNormal;',
             'varying vec3 vViewDir;',
             'varying vec2 vUv;',
@@ -473,7 +544,7 @@ function init3DLogoSphere() {
             '    float phi   = vUv.x * 6.28318;',
             '    float theta = vUv.y * 3.14159;',
             '    vec3 sPos = vec3(sin(theta)*cos(phi), cos(theta), sin(theta)*sin(phi));',
-            '    float spd = 0.21 + u_hover * 0.15 + u_clickT * 0.25;',  // 2026-04-24: 3倍速
+            '    float spd = 0.10 + u_hover * 0.05 + u_clickT * 0.08 + u_speechPulse * 0.05;',
             '    float t   = u_time * spd;',
             '    vec3 nOff = vec3(',
             '        noise3(sPos * 2.5 + vec3(t,    0.,   0.)) * 2. - 1.,',
@@ -511,40 +582,131 @@ function init3DLogoSphere() {
             '    vec3  H    = normalize(L + V);',
             '    float spec = pow(max(dot(N, H), 0.0), 72.0) * 0.18;',
             '    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 1.8);',
-            '    float frStr   = 0.9 + u_hover * 0.8;',
-            '    float greyVal = 0.45 + 0.10 * sin(u_time * 0.3);',
-            '    vec3  frCol   = vec3(greyVal) * fresnel * frStr;',
-            '    float emissive = 0.05 + u_hover * 0.10;',
+            '    float frStr   = 0.74 + u_hover * 0.28 + u_clickT * 0.16 + u_speechPulse * 0.18;',
+            '    vec3  frCol   = mix(vec3(0.58), u_phaseColor, 0.45) * fresnel * frStr;',
+            '    float emissive = 0.045 + u_hover * 0.05 + u_clickT * 0.04 + u_speechPulse * 0.05;',
             '    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.5);',
-            '    vec3 rimLight = result * rim * 0.22 + vec3(0.3, 0.4, 0.5) * rim * 0.10;',
-            '    rimLight += result * rim * u_hover * 0.18;',
-            '    vec3 col = result * (ambient + diff * 0.90)',
-            '             + result * emissive',
+            '    vec3 phaseBase = mix(result, u_phaseColor, u_phaseMix);',
+            '    vec3 rimLight = phaseBase * rim * (0.15 + u_phaseMix * 0.18) + vec3(0.26, 0.30, 0.36) * rim * 0.07;',
+            '    rimLight += u_phaseColor * rim * (u_hover * 0.08 + u_speechPulse * 0.14);',
+            '    vec3 col = phaseBase * (ambient + diff * 0.82)',
+            '             + phaseBase * emissive',
             '             + frCol',
             '             + vec3(spec)',
             '             + rimLight;',
-            '    col = mix(col, vec3(1.0), u_clickT * 0.5);',
+            '    col = mix(col, vec3(1.0), u_clickT * 0.26 + u_speechPulse * 0.10);',
             '    if (u_morph > 0.0) {',
             '        float grey = dot(col, vec3(0.299, 0.587, 0.114));',
-            '        vec3 holoGrey = vec3(grey) * (0.8 + 0.2 * sin(u_time * 2.0));',
+            '        vec3 holoGrey = vec3(grey) * 0.92;',
             '        float fr = pow(1.0 - max(dot(normalize(vNormal), normalize(vViewDir)), 0.0), 2.5);',
-            '        vec3 aurora = vec3(',
-            '            0.5 + 0.5 * sin(u_time * 1.3 + fr * 6.28),',
-            '            0.5 + 0.5 * sin(u_time * 1.7 + fr * 6.28 + 2.094),',
-            '            0.5 + 0.5 * sin(u_time * 2.1 + fr * 6.28 + 4.189)',
-            '        );',
-            '        holoGrey += aurora * fr * 0.4 * (1.0 - u_morph * 0.25);',
+            '        holoGrey += u_phaseColor * fr * 0.16;',
             '        col = mix(col, holoGrey, u_morph);',
             '    }',
             '    gl_FragColor = vec4(col, 1.0);',
             '}'
         ].join('\n');
 
-        var uniforms = { u_time:{value:0}, u_hover:{value:0}, u_clickT:{value:0}, u_morph:{value:0} };
+        var uniforms = {
+            u_time:{value:0},
+            u_hover:{value:0},
+            u_clickT:{value:0},
+            u_morph:{value:0},
+            u_phaseMix:{value:0.08},
+            u_speechPulse:{value:0.0},
+            u_phaseColor:{value:new THREE.Vector3(0.72, 0.78, 0.84)}
+        };
         var mat = new THREE.ShaderMaterial({ vertexShader: sVert, fragmentShader: rcFrag, uniforms: uniforms });
         var geo = new THREE.SphereGeometry(1, 64, 64);
         var sphere = new THREE.Mesh(geo, mat);
         scene.add(sphere);
+
+        // 2026-05-09: 司「コア/生成/世界」へ転換 — 'observe' は内部識別子としてのみ温存。
+        // セマンティクスは「焦点 (focus / 視点が定まる)」 = コアに視線が合う相。
+        // 改名すると LOGO_PHASES_BY_REGISTER / canonMeta / phase resolver の契約が壊れるため未変更。
+        var LOGO_PHASES = {
+            idle:       { color: [0.72, 0.78, 0.84], mix: 0.08, pulse: 0.00, spin: 0.02, tilt: 0.038, drift: 0.05,  priority: 0, hold:   0 },
+            observe:    { color: [1.00, 0.90, 0.28], mix: 0.18, pulse: 0.06, spin: 0.05, tilt: 0.045, drift: 0.11, priority: 1, hold: 680 }, // = 焦点相 (旧: 観測相)
+            shadow:     { color: [0.20, 0.55, 1.00], mix: 0.16, pulse: 0.04, spin: 0.04, tilt: 0.042, drift: 0.08, priority: 2, hold: 860 },
+            emit:       { color: [0.22, 0.95, 0.95], mix: 0.22, pulse: 0.12, spin: 0.08, tilt: 0.048, drift: 0.14, priority: 3, hold: 980 },
+            resonance:  { color: [0.98, 0.30, 0.78], mix: 0.26, pulse: 0.15, spin: 0.09, tilt: 0.052, drift: 0.16, priority: 3, hold: 1180 },
+            summon:     { color: [0.18, 0.95, 0.42], mix: 0.32, pulse: 0.20, spin: 0.07, tilt: 0.046, drift: 0.12, priority: 4, hold: 1680 },
+            revelation: { color: [1.00, 0.45, 0.15], mix: 0.40, pulse: 0.24, spin: 0.10, tilt: 0.055, drift: 0.18, priority: 4, hold: 1560 }
+        };
+        var canonMeta = window.InryokuCanonMeta || null;
+        var FALLBACK_CANON_PHASE_RULES = {
+            summon:           { phase: 'summon',     hold: 1800, priority: 4 },
+            revelation:       { phase: 'revelation', hold: 1640, priority: 4 },
+            leap:             { phase: 'revelation', hold: 1460, priority: 4 },
+            future_command:   { phase: 'revelation', hold: 1280, priority: 4 },
+            resonance:        { phase: 'resonance',  hold: 1320, priority: 3 },
+            consensus:        { phase: 'resonance',  hold: 1280, priority: 3 },
+            emit:             { phase: 'emit',       hold: 1040, priority: 3 },
+            declaration:      { phase: 'emit',       hold: 1120, priority: 3 },
+            quotation:        { phase: 'shadow',     hold: 960,  priority: 2 },
+            past_speculation: { phase: 'shadow',     hold: 1040, priority: 2 },
+            shadow:           { phase: 'shadow',     hold: 980,  priority: 2 },
+            echo:             { phase: 'shadow',     hold: 820,  priority: 2 },
+            observation:      { phase: 'observe',    hold: 920,  priority: 2 },
+            self_question:    { phase: 'observe',    hold: 980,  priority: 2 },
+            core:             { phase: 'idle',       hold: 520,  priority: 1 },
+            ma:               { phase: 'idle',       hold: 620,  priority: 1 },
+            silence:          { phase: 'idle',       hold: 460,  priority: 1 }
+        };
+
+        var logoState = {
+            phase: 'idle',
+            target: LOGO_PHASES.idle,
+            phasePriority: 0,
+            phaseUntil: 0,
+            hoverActive: false,
+            clickPulse: 0,
+            speechBoost: 0,
+            phaseDrift: 0
+        };
+
+        function getPhasePreset(name) {
+            return LOGO_PHASES[name] || LOGO_PHASES.idle;
+        }
+
+        function currentTimeMs() {
+            return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        }
+
+        function getFallbackPhase() {
+            return logoState.hoverActive ? 'observe' : 'idle';
+        }
+
+        function setPhase(name, opts) {
+            opts = opts || {};
+            var target = getPhasePreset(name);
+            var now = currentTimeMs();
+            var priority = typeof opts.priority === 'number' ? opts.priority : target.priority || 0;
+            var hold = typeof opts.hold === 'number' ? opts.hold : target.hold || 0;
+            if (opts.force !== true && now < logoState.phaseUntil && priority < logoState.phasePriority) return false;
+            logoState.phase = name;
+            logoState.target = target;
+            logoState.phasePriority = priority;
+            logoState.phaseUntil = hold > 0 ? now + hold : 0;
+            return true;
+        }
+
+        function applyCanonPhase(canonName, register) {
+            var rule = canonMeta && typeof canonMeta.getPhaseRule === 'function'
+                ? canonMeta.getPhaseRule(canonName, register)
+                : null;
+            if (!rule) rule = FALLBACK_CANON_PHASE_RULES[canonName] || null;
+            if (!rule && register === 'click') rule = { phase: 'emit', hold: 1020, priority: 3 };
+            if (!rule && register === 'hover') rule = { phase: 'observe', hold: 860, priority: 1 };
+            if (!rule) rule = { phase: 'idle', hold: 480, priority: 1 };
+            setPhase(rule.phase, { hold: rule.hold, priority: rule.priority });
+        }
+
+        function settlePhase() {
+            var fallback = getFallbackPhase();
+            if (logoState.phase !== fallback) {
+                setPhase(fallback, { force: true, priority: LOGO_PHASES[fallback].priority || 0, hold: 0 });
+            }
+        }
 
         // canvas を wrap に挿入、PNG img を非表示
         wrap.appendChild(canvas);
@@ -556,9 +718,26 @@ function init3DLogoSphere() {
         function loop() {
             if (!alive) return;
             var dt = clock.getDelta();
-            uniforms.u_time.value += dt;
-            sphere.rotation.y += dt * 0.75;                                   // 2026-04-24: 3倍
-            sphere.rotation.x = Math.sin(uniforms.u_time.value * 0.51) * 0.12;
+            var now = currentTimeMs();
+            if (logoState.phaseUntil && now >= logoState.phaseUntil) {
+                logoState.phaseUntil = 0;
+                logoState.phasePriority = 0;
+                settlePhase();
+            }
+            logoState.phaseDrift += dt * (logoState.target.drift || 0.05);
+            uniforms.u_time.value = logoState.phaseDrift;
+            var target = logoState.target || LOGO_PHASES.idle;
+            var color = uniforms.u_phaseColor.value;
+            color.x += (target.color[0] - color.x) * 0.085;
+            color.y += (target.color[1] - color.y) * 0.085;
+            color.z += (target.color[2] - color.z) * 0.085;
+            uniforms.u_phaseMix.value += (target.mix - uniforms.u_phaseMix.value) * 0.08;
+            logoState.speechBoost += (target.pulse - logoState.speechBoost) * 0.07;
+            logoState.clickPulse = Math.max(0, logoState.clickPulse - dt * 1.2);
+            uniforms.u_clickT.value += ((logoState.clickPulse > 0 ? logoState.clickPulse : 0) - uniforms.u_clickT.value) * 0.14;
+            uniforms.u_speechPulse.value += (logoState.speechBoost - uniforms.u_speechPulse.value) * 0.12;
+            sphere.rotation.y += dt * target.spin;
+            sphere.rotation.x += (target.tilt - sphere.rotation.x) * 0.06;
             renderer.render(scene, camera);
             requestAnimationFrame(loop);
         }
@@ -569,20 +748,49 @@ function init3DLogoSphere() {
             var target = v ? 1 : 0;
             var start = uniforms.u_hover.value;
             var t0 = performance.now();
+            logoState.hoverActive = !!v;
+            if (v) {
+                setPhase('observe', { priority: 1, hold: 0 });
+            } else if (logoState.phasePriority <= 1 || !logoState.phaseUntil) {
+                settlePhase();
+            }
             (function ease(){
                 var p = Math.min(1, (performance.now()-t0)/260);
                 uniforms.u_hover.value = start + (target - start) * p;
                 if (p < 1) requestAnimationFrame(ease);
             })();
         }
-        wrap.addEventListener('pointerenter', function(){ setHover(true); });
-        wrap.addEventListener('pointerleave', function(){ setHover(false); });
+        function handlePointerEnter(){ setHover(true); }
+        function handlePointerLeave(){ setHover(false); }
+        function handlePointerDown(){
+            logoState.clickPulse = 1;
+            setPhase('emit', { priority: 3, hold: 980 });
+        }
+        wrap.addEventListener('pointerenter', handlePointerEnter);
+        wrap.addEventListener('pointerleave', handlePointerLeave);
+        wrap.addEventListener('pointerdown', handlePointerDown);
 
         var ref = {
             canvas: canvas, renderer: renderer, scene: scene, camera: camera,
             uniforms: uniforms, sphere: sphere,
+            setPhase: setPhase,
+            getPhase: function(){ return logoState.phase; },
+            setSpeechCanon: function(canonName, register){
+                logoState.clickPulse = register === 'click' ? 1 : Math.max(logoState.clickPulse, 0.36);
+                applyCanonPhase(canonName, register);
+            },
+            clearSpeechCanon: function(){
+                logoState.phaseUntil = 0;
+                logoState.phasePriority = 0;
+                settlePhase();
+            },
             dispose: function(){
                 alive = false;
+                try {
+                    wrap.removeEventListener('pointerenter', handlePointerEnter);
+                    wrap.removeEventListener('pointerleave', handlePointerLeave);
+                    wrap.removeEventListener('pointerdown', handlePointerDown);
+                } catch(e){}
                 try { geo.dispose(); mat.dispose(); renderer.forceContextLoss(); renderer.dispose(); } catch(e){}
                 if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
                 imgEl.style.display = '';
@@ -593,6 +801,7 @@ function init3DLogoSphere() {
         return ref;
     } catch(err) {
         console.warn('[init3DLogoSphere] failed, fallback to PNG:', err);
+        window._p3LogoSphere3DFailed = true; // 再試行ブロック (WebGL context type lock 対策)
         return null;
     }
 }
@@ -999,7 +1208,7 @@ function renderPhase3() {
     let p6bgm = null;
     let bgmFading = false;
 
-    function fadeBGMIn() {
+function fadeBGMIn() {
         if (bgmFading || !p6bgm) return;
         bgmFading = true;
         const BGM_TARGET = 0.5;
@@ -1007,7 +1216,7 @@ function renderPhase3() {
         const t0 = performance.now();
         function fadeStep(now) {
             const p = Math.min((now - t0) / BGM_FADE_MS, 1.0);
-            if (p6bgm) p6bgm.volume = p * BGM_TARGET;
+            if (p6bgm) p6bgm.volume = Math.max(0, Math.min(1, p * BGM_TARGET));
             if (p < 1.0) requestAnimationFrame(fadeStep);
         }
         requestAnimationFrame(fadeStep);
@@ -1098,13 +1307,21 @@ function renderPhase3() {
           <div class="carousel-ring" id="carousel-ring">
             ${PRODUCTS.map((p, i) => {
               var angle = (360 / PRODUCTS.length) * i;
-              return `<div class="carousel-item" data-idx="${i}" id="product-${p.id}" style="transform: rotateY(${angle}deg) translateZ(115px);">
-                <div class="product-card-img">
-                  <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;color:rgba(255,255,255,0.15);font-family:monospace;\\'>${p.name.charAt(0)}</div>'">
+              return `<div class="carousel-item${isProductPurchasable(p) ? '' : ' product-card-disabled'}" data-idx="${i}" id="product-${p.id}" style="transform: translateX(0) translateZ(0);">
+                <div class="product-showcase">
+                  <div class="product-showcase-frame"></div>
+                  <div class="product-showcase-glow"></div>
+                  <div class="product-showcase-aurora"></div>
+                  <div class="product-showcase-orbit"></div>
+                  <div class="product-showcase-pedestal"></div>
+                  <div class="product-card-img" data-3d-slot="${p.id}" data-glb="${p.glb || ''}">
+                    <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:32px;color:rgba(255,255,255,0.15);font-family:monospace;\\'>${p.name.charAt(0)}</div>'">
+                  </div>
                 </div>
                 <div class="product-card-info">
                   <div class="product-card-name">${p.name}</div>
-                  <div class="product-card-price">${p.price}</div>
+                  <div class="product-card-price" data-final="${p.price}">¥0</div>
+                  <div class="product-card-status">${getProductAvailabilityLabel(p)}</div>
                 </div>
               </div>`;
             }).join('')}
@@ -1113,20 +1330,31 @@ function renderPhase3() {
       </div>`;
 
     root.innerHTML = `
-        <canvas id="pu-cv" style="display:none;"></canvas>
     <div class="singularity-content" style="position:relative;z-index:5;pointer-events:auto;">
         <div class="hologram-logo" style="opacity:0;" id="holo-logo-wrap">
             <div class="brand-name p6-logo-text">
-                <span class="brand-char" style="color:#808080;opacity:0;">i</span><span class="brand-char" style="color:#FF0000;opacity:0;">n</span><span class="brand-char" style="color:#00FF00;opacity:0;">r</span><span class="brand-char" style="color:#0044FF;opacity:0;">y</span><span class="brand-char" style="color:#00FFFF;opacity:0;">o</span><span class="brand-char" style="color:#FF00FF;opacity:0;">k</span><span class="brand-char" style="color:#FFFF00;opacity:0;">ü</span>
+                <span class="brand-char" data-char="i" style="color:#808080;opacity:0;">i</span><span class="brand-char" data-char="n" style="color:#FF0000;opacity:0;">n</span><span class="brand-char" data-char="r" style="color:#00FF00;opacity:0;">r</span><span class="brand-char" data-char="y" style="color:#0044FF;opacity:0;">y</span><span class="brand-char" data-char="o" style="color:#00FFFF;opacity:0;">o</span><span class="brand-char" data-char="k" style="color:#FF00FF;opacity:0;">k</span><span class="brand-char" data-char="ü" style="color:#FFFF00;opacity:0;">ü</span>
             </div>
             <div class="logo-holo-wrap" id="bb-logo" style="cursor:pointer;opacity:0;">
-                <img src="logo_shell.png" alt="" class="logo-shell" style="opacity:0;">
-                <img src="logo_sphere.png" alt="" class="logo-sphere" style="opacity:0;animation:none;">
+                <img src="logo_shell.png" alt="" class="logo-shell" width="671" height="953" decoding="async" draggable="false" style="opacity:0;">
+                <img src="logo_sphere.png" alt="" class="logo-sphere" width="671" height="953" decoding="async" draggable="false" style="opacity:0;animation:none;">
                 <div class="holo-scanlines"></div>
                 <div class="holo-overlay"></div>
                 <div class="holo-scanline"></div>
             </div>
+            <div class="point-link-language" aria-hidden="true">
+                <span class="pl-dot" style="--x:13%;--y:42%;--c:#00FFFF;--d:0.0s;--float:0.7;"></span>
+                <span class="pl-dot" style="--x:30%;--y:30%;--c:#FFFF00;--d:0.18s;--float:1.4;"></span>
+                <span class="pl-dot" style="--x:49%;--y:38%;--c:#FF00FF;--d:0.36s;--float:2.1;"></span>
+                <span class="pl-dot" style="--x:66%;--y:56%;--c:#00FF00;--d:0.54s;--float:2.8;"></span>
+                <span class="pl-dot" style="--x:84%;--y:47%;--c:#FF0000;--d:0.72s;--float:3.5;"></span>
+                <span class="pl-line" style="--x:15%;--y:41%;--w:18%;--r:-21deg;--d:0.95s;--float:0.4;"></span>
+                <span class="pl-line" style="--x:31%;--y:31%;--w:20%;--r:12deg;--d:1.18s;--float:1.1;"></span>
+                <span class="pl-line" style="--x:50%;--y:39%;--w:19%;--r:33deg;--d:1.41s;--float:1.8;"></span>
+                <span class="pl-line" style="--x:67%;--y:55%;--w:18%;--r:-13deg;--d:1.64s;--float:2.5;"></span>
+            </div>
         </div>
+
 
         <div class="item-grid" style="opacity:0;transition:opacity 1.2s ease;">
             ${productCardsHTML}
@@ -1134,27 +1362,94 @@ function renderPhase3() {
 
     </div>`;
 
-
     console.log('[Phase 3] DOM setup complete, initializing particle universe...');
     initLogoHologramParallax();
     // 同期呼び出し（rAFだとバックグラウンドタブや競合で不発になるケースがある）
-    try {
-        initParticleUniverse();
-        console.log('[Phase 3] Particle universe initialized successfully');
-    } catch(e) {
-        console.error('[Phase 3] initParticleUniverse error:', e);
-    }
+    // 2026-05-09: 新シーケンス「黒 → コア → ロゴ → 粒子宇宙 → 服 → UI」
+    // STEP 2 (ロゴ brand-name reveal) 開始直後、コア materialize 完了後に粒子発火。
+    // 7000 → 3000ms に前倒し。コア出現 (280-1880ms) → ロゴ出現 (2450-4970ms) と並行して粒子が広がる。
+    setTimeout(() => {
+        try {
+            initParticleUniverse();
+            console.log('[Phase 3] Particle universe initialized successfully');
+        } catch(e) {
+            console.error('[Phase 3] initParticleUniverse error:', e);
+        }
+    }, 3000);
 
     // ── 「間」の演出: 真っ暗→5秒後にリビール開始（ラッパー表示は子要素リセット後） ──
     // 旧: 3秒でラッパーfadeIn→5秒でリビール → 2秒間子要素が一瞬見えるバグあり
     // 修正: ラッパー表示をinitBrandParticleReveal内に統合
-    // 2026-04-22: reveal 開始 5000ms → 1200ms
-    setTimeout(initBrandParticleReveal, 1200);
+    // 2026-05-07: 黒い世界にまずコアだけを出す
+    setTimeout(initBrandParticleReveal, 180);
 
-    // 2026-04-24: 司要望 — PNG 球体が出るタイミングと同期 (brand reveal 1200 + 100 = 1300ms)
+    // 2026-05-07: 3Dコアを先に作り、後続の全要素はこのコアから生成される
     setTimeout(function() {
         try { init3DLogoSphere(); } catch(e) { console.warn('[3DLogo] init failed:', e); }
-    }, 1300);
+    }, 60);
+
+    // 2026-05-05: #4 哲学コピーのタイプオン演出（ブランドリビール完了後）
+    // 2026-05-05 KO追加: 初回 textContent を data-final に保存し、言語切替時は data-final を即時更新
+    setTimeout(function() {
+        const typeOut = (el, charDelayMs) => {
+            if (!el) return 0;
+            const text = el.textContent || '';
+            // 初回 textContent を data-final に固定 (言語変更時は i18n 側で更新される)
+            el.dataset.final = text;
+            el.textContent = '';
+            el.style.minHeight = '1em';
+            let i = 0;
+            const id = setInterval(() => {
+                if (i >= text.length) { clearInterval(id); return; }
+                el.textContent += text[i++];
+            }, charDelayMs);
+            return text.length * charDelayMs;
+        };
+        const phMain = document.querySelector('.philosophy-copy');
+        const phSub  = document.querySelector('.philosophy-sub');
+        const mainDur = typeOut(phMain, 130);
+        setTimeout(() => typeOut(phSub, 60), mainDur + 350);
+    }, 7600);
+
+    // 2026-05-05 KO追加: 言語切替時に哲学コピーを即時 swap（タイプオンはやり直さず textContent を一括上書き）
+    try {
+        window.addEventListener('inryoku:langchange', function() {
+            // i18n.js 側の applyDom() が data-i18n で textContent を上書き済み。
+            // タイプオン中に来た場合は途中状態が壊れるが、現実的には reveal 完了後しか起こらない。
+            // data-final を新言語で再保存（価格ロジックなど他箇所が参照しても問題なくする）
+            const phMain = document.querySelector('.philosophy-copy');
+            const phSub  = document.querySelector('.philosophy-sub');
+            if (phMain) phMain.dataset.final = phMain.textContent || '';
+            if (phSub)  phSub.dataset.final  = phSub.textContent  || '';
+        });
+    } catch(e) { /* swallow */ }
+
+    // 2026-05-05: #5 価格カウントアップ（初回 reveal 時に ¥0→最終値）
+    setTimeout(function() {
+        const priceEls = document.querySelectorAll('.product-card-price[data-final]');
+        priceEls.forEach((el, idx) => {
+            const finalStr = el.dataset.final || '';
+            // ¥12,800 形式から数値抽出
+            const m = finalStr.match(/[\d,]+/);
+            if (!m) { el.textContent = finalStr; return; }
+            const finalNum = parseInt(m[0].replace(/,/g, ''), 10);
+            if (!finalNum || isNaN(finalNum)) { el.textContent = finalStr; return; }
+            const prefix = finalStr.slice(0, m.index);
+            const suffix = finalStr.slice(m.index + m[0].length);
+            const DUR = 1400 + idx * 80;  // 商品ごとに微小ずらし
+            const start = performance.now();
+            const tick = () => {
+                const t = (performance.now() - start) / DUR;
+                if (t >= 1) { el.textContent = finalStr; return; }
+                // ease-out cubic でスロット風に減速
+                const eased = 1 - Math.pow(1 - t, 3);
+                const v = Math.floor(finalNum * eased);
+                el.textContent = prefix + v.toLocaleString() + suffix;
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        });
+    }, 9600);
 
     // ── ストアグリッド制御 ──
     initStoreGrid();
@@ -1367,10 +1662,10 @@ function renderPhase3() {
     if (savedNum && savedToken) {
         renderGreyProfile();
     } else {
+        // 2026-04-30: 司「Grey になる / 観測する者たちへ 削除」
+        // 哲学コピーは singularity-content 直下の .philosophy-copy / .philosophy-sub に集約
         emailSignup.innerHTML = `
             ${buildParticles()}
-            <div class="email-signup-label">Grey になる</div>
-            <div class="email-signup-sub">50% → 101% を観測する者たちへ</div>
             <div class="email-signup-row">
                 <input type="email" id="email-input" placeholder="your@email.com" class="email-signup-input">
                 <button id="email-submit" class="email-signup-btn">→</button>
@@ -1379,7 +1674,11 @@ function renderPhase3() {
         `;
     }
     const scContentForEmail = document.querySelector('.singularity-content');
-    if (scContentForEmail) { scContentForEmail.appendChild(emailSignup); }
+    // 2026-05-31 司「メール欄を CONTACT に統合」: 下部の email-signup は
+    //   CONTACT フォーム内のチェックボックスに移したので、DOM へ追加しない。
+    //   (Grey ハッシュ表示モードのみ従来通り表示。通常メール欄は非表示)
+    var __isGreyMode = /you are Grey|grey-save/.test(emailSignup.innerHTML);
+    if (scContentForEmail && __isGreyMode) { scContentForEmail.appendChild(emailSignup); }
 
     // Email submit handler
     const emailSubmitBtn = document.getElementById('email-submit');
@@ -1448,12 +1747,19 @@ function renderPhase3() {
     contactForm.className = 'contact-form';
     contactForm.id = 'contact-form';
     contactForm.style.cssText = 'opacity:0;transition:opacity 1.2s ease;';
+    // 2026-05-31 司「メール欄を CONTACT に統合、メール登録もできるように」:
+    //   下部の email-signup を廃し、CONTACT フォームにメール登録チェックを内蔵。
+    //   メッセージは任意 (メール登録だけでも送信可)。
     contactForm.innerHTML = `
         <div class="contact-toggle" id="contact-toggle">CONTACT</div>
         <div class="contact-body" id="contact-body" style="display:none;">
             <input type="text" id="contact-name" placeholder="Name" class="contact-input">
             <input type="email" id="contact-email" placeholder="Email" class="contact-input">
-            <textarea id="contact-msg" placeholder="Message" class="contact-textarea" rows="3"></textarea>
+            <textarea id="contact-msg" placeholder="Message (任意)" class="contact-textarea" rows="3"></textarea>
+            <label class="contact-news" for="contact-news-cb">
+                <input type="checkbox" id="contact-news-cb" checked>
+                <span>最新情報を受け取る</span>
+            </label>
             <button id="contact-submit" class="contact-submit-btn">SEND</button>
             <div class="contact-status" id="contact-status"></div>
         </div>
@@ -1462,47 +1768,59 @@ function renderPhase3() {
     if (scContentForContact) { scContentForContact.appendChild(contactForm); }
 
     // 問い合わせ展開トグル
-    // 2026-05-13: CONTACT クリック → ビッグバン + ロゴが喋る発動
-    // bb-logo のクリックを再利用（absorb → chatting → speakBinary の既存フロー）
-    // ロゴ未存在 or クールダウン中はフォーム展開にフォールバック
     document.getElementById('contact-toggle').addEventListener('click', function() {
-        var logo = document.getElementById('bb-logo');
-        if (logo) {
-            // bb-logo の既存ハンドラ（idle ガード付き）に委譲
-            // 二重発火・状態異常は内部でブロックされる
-            logo.click();
-            return;
-        }
-        // フォールバック: 旧来のフォーム開閉
         var body = document.getElementById('contact-body');
-        if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        // 2026-04-30: CONTACT 押下で ロゴが話しかけてくる（コアタップと同じ挙動）
+        var bbLogo = document.getElementById('bb-logo');
+        if (bbLogo) bbLogo.click();
     });
+
 
     // 問い合わせ送信
     document.getElementById('contact-submit').addEventListener('click', function() {
         var name = document.getElementById('contact-name').value.trim();
         var email = document.getElementById('contact-email').value.trim();
         var msg = document.getElementById('contact-msg').value.trim();
+        var wantNews = document.getElementById('contact-news-cb');
+        var subscribe = wantNews ? wantNews.checked : false;
         var status = document.getElementById('contact-status');
-        if (!name || !email || !msg) {
-            status.textContent = '全項目を入力してください';
+
+        // 2026-05-31: メールは必須。メッセージは任意 (空ならメール登録のみ)。
+        if (!email) {
+            status.textContent = 'メールアドレスを入力してください';
+            status.style.color = 'rgba(255,100,100,0.6)';
+            return;
+        }
+        var hasMessage = !!msg;
+        if (!hasMessage && !subscribe) {
+            status.textContent = 'メッセージ入力 か 最新情報受け取りを選んでください';
             status.style.color = 'rgba(255,100,100,0.6)';
             return;
         }
         status.textContent = '送信中...';
         status.style.color = 'rgba(255,255,255,0.4)';
-        fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, email: email, message: msg })
-        })
-        .then(function(res) {
-            if (!res.ok) throw new Error('送信に失敗しました');
-            return res.json();
-        })
+
+        var jobs = [];
+        // 問い合わせ (メッセージがある時だけ)
+        if (hasMessage) {
+            jobs.push(fetch('/api/contact', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, email: email, message: msg })
+            }).then(function(res){ if(!res.ok) throw new Error('送信に失敗しました'); return res.json(); }));
+        }
+        // メール登録 (チェック時)
+        if (subscribe) {
+            jobs.push(fetch('/api/subscribe', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, name: name })
+            }).then(function(res){ if(!res.ok) throw new Error('登録に失敗しました'); return res.json().catch(function(){return{};}); }));
+        }
+
+        Promise.all(jobs)
         .then(function() {
             spawnBigBang(window.innerWidth / 2, window.innerHeight / 2, 25);
-            status.textContent = '✓ 送信完了';
+            status.textContent = subscribe && !hasMessage ? '✓ 登録完了' : '✓ 送信完了';
             status.style.color = 'rgba(100,255,150,0.6)';
         })
         .catch(function(err) {
@@ -1531,7 +1849,7 @@ function renderPhase3() {
             if (layers.indexOf(name) !== -1) return;
             layers.push(name);
             localStorage.setItem('inryoku.layers', JSON.stringify(layers));
-            var messages = { os9: '// observer detected: layer 1', imacg3: '// you saw the grey: layer 2', apple2: '// 101%: the origin' };
+            var messages = { os9: '// core detected: layer 1', imacg3: '// light revealed: layer 2', apple2: '// 101%: the origin' };
             showToast(messages[name] || '// layer unlocked');
             // スキン即時反映
             document.querySelectorAll('.carousel-item').forEach(function(c) {
@@ -1624,10 +1942,25 @@ function initStoreGrid() {
     var sliceAngle = 360 / count;
     // 2026-04-21: カード密度をレスポンシブに — mobile でリング半径を縮め接続を緻密に
     var isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+    // 2026-05-30 司「絶対に壊れないようにして」: 螺旋再発の恒久対策。
+    //   updateFrontCard が毎フレーム transform を書き換えるのに、CSS の
+    //   transition:transform が残っていると補間が追いつかず螺旋に見える。
+    //   CSS の上書き合戦に依存せず JS 側で transform の transition を恒久的に殺す
+    //   (filter/opacity の transition は活かす)。p3_styles / p3_ec_polish どちらの
+    //   設定でも螺旋は二度と起きない。
+    items.forEach(function (it) {
+        it.style.transitionProperty = 'filter, opacity';
+        it.style.willChange = 'transform';
+    });
     // 2026-04-24: 司「カード大きく」 RING/FRONT 拡大、scale 抑制 (ロゴ被らない)
-    var RING_Z  = isMobile ? 200 : 290;
-    var FRONT_Z = isMobile ? 320 : 470;
-    var FRONT_S = isMobile ? 1.45 : 1.35;
+    var RING_Z  = isMobile ? 190 : 290;
+    var FRONT_Z = isMobile ? 300 : 470;
+    // 2026-05-24 v8: 司「服小さすぎる、デザイン配置下に置きサイズ大きく」
+    //   FRONT_S 復活 + base scale 拡大 + 配置下げは CSS margin-top で
+    // 旧 v20260619: mobile 1.55 はタップ時に画面内の余白を潰し、
+    // 商品名/価格と重なって安っぽく見えていた。desktop は維持。
+    var FRONT_S = isMobile ? 1.22 : 1.45;
     var currentAngle = 0;
     // 2026-04-22: ぬるっと ゆっくり → 司「ほんのちょっとスピード上げて」 0.025 → 0.04
     var autoRotateSpeed = 0.04; // deg per frame
@@ -1666,18 +1999,39 @@ function initStoreGrid() {
 
             var t = absDist / 180;                    // 0..1
             var ease = t * t * (3 - 2 * t);           // smoothstep
-            var scale      = 1.0  - ease * 0.28;      // 1.0 → 0.72
-            var opacity    = 1.0  - ease * 0.65;      // 1.0 → 0.35
-            var brightness = 1.35 - ease * 0.80;      // 1.35 → 0.55
-            var saturate   = 1.15 - ease * 0.55;      // 1.15 → 0.60
-            var blur       = ease * 2.2;              // 0 → 2.2px
+            // 2026-05-24 v8: 司「服小さすぎる」 base scale up + 側面落差少なめ
+            var scale      = (isMobile ? 1.13 : 1.30) - ease * (isMobile ? 0.20 : 0.32);
+            var opacity    = 1.0  - ease * (isMobile ? 0.82 : 0.65);
+            var brightness = 1.35 - ease * (isMobile ? 0.92 : 0.80);
+            var saturate   = 1.15 - ease * (isMobile ? 0.62 : 0.55);
+            var blur       = ease * (isMobile ? 1.4 : 2.2);
             // cinematic lift: 側面カードはわずかに下へ沈み、奥で持ち上がる
             var lift       = -Math.sin(itemAngle * Math.PI / 180) * 6; // -6..+6
             var angle      = i * sliceAngle;
 
+            // 2026-05-24 v4 (司さん「曲面めっちゃ綺麗に」):
+            //   Y は固定したまま、X/Z/rotateY のみで水平な曲面 coverflow にする。
+            //   旧 v3: var cfX = itemAngle * pxPerDeg; transform = translateX(cfX) scale(scale)
+            // 2026-05-24 v7 (司さん「もっと密着、前の曲面ガラスに戻す」):
+            //   curveRadius を縮めて密着感、rotateY は強めキープで曲面感
+            //   scale 落差を緩めて side cards もガラスっぽく透ける
+            // 2026-05-31 司「もっと平面に・ガラスが横の服と重なる」:
+            //   rotateY と depth を弱めてほぼ平面の横スクロールに。
+            //   カード間隔(curveRadius)は広げて、正面カードの虹背景が隣に被らない。
+            var rad = itemAngle * Math.PI / 180;
+            // 旧 v20260619: mobile curveRadius 230 は 375px 幅で左右カードが画面端へはみ出し、
+            // 横カードの文字が中央に被った。mobile だけ半径を圧縮し、3枚が静かに収まる幅へ。
+            var curveRadius = isMobile ? 118 : 340;
+            var depth = isMobile ? 58 : 130;
+            var cfX = Math.sin(rad) * curveRadius;
+            var cfZ = (Math.cos(rad) - 1) * depth;
+            var cfRotY = -itemAngle * (isMobile ? 0.18 : 0.30);
+            var rotLimit = isMobile ? 18 : 32;
+            if (cfRotY > rotLimit) cfRotY = rotLimit; else if (cfRotY < -rotLimit) cfRotY = -rotLimit;
+            var backHide = Math.abs(itemAngle) > 105 ? 0 : 1;
             item.style.transform =
-                'rotateY(' + angle + 'deg) translateZ(' + RING_Z + 'px) translateY(' + lift.toFixed(2) + 'px) scale(' + scale.toFixed(3) + ')';
-            item.style.opacity = opacity.toFixed(3);
+                'translate3d(' + cfX.toFixed(1) + 'px,0,' + cfZ.toFixed(1) + 'px) rotateY(' + cfRotY.toFixed(2) + 'deg) scale(' + scale.toFixed(3) + ')';
+            item.style.opacity = (opacity * backHide).toFixed(3);
             item.style.filter  =
                 'brightness(' + brightness.toFixed(2) + ') saturate(' + saturate.toFixed(2) + ') blur(' + blur.toFixed(2) + 'px)';
 
@@ -1717,26 +2071,50 @@ function initStoreGrid() {
     // ── ホバー/タップで前に出る + クリック(2回目)でモーダル ──
     var isHovering = false;
     var activeCard = null; // 現在前に出てるカード (mobile tap用)
+    var __angleTweenId = null;
     function bringCardForward(card, idx) {
         var targetAngle = -(360 / count) * idx;
         var diff = targetAngle - currentAngle;
         diff = ((diff % 360) + 540) % 360 - 180;
         var dest = currentAngle + diff;
         ring.style.transition = 'transform 0.7s cubic-bezier(0.16,1,0.3,1)';
-        currentAngle = dest;
-        ring.style.transform = 'rotateY(' + dest + 'deg)';
-        var angle = (360 / count) * idx;
+        // 2026-05-24 v7: 司「スライド早すぎてコントロールできない」
+        //   currentAngle を 900ms かけて ease-out で dest までトゥイーン (snap禁止)
+        if (__angleTweenId) cancelAnimationFrame(__angleTweenId);
+        var fromA = currentAngle;
+        var startT = performance.now();
+        var dur = 900;
+        var step = function(now) {
+            var k = Math.min(1, (now - startT) / dur);
+            // ease-out cubic
+            var e = 1 - Math.pow(1 - k, 3);
+            currentAngle = fromA + (dest - fromA) * e;
+            velocity = 0;
+            if (k < 1) {
+                __angleTweenId = requestAnimationFrame(step);
+            } else {
+                currentAngle = dest;
+                __angleTweenId = null;
+            }
+        };
+        __angleTweenId = requestAnimationFrame(step);
+        // 2026-05-24 coverflow: ring 自体は静止、updateFrontCard が
+        // currentAngle 経由で各カードの itemAngle を計算して X 軸の弧に配置
+        ring.style.transform = 'none';
+        card.classList.add('carousel-active');
         card.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.35s ease, opacity 0.35s ease';
-        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + FRONT_Z + 'px) scale(' + FRONT_S + ')';
+        // bringCardForward は updateFrontCard に任せる (per-frame で coverflow 位置に到達)
+        card.style.transform = 'translateX(0) translateZ(0) rotateY(0deg) scale(' + FRONT_S + ')';
         card.style.filter = 'brightness(1.5) saturate(1.2)';
         card.style.opacity = '1';
         card.style.zIndex = '20';
 
     }
     function resetCard(card, idx) {
-        var angle = (360 / count) * idx;
+        card.classList.remove('carousel-active');
         card.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1), filter 0.35s ease, opacity 0.35s ease';
-        card.style.transform = 'rotateY(' + angle + 'deg) translateZ(' + RING_Z + 'px) scale(1)';
+        // coverflow: updateFrontCard が次フレで coverflow 位置に補正、ここは中性 transform
+        card.style.transform = 'translateX(0) translateZ(0) rotateY(0deg) scale(1)';
         card.style.filter = '';
         card.style.zIndex = '';
         setTimeout(function() {
@@ -1756,6 +2134,20 @@ function initStoreGrid() {
             velocity = 0;
             bringCardForward(card, parseInt(card.dataset.idx));
         });
+
+        // 2026-05-24: 司「服タッチしたら虹色にして背景」 → 押下中 is-tapped で halo 強化
+        var __tapClear = null;
+        card.addEventListener('pointerdown', function() {
+            card.classList.add('is-tapped');
+            if (__tapClear) clearTimeout(__tapClear);
+        });
+        var releaseTap = function() {
+            if (__tapClear) clearTimeout(__tapClear);
+            __tapClear = setTimeout(function() { card.classList.remove('is-tapped'); }, 450);
+        };
+        card.addEventListener('pointerup', releaseTap);
+        card.addEventListener('pointercancel', releaseTap);
+        card.addEventListener('pointerleave', releaseTap);
 
         card.addEventListener('mouseleave', function() {
             isHovering = false;
@@ -1824,7 +2216,8 @@ function initStoreGrid() {
             }
         }
 
-        ring.style.transform = 'rotateY(' + currentAngle + 'deg)';
+        // 2026-05-24 coverflow: ring 静止、currentAngle は state 用のみ
+        ring.style.transform = 'none';
 
         updateFrontCard();
         autoRotateId = requestAnimationFrame(tick);
@@ -1896,35 +2289,155 @@ function initStoreGrid() {
 
 }
 
+function showCartToast(message, duration) {
+    var toast = document.createElement('div');
+    toast.className = 'cart-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.classList.add('show'); }, 10);
+    setTimeout(function() {
+        toast.classList.remove('show');
+        setTimeout(function() {
+            if (toast.parentNode) toast.remove();
+        }, 300);
+    }, duration || 2000);
+}
+
 // ── カードからカートに追加 ──
+// 2026-05-21 P3 段階1 (Codex): Add-to-Cart Flight + Badge Punch + Logo Pulse
+//   GLSL × GSAP 三層構造の最初の実証:
+//     第3層 DOM: ghost element がカードからカートへ flight、badge が punch
+//     第2層 GSAP: uniform u_clickT を expo.out で 0→1→0 駆動 (sphere 呼応)
+//     第1層 GLSL: 既存 spawnBigBang() を完了時に発火 (パーティクル爆発)
+//   既存 setTimeout の素朴な ✓ADDED 表示は廃止し、ボタン自体も timeline で feedback
 function addToCartFromCard(idx) {
     var p = PRODUCTS[idx];
     if (!p) return;
     var card = document.getElementById('product-' + p.id);
     var selectedBtn = card ? card.querySelector('.size-btn.selected') : null;
     var size = selectedBtn ? selectedBtn.dataset.size : (p.sizes.length > 1 ? p.sizes[1] : p.sizes[0]);
+    // 2026-05-21 P3 段階1.5: ?demo=1 で variant check を skip (アニメ確認専用)
+    //   本番では Shopify variant 未設定だと早期 return でアニメ見えないため、
+    //   デモモード時のみ available=true 上書き。実購入は走らない (CART.add はローカルのみ)
+    var demoMode = /[?&]demo=1/.test(location.search);
+    var checkoutStatus = getCheckoutStatus(p, size);
+    if (!checkoutStatus.available && !demoMode) {
+        showCartToast(p.name + ' は ' + checkoutStatus.message);
+        return;
+    }
+    if (demoMode && !checkoutStatus.available) {
+        // デモ表示: トーストに「DEMO」を明記
+        showCartToast('[DEMO] ' + p.name + ' (' + size + ') アニメ確認モード');
+    }
     var variantId = (p.shopifyVariants && p.shopifyVariants[size]) || '';
     CART.add(p.id, size, p.priceNum, p.name, variantId);
-    // カートアイコンからビッグバン
+
     var cartEl = document.getElementById('cart-icon');
-    if (cartEl) {
-        var cr = cartEl.getBoundingClientRect();
-        spawnBigBang(cr.left + cr.width / 2, cr.top + cr.height / 2, 12);
+    var btn    = card ? card.querySelector('.add-btn') : null;
+    var hasGsap = typeof window.gsap !== 'undefined';
+
+    // GSAP が無い環境 (CDN failure 等) は従来挙動にフォールバック
+    if (!hasGsap || !cartEl || !card) {
+        if (cartEl) {
+            var cr0 = cartEl.getBoundingClientRect();
+            spawnBigBang(cr0.left + cr0.width / 2, cr0.top + cr0.height / 2, 12);
+        }
+        showCartToast(p.name + ' (' + size + ') をカートに追加しました');
+        if (btn) {
+            btn.textContent = '✓ ADDED';
+            btn.style.background = 'rgba(0,255,100,0.2)';
+            setTimeout(function() { btn.textContent = 'ADD TO CART'; btn.style.background = ''; }, 1500);
+        }
+        return;
     }
-    // トースト通知
-    var toast = document.createElement('div');
-    toast.className = 'cart-toast';
-    toast.textContent = p.name + ' (' + size + ') をカートに追加しました';
-    document.body.appendChild(toast);
-    setTimeout(function() { toast.classList.add('show'); }, 10);
-    setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 2000);
-    // ボタンのフィードバック
-    var btn = card ? card.querySelector('.add-btn') : null;
+
+    // ─── 第3層 DOM: Ghost flight ────────────────────────────
+    // カードの画像/サムネを複製して position:fixed で打ち上げる
+    var img = card.querySelector('img, [data-3d-slot], .product-thumb') || card;
+    var srcRect = img.getBoundingClientRect();
+    var dstRect = cartEl.getBoundingClientRect();
+    var ghost = img.cloneNode(true);
+    ghost.removeAttribute('id');
+    ghost.style.cssText =
+        'position:fixed;' +
+        'left:' + srcRect.left + 'px;top:' + srcRect.top + 'px;' +
+        'width:' + srcRect.width + 'px;height:' + srcRect.height + 'px;' +
+        'margin:0;padding:0;pointer-events:none;z-index:2147482000;' +
+        'transition:none;will-change:transform,opacity;' +
+        'border-radius:12px;overflow:hidden;' +
+        'box-shadow:0 0 24px rgba(255,255,255,.45),0 0 48px rgba(255,80,200,.25);';
+    document.body.appendChild(ghost);
+
+    var dx = (dstRect.left + dstRect.width  / 2) - (srcRect.left + srcRect.width  / 2);
+    var dy = (dstRect.top  + dstRect.height / 2) - (srcRect.top  + srcRect.height / 2);
+
+    // ─── 第2層 GSAP: timeline で三層を時間的に紡ぐ ──────────
+    var tl = window.gsap.timeline({
+        onComplete: function() {
+            try { ghost.remove(); } catch (e) {}
+            // 着地パーティクル (第1層 GLSL 既存資産)
+            spawnBigBang(
+                dstRect.left + dstRect.width / 2,
+                dstRect.top  + dstRect.height / 2,
+                14
+            );
+        }
+    });
+
+    // Ghost: 放物線 + 縮小 + 回転 (商品の魂が空間を飛ぶ)
+    tl.to(ghost, {
+        x: dx,
+        y: dy,
+        scale: 0.18,
+        rotation: 24,
+        opacity: 0.85,
+        duration: 0.62,
+        ease: 'power3.in'
+    }, 0);
+    // 終端で fade out
+    tl.to(ghost, { opacity: 0, duration: 0.12, ease: 'power1.in' }, 0.5);
+
+    // Sphere u_clickT: ロゴ球が呼応して脈動 (第1層 GLSL × 第2層 GSAP)
+    try {
+        var logoRef = window._p3LogoSphere3D;
+        if (logoRef && logoRef.uniforms && logoRef.uniforms.u_clickT) {
+            tl.to(logoRef.uniforms.u_clickT, {
+                value: 1,
+                duration: 0.18,
+                ease: 'expo.out',
+                yoyo: true,
+                repeat: 1
+            }, 0);
+        }
+    } catch (e) {}
+
+    // Badge punch: カートの数字が "ボン!" と弾ける
+    var badge = document.getElementById('cart-badge') || cartEl.querySelector('.cart-badge');
+    if (badge) {
+        tl.fromTo(badge,
+            { scale: 1.0 },
+            { scale: 1.55, duration: 0.16, ease: 'back.out(3)', yoyo: true, repeat: 1 },
+            0.46  // ghost 着地直前
+        );
+    }
+
+    // Button feedback (text + bg を timeline 内で)
     if (btn) {
-        btn.textContent = '✓ ADDED';
-        btn.style.background = 'rgba(0,255,100,0.2)';
-        setTimeout(function() { btn.textContent = 'ADD TO CART'; btn.style.background = ''; }, 1500);
+        var origText = btn.textContent;
+        var origBg   = btn.style.background;
+        tl.call(function() {
+            btn.textContent = '✓ ADDED';
+            btn.style.background = 'rgba(0,255,100,0.22)';
+        }, null, 0);
+        tl.to(btn, { scale: 0.94, duration: 0.10, ease: 'power2.out', yoyo: true, repeat: 1 }, 0);
+        // 1.4 秒後に戻す
+        tl.call(function() {
+            btn.textContent = origText || 'ADD TO CART';
+            btn.style.background = origBg || '';
+        }, null, 1.4);
     }
+
+    showCartToast(p.name + ' (' + size + ') をカートに追加しました');
 }
 
 // ── ブランド名出現SFサウンド（グローバル: initBrandParticleRevealから呼ばれる） ──
@@ -2140,7 +2653,7 @@ function duckBGM() {
     var dur = 1500;
     function fadeDown(now) {
         var p = Math.min((now - t0) / dur, 1.0);
-        bgm.volume = startVol + (targetVol - startVol) * p;
+        bgm.volume = Math.max(0, Math.min(1, startVol + (targetVol - startVol) * p));
         if (p < 1.0) requestAnimationFrame(fadeDown);
     }
     requestAnimationFrame(fadeDown);
@@ -2154,7 +2667,7 @@ function unduckBGM() {
     var dur = 2000;
     function fadeUp(now) {
         var p = Math.min((now - t0) / dur, 1.0);
-        bgm.volume = startVol + (targetVol - startVol) * p;
+        bgm.volume = Math.max(0, Math.min(1, startVol + (targetVol - startVol) * p));
         if (p < 1.0) requestAnimationFrame(fadeUp);
     }
     requestAnimationFrame(fadeUp);
@@ -2163,19 +2676,20 @@ function unduckBGM() {
 function initBrandParticleReveal() {
     var chars = document.querySelectorAll('.brand-char');
     if (!chars.length) return;
-
     var charColors = ['#808080','#FF0000','#00FF00','#0044FF','#00FFFF','#FF00FF','#FFFF00'];
     var charGlows  = ['rgba(128,128,128,0.5)','rgba(255,0,0,0.5)','rgba(0,255,0,0.5)','rgba(0,68,255,0.5)','rgba(0,255,255,0.5)','rgba(255,0,255,0.5)','rgba(255,255,0,0.5)'];
     var prismLine  = document.querySelector('.prism-line');
     var logoWrap   = document.querySelector('.logo-holo-wrap');
     var logoShell  = document.querySelector('.logo-shell');
     var logoSphere = document.querySelector('.logo-sphere');
+    var logoCore   = null;
 
     // ── 全要素初期非表示（子要素をリセットしてからラッパーを表示） ──
     if (prismLine)  { prismLine.style.opacity = '0'; prismLine.style.transition = 'none'; }
-    if (logoWrap)   { logoWrap.style.opacity  = '0'; logoWrap.style.transition  = 'none'; }
+    if (logoWrap)   { logoWrap.classList.add('core-only'); logoWrap.style.opacity  = '0'; logoWrap.style.transition  = 'none'; }
     if (logoShell)  { logoShell.style.animation = 'none'; logoShell.style.opacity = '0'; logoShell.style.transition = 'none'; }
     if (logoSphere) { logoSphere.style.animation = 'none'; logoSphere.style.opacity = '0'; logoSphere.style.transition = 'none'; }
+    if (logoCore)   { logoCore.style.animation = 'none'; logoCore.style.opacity = '0'; logoCore.style.transition = 'none'; }
     chars.forEach(function(ch, idx) {
         if (ch.dataset.real) { ch.textContent = ch.dataset.real; delete ch.dataset.real; }
         delete ch.dataset.decoded;
@@ -2194,52 +2708,105 @@ function initBrandParticleReveal() {
     // ── 子要素リセット完了 → ラッパーを表示（中身は全てopacity:0なので何も見えない） ──
     var holoWrap = document.getElementById('holo-logo-wrap');
     if (holoWrap) { holoWrap.style.transition = 'none'; holoWrap.style.opacity = '1'; }
-    // logoWrapも表示
-    if (logoWrap) { logoWrap.style.opacity = '1'; logoWrap.style.transition = 'none'; }
+    // logoWrapも表示。ただし core-only 中は殻/scanline/投影光を隠し、コアだけを見せる。
+    if (logoWrap) { logoWrap.classList.add('core-only'); logoWrap.style.opacity = '1'; logoWrap.style.transition = 'none'; }
+    // 3Dコア生成が早すぎて空振りした場合も、ここで必ず再試行する。
+    try { init3DLogoSphere(); } catch(e) { console.warn('[3DLogo] core birth retry failed:', e); }
+    logoCore = document.querySelector('.logo-sphere-3d') || logoSphere;
 
     // ═══════════════════════════════════════════
     //  STEP 1: 球体コアが深淵から実体化（0ms〜）
     //  暗闇の中心にまず微かな光点 → 脈動しながら拡大 → 完全実体化
     // ═══════════════════════════════════════════
-    if (logoSphere) {
-        logoSphere.style.filter = 'drop-shadow(0 0 4px rgba(255,255,255,0.2)) brightness(0.05) saturate(0)';
-        logoSphere.style.opacity = '0';
-        logoSphere.style.transform = 'translateZ(34px) scale(0.3)';
+    if (logoCore) {
+        logoCore.style.filter = 'drop-shadow(0 0 3px rgba(255,255,255,0.18)) brightness(0.08) saturate(0)';
+        logoCore.style.opacity = '0';
+        logoCore.style.transform = 'translateX(-50%) translateZ(34px) scale(0.24)';
     }
-    // 2026-04-22: 球体実体化を短く (2200ms final → 800ms final)
     setTimeout(function() {
-        if (logoSphere) {
-            logoSphere.style.transition = 'opacity 0.7s ease-in, filter 0.8s ease, transform 0.9s cubic-bezier(0.16,1,0.3,1)';
-            logoSphere.style.opacity = '0.4';
-            logoSphere.style.transform = 'translateZ(34px) scale(0.7)';
-            logoSphere.style.filter = 'drop-shadow(0 0 4px rgba(128,128,128,0.5)) brightness(0.3) saturate(0)';
+        if (logoCore) {
+            logoCore.style.transition = 'opacity 1.0s ease-in, filter 1.15s ease, transform 1.15s cubic-bezier(0.16,1,0.3,1)';
+            logoCore.style.opacity = '0.46';
+            logoCore.style.transform = 'translateX(-50%) translateZ(34px) scale(0.62)';
+            logoCore.style.filter = 'drop-shadow(0 0 6px rgba(128,128,128,0.42)) brightness(0.34) saturate(0.15)';
         }
     }, 100);
     setTimeout(function() {
-        if (logoSphere) {
-            logoSphere.style.transition = 'opacity 0.6s ease, filter 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1)';
-            logoSphere.style.opacity = '0.8';
-            logoSphere.style.transform = 'translateZ(34px) scale(0.9)';
-            logoSphere.style.filter = 'drop-shadow(0 0 5px rgba(0,255,255,0.35)) drop-shadow(0 0 10px rgba(255,0,255,0.18)) brightness(0.6) saturate(0.5)';
+        if (logoCore) {
+            logoCore.style.transition = 'opacity 0.9s ease, filter 1s ease, transform 1s cubic-bezier(0.16,1,0.3,1)';
+            logoCore.style.opacity = '0.82';
+            logoCore.style.transform = 'translateX(-50%) translateZ(34px) scale(0.86)';
+            logoCore.style.filter = 'drop-shadow(0 0 8px rgba(0,255,255,0.30)) drop-shadow(0 0 16px rgba(255,0,255,0.14)) brightness(0.68) saturate(0.55)';
         }
-    }, 500);
+    }, 900);
     setTimeout(function() {
-        if (logoSphere) {
-            logoSphere.style.transition = 'filter 0.7s ease, transform 0.6s ease, opacity 0.5s ease';
-            logoSphere.style.opacity = '1';
-            logoSphere.style.transform = 'translateZ(34px) scale(1.0)';
-            logoSphere.style.filter = '';
+        if (logoCore) {
+            logoCore.style.transition = 'filter 1.0s ease, transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.8s ease';
+            logoCore.style.opacity = '1';
+            logoCore.style.transform = 'translateX(-50%) translateZ(34px) scale(1.0)';
+            logoCore.style.filter = '';
         }
-    }, 800);
+    }, 1700);
 
-    // シェル(0+1)は初期非表示のまま — ブランド名の後にホログラムで出す
+    function projectLogoShellFromCore() {
+        if (logoWrap) {
+            logoWrap.classList.remove('core-only');
+        }
+        if (!logoShell) return;
+
+        logoShell.style.opacity = '0';
+        logoShell.style.transform = 'translate3d(0,0,0) scale(0.88) rotateY(18deg)';
+        logoShell.style.filter = 'brightness(1.55) saturate(0.35) hue-rotate(180deg)';
+
+        // コアが先に存在し、その光でロゴ殻が投影される。
+        setTimeout(function() {
+            logoShell.style.transition = 'opacity 0.8s ease-in, transform 1.5s cubic-bezier(0.16,1,0.3,1), filter 1.2s ease';
+            logoShell.style.opacity = '0.18';
+            logoShell.style.transform = 'translate3d(0,0,0) scale(0.94) rotateY(8deg)';
+            logoShell.style.filter = 'brightness(1.35) saturate(0.5) hue-rotate(120deg)';
+        }, 80);
+        setTimeout(function() {
+            logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
+            logoShell.style.opacity = '0.02';
+            logoShell.style.transform = 'translate3d(2px,0,0) scale(0.95) rotateY(6deg)';
+        }, 720);
+        setTimeout(function() {
+            logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
+            logoShell.style.opacity = '0.42';
+            logoShell.style.transform = 'translate3d(-1.5px,0,0) scale(0.98) rotateY(-3deg)';
+        }, 780);
+        setTimeout(function() {
+            logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
+            logoShell.style.opacity = '0.1';
+            logoShell.style.transform = 'translate3d(1px,0,0) scale(0.99) rotateY(2deg)';
+        }, 840);
+        setTimeout(function() {
+            logoShell.style.transition = 'opacity 1.0s ease, transform 1.2s cubic-bezier(0.16,1,0.3,1), filter 1.5s ease';
+            logoShell.style.opacity = '0.76';
+            logoShell.style.transform = 'translate3d(0,0,0) scale(1.0) rotateY(0deg)';
+            logoShell.style.filter = '';
+        }, 920);
+        setTimeout(function() {
+            logoShell.style.transition = 'opacity 0.8s ease';
+            logoShell.style.opacity = '';
+            logoShell.style.transform = '';
+            setTimeout(function() {
+                if (logoShell) { logoShell.style.transition = ''; logoShell.style.animation = ''; }
+            }, 900);
+        }, 2100);
+    }
+
+    // STEP 1.5: コアが実体化したあと、ロゴ本体を先に投影する。
+    setTimeout(function() {
+        projectLogoShellFromCore();
+        playSignatureSound();
+    }, 2050);
 
     // ═══════════════════════════════════════════
-    //  STEP 2: 球体から光が放たれてブランドネームへ（2500ms〜）
-    //  球体実体化後すぐに光を放射
+    //  STEP 2: ロゴ本体が現れたあと、ブランドネームへ光が走る（2850ms〜）
     // ═══════════════════════════════════════════
     // 2026-04-24: 司「ブランドネームゆっくり」— 2.5倍スロー
-    var LIGHT_START = 1400;
+    var LIGHT_START = 2850;
     var LIGHT_DELAY = 220;
     var FLIGHT_MS   = 1200;
 
@@ -2413,68 +2980,21 @@ function initBrandParticleReveal() {
     setTimeout(function() {
         container.remove();
 
-        // ── シェル(0+1)がホログラムで投影される ──
-        if (logoShell) {
-            logoShell.style.opacity = '0';
-            logoShell.style.transform = 'translateZ(16px) scale(0.3) rotateY(90deg)';
-            logoShell.style.filter = 'brightness(3) saturate(0) hue-rotate(180deg)';
-
-            // フェーズ1: ゴーストのように薄く出現
-            setTimeout(function() {
-                logoShell.style.transition = 'opacity 0.8s ease-in, transform 1.5s cubic-bezier(0.16,1,0.3,1), filter 1.2s ease';
-                logoShell.style.opacity = '0.2';
-                logoShell.style.transform = 'translateZ(16px) scale(0.7) rotateY(30deg)';
-                logoShell.style.filter = 'brightness(2.5) saturate(0) hue-rotate(120deg)';
-            }, 100);
-
-            // フェーズ2: グリッチフリッカー
-            setTimeout(function() {
-                logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
-                logoShell.style.opacity = '0.02';
-                logoShell.style.transform = 'translateZ(16px) scale(0.7) rotateY(30deg) translateX(5px)';
-            }, 800);
-            setTimeout(function() {
-                logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
-                logoShell.style.opacity = '0.5';
-                logoShell.style.transform = 'translateZ(16px) scale(0.85) rotateY(-10deg) translateX(-3px)';
-            }, 860);
-            setTimeout(function() {
-                logoShell.style.transition = 'opacity 0.03s, transform 0.03s';
-                logoShell.style.opacity = '0.1';
-                logoShell.style.transform = 'translateZ(16px) scale(0.9) rotateY(5deg) translateX(2px)';
-            }, 920);
-
-            // フェーズ3: 安定化 — 完全実体化
-            setTimeout(function() {
-                logoShell.style.transition = 'opacity 1.0s ease, transform 1.2s cubic-bezier(0.16,1,0.3,1), filter 1.5s ease';
-                logoShell.style.opacity = '0.7';
-                logoShell.style.transform = 'translateZ(16px) scale(1.0) rotateY(0deg)';
-                logoShell.style.filter = '';
-            }, 980);
-
-            // CSSアニメーションへ移行
-            setTimeout(function() {
-                logoShell.style.transition = 'opacity 0.8s ease';
-                logoShell.style.opacity = '';
-                logoShell.style.transform = '';
-                setTimeout(function() {
-                    if (logoShell) { logoShell.style.transition = ''; logoShell.style.animation = ''; }
-                }, 900);
-            }, 2200);
-        }
-
-        // ── シグネチャーサウンド（シェル出現の瞬間から — ジュピター風ファンファーレ） ──
-        // ゴースト出現(100ms)と同時に「ジャーン」、グリッチ(800ms)で「ジャジャジャ」、安定化(980ms)で「ジャン！」
-        setTimeout(function() {
-            playSignatureSound();
-        }, 100);
-
         // ── STEP 4: プリズムライン + 商品カード + 球体ビーコン ──
         setTimeout(function() {
             if (prismLine) { prismLine.style.transition = 'opacity 1s ease'; prismLine.style.opacity = '1'; }
             setTimeout(function() {
                 var itemGrid = document.querySelector('.item-grid');
-                if (itemGrid) itemGrid.style.opacity = '1';
+                if (itemGrid) {
+                    itemGrid.style.opacity = '1';
+                    var cards = itemGrid.querySelectorAll('.carousel-item');
+                    cards.forEach(function(card, idx) {
+                        card.style.setProperty('--entry-index', String(idx));
+                    });
+                    requestAnimationFrame(function() {
+                        itemGrid.classList.add('store-materialized');
+                    });
+                }
                 // 全UIフェードイン（ブランドロゴ完了後）
                 var cartIcon = document.getElementById('cart-icon');
                 var muteBtn = document.getElementById('mute-btn');
@@ -2522,15 +3042,50 @@ function initParticleUniverse() {
     let W = window.innerWidth || document.documentElement.clientWidth || 1280;
     let H = window.innerHeight || document.documentElement.clientHeight || 720;
     if (W < 2 || H < 2) { W = 1280; H = 720; }
+
+    // 2026-04-30: prefers-reduced-motion: reduce 対応
+    // 検出は initParticleUniverse 冒頭で 1 回。OS 設定変更には mql.change で追従。
+    // 星座と粒子は「見える」が、drift / rotation / twinkle は静止する。
+    let reduceMotion = false;
+    // 2026-04-30: closure leak fix — initParticleUniverse が再呼出 (sample 切替等) されると
+    // 古い material を掴むハンドラが残るバグ対策。named handler を変数に保存し、
+    // destroy 経路 (currentPhase !== 3) で removeEventListener を呼ぶ。
+    let _onMotionChange = null;
+    let _mqlRef = null;
+    try {
+        const mql = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+        if (mql) {
+            _mqlRef = mql;
+            reduceMotion = !!mql.matches;
+            _onMotionChange = (ev) => {
+                reduceMotion = !!ev.matches;
+                try {
+                    if (typeof material !== 'undefined' && material && material.uniforms && material.uniforms.uReduceMotion)
+                        material.uniforms.uReduceMotion.value = reduceMotion ? 1.0 : 0.0;
+                    // 旧 csMat/csEdgeMat reduce-motion 同期 - 2026-05-09 削除: 星座レイヤ全削除に伴い
+                    // モード切替時に reveal を再正規化（既存進捗を保つ）
+                    // REVEAL_DUR は loop で動的参照されるので自動追従。
+                } catch(e){}
+            };
+            if (typeof mql.addEventListener === 'function') mql.addEventListener('change', _onMotionChange);
+            else if (typeof mql.addListener === 'function') mql.addListener(_onMotionChange);
+        }
+    } catch(e){ reduceMotion = false; }
+    console.log('[P3] prefers-reduced-motion:', reduceMotion);
+
     document.querySelectorAll('body > canvas:not(#p6-canvas)').forEach(c => c.remove());
     const existing = document.getElementById('p6-canvas');
     if (existing) existing.remove();
 
     // ── Renderer ──
-    const renderer6 = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+    // 2026-05-05: 司「重い」→ DPR 上限 2→1.5、antialias OFF（bloom がぼかし吸収）
+    const renderer6 = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
     renderer6.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer6.setSize(W, H);
     renderer6.setClearColor(0x000000, 1);
+    if (typeof THREE.SRGBColorSpace !== 'undefined') renderer6.outputColorSpace = THREE.SRGBColorSpace;
+    if (typeof THREE.ACESFilmicToneMapping !== 'undefined') renderer6.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer6.toneMappingExposure = 1.06;
     renderer6.domElement.id = 'p6-canvas';
     renderer6.domElement.style.cssText =
         'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;' +
@@ -2540,70 +3095,103 @@ function initParticleUniverse() {
     // ── Scene / Camera ──
     const scene6 = new THREE.Scene();
     const camera6 = new THREE.PerspectiveCamera(60, W / H, 0.1, 2000);
-    camera6.position.set(0, 0, 200);
+    camera6.position.set(0, 0, 270);
     camera6.lookAt(0, 0, 0);
 
+    // 2026-05-05: ?cstyle=N で星座の幻想バリエーション切替
+    //   0=default / 1=mist / 2=pulse / 3=flare / 4=all / 5=spectral echo
+    const CSTYLE = (() => {
+        try {
+            const m = location.search.match(/[?&]cstyle=(\d+)/);
+            return m ? Math.max(0, Math.min(5, parseInt(m[1], 10))) : 5;
+        } catch (e) { return 5; }
+    })();
+    const CS_MIST   = (CSTYLE === 1 || CSTYLE === 4);
+    const CS_PULSE  = (CSTYLE === 2 || CSTYLE === 4);
+    const CS_FLARE  = (CSTYLE === 3 || CSTYLE === 4);
+    const CS_DRIFT  = (CSTYLE === 4);
+    const CS_ECHO   = (CSTYLE === 5);
+    // 旧 SHOW_CONSTELLATIONS フラグ - 2026-05-09 削除: 星座レイヤ全削除に伴い (新コンセプト「コア → ロゴ → 粒子 → 服」)
+    console.log('[P3] cstyle=', CSTYLE, '{mist:', CS_MIST, 'pulse:', CS_PULSE, 'flare:', CS_FLARE, 'drift:', CS_DRIFT, 'echo:', CS_ECHO, '}');
+
     // ═══════════════════════════════════════════════════════════════
-    //  15000 RGBCMY+White 星 — 呼吸する宇宙
+    //  パーティクル宇宙
     // ═══════════════════════════════════════════════════════════════
     const isMobile = W < 768;
-    // 2026-04-24: 司「数減らして」 mobile 2800 / desktop 5000
-    const N = isMobile ? 2800 : 5000;
+    // 2026-05-07: 粒子密度を半分へ調整。余白を残して服とロゴを立たせる。
+    const N = isMobile ? 850 : 1500;
 
     const positions = new Float32Array(N * 3);
     const colors = new Float32Array(N * 3);
     const aSizes = new Float32Array(N);
     const aPhases = new Float32Array(N);
+    const aBirth = new Float32Array(N);  // 2026-04-30: per-particle reveal time (0..1)
+    const driftTempo = new Float32Array(N);
+    const motionKind = new Uint8Array(N);      // 0=drift / 1=inbound / 2=fast-cross
+    const travelAngle = new Float32Array(N);
+    const travelOffset = new Float32Array(N);
+    const travelSpeed = new Float32Array(N);
 
-    // 2026-04-24: 司「粒子言語もっといい感じに」
-    // RGBCMY 純色 + 白 + grey のハイブリッドパレット、色ごとに微シフトを入れて単調化回避
+    function gaussRand() {
+        let u = 0, v = 0;
+        while (u === 0) u = uRng();
+        while (v === 0) v = uRng();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // 司「粒子の色は CMYRGB だけ」
+    // 2026-05-06: 純粋 RGBCMY に統一（混色なし）+ HDR 化で bloom にも乗る
     const PALETTE = [
-        [1.00, 0.12, 0.25],   // R
-        [1.00, 0.45, 0.15],   // 橙
-        [0.18, 0.95, 0.42],   // G
-        [0.20, 0.55, 1.00],   // B
-        [0.22, 0.95, 0.95],   // C
-        [0.98, 0.30, 0.78],   // M
-        [1.00, 0.90, 0.28],   // Y
-        [0.95, 0.95, 1.00],   // warm white
-        [0.88, 0.88, 0.92],   // pale
-        [0.55, 0.55, 0.60],   // dim grey
+        [1.50, 0.00, 0.00],   // R 純赤
+        [0.00, 1.50, 0.00],   // G 純緑
+        [0.00, 0.00, 1.60],   // B 純青
+        [0.00, 1.50, 1.50],   // C 純シアン
+        [1.50, 0.00, 1.50],   // M 純マゼンタ
+        [1.50, 1.50, 0.00],   // Y 純イエロー
     ];
-    // 2026-04-24: 司「白多すぎ、RGBCMYに寄せて」 grey 30% / RGBCMY 70%
-    const GREY_INDICES = [7, 8, 9];
-    const COLOR_INDICES = [0, 1, 2, 3, 4, 5, 6];
 
     for (let i = 0; i < N; i++) {
-        // 2026-04-24: 司「奥にいるサイズばっか、幻想的さ少ない」→ 近距離寄せ
-        // 球状に分布、半分は近場 (60-250)、残り中〜遠 (250-480)
-        const r = 60 + Math.pow(uRng(), 1.6) * 420;
+        const r = 80 + Math.pow(uRng(), 1.16) * 420;
         const theta = uRng() * Math.PI * 2;
         const phi = Math.acos(2 * uRng() - 1);
         positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
         positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = r * Math.cos(phi);
 
-        // 2026-04-24: 司「粒子鮮やかさ消えた」— 10% grey / 90% 虹色
-        const isColor = uRng() < 0.90;
-        const idx = isColor
-            ? COLOR_INDICES[Math.floor(uRng() * COLOR_INDICES.length)]
-            : GREY_INDICES[Math.floor(uRng() * GREY_INDICES.length)];
+        const idx = Math.floor(uRng() * PALETTE.length);
         const c = PALETTE[idx];
-        // 微シフト: 同じ R でも個体差
-        const jitter = 0.08;
+        const jitter = 0.05;
         colors[i * 3]     = Math.max(0, Math.min(1, c[0] + (uRng() - 0.5) * jitter));
         colors[i * 3 + 1] = Math.max(0, Math.min(1, c[1] + (uRng() - 0.5) * jitter));
         colors[i * 3 + 2] = Math.max(0, Math.min(1, c[2] + (uRng() - 0.5) * jitter));
 
-        // 2026-04-24: 司「ちいちい玉ばっか」— 中〜大に振り直し
-        const sR = uRng();
-        if (sR < 0.10)       aSizes[i] = 10.0 + uRng() * 8.0;   // 超大 10%
-        else if (sR < 0.32)  aSizes[i] = 5.0  + uRng() * 4.0;   // 大 22%
-        else if (sR < 0.65)  aSizes[i] = 2.5  + uRng() * 2.0;   // 中 33%
-        else if (sR < 0.92)  aSizes[i] = 1.3  + uRng() * 1.0;   // 小 27%
-        else                 aSizes[i] = 0.6  + uRng() * 0.6;   // 微粒子 8%
+        // 2026-04-30: サイズ4層（微70/中22/大6/超大2%）— 大粒は希少にして「遠近の光」に見せる
+        const sizeRoll = uRng();
+        let s;
+        // 旧来の落ち着いたバランス + 大粒もそこそこ。徐々に出る方を主役に
+        if (sizeRoll < 0.30) {
+            s = 1.5 + uRng() * 2.5;        // 微: 1.5–4（30%）
+        } else if (sizeRoll < 0.62) {
+            s = 5.0 + uRng() * 6.0;        // 中: 5–11（32%）
+        } else if (sizeRoll < 0.88) {
+            s = 12.0 + uRng() * 12.0;      // 大: 12–24（26%）
+        } else {
+            s = 26.0 + Math.pow(uRng(), 0.5) * 22.0;  // 超大: 26–48（12%）
+        }
+        aSizes[i] = s;
 
         aPhases[i] = uRng() * Math.PI * 2;
+        // birth: ほぼ全粒子が 0..0.85 の範囲でランダムに灯る → uReveal が 0→1 のとき長く尾を引く
+        aBirth[i] = Math.pow(uRng(), 1.2) * 0.88;
+        driftTempo[i] = uRng() < 0.07 ? (1.63 + uRng() * 0.61) : (0.97 + uRng() * 0.46);
+        // 2026-04-30: 静止粒子を廃止。全粒子が動く
+        // 1=arc(70% 弧軌道) / 2=approach(12% 奥→手前) / 3=passthrough(18% 奥を横切る)
+        const motionRoll = uRng();
+        motionKind[i] = motionRoll < 0.70 ? 1 : motionRoll < 0.82 ? 2 : 3;
+        travelAngle[i] = uRng() * Math.PI * 2;
+        travelOffset[i] = uRng();
+        // 役割別 speed: approach=ゆっくり / passthrough=やや速め
+        travelSpeed[i] = motionKind[i] === 2 ? (0.006 + uRng() * 0.009) : (0.018 + uRng() * 0.022);
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -2611,93 +3199,229 @@ function initParticleUniverse() {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('aSize', new THREE.BufferAttribute(aSizes, 1));
     geometry.setAttribute('aPhase', new THREE.BufferAttribute(aPhases, 1));
+    geometry.setAttribute('aBirth', new THREE.BufferAttribute(aBirth, 1));
+    const idleBasePositions = positions.slice();
+
+    const SIMPLE_IDLE_UNIVERSE = true;
+    const ENABLE_COMPLEX_CHAT_FIELDS = false;
 
     // ═══════════════════════════════════════════════════════════════
     //  ShaderMaterial — 呼吸する丸い光の粒
     // ═══════════════════════════════════════════════════════════════
+    // 2026-04-30: ?sample=N で粒子の質感を切替（光・グロー・コアの違い）
+    const SAMPLE_N = (() => {
+        try { const m = location.search.match(/[?&]sample=(\d+)/); if (m) { const n = parseInt(m[1]); if (n>=0 && n<=10) return n; } } catch(e){}
+        return 0;
+    })();
+    const FRAGMENT_VARIANTS = {
+        0: `// default(hybrid 4+7): 三層グロー + 微ノイズ（スパイクなし）
+float _hash21(vec2 p) { return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    // 三層グロー（4）
+    float core = exp(-d*d*60.0) * 0.85;
+    float halo = exp(-d*d*8.0) * 0.18;
+    float veil = exp(-d*d*2.0) * 0.06;
+    // 微ノイズ（7）— 質感だけ加える
+    float n = 0.85 + 0.15 * _hash21(gl_PointCoord * 60.0);
+    float breathe = 0.88 + 0.12 * vBreathe;
+    // 2026-04-30: audio glow — uAudioEnergy で 18% まで光量ブースト（旧 5%→18%）
+    float audioGlow = 1.0 + uAudioEnergy * 0.18;
+    vec3 col = vColor * (core * 1.55 + halo * 0.95 + veil * 0.45) * n * audioGlow;
+    float a = (core * 1.05 + halo * 0.55 + veil * 0.22) * vReveal;
+    gl_FragColor = vec4(col * breathe, clamp(a, 0.0, 0.96));
+}`,
+        1: `// 1: Sharp / no halo
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float edge = 1.0 - smoothstep(0.42, 0.5, d);
+    float breathe = 0.88 + 0.12 * vBreathe;
+    gl_FragColor = vec4(vColor * breathe, edge * 0.95 * vReveal);
+}`,
+        2: `// 2: Gaussian soft
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float g = exp(-d*d*16.0);
+    float breathe = 0.88 + 0.12 * vBreathe;
+    gl_FragColor = vec4(vColor * g * 1.6 * breathe, g * 0.92 * vReveal);
+}`,
+        3: `// 3: Two-layer glow
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float core = exp(-d*d*45.0) * 0.85;
+    float halo = exp(-d*d*5.0) * 0.18;
+    float a = (core + halo) * vReveal;
+    gl_FragColor = vec4(vColor * (core*1.6 + halo*1.0), clamp(a, 0.0, 0.95));
+}`,
+        4: `// 4: Three-layer glow
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float core = exp(-d*d*60.0) * 0.85;
+    float halo = exp(-d*d*8.0) * 0.18;
+    float veil = exp(-d*d*2.0) * 0.06;
+    float a = (core + halo + veil) * vReveal;
+    gl_FragColor = vec4(vColor * (core*1.6 + halo*0.9 + veil*0.5), clamp(a, 0.0, 0.95));
+}`,
+        5: `// 5: Lens flare cross
+void main() {
+    vec2 p = gl_PointCoord - vec2(0.5);
+    float d = length(p);
+    if (d > 0.5) discard;
+    float core = exp(-d*d*40.0) * 0.7;
+    float fx = exp(-p.y*p.y*120.0) * exp(-abs(p.x)*3.0) * 0.5;
+    float fy = exp(-p.x*p.x*120.0) * exp(-abs(p.y)*3.0) * 0.5;
+    float flare = fx + fy;
+    float a = (core + flare * 0.6) * vReveal;
+    gl_FragColor = vec4(vColor * (core*1.4 + flare*1.5), clamp(a, 0.0, 0.95));
+}`,
+        6: `// 6: Ring (donut)
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float ring = exp(-pow(d - 0.30, 2.0) * 200.0);
+    float a = ring * 0.85 * vReveal;
+    gl_FragColor = vec4(vColor * ring * 1.6, a);
+}`,
+        7: `// 7: Noisy / granular
+float _hash21(vec2 p) { return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453); }
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float core = exp(-d*d*30.0) * 0.85;
+    float n = 0.5 + 0.5 * _hash21(gl_PointCoord * 80.0);
+    float a = core * n * vReveal;
+    gl_FragColor = vec4(vColor * core * n * 1.6, clamp(a, 0.0, 0.95));
+}`,
+        8: `// 8: Chromatic aberration
+void main() {
+    vec2 p = gl_PointCoord - vec2(0.5);
+    float d = length(p);
+    if (d > 0.55) discard;
+    float ar = exp(-pow(length(p + vec2( 0.04, 0.0)), 2.0) * 35.0);
+    float ag = exp(-d*d*35.0);
+    float ab = exp(-pow(length(p + vec2(-0.04, 0.0)), 2.0) * 35.0);
+    vec3 col = vec3(ar, ag, ab) + vColor * ag * 0.5;
+    float a = max(max(ar, ag), ab) * vReveal * 0.9;
+    gl_FragColor = vec4(col * 1.3, clamp(a, 0.0, 0.95));
+}`,
+        9: `// 9: 4-point twinkle star
+void main() {
+    vec2 p = gl_PointCoord - vec2(0.5);
+    float d = length(p);
+    if (d > 0.5) discard;
+    float core = exp(-d*d*55.0) * 0.6;
+    float fx = exp(-p.y*p.y*250.0) * exp(-abs(p.x)*2.5) * 0.65;
+    float fy = exp(-p.x*p.x*250.0) * exp(-abs(p.y)*2.5) * 0.65;
+    float spike = fx + fy;
+    float a = (core + spike * 0.8) * vReveal;
+    gl_FragColor = vec4(vColor * (core*1.4 + spike*1.7), clamp(a, 0.0, 0.95));
+}`,
+        10: `// 10: Nebula / reverse glow
+void main() {
+    float d = length(gl_PointCoord - vec2(0.5));
+    if (d > 0.5) discard;
+    float ring = exp(-pow(d - 0.32, 2.0) * 30.0) * 0.7;
+    float dim = exp(-d*d*3.0) * 0.15;
+    float a = (ring + dim) * vReveal * 0.85;
+    gl_FragColor = vec4(vColor * (ring + dim * 0.6) * 1.3, clamp(a, 0.0, 0.92));
+}`
+    };
+    const _fragVariantBody = FRAGMENT_VARIANTS[SAMPLE_N] || FRAGMENT_VARIANTS[0];
+    console.log('[P3] particle sample variant:', SAMPLE_N);
+
     const material = new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0.0 },
-            uAudioEnergy: { value: 0.0 }  // 音響リアクティブ: 0.0〜1.0
+            uAudioEnergy: { value: 0.0 },
+            uAudioBass: { value: 0.0 },
+            uAudioHigh: { value: 0.0 },
+            uObserverFocus: { value: 0.0 },
+            uReveal: { value: 0.0 },
+            uReduceMotion: { value: reduceMotion ? 1.0 : 0.0 },
+            // 2026-05-05: ロゴ周辺の粒子を薄める（NDC -1..1 / NDC半径）
+            uLogoCenterNDC: { value: new THREE.Vector2(0, 0.55) },
+            uLogoRadiusNDC: { value: 0.18 }
         },
         vertexShader: `
             attribute float aSize;
             attribute float aPhase;
+            attribute float aBirth;
             varying vec3 vColor;
             varying float vBreathe;
             varying float vDist;
+            varying float vPhase;
+            varying float vDepthGlow;
+            varying float vReveal;
             uniform float uTime;
             uniform float uAudioEnergy;
+            uniform float uAudioBass;
+            uniform float uAudioHigh;
+            uniform float uObserverFocus;
+            uniform float uReveal;
+            uniform float uReduceMotion;
+            uniform vec2 uLogoCenterNDC;
+            uniform float uLogoRadiusNDC;
 
 void main() {
     vColor = color;
+    vPhase = aPhase;
 
-    // 呼吸: 各粒子が独自のリズムで明滅（複数のsin波を重ねて有機的に）
-    // 音楽のエネルギーが高い → 呼吸が速くなる + 振幅が大きくなる
-    float audioBoost = 1.0 + uAudioEnergy * 1.5;
-    float breatheSpeed = (0.34 + aPhase * 0.13) * audioBoost;
-    float spatialWave = length(position) * 0.02;
-    float b1 = sin(uTime * breatheSpeed + aPhase + spatialWave);
-    float b2 = sin(uTime * breatheSpeed * 0.7 + aPhase * 2.3 + spatialWave * 1.5) * 0.3;
-    float breatheAmp = 0.5 + uAudioEnergy * 0.3; // 音が大きい → 呼吸の振幅UP
-    vBreathe = (b1 + b2) * breatheAmp * 0.5 + 0.5;
+    // 呼吸は残すが単純化する
+    float audioBoost = 1.0 + uAudioEnergy * 0.35;
+    float breatheSpeed = (0.28 + aPhase * 0.08) * audioBoost;
+    float b1 = sin(uTime * breatheSpeed + aPhase);
+    vBreathe = b1 * 0.5 + 0.5;
+    // reduce-motion: twinkle/breath を中立値 0.5 に固定
+    vBreathe = mix(vBreathe, 0.5, uReduceMotion);
 
     // カメラからの距離（ニュートンリング風エフェクト用）
     vDist = length(position);
 
-    // 呼吸に連動してサイズも変化（音が大きい → サイズ変動が大きい）
-    float sizeBreath = 1.0 + vBreathe * (0.35 + uAudioEnergy * 0.4);
+    float sizeBreath = 1.0 + vBreathe * (0.10 + uAudioBass * 0.20 + uAudioHigh * 0.04);
+
+    // 2026-04-30: per-particle reveal — uReveal が aBirth を超えてから 0.18 で全開
+    float rv = smoothstep(0.0, 0.18, uReveal - aBirth);
+    vReveal = rv;
 
     vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-    // 2026-04-19: 破損前の元サイズに戻す（480→280, min 1.4→0.5）
-    gl_PointSize = aSize * sizeBreath * (280.0 / -mvPos.z);
-    gl_PointSize = max(gl_PointSize, 0.5);
-    // 2026-04-20: カメラ至近の粒子が巨大化する問題を抑制（視界を塞ぐ巨大ボール対策）
-    gl_PointSize = min(gl_PointSize, 40.0);
+    float depthNorm = clamp((-mvPos.z - 100.0) / 700.0, 0.0, 1.0);
+    vDepthGlow = depthNorm;
+    // サイズも reveal に応じてふわっと拡大（最後の20%でほぼ等倍）
+    float sizeReveal = 0.55 + 0.45 * rv;
+    gl_PointSize = aSize * sizeBreath * sizeReveal * (455.0 / -mvPos.z);
+    gl_PointSize = max(gl_PointSize, 1.4);
+    gl_PointSize = min(gl_PointSize, 180.0);
     gl_Position = projectionMatrix * mvPos;
+
+    // 2026-05-06: ロゴマスクを「ロゴそのものだけ」に縮小（黒い穴感を解消）
+    // 縁ですぐ復活、外側は完全に通常。最低 0.35 で残し「消える」ではなく「薄くなる」だけ
+    vec2 ndc = gl_Position.xy / max(gl_Position.w, 0.0001);
+    float distFromLogo = length(ndc - uLogoCenterNDC);
+    float logoMaskRaw = smoothstep(uLogoRadiusNDC * 0.78, uLogoRadiusNDC * 1.02, distFromLogo);
+    float logoMask = mix(0.35, 1.0, logoMaskRaw);
+    gl_PointSize *= logoMask;
+    vReveal *= logoMask;
 }
 `,
         fragmentShader: `
             varying vec3 vColor;
             varying float vBreathe;
             varying float vDist;
+            varying float vPhase;
+            varying float vDepthGlow;
+            varying float vReveal;
             uniform float uTime;
             uniform float uAudioEnergy;
-
-void main() {
-    float d = length(gl_PointCoord - vec2(0.5));
-    if (d > 0.5) discard;
-
-    // 多層ガウシアン: 明るいコア + 広いグロー + ソフトヘイロー
-    // 音が大きい → グローが広がる
-    float audioGlow = 1.0 + uAudioEnergy * 0.6;
-    float core = exp(-d * d * 28.0);
-    float glow = exp(-d * d * (6.0 / audioGlow)) * (0.8 + uAudioEnergy * 0.3);
-    float halo = exp(-d * d * (1.5 / audioGlow)) * (0.25 + uAudioEnergy * 0.15);
-    float alpha = core + glow + halo;
-
-    // 呼吸: 明るさが0.5〜1.0の間で変化
-    float breathe = 0.5 + 0.5 * vBreathe;
-
-    // ニュートンリング風: 距離に応じた虹色の干渉縞
-    // 音が大きい → 虹の干渉が強くなる（見える色が増える）
-    float ringSpeed = 0.3 + uAudioEnergy * 0.5;
-    float ring = sin(vDist * 0.08 + uTime * ringSpeed) * 0.5 + 0.5;
-    float rainbowStrength = 0.25 + uAudioEnergy * 0.2;
-    vec3 rainbow = vec3(
-        sin(ring * 6.2832) * 0.5 + 0.5,
-        sin(ring * 6.2832 + 2.094) * 0.5 + 0.5,
-        sin(ring * 6.2832 + 4.189) * 0.5 + 0.5
-    );
-    vec3 finalColor = mix(vColor, vColor + rainbow * rainbowStrength, core * 0.5);
-    // コア中心を白く飛ばす（音が大きい → さらに眩しく）
-    finalColor += vec3(core * (0.6 + uAudioEnergy * 0.3));
-    // 2026-04-19: 破損前の輝度に戻す（1.5→1.0）
-    // finalColor *= 1.5;
-
-    gl_FragColor = vec4(finalColor * breathe, alpha * breathe);
-}
-`,
+            uniform float uAudioBass;
+            uniform float uAudioHigh;
+            uniform float uObserverFocus;
+            uniform float uReduceMotion;
+` + _fragVariantBody,
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -2707,12 +3431,19 @@ void main() {
     const particles = new THREE.Points(geometry, material);
     scene6.add(particles);
 
+    // 旧 名前付き星座 (Observer/Egg/Trinity/Bridge/Eye/Resonance) + Bridge + Mist + Discovery Hover
+    // 2026-05-09 削除: 約 800 行。新コンセプト「黒→コア→ロゴ→粒子→服」では星座レイヤを廃止。
+    // 削除対象: CONSTELLATIONS_REAL/LACE/NEURON データ、csGeom/csMat、csLines、csDotLines、
+    //           bridgeMat/bridgePoints、csMistMat/csMistPoints、hoverState/pickConstellation 等。
+    // 関連 helper (MAX_LINES / linePositions / updateConstellations 等 4120-4395) はチャット粒子網用なので残置。
+
     // ── パーティクル段階的出現（星がひとつずつ灯るように） ──
-    let visibleCount = 0;
-    // 60秒かけて真っ暗→全星: 最初はぽつぽつ、後半じわじわ加速（ease-in cubic）
-    const SPAWN_DURATION = 60.0; // 秒
-    let spawnElapsed = 0;
-    geometry.setDrawRange(0, 0); // 初期: 0個表示
+    let visibleCount = N;
+    // 2026-04-29: 司「もっと宇宙を感じたい」→ 初速が遅すぎたので出現を前倒し
+    // 最初の数秒で宇宙の母数を見せつつ、後半もじわっと増える
+    const SPAWN_DURATION = 10.0; // 秒
+    let spawnElapsed = SPAWN_DURATION;
+    geometry.setDrawRange(0, N);
 
     // ── ビッグバン音: 宇宙誕生の衝撃波 ──
     // 超低音ドローン + ホワイトノイズバースト + 上昇ハーモニクス
@@ -2821,49 +3552,179 @@ void main() {
     // ═══════════════════════════════════════════════════════════════
     //  星座ネットワーク (Constellation Lines)
     // ═══════════════════════════════════════════════════════════════
-    // 2026-04-22: 司 "線多すぎ" — 5000 → 1200
-    const MAX_LINES = 1200;
+    // 2026-04-29: ロゴ/商品周辺のコード宇宙を見せるため少し増やす
+    const MAX_LINES = 640;
     const linePositions = new Float32Array(MAX_LINES * 6);
     const lineColors = new Float32Array(MAX_LINES * 6);
+    const lineStrengths = new Float32Array(MAX_LINES * 2);
     const lineGeo = new THREE.BufferGeometry();
     lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
     lineGeo.setAttribute('color', new THREE.BufferAttribute(lineColors, 3));
+    lineGeo.setAttribute('lineStrength', new THREE.BufferAttribute(lineStrengths, 1));
     // 星座ライン用 ShaderMaterial（距離減衰+時間明滅+音楽反応）
     const lineMat = new THREE.ShaderMaterial({
         uniforms: { uTime: { value: 0.0 }, uAudioEnergy: { value: 0.0 } },
         vertexShader: `
-            attribute vec3 color;
+            attribute float lineStrength;
             varying vec3 vColor;
             varying float vDepth;
+            varying float vLineStrength;
             void main() {
                 vColor = color;
                 vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
                 vDepth = -mvPos.z;
+                vLineStrength = lineStrength;
                 gl_Position = projectionMatrix * mvPos;
             }
         `,
         fragmentShader: `
             varying vec3 vColor;
             varying float vDepth;
+            varying float vLineStrength;
             uniform float uTime;
             uniform float uAudioEnergy;
             void main() {
-                // 遠くのラインほど暗く
-                float depthFade = clamp(1.0 - vDepth / 300.0, 0.0, 1.0);
+                // 遠くのラインほど暗く、少しだけ冷たい信号線へ寄せる
+                float depthFade = clamp(1.0 - vDepth / 400.0, 0.0, 1.0);
                 depthFade = depthFade * depthFade;
-                // 微かな明滅（星座の瞬き）+ 音楽で脈動
-                float twinkle = 0.7 + 0.3 * sin(uTime * 0.8 + vDepth * 0.05) + uAudioEnergy * 0.4;
-                // 2026-04-22: 線多すぎ→ alpha 1.3 → 0.55 (控えめ)
-                float alpha = depthFade * twinkle * 0.55;
-                gl_FragColor = vec4(vColor * (0.6 + depthFade * 0.4 + uAudioEnergy * 0.3), alpha);
+                float calmTwinkle = 0.90 + 0.07 * sin(uTime * 0.42 + vDepth * 0.032);
+                float fieldTwinkle = 0.94 + 0.04 * sin(uTime * 0.22 + vDepth * 0.018);
+                float twinkle = mix(calmTwinkle, fieldTwinkle, vLineStrength) + uAudioEnergy * 0.08;
+                float pulse = mix(
+                    0.94 + 0.06 * sin(uTime * 0.24 + vDepth * 0.020),
+                    0.98 + 0.03 * sin(uTime * 0.16 + vDepth * 0.014),
+                    vLineStrength
+                );
+                float codePulse = smoothstep(0.18, 0.88, sin(uTime * 1.1 - vDepth * 0.06) * 0.5 + 0.5);
+                vec3 lineColor = mix(vColor, vec3(0.74, 0.86, 0.98), 0.12 + codePulse * 0.05 + vLineStrength * 0.06);
+                float alpha = depthFade * twinkle * mix(0.18 + codePulse * 0.05, 0.30 + codePulse * 0.06, vLineStrength);
+                gl_FragColor = vec4(lineColor * (0.60 + depthFade * 0.26) * pulse, alpha);
             }
         `,
         transparent: true,
         blending: THREE.AdditiveBlending,
-        depthWrite: false
+        depthWrite: false,
+        vertexColors: true
     });
     const linesMesh = new THREE.LineSegments(lineGeo, lineMat);
     scene6.add(linesMesh);
+
+    const fieldTints = {
+        logo: [0.30, 0.88, 1.0],
+        product: [0.86, 0.96, 0.42]
+    };
+    const cosmicFields = {
+        logo: {
+            active: false, x: 0, y: 0, z: 18, radius: 68, tint: fieldTints.logo,
+            pull: 0.010, swirl: 0.006, damping: 0.90
+        },
+        product: {
+            active: false, x: 0, y: 0, z: 10, radius: 92, tint: fieldTints.product,
+            pull: 0.008, swirl: -0.004, damping: 0.92
+        }
+    };
+    let cosmicFieldTick = 0;
+
+    function screenToWorldAtZ(clientX, clientY, zPlane) {
+        const nx = (clientX / window.innerWidth) * 2 - 1;
+        const ny = -(clientY / window.innerHeight) * 2 + 1;
+        const vec = new THREE.Vector3(nx, ny, 0.5);
+        vec.unproject(camera6);
+        const dir = vec.sub(camera6.position).normalize();
+        const t = (zPlane - camera6.position.z) / dir.z;
+        return {
+            x: camera6.position.x + dir.x * t,
+            y: camera6.position.y + dir.y * t,
+            z: zPlane
+        };
+    }
+
+    function updateCosmicFields() {
+        var logoEl = document.getElementById('bb-logo');
+        if (logoEl) {
+            var lr = logoEl.getBoundingClientRect();
+            if (lr.width > 0 && lr.height > 0) {
+                var logoWorld = screenToWorldAtZ(lr.left + lr.width / 2, lr.top + lr.height * 0.34, cosmicFields.logo.z);
+                cosmicFields.logo.x = logoWorld.x;
+                cosmicFields.logo.y = logoWorld.y;
+                cosmicFields.logo.active = true;
+            } else {
+                cosmicFields.logo.active = false;
+            }
+        } else {
+            cosmicFields.logo.active = false;
+        }
+
+        var productEl = document.querySelector('.carousel-item.carousel-front .product-card-img');
+        if (productEl) {
+            var pr = productEl.getBoundingClientRect();
+            if (pr.width > 0 && pr.height > 0) {
+                var productWorld = screenToWorldAtZ(pr.left + pr.width / 2, pr.top + pr.height * 0.48, cosmicFields.product.z);
+                cosmicFields.product.x = productWorld.x;
+                cosmicFields.product.y = productWorld.y;
+                cosmicFields.product.active = true;
+            } else {
+                cosmicFields.product.active = false;
+            }
+        } else {
+            cosmicFields.product.active = false;
+        }
+    }
+
+    function fieldInfluence(x, y, field) {
+        if (!field || !field.active) return 0;
+        const dx = x - field.x;
+        const dy = y - field.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        return Math.max(0, 1.0 - dist / field.radius);
+    }
+
+    function strongestField(x, y) {
+        var best = null;
+        var bestScore = 0;
+        var keys = Object.keys(cosmicFields);
+        for (var i = 0; i < keys.length; i++) {
+            var field = cosmicFields[keys[i]];
+            var influence = fieldInfluence(x, y, field);
+            if (influence > bestScore) {
+                bestScore = influence;
+                best = field;
+            }
+        }
+        return { field: best, score: bestScore };
+    }
+
+    function applyCosmicFieldMotion(i, dt, audioMod) {
+        var x = posArr[i * 3];
+        var y = posArr[i * 3 + 1];
+        var strongest = strongestField(x, y);
+        var field = strongest.field;
+        var influence = strongest.score;
+        if (!field || influence <= 0.02) {
+            attractVelX[i] *= 0.94;
+            attractVelY[i] *= 0.94;
+            return;
+        }
+
+        var dx = field.x - x;
+        var dy = field.y - y;
+        var dist = Math.max(Math.sqrt(dx * dx + dy * dy), 0.001);
+        var nx = dx / dist;
+        var ny = dy / dist;
+        var tangentX = -ny;
+        var tangentY = nx;
+        var orbitGate = 0.35 + influence * 0.65;
+        var forceScale = dt * (0.55 + audioMod * 0.10);
+
+        attractVelX[i] += (nx * field.pull + tangentX * field.swirl * orbitGate) * influence * forceScale;
+        attractVelY[i] += (ny * field.pull + tangentY * field.swirl * orbitGate) * influence * forceScale;
+
+        attractVelX[i] *= field.damping;
+        attractVelY[i] *= field.damping;
+
+        posArr[i * 3] += attractVelX[i];
+        posArr[i * 3 + 1] += attractVelY[i];
+    }
 
     function updateConstellations() {
         const posArr = geometry.attributes.position.array;
@@ -2872,49 +3733,80 @@ void main() {
 
         const nearby = [];
         const vCount = Math.floor(visibleCount);
+        const degree = new Uint8Array(vCount);
         for (let i = 0; i < vCount; i++) {
             const z = posArr[i * 3 + 2];
             const dz = z - camZ;
-            if (dz > -150 && dz < 60) {
+            const x = posArr[i * 3];
+            const y = posArr[i * 3 + 1];
+            const localField = strongestField(x, y).score;
+            if ((dz > -150 && dz < 60) || localField > 0.10) {
                 nearby.push(i);
             }
-            if (nearby.length >= 600) break;
+            if (nearby.length >= 640) break;
         }
 
         let lineIdx = 0;
-        const CONNECT_DIST = 70;  // 2026-04-22: 110 → 70 (線多すぎ抑制)
+        const CONNECT_DIST = 54;
 
         for (let a = 0; a < nearby.length && lineIdx < MAX_LINES; a++) {
             const ia = nearby[a];
             const ax = posArr[ia * 3], ay = posArr[ia * 3 + 1], az = posArr[ia * 3 + 2];
+            const fieldA = strongestField(ax, ay);
 
             for (let b = a + 1; b < nearby.length && lineIdx < MAX_LINES; b++) {
                 const ib = nearby[b];
                 const bx = posArr[ib * 3], by = posArr[ib * 3 + 1], bz = posArr[ib * 3 + 2];
+                const fieldB = strongestField(bx, by);
 
                 const dx = ax - bx, dy = ay - by, dz2 = az - bz;
                 const dist = Math.sqrt(dx * dx + dy * dy + dz2 * dz2);
+                const fieldBoost = Math.max(fieldA.score, fieldB.score);
+                const localConnect = CONNECT_DIST + fieldBoost * 22.0;
 
-                if (dist < CONNECT_DIST) {
-                    // cubic減衰（近いほど明るく、遠いほど急速に暗く）
-                    const fade = Math.pow(1.0 - dist / CONNECT_DIST, 2.5);
+                if (dist < localConnect) {
+                    if (degree[ia] >= 3 || degree[ib] >= 3) continue;
+                    const axisAlign = Math.abs(dz2) / Math.max(dist, 0.001);
+                    const planarBias = 1.0 - axisAlign * 0.24;
+                    const fade = Math.pow(1.0 - dist / localConnect, 2.5) * (0.48 + fieldBoost * 0.52) * planarBias;
                     const li = lineIdx * 6;
+                    const si = lineIdx * 2;
 
                     linePositions[li] = ax; linePositions[li + 1] = ay; linePositions[li + 2] = az;
                     linePositions[li + 3] = bx; linePositions[li + 4] = by; linePositions[li + 5] = bz;
+                    lineStrengths[si] = Math.min(1.0, fieldBoost * 0.92);
+                    lineStrengths[si + 1] = Math.min(1.0, fieldBoost * 0.92);
 
                     // 端点の色をHSL的に鮮やかに保つ: max(r,g,b)で正規化して彩度キープ
                     var ar = colArr[ia*3], ag = colArr[ia*3+1], ab = colArr[ia*3+2];
                     var br = colArr[ib*3], bg = colArr[ib*3+1], bb = colArr[ib*3+2];
                     var aBright = Math.max(ar, ag, ab, 0.3);
                     var bBright = Math.max(br, bg, bb, 0.3);
-                    lineColors[li]     = (ar / aBright) * fade;
-                    lineColors[li + 1] = (ag / aBright) * fade;
-                    lineColors[li + 2] = (ab / aBright) * fade;
-                    lineColors[li + 3] = (br / bBright) * fade;
-                    lineColors[li + 4] = (bg / bBright) * fade;
-                    lineColors[li + 5] = (bb / bBright) * fade;
+                    var tintA = fieldA.field ? fieldA.field.tint : null;
+                    var tintB = fieldB.field ? fieldB.field.tint : null;
+                    var mixA = fieldA.score * 0.38;
+                    var mixB = fieldB.score * 0.38;
+                    var acr = (ar / aBright), acg = (ag / aBright), acb = (ab / aBright);
+                    var bcr = (br / bBright), bcg = (bg / bBright), bcb = (bb / bBright);
+                    if (tintA) {
+                        acr = acr * (1.0 - mixA) + tintA[0] * mixA;
+                        acg = acg * (1.0 - mixA) + tintA[1] * mixA;
+                        acb = acb * (1.0 - mixA) + tintA[2] * mixA;
+                    }
+                    if (tintB) {
+                        bcr = bcr * (1.0 - mixB) + tintB[0] * mixB;
+                        bcg = bcg * (1.0 - mixB) + tintB[1] * mixB;
+                        bcb = bcb * (1.0 - mixB) + tintB[2] * mixB;
+                    }
+                    lineColors[li]     = acr * fade;
+                    lineColors[li + 1] = acg * fade;
+                    lineColors[li + 2] = acb * fade;
+                    lineColors[li + 3] = bcr * fade;
+                    lineColors[li + 4] = bcg * fade;
+                    lineColors[li + 5] = bcb * fade;
 
+                    degree[ia] += 1;
+                    degree[ib] += 1;
                     lineIdx++;
                 }
             }
@@ -2924,19 +3816,41 @@ void main() {
             linePositions[i] = 0;
             lineColors[i] = 0;
         }
+        for (let i = lineIdx * 2; i < MAX_LINES * 2; i++) {
+            lineStrengths[i] = 0;
+        }
 
         lineGeo.attributes.position.needsUpdate = true;
         lineGeo.attributes.color.needsUpdate = true;
+        lineGeo.attributes.lineStrength.needsUpdate = true;
         lineGeo.setDrawRange(0, lineIdx * 2);
     }
 
     // ── Bloom ──
     let composer6 = null;
-    if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
-        composer6 = new THREE.EffectComposer(renderer6);
-        composer6.addPass(new THREE.RenderPass(scene6, camera6));
-        composer6.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.6, 0.5, 0.15));
-    }
+    let bloomPass = null;
+    (async function initP3PostFx() {
+        try {
+            const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }] = await Promise.all([
+                import('three/addons/postprocessing/EffectComposer.js'),
+                import('three/addons/postprocessing/RenderPass.js'),
+                import('three/addons/postprocessing/UnrealBloomPass.js')
+            ]);
+            composer6 = new EffectComposer(renderer6);
+            composer6.addPass(new RenderPass(scene6, camera6));
+            // 2026-04-29: threshold は低めにして bg/mid 層も見える / strength 抑え目
+            // 2026-05-06: bloom 微増（収縮時の輝きを取り戻す）。strength 0.62→0.78 / radius 0.40→0.50
+            bloomPass = new UnrealBloomPass(new THREE.Vector2(W, H), 0.78, 0.50, 0.40);
+            composer6.addPass(bloomPass);
+            if (typeof composer6.setPixelRatio === 'function') composer6.setPixelRatio(renderer6.getPixelRatio());
+            composer6.setSize(W, H);
+            console.log('[P3] bloom enabled');
+        } catch (e) {
+            console.warn('[P3] bloom disabled, fallback render', e);
+            composer6 = null;
+            bloomPass = null;
+        }
+    })();
 
     // ── リサイズ ──
     const onR6 = () => {
@@ -2946,7 +3860,10 @@ void main() {
         renderer6.setSize(nw, nh);
         camera6.aspect = nw / nh;
         camera6.updateProjectionMatrix();
-        if (composer6) composer6.setSize(nw, nh);
+        if (composer6) {
+            if (typeof composer6.setPixelRatio === 'function') composer6.setPixelRatio(renderer6.getPixelRatio());
+            composer6.setSize(nw, nh);
+        }
     };
     window.addEventListener('resize', onR6);
     // 2026-04-19: 初期化時に 0x0 だった場合に備え数回リサイズを試みる
@@ -2962,6 +3879,8 @@ void main() {
     const driftAmpY = new Float32Array(N);     // Y揺らぎの振幅
     const driftPhaseX = new Float32Array(N);   // X揺らぎの位相オフセット
     const driftPhaseY = new Float32Array(N);   // Y揺らぎの位相オフセット
+    const flowLayer = new Float32Array(N);     // 深度ごとの場の位相
+    const flowBias = new Float32Array(N);      // 場に乗る強さ
 
     // ★ ドリフトもシード依存（同じ宇宙は同じ流れ方）
     // 流れ星フラグ: 一部のパーティクルが超高速で飛ぶ
@@ -2989,12 +3908,14 @@ void main() {
             shootingDirX[i] = 0;
             shootingDirY[i] = 0;
         }
-        driftFreqX[i] = 0.04 + uRng() * 0.10;
-        driftFreqY[i] = 0.03 + uRng() * 0.09;
-        driftAmpX[i] = 0.017 + uRng() * 0.10;
-        driftAmpY[i] = 0.017 + uRng() * 0.085;
+        driftFreqX[i] = 0.04 + uRng() * 0.11;
+        driftFreqY[i] = 0.03 + uRng() * 0.10;
+        driftAmpX[i] = 0.020 + uRng() * 0.12;
+        driftAmpY[i] = 0.020 + uRng() * 0.10;
         driftPhaseX[i] = uRng() * Math.PI * 2;
         driftPhaseY[i] = uRng() * Math.PI * 2;
+        flowLayer[i] = uRng() * Math.PI * 2;
+        flowBias[i] = 0.35 + uRng() * 0.65;
     }
     geometry.attributes.color.needsUpdate = true;
     geometry.attributes.aSize.needsUpdate = true;
@@ -3025,8 +3946,8 @@ void main() {
     let byteQueue = [];          // [{bits:'01001000'}, ...] 表示待ちバイト列
     let blockStart = 0;          // 現在のブロック開始バイトインデックス
     let bitRevealIdx = 0;        // ブロック内で何ビット目まで表示したか
-    const BYTES_PER_BLOCK = 24;  // 同時表示バイト数
-    const BIT_INTERVAL = 0.015;  // 1ビット出現間隔（秒）ゆっくり
+    const BYTES_PER_BLOCK = 16;  // 同時表示バイト数（可読性優先で少し減らす）
+    const BIT_INTERVAL = 0.018;  // 1ビット出現間隔（秒）
     const BLOCK_HOLD = 0.5;      // ブロック表示後の余韻（秒）
     const bbVelX = new Float32Array(N);
     const bbVelY = new Float32Array(N);
@@ -3190,6 +4111,13 @@ void main() {
             });
             window.removeEventListener('resize', onR6);
             document.removeEventListener('mousemove', onMouseMove6);
+            // 2026-04-30: prefers-reduced-motion リスナーの closure leak 対策
+            try {
+                if (_mqlRef && _onMotionChange) {
+                    if (typeof _mqlRef.removeEventListener === 'function') _mqlRef.removeEventListener('change', _onMotionChange);
+                    else if (typeof _mqlRef.removeListener === 'function') _mqlRef.removeListener(_onMotionChange);
+                }
+            } catch(e){}
             if (renderer6.domElement.parentNode) renderer6.domElement.remove();
             try { renderer6.dispose(); } catch (e) { }
             return;
@@ -3203,40 +4131,60 @@ void main() {
 
         uTime += dt;
         material.uniforms.uTime.value = uTime;
+        const REVEAL_DUR = reduceMotion ? 1.5 : 14.0;
+        material.uniforms.uReveal.value = Math.min(1.05, uTime / REVEAL_DUR);
+        // 2026-05-06: ロゴ位置 NDC マスク（idle 時のみ。absorb/speaking では粒子が飛び込めるよう 0）
+        const _logoEl = document.querySelector('.logo-holo-wrap');
+        if (_logoEl) {
+            const _r = _logoEl.getBoundingClientRect();
+            const _w = window.innerWidth || 1, _h = window.innerHeight || 1;
+            const _cx = (_r.left + _r.width  / 2) / _w * 2 - 1;
+            const _cy = -((_r.top  + _r.height / 2) / _h * 2 - 1);
+            material.uniforms.uLogoCenterNDC.value.set(_cx, _cy);
+            // 半径: ロゴ枠ピッタリ (1.55 → 1.05)。absorb/speaking 中は 0 にして粒子が自由に通る
+            const _absorbing = (typeof bigBangState !== 'undefined') &&
+                (bigBangState === 'absorb' || bigBangState === 'speaking' || bigBangState === 'chatting');
+            material.uniforms.uLogoRadiusNDC.value = _absorbing ? 0.0 : (_r.width / _w) * 1.05;
+        }
+        // 旧 星座 uniforms 同期 + 公転 + Discovery Hover - 2026-05-09 削除: 星座レイヤ全削除に伴い
         lineMat.uniforms.uTime.value = uTime;
         lineMat.uniforms.uAudioEnergy.value = material.uniforms.uAudioEnergy.value;
+        cosmicFieldTick += dt;
+        if (cosmicFieldTick >= 0.08) {
+            updateCosmicFields();
+            cosmicFieldTick = 0;
+        }
 
         // ── 音響リアクティブ: AnalyserNodeからエネルギーを取得 ──
         updateAudioEnergy();
-        // スムーズに追従（急変を防ぐ）。ビート時は瞬間ブースト
-        const targetEnergy = p3AudioEnergy + p3AudioBeat * 0.35;
+        // スムーズに追従（急変を防ぐ）
+        const targetEnergy = p3AudioEnergy;
         const currentEnergy = material.uniforms.uAudioEnergy.value;
-        // ビート時はアタック速く（0.35）、平時はゆっくり（0.15）
-        const attack = p3AudioBeat > 0.4 ? 0.35 : 0.15;
-        material.uniforms.uAudioEnergy.value += (targetEnergy - currentEnergy) * attack;
+        material.uniforms.uAudioEnergy.value += (targetEnergy - currentEnergy) * 0.15;
+        // 2026-04-30: 帯域別 uniform を全 ShaderMaterial に流す
+        const _bands = window.p3AudioBands || { bass: 0, mid: 0, high: 0 };
+        material.uniforms.uAudioBass.value = _bands.bass;
+        material.uniforms.uAudioHigh.value = _bands.high;
+        // 旧 csMat / csEdgeMat 帯域 uniform 同期 - 2026-05-09 削除
 
-        // 2026-05-15: ビート時のカメラ微振動（迫力UP・酔わない程度）
-        if (p3AudioBeat > 0.5) {
-            const kick = p3AudioBeat * 0.08;
-            camera6.position.x += (Math.random() - 0.5) * kick;
-            camera6.position.y += (Math.random() - 0.5) * kick;
-        }
-
-        // ── パーティクル段階的出現（60秒: 暗闇→ぽつぽつ→加速→全星） ──
-        if (visibleCount < N) {
-            spawnElapsed += dt;
-            // ease-in cubic: 最初はほとんど出ない → 後半一気に加速
-            var t = Math.min(spawnElapsed / SPAWN_DURATION, 1.0);
-            var eased = t * t * t; // cubic ease-in
-            visibleCount = eased * N;
-            if (visibleCount > N) visibleCount = N;
-            geometry.setDrawRange(0, Math.floor(visibleCount));
+        // 2026-04-29: 司「完全に見えるようにして、ややこしすぎ」
+        // idle から全粒子を見せる。遅いスポーン演出はやめる。
+        if (visibleCount !== N) {
+            visibleCount = N;
+            geometry.setDrawRange(0, N);
         }
 
         // 微かなカメラ揺らぎ + スクロールパララックス
         camera6.position.x = Math.sin(uTime * 0.09) * 0.43;
         camera6.position.y = Math.cos(uTime * 0.07) * 0.26 + scrollY6 * 0.04;
         camera6.lookAt(0, 0, 0);
+
+        // 2026-04-29: ロゴと商品まわりに見えない重力場をつくる
+        // 毎フレーム取らず、数フレームごとにDOM位置を拾って負荷を抑える
+        cosmicFieldTick = (cosmicFieldTick + 1) % 6;
+        if (cosmicFieldTick === 0) {
+            updateCosmicFields();
+        }
 
         // ═══ 状態遷移: absorb → speaking → chatting → (close時) bb_collapse → bb_explode → idle ═══
         if (bigBangState !== 'idle' && bigBangState !== 'done' && bigBangState !== 'chatting') {
@@ -3270,24 +4218,24 @@ void main() {
                 showChatUI();
             }
             // bb_collapse完了 → bb_explode（ビッグバン爆発）
-            else if (bigBangState === 'bb_collapse' && bigBangTimer >= 2.5) {
+            else if (bigBangState === 'bb_collapse' && bigBangTimer >= 3.4) {
                 bigBangState = 'bb_explode';
                 bigBangTimer = 0;
                 // console.log('[STATE] bb_collapse→bb_explode'); // perf: disabled
                 const colArr = geometry.attributes.color.array;
                 const sizeArr = geometry.attributes.aSize.array;
-                const BB_COLS = [[1,0,0],[0,1,0],[0,0,1],[0,1,1],[1,0,1],[1,1,0]];
+                // ビッグバン自体は元の強さを維持。戻りの荒さは done 側で補間する。
+                const BB_COLS = [[1.45,0.10,0.20],[0.18,1.45,0.32],[0.22,0.40,1.50],[0.20,1.40,1.40],[1.45,0.18,1.20],[1.45,1.30,0.18]];
                 for (let j = 0; j < N; j++) {
                     const c = BB_COLS[j % 6];
                     colArr[j*3] = c[0]; colArr[j*3+1] = c[1]; colArr[j*3+2] = c[2];
                     posArr[j*3]   = logoWX6;
                     posArr[j*3+1] = logoWY6;
                     posArr[j*3+2] = 0;
-                    // ★ 爆発時にサイズを元に戻す（0のまま放出されていたバグ修正）
-                    sizeArr[j] = origSizeArr ? origSizeArr[j] : 2.0;
+                    sizeArr[j] = (origSizeArr ? origSizeArr[j] : 2.0) * 1.30;
                     const ang = Math.random() * Math.PI * 2;
                     const phi = Math.acos(2 * Math.random() - 1);
-                    const spd = 0.5 + Math.random() * 2.0;
+                    const spd = 0.8 + Math.random() * 2.8;
                     bbVelX[j] = spd * Math.sin(phi) * Math.cos(ang);
                     bbVelY[j] = spd * Math.sin(phi) * Math.sin(ang);
                     bbVelZ[j] = spd * Math.cos(phi);
@@ -3302,17 +4250,8 @@ void main() {
                 // console.log('[STATE] bb_explode→done: idle復帰'); // perf: disabled
                 // BGM音量を戻す
                 unduckBGM();
-                // 色とサイズを元に戻す
-                const colArr = geometry.attributes.color.array;
-                for (let j = 0; j < origColArr.length; j++) colArr[j] = origColArr[j];
-                geometry.attributes.color.needsUpdate = true;
-                if (origSizeArr) {
-                    const sizeArr = geometry.attributes.aSize.array;
-                    for (let j = 0; j < N; j++) sizeArr[j] = origSizeArr[j];
-                    geometry.attributes.aSize.needsUpdate = true;
-                }
                 removeConstellationMessage(); // 念のため
-                setTimeout(() => { bigBangState = 'idle'; bbCooldownUntil = Date.now() + 5000; }, 2000);
+                setTimeout(() => { bigBangState = 'idle'; bbCooldownUntil = Date.now() + 5000; }, 9000);
             }
         }
 
@@ -3405,7 +4344,9 @@ void main() {
 
                     if (localAge < 0) {
                         // まだ生まれていない — 球体コアの中に潜む
-                        posArr[i*3] = ringLogoX; posArr[i*3+1] = ringLogoY; posArr[i*3+2] = RING_Z;
+                        posArr[i*3] = ringLogoX;
+                        posArr[i*3+1] = ringLogoY;
+                        posArr[i*3+2] = RING_Z + (node.ringZOffset || 0) * 0.16;
                         colArr[i*3] = 0; colArr[i*3+1] = 0; colArr[i*3+2] = 0;
                         geometry.attributes.aSize.array[i] = 0;
                     } else if (age < RING_APPEAR_TIME) {
@@ -3420,15 +4361,17 @@ void main() {
                         var spinDir = pol; // +1 or -1
                         var curAngle = node.angle + (1 - ease2) * Math.PI * 0.5 * spinDir;
                         posArr[i*3]   = ringLogoX + Math.cos(curAngle) * curRadius;
-                        posArr[i*3+1] = ringLogoY + Math.sin(curAngle) * curRadius * 0.45;
-                        posArr[i*3+2] = RING_Z;
+                        posArr[i*3+1] = ringLogoY + Math.sin(curAngle) * curRadius * 0.62;
+                        posArr[i*3+2] = RING_Z
+                            + (node.ringZOffset || 0) * (0.32 + ease2 * 0.88)
+                            + Math.sin(curAngle * 2.0 + (node.ringPhaseOffset || 0)) * 1.12;
 
                         // 1-bit: 両方同じサイズ・同じ輝度（方向が違うだけ）
                         var bc = node.byteColor || [0.9,0.92,1.0];
                         var gs = node.groupScale || 1.0;
-                        var bright = 0.7 * ease2 * gs;
+                        var bright = (0.82 + 0.12 * Math.sin(node.col * 0.7 + uTime * 0.8)) * ease2 * gs;
                         colArr[i*3] = bc[0]*bright; colArr[i*3+1] = bc[1]*bright; colArr[i*3+2] = bc[2]*bright;
-                        geometry.attributes.aSize.array[i] = 2.0 + 5.5 * ease2 * gs;
+                        geometry.attributes.aSize.array[i] = 3.4 + 7.2 * ease2 * gs;
 
                         for (var e = 0; e < msgEdges.length; e++) {
                             if (msgEdges[e].from === node.idx || msgEdges[e].to === node.idx) {
@@ -3441,7 +4384,7 @@ void main() {
                         var holdAge = age - RING_APPEAR_TIME;
                         var gs = node.groupScale || 1.0;
                         // グループスケール脈動: バイトの「重み」が呼吸する
-                        var breath = 1.0 + 0.06 * gs * Math.sin(uTime * 2.0 + (node.ringIdx || 0) * 1.2);
+                        var breath = 1.0 + 0.08 * gs * Math.sin(uTime * 2.0 + (node.ringIdx || 0) * 1.2);
                         // +1粒子と-1粒子が逆方向に回転（対称性の可視化）
                         var pol = node.polarity || (node.isOne ? 1 : -1);
                         var rotSpeed = 0.18 + (node.ringIdx || 0) * 0.04;
@@ -3450,13 +4393,15 @@ void main() {
                         var holdAngle = node.angle + holdAge * rotSpeed * ringDir * pol;
                         var r = (node.ringRadius || MANDALA_INNER_R) * breath;
                         posArr[i*3] = ringLogoX + Math.cos(holdAngle) * r;
-                        posArr[i*3+1] = ringLogoY + Math.sin(holdAngle) * r * 0.45;
-                        posArr[i*3+2] = RING_Z;
+                        posArr[i*3+1] = ringLogoY + Math.sin(holdAngle) * r * 0.62;
+                        posArr[i*3+2] = RING_Z
+                            + (node.ringZOffset || 0) * 1.22
+                            + Math.sin(uTime * 1.6 + node.col * 0.7 + (node.ringPhaseOffset || 0)) * 1.7;
                         // 1-bit: +1も-1も同じサイズ・同じ輝度で脈動
                         var bc = node.byteColor || [0.9,0.92,1.0];
-                        var glow = (0.65 + 0.15 * Math.sin(uTime * 3.0 + node.col * 0.8)) * gs;
+                        var glow = (0.84 + 0.16 * Math.sin(uTime * 3.0 + node.col * 0.8) + 0.08 * Math.sin(holdAngle * 3.0)) * gs;
                         colArr[i*3] = bc[0]*glow; colArr[i*3+1] = bc[1]*glow; colArr[i*3+2] = bc[2]*glow;
-                        geometry.attributes.aSize.array[i] = 7.0 * gs;
+                        geometry.attributes.aSize.array[i] = 8.6 * gs;
                         for (var e = 0; e < msgEdges.length; e++) {
                             if (msgEdges[e].from === node.idx || msgEdges[e].to === node.idx) {
                                 msgEdges[e].progress = Math.min(msgEdges[e].progress + dt * 2.0, 1.0);
@@ -3467,21 +4412,21 @@ void main() {
                         var dt3 = age - RING_APPEAR_TIME - RING_HOLD_TIME;
                         var t3 = dt3 / RING_DRAIN_TIME;
                         var ease3 = t3 * t3;
-                        // 全粒子がチャット中心へ収束
-                        posArr[i*3]   = node.tx + (drainTX - node.tx) * ease3;
-                        posArr[i*3+1] = node.ty + (drainTY - node.ty) * ease3;
-                        posArr[i*3+2] = RING_Z;
                         var fade3 = 1.0 - t3;
-                        // 1-bit収束: 色が補色→グレーへ（+1と-1が混ざる）
-                        // R+C=白, G+M=白, B+Y=白 → 暗くなるとグレー
+                        // 全粒子がチャット中心へ収束しつつ、小さく螺旋して翻訳される
+                        var spiralDrift = 1.0 - ease3;
+                        posArr[i*3]   = node.tx + (drainTX - node.tx) * ease3 + Math.cos(node.angle + t3 * 4.6 * (node.polarity || 1)) * 1.8 * spiralDrift;
+                        posArr[i*3+1] = node.ty + (drainTY - node.ty) * ease3 + Math.sin(node.angle + t3 * 4.6 * (node.polarity || 1)) * 1.1 * spiralDrift;
+                        posArr[i*3+2] = RING_Z
+                            + (node.ringZOffset || 0) * fade3 * 1.15
+                            + Math.sin((node.col + 1) * 0.9 + (node.ringPhaseOffset || 0) + t3 * Math.PI) * 1.08 * fade3;
+                        // 1-bit収束: grey へは落とさず、極性の色を保ったまま減衰
                         var bc = node.byteColor || [0.9,0.92,1.0];
-                        var greyMix = ease3; // 0→1 でグレーへ
-                        var greyVal = 0.5 * fade3;
-                        var cr = bc[0] * 0.65 * (1.0 - greyMix) + greyVal * greyMix;
-                        var cg = bc[1] * 0.65 * (1.0 - greyMix) + greyVal * greyMix;
-                        var cb = bc[2] * 0.65 * (1.0 - greyMix) + greyVal * greyMix;
-                        colArr[i*3] = cr * fade3; colArr[i*3+1] = cg * fade3; colArr[i*3+2] = cb * fade3;
-                        geometry.attributes.aSize.array[i] = 6.0 * fade3;
+                        var sink = 0.50 + 0.22 * Math.sin(t3 * Math.PI * 2.0 + node.col * 0.7);
+                        colArr[i*3] = bc[0] * sink * fade3;
+                        colArr[i*3+1] = bc[1] * sink * fade3;
+                        colArr[i*3+2] = bc[2] * sink * fade3;
+                        geometry.attributes.aSize.array[i] = 6.8 * fade3;
                         for (var e = 0; e < msgEdges.length; e++) {
                             if (msgEdges[e].from === node.idx || msgEdges[e].to === node.idx) {
                                 msgEdges[e].progress *= 0.93;
@@ -3501,63 +4446,223 @@ void main() {
                 }
 
             } else if (bigBangState === 'bb_collapse') {
-                // チャット終了後: 全粒子がロゴに再集結（ビッグバン準備）
-                const prog = Math.min(bigBangTimer / 2.5, 1.0);
-                const ease = prog * prog * prog;
-                const lerpF = 0.003 + ease * 0.2;
-                posArr[i*3]   += (logoWX6 - posArr[i*3])   * lerpF;
-                posArr[i*3+1] += (logoWY6 - posArr[i*3+1]) * lerpF;
-                posArr[i*3+2] += (0       - posArr[i*3+2]) * lerpF;
-                // グレーへ（50%の世界）
-                const greyF = ease * 0.8;
-                colArr[i*3]   = origColArr[i*3]   * (1 - greyF) + 0.5 * greyF;
-                colArr[i*3+1] = origColArr[i*3+1] * (1 - greyF) + 0.5 * greyF;
-                colArr[i*3+2] = origColArr[i*3+2] * (1 - greyF) + 0.5 * greyF;
+                // チャット終了後: 小さい吸収コアへ集める。ただし吸引加速度は抑えて暴れを防ぐ。
+                const prog = Math.min(bigBangTimer / 3.4, 1.0);
+                const ease = prog * prog * (3.0 - 2.0 * prog);
+                const orbit = uTime * (0.20 + (i % 11) * 0.003) + aPhases[i];
+                const orbitR = (5.0 + (i % 13) * 0.55) * (1.0 - ease * 0.90);
+                const targetX = logoWX6 + Math.cos(orbit) * orbitR;
+                const targetY = logoWY6 + Math.sin(orbit * 0.83) * orbitR * 0.55;
+                const targetZ = Math.sin(orbit * 0.71) * 6.0 * (1.0 - ease);
+                const lerpF = 0.010 + ease * 0.048;
+                posArr[i*3]   += (targetX - posArr[i*3]) * lerpF;
+                posArr[i*3+1] += (targetY - posArr[i*3+1]) * lerpF;
+                posArr[i*3+2] += (targetZ - posArr[i*3+2]) * lerpF;
+                // 色は少しだけ落ち着かせる。完全な灰色化は硬く見えるので避ける。
+                const dimF = 1.0 - ease * 0.24;
+                colArr[i*3]   = origColArr[i*3]   * dimF;
+                colArr[i*3+1] = origColArr[i*3+1] * dimF;
+                colArr[i*3+2] = origColArr[i*3+2] * dimF;
 
             } else if (bigBangState === 'bb_explode') {
                 // ビッグバン: RGBCMY爆発
                 posArr[i*3]   += bbVelX[i];
                 posArr[i*3+1] += bbVelY[i];
                 posArr[i*3+2] += bbVelZ[i];
-                bbVelX[i] *= 0.993;
-                bbVelY[i] *= 0.993;
-                bbVelZ[i] *= 0.993;
+                bbVelX[i] *= 0.978;
+                bbVelY[i] *= 0.978;
+                bbVelZ[i] *= 0.978;
 
             } else {
                 // 通常ドリフト (idle / done)
                 // 音響リアクティブ: 音が大きい → 粒子が速く動く + 揺れが大きくなる
                 const spdMod = window._universeParams ? window._universeParams.speed : 1.0;
-                const audioMod = (1.0 + material.uniforms.uAudioEnergy.value * 2.0) * spdMod;
-                posArr[i*3+2] += driftSpeedZ[i] * audioMod;
-                if (isShootingStar[i]) {
-                    // 流れ星: 直線的に高速移動
-                    posArr[i*3]   += shootingDirX[i] * audioMod;
-                    posArr[i*3+1] += shootingDirY[i] * audioMod;
-                } else {
-                    posArr[i*3]   += Math.sin(uTime * driftFreqX[i] + driftPhaseX[i]) * driftAmpX[i] * audioMod;
-                    posArr[i*3+1] += Math.cos(uTime * driftFreqY[i] + driftPhaseY[i]) * driftAmpY[i] * audioMod;
-                }
+                const audioMod = (1.0 + material.uniforms.uAudioEnergy.value * 0.8) * spdMod;
+                if (SIMPLE_IDLE_UNIVERSE && bigBangState !== 'chatting') {
+                    const bx = idleBasePositions[i*3];
+                    const by = idleBasePositions[i*3+1];
+                    const bz = idleBasePositions[i*3+2];
+                    const ph = aPhases[i];
+                    const tempo = driftTempo[i];
+                    const kind = motionKind[i];
+                    let xNext = bx, yNext = by, zNext = bz;
 
-                const z = posArr[i*3+2];
-                // 流れ星はXY方向にも画面外に出る可能性
-                const x = posArr[i*3], y = posArr[i*3+1];
-                if (z > 250 || z < -500 || (isShootingStar[i] && (Math.abs(x) > 400 || Math.abs(y) > 400))) {
-                    if (driftSpeedZ[i] >= 0) {
-                        posArr[i*3+2] = -300 - Math.random() * 200;
-                    } else {
-                        posArr[i*3+2] = 200 + Math.random() * 50;
+                    // reduce-motion: drift 計算を完全に bypass（idleBase に固定）
+                    if (reduceMotion) {
+                        posArr[i*3]   = bx;
+                        posArr[i*3+1] = by;
+                        posArr[i*3+2] = bz;
+                        colArr[i*3]   += (origColArr[i*3]   - colArr[i*3])   * 0.06;
+                        colArr[i*3+1] += (origColArr[i*3+1] - colArr[i*3+1]) * 0.06;
+                        colArr[i*3+2] += (origColArr[i*3+2] - colArr[i*3+2]) * 0.06;
+                        geometry.attributes.aSize.array[i] = origSizeArr ? origSizeArr[i] : aSizes[i];
+                        continue;
                     }
-                    const r = 20 + Math.random() * 180;
-                    const angle = Math.random() * Math.PI * 2;
-                    posArr[i*3]   = Math.cos(angle) * r;
-                    posArr[i*3+1] = Math.sin(angle) * r;
-                    // 流れ星はリスポーン時にランダムに新しい方向
+
+                    // 2026-04-30: 役割別 idle motion で「無重力の層」を作る
+                    if (kind === 0) {
+                        // breath: ほぼ静止＋微呼吸（60%）。光が漂って点いている層
+                        const slow = uTime * (0.04 + driftFreqX[i] * 0.03) * tempo;
+                        const dx = Math.sin(slow + driftPhaseX[i]) * (1.5 + driftAmpX[i] * 2.5);
+                        const dy = Math.cos(slow * 0.83 + driftPhaseY[i]) * (1.2 + driftAmpY[i] * 2.2);
+                        const dz = Math.sin(slow * 0.6 + ph) * 1.8;
+                        xNext = bx + dx;
+                        yNext = by + dy;
+                        zNext = bz + dz;
+                    } else if (kind === 1) {
+                        // 2026-05-06: 真の Curl noise advection — 現在位置をフィールドで流す
+                        // 毎フレーム posArr の現在位置に curl ベクトルを加算 → 流れる
+                        // ベースポジションへの極弱い restoring force で領域内に保つ
+                        const t = uTime * 0.05 * tempo;
+                        const px = posArr[i*3], py = posArr[i*3+1], pz = posArr[i*3+2];
+                        const _n = (x, y) => (
+                            Math.sin(x * 0.0085 + t * 1.0  + driftPhaseX[i]) +
+                            Math.sin(y * 0.0070 + t * 0.83 + driftPhaseY[i] * 0.5) +
+                            Math.sin((x + y) * 0.0050 - t * 0.62 + ph)
+                        );
+                        const e = 8.0;
+                        const dnx = _n(px + e, py) - _n(px - e, py);
+                        const dny = _n(px, py + e) - _n(px, py - e);
+                        // curl velocity (流速)
+                        const vx =  dny * 1.2;
+                        const vy = -dnx * 1.2;
+                        const vz = Math.sin(t * 1.3 + ph) * 0.45
+                                 + Math.cos(t * 0.7 + driftPhaseX[i]) * 0.30;
+                        // restoring: ベース位置にゆっくり戻す（領域外に飛ばないため）
+                        const k = 0.0035;
+                        xNext = px + vx + (bx - px) * k;
+                        yNext = py + vy + (by - py) * k;
+                        zNext = pz + vz + (bz - pz) * k;
+                    } else if (kind === 2) {
+                        // approach: 奥→手前（12%）— 速度ゆっくり戻す
+                        const cycle = (uTime * travelSpeed[i] * 0.55 + travelOffset[i]) % 1;
+                        const p = cycle < 0.94 ? cycle / 0.94 : 1.0;
+                        const ease = p * p * (3.0 - 2.0 * p);
+                        const ax = Math.cos(travelAngle[i]);
+                        const ay = Math.sin(travelAngle[i]);
+                        const startX = ax * (420.0 + (i % 7) * 22.0);
+                        const startY = ay * (300.0 + (i % 5) * 26.0);
+                        const startZ = -420.0 + Math.sin(ph) * 60.0;
+                        const wob = Math.sin(uTime * 0.25 + ph) * 8.0;
+                        xNext = startX + (bx - startX) * ease + wob;
+                        yNext = startY + (by - startY) * ease + wob * 0.7;
+                        zNext = startZ + (bz - startZ) * ease;
+                    } else {
+                        // passthrough: 奥を横切る（18%）— ゆっくり sweep
+                        const run = (uTime * travelSpeed[i] * 0.55 + travelOffset[i]) % 1;
+                        const sweep = (run - 0.5) * 720.0;
+                        const ax = Math.cos(travelAngle[i]);
+                        const ay = Math.sin(travelAngle[i]);
+                        const sideX = -ay;
+                        const sideY = ax;
+                        const wave = Math.sin(run * Math.PI * 2.0 + ph) * 36.0;
+                        xNext = bx * 0.45 + sideX * sweep + ax * wave;
+                        yNext = by * 0.45 + sideY * sweep + ay * wave;
+                        zNext = bz + Math.sin(run * Math.PI * 2.0 + ph) * 44.0;
+                    }
+
+                    if (bigBangState === 'done') {
+                        // ビッグバン後の通常宇宙への復帰だけを緩くする。一発で戻すと暴れて見える。
+                        const returnF = 0.012;
+                        posArr[i*3]   += (xNext - posArr[i*3]) * returnF;
+                        posArr[i*3+1] += (yNext - posArr[i*3+1]) * returnF;
+                        posArr[i*3+2] += (zNext - posArr[i*3+2]) * returnF;
+                    } else {
+                        posArr[i*3] = xNext;
+                        posArr[i*3+1] = yNext;
+                        posArr[i*3+2] = zNext;
+                    }
+                    colArr[i*3]   += (origColArr[i*3]   - colArr[i*3])   * 0.06;
+                    colArr[i*3+1] += (origColArr[i*3+1] - colArr[i*3+1]) * 0.06;
+                    colArr[i*3+2] += (origColArr[i*3+2] - colArr[i*3+2]) * 0.06;
+                    geometry.attributes.aSize.array[i] = origSizeArr ? origSizeArr[i] : aSizes[i];
+                } else {
+                    posArr[i*3+2] += driftSpeedZ[i] * audioMod;
                     if (isShootingStar[i]) {
-                        const a2 = Math.random() * Math.PI * 2;
-                        const sp = 0.3 + Math.random() * 0.8;
-                        driftSpeedZ[i] = sp;
-                        shootingDirX[i] = Math.cos(a2) * 0.15 * sp;
-                        shootingDirY[i] = Math.sin(a2) * 0.15 * sp;
+                        // 流れ星: 直線的に高速移動
+                        posArr[i*3]   += shootingDirX[i] * audioMod;
+                        posArr[i*3+1] += shootingDirY[i] * audioMod;
+                    } else {
+                        const baseDriftX = Math.sin(uTime * driftFreqX[i] + driftPhaseX[i]) * driftAmpX[i] * audioMod;
+                        const baseDriftY = Math.cos(uTime * driftFreqY[i] + driftPhaseY[i]) * driftAmpY[i] * audioMod;
+
+                        if (ENABLE_COMPLEX_CHAT_FIELDS && bigBangState === 'chatting') {
+                        let swirlX = 0;
+                        let swirlY = 0;
+                        let fieldPullX = 0;
+                        let fieldPullY = 0;
+                        const px = posArr[i*3];
+                        const py = posArr[i*3+1];
+                        const pz = posArr[i*3+2];
+
+                        const shearX = (
+                            Math.sin(pz * 0.014 + uTime * 0.10 + flowLayer[i]) * 0.010 +
+                            Math.cos(py * 0.010 - uTime * 0.06 + flowLayer[i] * 0.7) * 0.006
+                        ) * flowBias[i];
+                        const shearY = (
+                            Math.cos(pz * 0.012 - uTime * 0.08 + flowLayer[i]) * 0.009 +
+                            Math.sin(px * 0.011 + uTime * 0.05 + flowLayer[i] * 0.6) * 0.005
+                        ) * flowBias[i];
+
+                        const globalR = Math.sqrt(px * px + py * py) + 0.001;
+                        const globalNorm = Math.max(0.0, 1.0 - globalR / 320.0);
+                        const globalSwirl = (0.0020 + globalNorm * 0.0028) * audioMod;
+                        swirlX += (-py / globalR) * globalSwirl;
+                        swirlY += (px / globalR) * globalSwirl;
+
+                        const fieldKeys = Object.keys(cosmicFields);
+                        for (let fi = 0; fi < fieldKeys.length; fi++) {
+                            const field = cosmicFields[fieldKeys[fi]];
+                            if (!field || !field.active) continue;
+                            const dx = field.x - px;
+                            const dy = field.y - py;
+                            const dist2 = dx * dx + dy * dy;
+                            const dist = Math.sqrt(dist2) + 0.001;
+                            if (dist >= field.radius) continue;
+
+                            const influence = Math.max(0, 1.0 - dist / field.radius);
+                            const tangentX = -dy / dist;
+                            const tangentY = dx / dist;
+                            const orbitStrength = (0.0024 + field.radius * 0.00002) * influence;
+                            const pullStrength = 0.0018 * influence * influence;
+
+                            swirlX += tangentX * orbitStrength;
+                            swirlY += tangentY * orbitStrength;
+                            fieldPullX += dx * pullStrength;
+                            fieldPullY += dy * pullStrength;
+                        }
+
+                            posArr[i*3]   += baseDriftX + shearX + swirlX + fieldPullX;
+                            posArr[i*3+1] += baseDriftY + shearY + swirlY + fieldPullY;
+                        } else {
+                            posArr[i*3]   += baseDriftX;
+                            posArr[i*3+1] += baseDriftY;
+                        }
+                    }
+                    if (ENABLE_COMPLEX_CHAT_FIELDS && bigBangState === 'chatting') {
+                        applyCosmicFieldMotion(i, dt, audioMod);
+                    }
+
+                    const z = posArr[i*3+2];
+                    // 流れ星はXY方向にも画面外に出る可能性
+                    const x = posArr[i*3], y = posArr[i*3+1];
+                    if (z > 250 || z < -500 || (isShootingStar[i] && (Math.abs(x) > 400 || Math.abs(y) > 400))) {
+                        if (driftSpeedZ[i] >= 0) {
+                            posArr[i*3+2] = -300 - Math.random() * 200;
+                        } else {
+                            posArr[i*3+2] = 200 + Math.random() * 50;
+                        }
+                        const r = 20 + Math.random() * 180;
+                        const angle = Math.random() * Math.PI * 2;
+                        posArr[i*3]   = Math.cos(angle) * r;
+                        posArr[i*3+1] = Math.sin(angle) * r;
+                        if (isShootingStar[i]) {
+                            const a2 = Math.random() * Math.PI * 2;
+                            const sp = 0.3 + Math.random() * 0.8;
+                            driftSpeedZ[i] = sp;
+                            shootingDirX[i] = Math.cos(a2) * 0.15 * sp;
+                            shootingDirY[i] = Math.sin(a2) * 0.15 * sp;
+                        }
                     }
                 }
                 // done→idleへの復帰中: 色を徐々に戻す
@@ -3565,20 +4670,38 @@ void main() {
                     colArr[i*3]   += (origColArr[i*3]   - colArr[i*3])   * 0.02;
                     colArr[i*3+1] += (origColArr[i*3+1] - colArr[i*3+1]) * 0.02;
                     colArr[i*3+2] += (origColArr[i*3+2] - colArr[i*3+2]) * 0.02;
+                    if (origSizeArr) {
+                        geometry.attributes.aSize.array[i] += (origSizeArr[i] - geometry.attributes.aSize.array[i]) * 0.025;
+                    }
                 }
             }
         }
         geometry.attributes.position.needsUpdate = true;
         geometry.attributes.color.needsUpdate = true;
-        if (bigBangState === 'chatting' && chatSpeaking) {
+        if ((bigBangState === 'chatting' && chatSpeaking) || bigBangState === 'bb_explode' || bigBangState === 'done') {
             geometry.attributes.aSize.needsUpdate = true;
         }
 
-        // 星座ネットワーク更新
-        updateConstellations();
+        // 待機宇宙は粒子を主役にする。線は chatting 中だけ。
+        if (bigBangState === 'chatting') {
+            updateConstellations();
+        } else {
+            lineGeo.setDrawRange(0, 0);
+        }
         // 二進数メッセージの線更新（chatting中のみ）
         if (bigBangState === 'chatting') {
             updateConstellationLines();
+        }
+
+        const audioLevelForBloom = material.uniforms.uAudioEnergy.value || 0.0;
+        material.uniforms.uObserverFocus.value = 0.0;
+        if (bloomPass) {
+            const baseStrength = bigBangState === 'chatting' ? 0.10 : 0.0;
+            const baseRadius = bigBangState === 'chatting' ? 0.12 : 0.0;
+            const baseThreshold = bigBangState === 'chatting' ? 0.78 : 0.96;
+            bloomPass.strength += ((baseStrength + audioLevelForBloom * 0.01) - bloomPass.strength) * 0.08;
+            bloomPass.radius += (baseRadius - bloomPass.radius) * 0.08;
+            bloomPass.threshold += (baseThreshold - bloomPass.threshold) * 0.08;
         }
 
         if (composer6) composer6.render(); else renderer6.render(scene6, camera6);
@@ -3593,12 +4716,48 @@ void main() {
     // ── チャットUI ──
     let chatMode = 'win95';
     let glitchTimer = null;
+    let chatSessionId = 0;
+    let chatTimerIds = new Set();
+    let chatFetchController = null;
     let tpCharEls = [];     // { span, pIdx, tx, ty, sx, sy }
     let sculptActive = false;
     let famicomACtx = null;
     // AI会話履歴（localStorageで永続化）
     let chatHistory = JSON.parse(localStorage.getItem('inryoku_chat_history') || '[]');
     function saveChatHistory() { try { localStorage.setItem('inryoku_chat_history', JSON.stringify(chatHistory.slice(-20))); } catch(e) {} }
+    function isChatSessionActive(sessionId) {
+        return sessionId === chatSessionId && (!!document.getElementById('inryoku-chat') || !!document.getElementById('chat-tp-overlay'));
+    }
+    function clearChatTimers() {
+        chatTimerIds.forEach(function(id) { clearTimeout(id); });
+        chatTimerIds.clear();
+    }
+    function scheduleChatTimeout(fn, delay, sessionId) {
+        var timerId = setTimeout(function() {
+            chatTimerIds.delete(timerId);
+            if (!isChatSessionActive(sessionId)) return;
+            fn();
+        }, delay);
+        chatTimerIds.add(timerId);
+        return timerId;
+    }
+    function abortChatFetch() {
+        if (!chatFetchController) return;
+        try { chatFetchController.abort(); } catch (e) {}
+        chatFetchController = null;
+    }
+    function beginChatSession() {
+        chatSessionId += 1;
+        clearChatTimers();
+        abortChatFetch();
+        return chatSessionId;
+    }
+    function endChatSession() {
+        chatSessionId += 1;
+        clearChatTimers();
+        abortChatFetch();
+        removeConstellationMessage();
+    }
 
     // ── 吸収サウンド: 粒子がロゴに吸い込まれる時の引力音 ──
     // 降下するドローン（高→低）+ パルス + ハーモニクス
@@ -3750,12 +4909,12 @@ void main() {
     // 各バイト = 1つの同心円リング（8粒子が円周上に配置）
     // 内側リングから順に出現 → 保持 → ドレイン
     const RING_Z = 130;
-    const MANDALA_INNER_R = 12;      // 最内リング半径
-    const MANDALA_RING_GAP = 8;      // リング間隔
+    const MANDALA_INNER_R = 16;      // 最内リング半径
+    const MANDALA_RING_GAP = 10;     // リング間隔
     const RING_APPEAR_TIME = 4.0;    // 全リング出現時間(秒)
     const RING_HOLD_TIME = 2.5;      // 表示保持(秒)
     const RING_DRAIN_TIME = 1.2;     // 下方ドレイン(秒)
-    const MANDALA_STAGGER = 0.4;     // リング間の出現遅延(秒)
+    const MANDALA_STAGGER = 0.34;    // リング間の出現遅延(秒)
     let ringPhases = [];             // [{birthTime, state:'appear'|'hold'|'drain'|'done', particles[]}]
     let ringStartTime = 0;
     // ドレイン先（チャットパネル上部のワールド座標）
@@ -3867,7 +5026,9 @@ void main() {
             // リング出現遅延（内側が先、外側が後 — 波紋）
             var ringDelay = byteIdx * MANDALA_STAGGER;
             // リングごとの回転オフセット（曼荼羅的な回転ずれ）
-            var ringRotOffset = byteIdx * Math.PI / byteCount * 0.7;
+            var ringRotOffset = byteIdx * Math.PI / byteCount * 1.05;
+            // 平面記号感は保ったまま、リングごとにごく薄い奥行きを持たせる
+            var ringZOffset = (byteIdx - (byteCount - 1) * 0.5) * 0.72;
 
             for (var bitIdx = 0; bitIdx < 8 && pCursor < dists.length; bitIdx++) {
                 // 1-bit: +1(光の方向) か -1(影の方向) — 0は存在しない
@@ -3881,7 +5042,7 @@ void main() {
                 var angle = (bitIdx / 8) * Math.PI * 2 + ringRotOffset;
                 // Y圧縮で立体的な楕円に
                 var tx = ringLogoX + Math.cos(angle) * ringRadius;
-                var ty = ringLogoY + Math.sin(angle) * ringRadius * 0.45;
+                var ty = ringLogoY + Math.sin(angle) * ringRadius * 0.58;
 
                 var pIdx = dists[pCursor++].idx;
                 // 初期位置: 球体コア中心
@@ -3901,6 +5062,8 @@ void main() {
                     sweepOffset: ringDelay / (RING_APPEAR_TIME * 0.7),
                     ringIdx: byteIdx,
                     ringRadius: ringRadius,
+                    ringZOffset: ringZOffset,
+                    ringPhaseOffset: ringRotOffset + bitIdx * 0.22,
                     isThickness: false,
                     byteColor: byteColor,
                     groupScale: groupScale,
@@ -3913,6 +5076,24 @@ void main() {
             }
         }
 
+        // 同心リングの円周骨格 + リング間スポーク
+        for (var ri = 0; ri < byteCount; ri++) {
+            var ringStart = ri * 8;
+            for (var bi = 0; bi < 8; bi++) {
+                var current = allParticles[ringStart + bi];
+                var next = allParticles[ringStart + ((bi + 1) % 8)];
+                if (current && next) {
+                    msgEdges.push({
+                        from: current.idx,
+                        to: next.idx,
+                        progress: 0,
+                        kind: 'ring',
+                        strength: 0.75
+                    });
+                }
+            }
+        }
+
         // 同心リング間を結ぶエッジ（曼荼羅の骨格線）
         for (var pi = 0; pi < allParticles.length; pi++) {
             var p = allParticles[pi];
@@ -3921,7 +5102,13 @@ void main() {
                 var nextBitIdx = (p.ringIdx + 1) * 8 + p.col;
                 if (nextBitIdx < allParticles.length) {
                     var np = allParticles[nextBitIdx];
-                    msgEdges.push({ from: p.idx, to: np.idx, progress: 0 });
+                    msgEdges.push({
+                        from: p.idx,
+                        to: np.idx,
+                        progress: 0,
+                        kind: 'spoke',
+                        strength: 1.0
+                    });
                 }
             }
         }
@@ -3956,9 +5143,41 @@ void main() {
         var lg = new THREE.BufferGeometry();
         lg.setAttribute('position', new THREE.BufferAttribute(lp, 3));
         lg.setAttribute('color',    new THREE.BufferAttribute(lc, 3));
-        msgLineMesh = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({
-            vertexColors: true, transparent: true, opacity: 1.0,
-            blending: THREE.AdditiveBlending, depthWrite: false
+        msgLineMesh = new THREE.LineSegments(lg, new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0.0 },
+                uSignal: { value: 0.0 }
+            },
+            vertexShader: `
+                varying vec3 vColor;
+                varying float vDepth;
+                void main() {
+                    vColor = color;
+                    vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+                    vDepth = -mvPos.z;
+                    gl_Position = projectionMatrix * mvPos;
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vColor;
+                varying float vDepth;
+                uniform float uTime;
+                uniform float uSignal;
+                void main() {
+                    float depthFade = clamp(1.0 - vDepth / 230.0, 0.0, 1.0);
+                    depthFade = pow(depthFade, 1.6);
+                    float energy = clamp((vColor.r + vColor.g + vColor.b) / 2.2, 0.0, 1.0);
+                    float lane = 0.84 + 0.16 * sin(uTime * 1.35 + vDepth * 0.08 + energy * 2.0);
+                    float shimmer = 0.92 + 0.08 * sin(uTime * (2.1 + energy * 0.9) - vDepth * 0.11);
+                    vec3 lineColor = mix(vColor, vec3(0.86, 0.94, 1.0), 0.12 + uSignal * 0.10 + energy * 0.08);
+                    float alpha = depthFade * (0.24 + uSignal * 0.18 + energy * 0.30) * lane;
+                    gl_FragColor = vec4(lineColor * shimmer, alpha);
+                }
+            `,
+            vertexColors: true,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
         }));
         scene6.add(msgLineMesh);
     }
@@ -3991,28 +5210,65 @@ void main() {
         if (!msgLineMesh || msgEdges.length === 0) return;
         const lPos = msgLineMesh.geometry.attributes.position.array;
         const lCol = msgLineMesh.geometry.attributes.color.array;
-        // 明るいRGBCMYパレット（白ブースト）
-        const BB_COLS = [[1,0.5,0.4],[0.4,1,0.5],[0.5,0.5,1],[0.3,1,1],[1,0.3,1],[1,1,0.3]];
+        // 冷たい軌道線と、強い放射線を分ける
+        const BB_COLS = [[0.98,0.46,0.52],[0.46,0.95,0.62],[0.55,0.66,1.0],[0.38,0.94,0.98],[0.98,0.38,0.88],[1.0,0.92,0.42]];
+        const ORBIT_TINT = [0.52, 0.76, 1.0];
+        const SPOKE_TINT = [1.0, 0.96, 0.84];
+        var signalLevel = 0.0;
 
         for (let e = 0; e < msgEdges.length; e++) {
             const edge = msgEdges[e];
-            lPos[e*6]   = posArr[edge.from*3];
-            lPos[e*6+1] = posArr[edge.from*3+1];
-            lPos[e*6+2] = posArr[edge.from*3+2];
-            lPos[e*6+3] = posArr[edge.to*3];
-            lPos[e*6+4] = posArr[edge.to*3+1];
-            lPos[e*6+5] = posArr[edge.to*3+2];
+            const ax = posArr[edge.from*3];
+            const ay = posArr[edge.from*3+1];
+            const az = posArr[edge.from*3+2];
+            const bx = posArr[edge.to*3];
+            const by = posArr[edge.to*3+1];
+            const bz = posArr[edge.to*3+2];
+            const reveal = Math.max(0.0, Math.min(edge.progress, 1.0));
+            const tipEase = reveal * reveal * (3 - 2 * reveal);
+            const tx = ax + (bx - ax) * tipEase;
+            const ty = ay + (by - ay) * tipEase;
+            const tz = az + (bz - az) * tipEase;
+            const fromNode = msgNodeMap.get(edge.from);
+            const toNode = msgNodeMap.get(edge.to);
+            lPos[e*6]   = ax;
+            lPos[e*6+1] = ay;
+            lPos[e*6+2] = az;
+            lPos[e*6+3] = tx;
+            lPos[e*6+4] = ty;
+            lPos[e*6+5] = tz;
 
             if (edge.progress > 0) {
-                const pulse = 0.7 + 0.3 * Math.sin(uTime * 2.0 + e * 0.4);
-                const bright = edge.progress * pulse * 1.5; // 1.5倍ブースト
-                const c = BB_COLS[e % 6];
-                lCol[e*6]   = c[0]*bright; lCol[e*6+1] = c[1]*bright; lCol[e*6+2] = c[2]*bright;
-                lCol[e*6+3] = c[0]*bright; lCol[e*6+4] = c[1]*bright; lCol[e*6+5] = c[2]*bright;
+                signalLevel = Math.max(signalLevel, edge.progress);
+                const isRing = edge.kind === 'ring';
+                const strength = edge.strength || (isRing ? 0.78 : 1.0);
+                const pulse = isRing
+                    ? 0.72 + 0.16 * Math.sin(uTime * 1.3 + e * 0.33)
+                    : 0.84 + 0.26 * Math.sin(uTime * 2.2 + e * 0.45);
+                const head = isRing
+                    ? 0.80 + 0.10 * Math.sin(uTime * 2.1 + e * 0.22)
+                    : 0.96 + 0.18 * Math.sin(uTime * 3.0 + e * 0.28);
+                const brightA = Math.pow(edge.progress, 1.15) * pulse * strength * (isRing ? 0.88 : 1.04);
+                const brightB = Math.pow(edge.progress, 1.15) * head * strength * (isRing ? 0.96 : 1.18);
+                const ca = fromNode && fromNode.byteColor ? fromNode.byteColor : BB_COLS[e % 6];
+                const cb = toNode && toNode.byteColor ? toNode.byteColor : ca;
+                const tint = isRing ? ORBIT_TINT : SPOKE_TINT;
+                const mixA = isRing ? 0.38 : 0.12;
+                const mixB = isRing ? 0.26 : 0.08;
+                lCol[e*6]   = (ca[0] * (1.0 - mixA) + tint[0] * mixA) * brightA;
+                lCol[e*6+1] = (ca[1] * (1.0 - mixA) + tint[1] * mixA) * brightA;
+                lCol[e*6+2] = (ca[2] * (1.0 - mixA) + tint[2] * mixA) * brightA;
+                lCol[e*6+3] = (cb[0] * (1.0 - mixB) + tint[0] * mixB) * brightB;
+                lCol[e*6+4] = (cb[1] * (1.0 - mixB) + tint[1] * mixB) * brightB;
+                lCol[e*6+5] = (cb[2] * (1.0 - mixB) + tint[2] * mixB) * brightB;
             } else {
                 lCol[e*6]=0;lCol[e*6+1]=0;lCol[e*6+2]=0;
                 lCol[e*6+3]=0;lCol[e*6+4]=0;lCol[e*6+5]=0;
             }
+        }
+        if (msgLineMesh.material && msgLineMesh.material.uniforms) {
+            msgLineMesh.material.uniforms.uTime.value = uTime;
+            msgLineMesh.material.uniforms.uSignal.value = signalLevel;
         }
         msgLineMesh.geometry.attributes.position.needsUpdate = true;
         msgLineMesh.geometry.attributes.color.needsUpdate = true;
@@ -4026,11 +5282,13 @@ void main() {
         bitRevealIdx = 0;
         chatSpeaking = false;
         chatSpeakTimer = 0;
+        chatSpeakCallback = null;
     }
 
     // ── 二進数粒子演出でテキストを「話す」 ──
     // 1バイトずつ: infoから粒子が飛び出し→8ビット並ぶ→文字デコード→次のバイト
-    function speakBinary(text, callback) {
+    function speakBinary(text, callback, sessionId) {
+        if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
         removeConstellationMessage();
 
         // テキストをUTF-8バイト列にして、バイトキューを作成
@@ -4044,7 +5302,10 @@ void main() {
         bitRevealIdx = 0;
         chatSpeaking = true;
         chatSpeakTimer = 0;
-        chatSpeakCallback = callback || null;
+        chatSpeakCallback = function() {
+            if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
+            if (callback) callback();
+        };
 
         // 最初のブロックをセットアップ
         var firstBlock = byteQueue.slice(0, BYTES_PER_BLOCK);
@@ -4056,7 +5317,8 @@ void main() {
     }
 
     // ── タイプライター（showChatUI/sendChatMsgの外に配置してスコープ共有） ──
-    function typeMsg(text, onDone) {
+    function typeMsg(text, onDone, sessionId) {
+        if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
         const msgs = document.getElementById('chat-messages');
         if (!msgs) return;
         const isFamicom = chatMode === 'famicom';
@@ -4070,7 +5332,7 @@ void main() {
                 const oldest = existing[0];
                 oldest.style.transition = 'opacity 0.3s';
                 oldest.style.opacity = '0';
-                setTimeout(() => oldest.remove(), 320);
+                scheduleChatTimeout(() => oldest.remove(), 320, sessionId || chatSessionId);
             }
         }
         const div = document.createElement('div');
@@ -4096,31 +5358,37 @@ void main() {
         }
 
         function typeNext() {
+            if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
             if (idx < text.length) {
                 var ch = text[idx];
                 div.textContent += ch;
                 if (isFamicom) famicomBeep();
                 msgs.scrollTop = msgs.scrollHeight;
                 idx++;
-                setTimeout(typeNext, getDelay(ch));
+                scheduleChatTimeout(typeNext, getDelay(ch), sessionId || chatSessionId);
             } else {
                 if (isFamicom) {
                     const cur = document.createElement('span');
                     cur.className = 'nes-cursor';
                     cur.textContent = ' ▼';
                     div.appendChild(cur);
-                    setTimeout(() => { cur.remove(); if (onDone) onDone(); }, 900);
+                    scheduleChatTimeout(() => {
+                        if (!cur.isConnected) return;
+                        cur.remove();
+                        if (onDone) onDone();
+                    }, 900, sessionId || chatSessionId);
                 } else {
                     if (onDone) onDone();
                 }
             }
         }
         // 最初の文字の前に少しだけ間を置く（考え始める感）
-        setTimeout(typeNext, 300 + Math.random() * 200);
+        scheduleChatTimeout(typeNext, 300 + Math.random() * 200, sessionId || chatSessionId);
     }
 
     function showChatUI() {
         if (document.getElementById('inryoku-chat') || document.getElementById('chat-tp-overlay')) return;
+        var sessionId = beginChatSession();
 
         // ── トーク中はロゴ+チャットのみ。他UI完全非表示 ──
         var hideEls = [
@@ -4176,19 +5444,68 @@ void main() {
         if (chatMode === 'glitch') startGlitch();
 
         // 最初の挨拶: 二進数演出 → テキスト表示（infoが粒子で語りかける）
-        setTimeout(() => {
+        scheduleChatTimeout(function() {
             speakBinary('こんにちは、私は、infoです', function() {
-                typeMsg('こんにちは、私は、infoです', () => {
+                typeMsg('こんにちは、私は、infoです', function() {
                     speakBinary('何について知りたいですか？', function() {
-                        typeMsg('何について知りたいですか？');
-                    });
-                });
+                        typeMsg('何について知りたいですか？', function() {
+                            // 2026-05-06: 挨拶完了後、質問候補をチャット内に表示（粒子言語の世界観のまま）
+                            showChatSuggestions(sessionId);
+                        }, sessionId);
+                    }, sessionId);
+                }, sessionId);
+            }, sessionId);
+        }, 400, sessionId);
+    }
+
+    // 2026-05-06: チャット内に質問候補チップを表示（挨拶後）
+    function showChatSuggestions(sessionId) {
+        if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
+        var msgs = document.getElementById('chat-messages');
+        if (!msgs) return;
+        // 既存があれば消す（再入防止）
+        var existing = document.getElementById('chat-suggestions');
+        if (existing) existing.remove();
+        var box = document.createElement('div');
+        box.id = 'chat-suggestions';
+        box.className = 'chat-suggestions';
+        var SUGGESTIONS = [
+            { q: '商品について', full: '商品について教えてください。' },
+            { q: '次のドロップ', full: '次のドロップはいつですか？' },
+            { q: 'サイズ・素材', full: 'サイズ・素材について教えてください。' },
+            { q: '取材・コラボ', full: '取材・コラボのご相談です。' },
+            { q: 'その他', full: 'その他のお問い合わせ：' }
+        ];
+        SUGGESTIONS.forEach(function(s) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chat-suggestion';
+            btn.textContent = s.q;
+            btn.addEventListener('click', function() {
+                var input = document.getElementById('chat-input');
+                if (input) {
+                    input.value = s.full;
+                    // 既存の send ロジックに乗せる
+                    var sendBtn = document.getElementById('chat-send');
+                    if (sendBtn) sendBtn.click();
+                    else {
+                        // Enter キー押下を simulate
+                        var ev = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true });
+                        input.dispatchEvent(ev);
+                    }
+                }
+                box.remove();
             });
-        }, 400);
+            box.appendChild(btn);
+        });
+        msgs.appendChild(box);
+        msgs.scrollTop = msgs.scrollHeight;
     }
 
     function closeChatUI() {
         if (glitchTimer) { clearInterval(glitchTimer); glitchTimer = null; }
+        endChatSession();
+        clearChatAwaitingState();
         // telepathy
         const tp = document.getElementById('chat-tp-overlay');
         if (tp) {
@@ -4202,8 +5519,6 @@ void main() {
         if (chat) { chat.classList.remove('chat-visible'); setTimeout(() => chat.remove(), 500); }
         chatHistory = []; saveChatHistory(); // 会話履歴リセット + localStorage同期
 
-        // ★ 星座メッセージ除去 → ビッグバン発動！
-        removeConstellationMessage();
         console.log('[CLOSE] chatting→bb_collapse: ビッグバン開始');
         bigBangState = 'bb_collapse';
         bigBangTimer = 0;
@@ -4359,11 +5674,138 @@ void main() {
         }, 5000);
     }
 
-    function fetchAIResponse(userText, callback) {
+    function countMatches(text, patterns) {
+        var score = 0;
+        if (!text || !patterns || !patterns.length) return score;
+        for (var i = 0; i < patterns.length; i++) {
+            var pattern = patterns[i];
+            if (pattern && pattern.test(text)) score += 1;
+        }
+        return score;
+    }
+
+    function startsWithAny(text, patterns) {
+        if (!text || !patterns || !patterns.length) return false;
+        for (var i = 0; i < patterns.length; i++) {
+            if (patterns[i] && patterns[i].test(text)) return true;
+        }
+        return false;
+    }
+
+    function inferSpeechProfile(userText, responseText) {
+        var user = String(userText || '').trim();
+        var response = String(responseText || '').trim();
+        var userLower = user.toLowerCase();
+        var responseLower = response.toLowerCase();
+        var source = (userLower + ' ' + responseLower).trim();
+        var reportedQuestion = /you asked|you said|as you said|as i said|asked\s+[“"']|質問した|と言ってた|という質問|引用/.test(responseLower);
+        var responseStartsDirective = startsWithAny(responseLower, [
+            /^(let's|go|open|look|enter|watch|start|try|take)\b/,
+            /^(進め|開け|見ろ|入れ|始め|試して|行け|向かえ)/
+        ]);
+        var responseStartsAnswer = startsWithAny(responseLower, [
+            /^(yes|no|it is|it will|you can|you should|i can|we can|sure|maybe)\b/,
+            /^(はい|いいえ|可能|無理|まだ|できる|できます|そうです|たぶん|了解)/
+        ]);
+        var responseStartsQuestion = startsWithAny(responseLower, [
+            /^(what|why|which|where|when|who|how|can you|do you|would you)\b/,
+            /^(何|なぜ|どれ|どこ|いつ|誰|どう|できますか|してほしい)/
+        ]);
+        return {
+            user: user,
+            response: response,
+            source: source,
+            asksBack: !reportedQuestion && ((/[?？]/.test(response) && response.length < 120) || responseStartsQuestion),
+            refusal: /できない|無理|can't|cannot|not available|unavailable|later|wait|拒否|だめ|not now|still closed|未設定|準備中|soon|checkout soon|まだ.*(ない|できない)|hold/.test(responseLower),
+            quote: /記憶|過去|remember|echo|quote|heard|told|伝聞|引用|said|taught|according to|as you said|as i said/.test(responseLower),
+            reveal: /101|啓示|覚醒|超え|越え|unlock|awaken|reveal|\bleap\b|\bjump\b|breakthrough|threshold/.test(source),
+            directive: /やれ|進め|open|go\b|must|should|いけ|見ろ|command|enter|unlock|move|して\b|してくれ|try|begin|start|take\b/.test(responseLower) || responseStartsDirective,
+            // observe = 焦点フラグ (旧: 観測フラグ) [2026-05-09 改名]。
+            // ユーザー文の日本語マッチに「観測」が含まれるのは入力テキスト側の語彙であり、
+            // ブランドコピーではない。LOGO_PHASES.observe / canonMeta の契約と連動するため key 名は不変。
+            observe: /見て|観測|observe|\blook\b|気づ|notice|signal|vision|read|watch|focus/.test(responseLower),
+            resonance: /\bwe\b|\bus\b|一緒|ともに|共に|align|consensus|resonate|connect|with you|same wave|sync/.test(responseLower),
+            certainty: /definitely|certain|clearly|must|will\b|断言|確実|明確|確か|guarantee|for sure|もちろん|必ず|間違いなく/.test(responseLower),
+            emit: /hello|こんにちは|signal|speak|tell|show|transmit|saying|message/.test(responseLower),
+            selfScope: /\b(i|me|my|myself)\b|私|ぼく|俺/.test(responseLower),
+            youScope: /\byou\b|あなた|君/.test(responseLower),
+            worldScope: /\b(world|they|it|site|system)\b|世界|サイト|システム|あれ|それ/.test(responseLower),
+            responseStartsAnswer: responseStartsAnswer
+        };
+    }
+
+    function inferSpeechCanon(userText, responseText) {
+        var canonMeta = window.InryokuCanonMeta || null;
+        function finalizeCanon(canonName, fallbackCanon) {
+            var resolved = canonName || fallbackCanon || 'emit';
+            if (!canonMeta || typeof canonMeta.getCanon !== 'function') return resolved;
+            var config = canonMeta.getCanon(resolved);
+            if (!config) return fallbackCanon || 'emit';
+            // AI 応答は whisper 系へ落とさない。最低でも可視の emit に寄せる。
+            if (config.triggerClass === 'whisper') return fallbackCanon || 'emit';
+            return resolved;
+        }
+
+        var profile = inferSpeechProfile(userText, responseText);
+
+        if (profile.reveal) return finalizeCanon('revelation', 'emit');
+        if (profile.refusal) return finalizeCanon(profile.quote ? 'quotation' : 'shadow', 'emit');
+        if (profile.quote) return finalizeCanon('quotation', 'emit');
+        if (profile.asksBack) return finalizeCanon(profile.selfScope && !profile.youScope ? 'self_question' : 'observation', 'observation');
+        if (profile.directive) return finalizeCanon('future_command', 'emit');
+        if (profile.observe) return finalizeCanon(profile.youScope || profile.worldScope ? 'observation' : 'emit', 'emit');
+        if (profile.resonance) return finalizeCanon('resonance', 'emit');
+        if (profile.certainty) return finalizeCanon('declaration', 'emit');
+        if (profile.emit) return finalizeCanon('emit', 'emit');
+        if (profile.responseStartsAnswer) return finalizeCanon('declaration', 'emit');
+        return finalizeCanon('emit', 'emit');
+    }
+
+    function setLogoSphereCanon(canonName, register) {
+        var sphere3d = window._p3LogoSphere3D;
+        if (!sphere3d || typeof sphere3d.setSpeechCanon !== 'function') return;
+        try { sphere3d.setSpeechCanon(canonName, register); } catch (err) {}
+    }
+
+    function clearLogoSphereCanon() {
+        var sphere3d = window._p3LogoSphere3D;
+        if (!sphere3d || typeof sphere3d.clearSpeechCanon !== 'function') return;
+        try { sphere3d.clearSpeechCanon(); } catch (err) {}
+    }
+
+    function emitSpeechCanon(canonName, register) {
+        if (!canonName) return false;
+        var canonMeta = window.InryokuCanonMeta || null;
+        if ((!register || register === 'special') && canonMeta && typeof canonMeta.getRegisterClass === 'function') {
+            register = canonMeta.getRegisterClass(canonName, register);
+        }
+        if (window._inryokuSpeech && typeof window._inryokuSpeech.speakCanon === 'function') {
+            try {
+                return window._inryokuSpeech.speakCanon(canonName, register) !== false;
+            } catch (err) {}
+        }
+        setLogoSphereCanon(canonName, register);
+        return true;
+    }
+
+    function setChatAwaitingState() {
+        setLogoSphereCanon('self_question', 'hover');
+    }
+
+    function clearChatAwaitingState() {
+        clearLogoSphereCanon();
+    }
+
+    function fetchAIResponse(userText, callback, sessionId) {
+        if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
         chatHistory.push({ role: 'user', content: userText }); saveChatHistory();
+        setChatAwaitingState();
+        abortChatFetch();
+        chatFetchController = typeof AbortController !== 'undefined' ? new AbortController() : null;
         fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: chatFetchController ? chatFetchController.signal : undefined,
             body: JSON.stringify({
                 message: userText,
                 history: chatHistory.slice(-10) // 直近10メッセージのみ送信
@@ -4371,18 +5813,27 @@ void main() {
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
+            if (chatFetchController && typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
             var response = data.response || '……';
+            chatFetchController = null;
+            clearChatAwaitingState();
+            if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
             chatHistory.push({ role: 'assistant', content: response }); saveChatHistory();
             callback(response);
         })
-        .catch(function() {
+        .catch(function(err) {
+            if (err && err.name === 'AbortError') return;
             var fallback = '波が揺れた。もう一度、話しかけて';
+            chatFetchController = null;
+            clearChatAwaitingState();
+            if (typeof sessionId === 'number' && !isChatSessionActive(sessionId)) return;
             chatHistory.push({ role: 'assistant', content: fallback }); saveChatHistory();
             callback(fallback);
         });
     }
 
     function sendChatMsg() {
+        var sessionId = chatSessionId;
         // telepathy / sculpt / quantum
         if (chatMode === 'telepathy' || chatMode === 'sculpt' || chatMode === 'quantum') {
             var input = document.getElementById('chat-tp-input');
@@ -4396,8 +5847,10 @@ void main() {
             appearFn(txt, 'tp-user', function() {
                 // AI応答を取得して表示
                 fetchAIResponse(txt, function(response) {
-                    setTimeout(function() { appearFn(response, 'tp-ai'); }, 400);
-                });
+                    if (!isChatSessionActive(sessionId)) return;
+                    emitSpeechCanon(inferSpeechCanon(txt, response), 'chat');
+                    scheduleChatTimeout(function() { appearFn(response, 'tp-ai'); }, 400, sessionId);
+                }, sessionId);
             });
             return;
         }
@@ -4428,16 +5881,18 @@ void main() {
 
         // AI応答を取得 → 二進数粒子演出 → テキスト表示
         fetchAIResponse(txt, function(response) {
+            if (!isChatSessionActive(sessionId)) return;
             aDiv.remove();
             // 宇宙変更のフィードバックがあれば応答に追加
             var fullResponse = universeFeedback
                 ? response + '\n\n' + universeFeedback
                 : response;
+            emitSpeechCanon(inferSpeechCanon(txt, response), 'chat');
             // 粒子が円環を形成してから「読み取り」としてテキスト表示
             speakBinary(fullResponse, function() {
-                typeMsg(fullResponse);
-            });
-        });
+                typeMsg(fullResponse, null, sessionId);
+            }, sessionId);
+        }, sessionId);
     }
 
     // ── グリッチエフェクト ──
@@ -4723,6 +6178,492 @@ void main() {
 }
 
 
+// ═══ 2026-04-30: Canvas2D 星空版（旧 antigravity evolution_fixed.js 準拠） ═══
+// initParticleUniverse の代替。WebGL版を保持したまま、こちらを呼び出すことで切替。
+function initParticleUniverseCanvas2D() {
+    if (window.__p3Canvas2DUniverse && typeof window.__p3Canvas2DUniverse.destroy === 'function') {
+        try { window.__p3Canvas2DUniverse.destroy(); } catch (_) {}
+    }
+
+    document.querySelectorAll('body > canvas:not(#p6-canvas)').forEach(c => c.remove());
+    const existing = document.getElementById('p6-canvas');
+    if (existing) existing.remove();
+
+    const cv = document.createElement('canvas');
+    cv.id = 'p6-canvas';
+    cv.style.cssText =
+        'position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;' +
+        'pointer-events:none;display:block;opacity:1;';
+    document.body.insertBefore(cv, document.body.firstChild);
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const ctx = cv.getContext('2d', { alpha: true, desynchronized: true });
+    let W = 0, H = 0, lastNow = 0, rafId = 0, running = false;
+    let mx = 0, my = 0;
+    let activeMeteor = null;
+    let nextMeteorAt = 16 + Math.random() * 8;
+    let nextFlashAt = 5;
+    let flashGroupId = null;
+    let flashStartAt = -100;
+
+    const COLS = ['#FF0000', '#00FF00', '#0000FF', '#00FFFF', '#FF00FF', '#FFFF00'];
+    const COLS_RGB = [[255,0,0],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[255,255,0]];
+    const isMobile = window.innerWidth < 768;
+    const N = isMobile ? 3200 : 6400;
+    const CN = isMobile ? 42 : 80;
+    const FADE_TOTAL = 5.0;
+    const DEPTH_MIN = 180;
+    const DEPTH_MAX = 1850;
+    const FOV = 560 * dpr;
+
+    function applyCanvasMetrics() {
+        cv.width = Math.floor((window.innerWidth || 1280) * dpr);
+        cv.height = Math.floor((window.innerHeight || 720) * dpr);
+        W = cv.width;
+        H = cv.height;
+        mx = W * 0.5;
+        my = H * 0.5;
+        ctx.setTransform(1, 0, 0, 1, 0.5, 0.5);
+    }
+    applyCanvasMetrics();
+
+    function pickColor(index) {
+        const ci = typeof index === 'number' ? index % COLS.length : Math.floor(Math.random() * COLS.length);
+        return { col: COLS[ci], rgb: COLS_RGB[ci], ci };
+    }
+
+    function sampleParticleSize() {
+        const roll = Math.random();
+        if (roll < 0.80) return (0.3 + Math.random() * 0.7) * dpr;
+        if (roll < 0.98) return (1.0 + Math.random() * 1.5) * dpr;
+        return (2.5 + Math.random() * 2.5) * dpr;
+    }
+
+    function sampleTwinkleBand() {
+        const roll = Math.random();
+        if (roll < 0.34) return { speed: 1.8 + Math.random() * 1.1, amp: 0.20 };
+        if (roll < 0.68) return { speed: 0.9 + Math.random() * 0.55, amp: 0.14 };
+        return { speed: 0.35 + Math.random() * 0.25, amp: 0.10 };
+    }
+
+    const pts = Array.from({ length: N }, (_, i) => {
+        const picked = pickColor(i);
+        const band = sampleTwinkleBand();
+        return {
+            bx: (Math.random() - 0.5) * W * 1.9,
+            by: (Math.random() - 0.5) * H * 1.9,
+            z: DEPTH_MIN + Math.random() * (DEPTH_MAX - DEPTH_MIN),
+            vz: 52 + Math.random() * 96,
+            swayX: 18 + Math.random() * 48,
+            swayY: 18 + Math.random() * 48,
+            phX: Math.random() * Math.PI * 2,
+            phY: Math.random() * Math.PI * 2,
+            col: picked.col,
+            rgb: picked.rgb,
+            sz: sampleParticleSize(),
+            tw: Math.random() * Math.PI * 2,
+            tspd: band.speed,
+            tamp: band.amp,
+            birth: Math.random() * 3.0
+        };
+    });
+
+    function makeRandomStars(count) {
+        return Array.from({ length: count }, () => {
+            const picked = pickColor();
+            const band = sampleTwinkleBand();
+            return {
+                x: Math.random() * W,
+                y: Math.random() * H,
+                col: picked.col,
+                rgb: picked.rgb,
+                sz: (1.1 + Math.random() * 1.2) * dpr,
+                tw: Math.random() * Math.PI * 2,
+                tspd: 0.22 + Math.random() * 0.42,
+                tamp: 0.18 + Math.random() * 0.10,
+                links: [],
+                group: null,
+                birth: 0
+            };
+        });
+    }
+
+    function buildNamedConstellation(groupId, cx, cy, scale, points, links) {
+        return points.map((pt, idx) => {
+            const picked = pickColor((groupId * 2 + idx) % COLS.length);
+            return {
+                x: cx + pt[0] * scale,
+                y: cy + pt[1] * scale,
+                col: picked.col,
+                rgb: picked.rgb,
+                sz: (1.5 + Math.random() * 1.0) * dpr,
+                tw: Math.random() * Math.PI * 2,
+                tspd: 0.20 + idx * 0.02,
+                tamp: 0.16,
+                links: links.filter(pair => pair[0] === idx).map(pair => pair[1]),
+                group: groupId,
+                named: true,
+                birth: 0
+            };
+        });
+    }
+
+    function buildConstellations() {
+        const named = [];
+        const scaleA = Math.min(W, H) * 0.12;
+        const scaleB = Math.min(W, H) * 0.10;
+        const scaleC = Math.min(W, H) * 0.11;
+
+        named.push(...buildNamedConstellation(
+            0,
+            W * 0.24,
+            H * 0.30,
+            scaleA,
+            [[-0.7, 0.2], [0.0, -0.6], [0.7, 0.25]],
+            [[0, 1], [1, 2], [2, 0]]
+        ));
+        named.push(...buildNamedConstellation(
+            1,
+            W * 0.76,
+            H * 0.26,
+            scaleB,
+            [[-1.1, -0.1], [-0.65, -0.22], [-0.25, -0.08], [0.15, 0.10], [0.55, 0.22], [0.95, 0.34], [1.28, 0.56]],
+            [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+        ));
+        named.push(...buildNamedConstellation(
+            2,
+            W * 0.54,
+            H * 0.70,
+            scaleC,
+            [[0, -1.05], [0, -0.38], [0, 0.30], [0, 0.98], [-0.62, -0.06], [0.62, -0.06]],
+            [[0, 1], [1, 2], [2, 3], [4, 2], [2, 5]]
+        ));
+
+        const rest = Math.max(0, CN - named.length);
+        const randoms = makeRandomStars(rest);
+        const all = randoms.concat(named);
+        const maxLink = Math.min(W, H) * 0.28;
+        for (let i = 0; i < randoms.length; i++) {
+            const s = randoms[i];
+            const cand = [];
+            for (let j = 0; j < randoms.length; j++) {
+                if (j === i) continue;
+                const o = randoms[j];
+                const d = Math.hypot(s.x - o.x, s.y - o.y);
+                if (d < maxLink) cand.push({ j, d });
+            }
+            cand.sort((a, b) => a.d - b.d);
+            s.links = cand.slice(0, 2).map(c => c.j);
+        }
+
+        all.sort((a, b) => a.y - b.y || a.x - b.x);
+        all.forEach((s, i) => { s.birth = 1.0 + i * 0.15; });
+        return all;
+    }
+
+    let cstars = buildConstellations();
+    let namedGroups = [...new Set(cstars.filter(s => s.group !== null).map(s => s.group))];
+
+    function haloGradient(x, y, radius, rgb, innerAlpha, outerAlpha) {
+        const rg = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        rg.addColorStop(0.0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${innerAlpha})`);
+        rg.addColorStop(0.3, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${innerAlpha * 0.45})`);
+        rg.addColorStop(0.7, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${outerAlpha})`);
+        rg.addColorStop(1.0, 'rgba(0,0,0,0)');
+        return rg;
+    }
+
+    function drawLensFlare(x, y, len, alpha, rgb) {
+        ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+        ctx.lineWidth = Math.max(0.6 * dpr, 0.8);
+        ctx.beginPath();
+        ctx.moveTo(x - len, y);
+        ctx.lineTo(x + len, y);
+        ctx.moveTo(x, y - len);
+        ctx.lineTo(x, y + len);
+        ctx.stroke();
+    }
+
+    function resetMeteor(elapsed) {
+        const side = Math.floor(Math.random() * 4);
+        const picked = pickColor();
+        let x, y, vx, vy;
+        const speed = 1500 * dpr;
+        if (side === 0) { x = -120 * dpr; y = Math.random() * H * 0.55; vx = speed * 0.85; vy = speed * 0.35; }
+        else if (side === 1) { x = W + 120 * dpr; y = Math.random() * H * 0.45; vx = -speed * 0.82; vy = speed * 0.28; }
+        else if (side === 2) { x = Math.random() * W; y = -120 * dpr; vx = speed * 0.42; vy = speed * 0.92; }
+        else { x = Math.random() * W; y = H + 120 * dpr; vx = speed * 0.48; vy = -speed * 0.96; }
+        activeMeteor = {
+            x, y, vx, vy,
+            col: picked.col,
+            rgb: picked.rgb,
+            life: 0,
+            maxLife: 1.2,
+            tail: 200 * dpr
+        };
+        nextMeteorAt = elapsed + 15 + Math.random() * 10;
+    }
+
+    function pointerMove(e) {
+        if (e.touches && e.touches[0]) {
+            mx = e.touches[0].clientX * dpr;
+            my = e.touches[0].clientY * dpr;
+        } else {
+            mx = e.clientX * dpr;
+            my = e.clientY * dpr;
+        }
+    }
+
+    function onResize() {
+        const oldW = W || 1;
+        const oldH = H || 1;
+        applyCanvasMetrics();
+        const sx = W / oldW;
+        const sy = H / oldH;
+        pts.forEach(p => {
+            p.bx *= sx;
+            p.by *= sy;
+        });
+        cstars.forEach(s => {
+            s.x *= sx;
+            s.y *= sy;
+        });
+    }
+
+    function onVisibility() {
+        if (document.hidden) {
+            running = false;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = 0;
+        } else if (!running) {
+            running = true;
+            lastNow = performance.now();
+            rafId = requestAnimationFrame(draw);
+        }
+    }
+
+    function destroy() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        document.removeEventListener('mousemove', pointerMove);
+        document.removeEventListener('touchmove', pointerMove, { passive: true });
+        window.removeEventListener('resize', onResize);
+        document.removeEventListener('visibilitychange', onVisibility);
+        if (cv && cv.isConnected) cv.remove();
+        if (window.__p3Canvas2DUniverse && window.__p3Canvas2DUniverse.canvas === cv) {
+            delete window.__p3Canvas2DUniverse;
+        }
+    }
+
+    document.addEventListener('mousemove', pointerMove);
+    document.addEventListener('touchmove', pointerMove, { passive: true });
+    window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    function draw(nowMs) {
+        if (!running || !cv.isConnected) {
+            if (!cv.isConnected) destroy();
+            return;
+        }
+
+        const now = nowMs || performance.now();
+        const dt = lastNow ? Math.min(0.033, Math.max(0.001, (now - lastNow) / 1000)) : 0.016;
+        lastNow = now;
+        const elapsed = now / 1000 - startT;
+        const fadeIn = Math.min(1, elapsed / FADE_TOTAL);
+        const breath = 0.85 + 0.15 * Math.sin(elapsed * 0.4 * Math.PI * 2);
+        const swirlX = Math.cos(elapsed * (Math.PI * 2 / 15)) * 10 * dpr;
+        const swirlY = Math.sin(elapsed * (Math.PI * 2 / 15)) * 10 * dpr;
+        const parallaxX = ((mx / Math.max(W, 1)) - 0.5) * 40 * dpr;
+        const parallaxY = ((my / Math.max(H, 1)) - 0.5) * 40 * dpr;
+        const windPhase = elapsed % 30;
+        const windActive = windPhase < 5;
+        const windKick = windActive ? Math.sin((windPhase / 5) * Math.PI) * 18 * dpr : 0;
+
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0.5, 0.5);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-1, -1, W + 2, H + 2);
+        ctx.globalCompositeOperation = 'lighter';
+
+        for (let i = 0; i < pts.length; i++) {
+            const p = pts[i];
+            p.z -= p.vz * dt;
+            if (p.z < DEPTH_MIN) p.z = DEPTH_MAX;
+
+            const bornFade = Math.min(1, Math.max(0, (elapsed - p.birth) / 1.8));
+            if (bornFade <= 0) continue;
+
+            const sc = FOV / p.z;
+            const tw = 1 + Math.sin(elapsed * p.tspd + p.tw) * p.tamp;
+            const depthNorm = 1 - (p.z - DEPTH_MIN) / (DEPTH_MAX - DEPTH_MIN);
+            const driftX = Math.sin(elapsed * 0.18 + p.phX) * p.swayX;
+            const driftY = Math.cos(elapsed * 0.16 + p.phY) * p.swayY;
+            const px = p.bx + driftX + swirlX + windKick + parallaxX * (0.28 + depthNorm * 0.72);
+            const py = p.by + driftY + swirlY + parallaxY * (0.28 + depthNorm * 0.72);
+            const sx = W * 0.5 + px * sc;
+            const sy = H * 0.5 + py * sc;
+            if (sx < -32 || sx > W + 32 || sy < -32 || sy > H + 32) continue;
+
+            const size = Math.min(6.5 * dpr, Math.max(0.24 * dpr, p.sz * sc * 1.18));
+            const alpha = Math.min(1, (0.16 + depthNorm * 0.84) * bornFade * breath * tw);
+
+            if (size >= 0.55 * dpr) {
+                const tightR = size * 1.8;
+                ctx.fillStyle = haloGradient(sx, sy, tightR, p.rgb, 0.24 * alpha, 0.05 * alpha);
+                ctx.beginPath();
+                ctx.arc(sx, sy, tightR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (size >= 1.1 * dpr) {
+                const softR = size * 3.4;
+                ctx.fillStyle = haloGradient(sx, sy, softR, p.rgb, 0.06 * alpha, 0.02 * alpha);
+                ctx.beginPath();
+                ctx.arc(sx, sy, softR, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (size <= 0.75 * dpr) {
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.col;
+                ctx.fillRect(sx, sy, Math.max(1, size), Math.max(1, size));
+                ctx.globalAlpha = 1;
+            } else {
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.col;
+                ctx.beginPath();
+                ctx.arc(sx, sy, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+
+            if (size >= 3.0 * dpr) {
+                drawLensFlare(sx, sy, size * 7.0, 0.10 * alpha, p.rgb);
+            }
+        }
+
+        const flashProgress = Math.max(0, Math.min(1, (elapsed - flashStartAt) / 1.0));
+        const flashBoost = flashProgress > 0 && flashProgress < 1 ? 1 + Math.sin(flashProgress * Math.PI) * 2.0 : 1;
+
+        ctx.lineCap = 'round';
+        for (let i = 0; i < cstars.length; i++) {
+            const s = cstars[i];
+            const sFade = Math.min(1, Math.max(0, (elapsed - s.birth) / 0.9));
+            if (sFade <= 0) continue;
+            const sTw = 1 + Math.sin(elapsed * s.tspd + s.tw) * s.tamp;
+            const groupBoost = s.group !== null && s.group === flashGroupId ? flashBoost : 1;
+
+            for (const j of s.links) {
+                const o = cstars[j];
+                const linkStart = Math.max(s.birth, o.birth);
+                const lineProg = Math.min(1, Math.max(0, (elapsed - linkStart) / 0.8));
+                if (lineProg <= 0) continue;
+                const ex = s.x + (o.x - s.x) * lineProg;
+                const ey = s.y + (o.y - s.y) * lineProg;
+                const lineAlpha = (s.named || o.named ? 0.12 : 0.07) * sFade * sTw * groupBoost;
+                const grad = ctx.createLinearGradient(s.x, s.y, ex, ey);
+                grad.addColorStop(0, `rgba(${s.rgb[0]},${s.rgb[1]},${s.rgb[2]},${lineAlpha})`);
+                grad.addColorStop(1, `rgba(${o.rgb[0]},${o.rgb[1]},${o.rgb[2]},${lineAlpha})`);
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = (s.named || o.named ? 1.0 : 0.6) * dpr;
+                ctx.beginPath();
+                ctx.moveTo(s.x, s.y);
+                ctx.lineTo(ex, ey);
+                ctx.stroke();
+            }
+        }
+
+        for (let i = 0; i < cstars.length; i++) {
+            const s = cstars[i];
+            const sFade = Math.min(1, Math.max(0, (elapsed - s.birth) / 0.9));
+            if (sFade <= 0) continue;
+            const sTw = 1 + Math.sin(elapsed * s.tspd + s.tw) * s.tamp;
+            const groupBoost = s.group !== null && s.group === flashGroupId ? flashBoost : 1;
+            const size = s.sz * (0.92 + sTw * 0.20) * groupBoost;
+            const alpha = 0.82 * sFade * breath;
+
+            const tightR = size * 2.4;
+            ctx.fillStyle = haloGradient(s.x, s.y, tightR, s.rgb, 0.18 * alpha, 0.05 * alpha);
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, tightR, 0, Math.PI * 2);
+            ctx.fill();
+
+            const softR = size * 4.8;
+            ctx.fillStyle = haloGradient(s.x, s.y, softR, s.rgb, 0.05 * alpha, 0.02 * alpha);
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, softR, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalAlpha = Math.min(1, alpha);
+            ctx.fillStyle = s.col;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        if (!activeMeteor && elapsed >= nextMeteorAt) {
+            resetMeteor(elapsed);
+        }
+        if (activeMeteor) {
+            activeMeteor.life += dt;
+            activeMeteor.x += activeMeteor.vx * dt;
+            activeMeteor.y += activeMeteor.vy * dt;
+            const meteorFade = Math.max(0, 1 - activeMeteor.life / activeMeteor.maxLife);
+            const tailX = activeMeteor.x - activeMeteor.vx * 0.10;
+            const tailY = activeMeteor.y - activeMeteor.vy * 0.10;
+            const grad = ctx.createLinearGradient(activeMeteor.x, activeMeteor.y, tailX, tailY);
+            grad.addColorStop(0, `rgba(${activeMeteor.rgb[0]},${activeMeteor.rgb[1]},${activeMeteor.rgb[2]},${0.85 * meteorFade})`);
+            grad.addColorStop(0.6, `rgba(${activeMeteor.rgb[0]},${activeMeteor.rgb[1]},${activeMeteor.rgb[2]},${0.22 * meteorFade})`);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 2.2 * dpr;
+            ctx.beginPath();
+            ctx.moveTo(activeMeteor.x, activeMeteor.y);
+            ctx.lineTo(tailX, tailY);
+            ctx.stroke();
+
+            ctx.fillStyle = haloGradient(activeMeteor.x, activeMeteor.y, 18 * dpr, activeMeteor.rgb, 0.32 * meteorFade, 0.08 * meteorFade);
+            ctx.beginPath();
+            ctx.arc(activeMeteor.x, activeMeteor.y, 18 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalAlpha = meteorFade;
+            ctx.fillStyle = activeMeteor.col;
+            ctx.beginPath();
+            ctx.arc(activeMeteor.x, activeMeteor.y, 2.4 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            if (
+                activeMeteor.life >= activeMeteor.maxLife ||
+                activeMeteor.x < -activeMeteor.tail || activeMeteor.x > W + activeMeteor.tail ||
+                activeMeteor.y < -activeMeteor.tail || activeMeteor.y > H + activeMeteor.tail
+            ) {
+                activeMeteor = null;
+            }
+        }
+
+        if (elapsed >= nextFlashAt && namedGroups.length) {
+            flashGroupId = namedGroups[Math.floor(Math.random() * namedGroups.length)];
+            flashStartAt = elapsed;
+            nextFlashAt = elapsed + 5;
+        }
+
+        ctx.restore();
+        rafId = requestAnimationFrame(draw);
+    }
+
+    const startT = performance.now() / 1000;
+    lastNow = performance.now();
+    running = true;
+    window.__p3Canvas2DUniverse = { destroy, canvas: cv };
+    rafId = requestAnimationFrame(draw);
+    console.log('[P3] Canvas2D particle universe started (N=' + N + ', constellations=' + CN + ')');
+}
+
 // initParticleUniverseCanvas() — Canvas 2D使用のため削除 (inryokü技術制約違反)
 
 
@@ -4758,6 +6699,10 @@ function showCartDrawer() {
                 </div>
             </div>`;
         }).join('');
+        var allCheckoutReady = items.every(function(item) {
+            var product = PRODUCTS.find(function(p) { return p.id === item.id; });
+            return product && getCheckoutStatus(product, item.size).available;
+        });
 
         return `
             <div class="cart-drawer-header">
@@ -4770,8 +6715,8 @@ function showCartDrawer() {
                     <span>TOTAL</span>
                     <span>¥${CART.total().toLocaleString()}</span>
                 </div>
-                <button class="cart-checkout-btn" id="cd-checkout">CHECKOUT</button>
-                <div class="cart-stripe-note">Secure Checkout</div>
+                <button class="cart-checkout-btn${allCheckoutReady ? '' : ' is-pending'}" id="cd-checkout"${allCheckoutReady ? '' : ' disabled aria-disabled="true"'}>${allCheckoutReady ? 'CHECKOUT' : 'チェックアウト準備中'}</button>
+                <div class="cart-stripe-note">${allCheckoutReady ? 'Secure Checkout · Stripe 経由' : 'チェックアウト準備中。最終確定後に決済が有効になります。'}</div>
             </div>`;
     }
 
@@ -4800,7 +6745,19 @@ function showCartDrawer() {
 
             // Shopify Storefront API でカート作成 → チェックアウトURLへリダイレクト
             // CART.itemsにshopifyVariantIdがない場合はフォールバック
+            var allCheckoutReady = CART.items.every(function(item) {
+                var product = PRODUCTS.find(function(p) { return p.id === item.id; });
+                return product && getCheckoutStatus(product, item.size).available;
+            });
             var hasShopify = CART.items.some(function(item) { return !!item.shopifyVariantId; });
+
+            if (!allCheckoutReady) {
+                alert('この商品はチェックアウト準備中です。今しばらくお待ちください。');
+                btn.textContent = 'チェックアウト準備中';
+                btn.classList.add('is-pending');
+                btn.disabled = true;
+                return;
+            }
 
             if (hasShopify && SHOPIFY_CONFIG.storeDomain && SHOPIFY_CONFIG.storefrontToken) {
                 shopifyCheckout(CART.items)
@@ -4819,20 +6776,34 @@ function showCartDrawer() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ items: CART.items })
                 })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.url) {
-                        window.location.href = data.url;
+                .then(function(r) {
+                    // 2026-05-09 EC launch: 503 (Shopify env 未設定) 等を本文と共に握る
+                    return r.json().then(function(data) {
+                        return { ok: r.ok, status: r.status, data: data };
+                    }).catch(function() {
+                        return { ok: r.ok, status: r.status, data: { error: 'サーバー応答を解析できませんでした (' + r.status + ')' } };
+                    });
+                })
+                .then(function(result) {
+                    if (result.ok && result.data && result.data.url) {
+                        window.location.href = result.data.url;
                     } else {
-                        alert(data.error || 'Checkout not ready yet');
+                        var msg = (result.data && result.data.error) || 'チェックアウトはまだ準備中です。';
+                        if (result.status === 503) {
+                            msg = 'チェックアウト準備中: 決済プロバイダの設定が完了していません。'
+                                + ' お手数ですが暫くしてから再度お試しください。';
+                        }
+                        alert(msg);
                         btn.textContent = 'CHECKOUT';
                         btn.disabled = false;
+                        btn.classList.remove('is-pending');
                     }
                 })
                 .catch(function(err) {
-                    alert('Checkout error: ' + err.message);
+                    alert('チェックアウトエラー: ' + (err && err.message ? err.message : 'ネットワークに接続できません'));
                     btn.textContent = 'CHECKOUT';
                     btn.disabled = false;
+                    btn.classList.remove('is-pending');
                 });
             }
         }
@@ -4847,6 +6818,8 @@ function showCartDrawer() {
 function showProductModal(idx) {
     const p = PRODUCTS[idx];
     if (!p) return;
+    const modalCheckoutReady = isProductPurchasable(p);
+    const initialSize = getDefaultPurchasableSize(p);
     const m = document.createElement('div');
     m.className = 'product-modal';
     m.setAttribute('role', 'dialog');
@@ -4868,11 +6841,15 @@ function showProductModal(idx) {
                     <div class="size-selector">
                         <div class="size-label">SIZE</div>
                         <div class="size-options">
-                            ${p.sizes.map((s, i) => `<button class="size-btn${i === 1 ? ' selected' : ''}" data-size="${s}">${s}</button>`).join('')}
+                            ${p.sizes.map((s) => {
+                                var enabled = hasMappedVariant(p, s);
+                                var selected = enabled && s === initialSize;
+                                return `<button class="size-btn${selected ? ' selected' : ''}" data-size="${s}"${enabled ? '' : ' disabled'}>${s}</button>`;
+                            }).join('')}
                         </div>
                     </div>
-                    <button class="add-to-cart-btn" id="pm-cart">
-                        <span class="cart-btn-text">ADD TO CART</span>
+                    <button class="add-to-cart-btn${modalCheckoutReady ? '' : ' disabled is-pending'}" id="pm-cart"${modalCheckoutReady ? '' : ' disabled aria-disabled="true"'}>
+                        <span class="cart-btn-text">${modalCheckoutReady ? 'ADD TO CART' : 'チェックアウト準備中'}</span>
                         <span class="cart-btn-price">${p.price}</span>
                     </button>
                     <div class="product-shipping-info">
@@ -4891,15 +6868,16 @@ function showProductModal(idx) {
                         </table>
                         <div class="size-guide-note">※ cm表記 · 個体差±2cm</div>
                     </div>
-                    <div class="stripe-badge">Secure Checkout</div>
+                    <div class="stripe-badge">${modalCheckoutReady ? 'Secure Checkout · Stripe' : 'チェックアウト準備中'}</div>
                 </div>
             </div>
         </div>`;
     document.body.appendChild(m);
 
     // サイズ選択
-    let selectedSize = p.sizes.length > 1 ? p.sizes[1] : p.sizes[0];
+    let selectedSize = initialSize;
     m.querySelectorAll('.size-btn').forEach(btn => {
+        if (btn.disabled) return;
         btn.addEventListener('click', () => {
             m.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
@@ -4907,30 +6885,94 @@ function showProductModal(idx) {
         });
     });
 
-    // カートボタン → カートに追加 + トースト通知
+    // 2026-05-21 P3 段階1.7: モーダルの ADD TO CART にも三層アニメ統合
+    //   司さん「カート入れた時のアニメーションない」発覚: ユーザは modal の pm-cart を押していた
+    //   カードの addToCartFromCard と同じ三層構造をここにも適用
     document.getElementById('pm-cart').addEventListener('click', () => {
+        var demoMode = /[?&]demo=1/.test(location.search);
+        var checkoutStatus = getCheckoutStatus(p, selectedSize);
+        if (!checkoutStatus.available && !demoMode) {
+            showCartToast(p.name + ' は ' + checkoutStatus.message);
+            return;
+        }
         var vid = (p.shopifyVariants && p.shopifyVariants[selectedSize]) || '';
         CART.add(p.id, selectedSize, p.priceNum, p.name, vid);
-        // Show toast notification
-        const toast = document.createElement('div');
-        toast.className = 'cart-toast';
-        toast.textContent = `${p.name} (${selectedSize}) をカートに追加しました`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 10);
-        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
+        if (demoMode && !checkoutStatus.available) {
+            showCartToast('[DEMO] ' + p.name + ' (' + selectedSize + ') アニメ確認モード');
+        } else {
+            showCartToast(`${p.name} (${selectedSize}) をカートに追加しました`);
+        }
+
+        var cartEl = document.getElementById('cart-icon');
+        var pmBtn  = document.getElementById('pm-cart');
+        var hasGsap = typeof window.gsap !== 'undefined';
+
+        if (!hasGsap || !cartEl || !pmBtn) {
+            // フォールバック: 旧 spawnBigBang のみ
+            if (pmBtn) {
+                var cr = pmBtn.getBoundingClientRect();
+                spawnBigBang(cr.left + cr.width / 2, cr.top + cr.height / 2, 12);
+            }
+            return;
+        }
+
+        // 第3層: ghost flight (modal の商品画像 or pm-cart ボタン位置から)
+        var modalImg = m.querySelector('.product-modal-image img, .product-modal img') || pmBtn;
+        var srcRect = modalImg.getBoundingClientRect();
+        var dstRect = cartEl.getBoundingClientRect();
+        var ghost = modalImg.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.style.cssText =
+            'position:fixed;' +
+            'left:' + srcRect.left + 'px;top:' + srcRect.top + 'px;' +
+            'width:' + srcRect.width + 'px;height:' + srcRect.height + 'px;' +
+            'margin:0;padding:0;pointer-events:none;z-index:2147482000;' +
+            'transition:none;will-change:transform,opacity;' +
+            'border-radius:12px;overflow:hidden;' +
+            'box-shadow:0 0 24px rgba(255,255,255,.45),0 0 48px rgba(255,80,200,.25);';
+        document.body.appendChild(ghost);
+        var dx = (dstRect.left + dstRect.width  / 2) - (srcRect.left + srcRect.width  / 2);
+        var dy = (dstRect.top  + dstRect.height / 2) - (srcRect.top  + srcRect.height / 2);
+
+        var tl = window.gsap.timeline({
+            onComplete: function() {
+                try { ghost.remove(); } catch (e) {}
+                spawnBigBang(dstRect.left + dstRect.width / 2, dstRect.top + dstRect.height / 2, 14);
+            }
+        });
+        tl.to(ghost, {
+            x: dx, y: dy, scale: 0.18, rotation: 24, opacity: 0.85,
+            duration: 0.62, ease: 'power3.in'
+        }, 0);
+        tl.to(ghost, { opacity: 0, duration: 0.12, ease: 'power1.in' }, 0.5);
+
+        // 第1+2層: ロゴ球 u_clickT pulse
+        try {
+            var logoRef = window._p3LogoSphere3D;
+            if (logoRef && logoRef.uniforms && logoRef.uniforms.u_clickT) {
+                tl.to(logoRef.uniforms.u_clickT, {
+                    value: 1, duration: 0.18, ease: 'expo.out', yoyo: true, repeat: 1
+                }, 0);
+            }
+        } catch (e) {}
+
+        // Badge punch
+        var badge = document.getElementById('cart-badge') || cartEl.querySelector('.cart-badge');
+        if (badge) {
+            tl.fromTo(badge,
+                { scale: 1.0 },
+                { scale: 1.55, duration: 0.16, ease: 'back.out(3)', yoyo: true, repeat: 1 },
+                0.46);
+        }
+
+        // pm-cart ボタン feedback
+        tl.to(pmBtn, { scale: 0.94, duration: 0.10, ease: 'power2.out', yoyo: true, repeat: 1 }, 0);
     });
 
     // サイズガイド展開
     document.getElementById('sg-toggle').addEventListener('click', function() {
         var table = document.getElementById('sg-table');
         table.style.display = table.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // カート追加時ビッグバン
-    var pmCartBtn = document.getElementById('pm-cart');
-    pmCartBtn.addEventListener('click', function() {
-        var cr = pmCartBtn.getBoundingClientRect();
-        spawnBigBang(cr.left + cr.width / 2, cr.top + cr.height / 2, 12);
     });
 
     // 閉じる（modal-closing クラスで退場アニメーション → 300ms後にDOM除去）

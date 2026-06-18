@@ -1,0 +1,94 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "tmp/**",
+      "**/*.min.js",
+      "vendor/**",
+      "tests/visual/baselines/**",
+      "tests/e2e/snapshots/**",
+      "tests/**",
+      "p0_code_for_claude.js",
+      "p1_code_for_claude.js",
+      "p2_code_for_claude.js",
+      "p3_code_for_claude.js",
+      "p1_stage1_taichi.js",
+      "p1_stage6_eye.js",
+      "p1_stage7_cross.js",
+      "p3_audio_test.html",
+      "p3_effects_test.html",
+      "p1_upgrade_preview.html",
+      "p2_upgrade_preview.html",
+      "p3_proto.js",
+      "p3_unified_boot.js",
+      "behaviors/**",
+      "logo-*.js",
+      "phase-*.js",
+      "scripts/**",
+      "tools/**",
+      "webgpu/**",
+      "extensions/**",
+      "i18n*.json",
+      "phase-transitions/**",
+      "docs/**"
+    ]
+  },
+  "organizeImports": { "enabled": false },
+  "formatter": {
+    "enabled": false,
+    "indentStyle": "space",
+    "indentWidth": 4,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "es5" }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "suspicious": {
+        "noDoubleEquals": "warn",
+        "noDuplicateObjectKeys": "error",
+        "noDuplicateParameters": "error",
+        "noExplicitAny": "off",
+        "noConsoleLog": "off",
+        "noAssignInExpressions": "off",
+        "noShadowRestrictedNames": "error"
+      },
+      "correctness": {
+        "noConstAssign": "error",
+        "noInnerDeclarations": "off",
+        "noUnreachable": "warn",
+        "noUnusedVariables": "off",
+        "noUndeclaredVariables": "off",
+        "useIsNan": "error"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "noUselessSwitchCase": "off",
+        "noUselessTypeConstraint": "off",
+        "useArrowFunction": "off"
+      },
+      "style": {
+        "noVar": "off",
+        "useTemplate": "off",
+        "useConst": "off",
+        "useImportType": "off",
+        "noUnusedTemplateLiteral": "off"
+      },
+      "performance": {
+        "noDelete": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      }
+    }
+  }
+}

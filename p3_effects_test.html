@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — P3 効果層の試験</title>
+<link rel="stylesheet" href="cosmos-effects.css" />
+<link rel="stylesheet" href="cosmos-a11y.css" />
+<style>
+  :root { color-scheme: dark; --ink:#f0f0f6; --dim:#9a9aaa; --line:#2a2a32; --accent:#a78bfa; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: #030305; color: var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    overflow: hidden;
+    cursor: none;
+  }
+  canvas { display: block; position: fixed; inset: 0; }
+
+  .corner {
+    position: fixed; z-index: 10;
+    font-size: 10px; letter-spacing: 0.32em; color: var(--dim);
+    text-transform: uppercase; padding: 16px 20px; pointer-events: none;
+  }
+  .tl { top: 0; left: 0; }
+  .tr { top: 0; right: 0; text-align: right; }
+  .bl { bottom: 0; left: 0; }
+  .corner b {
+    color: var(--ink); font-weight: 300; letter-spacing: 0.42em;
+    display: block; margin-bottom: 4px; font-size: 11px;
+  }
+
+  #cfxTitle {
+    position: fixed; left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    z-index: 5; text-align: center;
+    mix-blend-mode: screen; pointer-events: none;
+  }
+  #cfxTitle .l1 {
+    font-size: clamp(64px, 12vw, 200px);
+    letter-spacing: 0.24em; font-weight: 100;
+    color: #f8f8fc; opacity: 0.97;
+    text-shadow: 0 0 40px rgba(167,139,250,0.25);
+  }
+  #cfxTitle .l2 {
+    font-size: 10px; letter-spacing: 0.6em;
+    color: #9090a0; margin-top: 8px;
+  }
+
+  #scene {
+    position: fixed; bottom: 26px; left: 50%;
+    transform: translateX(-50%); z-index: 20;
+    display: flex; gap: 3px; padding: 5px;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: rgba(8,8,12,0.78);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+  #scene button {
+    appearance: none; border: 0; background: transparent;
+    color: #9a9aa6; cursor: none;
+    padding: 8px 16px; border-radius: 999px;
+    font: inherit; font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: all 0.3s cubic-bezier(.2,.7,.2,1);
+  }
+  #scene button.on {
+    background: #1c1c26; color: var(--ink);
+    box-shadow: inset 0 0 0 1px #3a3a44, 0 0 24px rgba(167,139,250,0.18);
+  }
+  #scene button:hover { color: var(--ink); }
+
+  #hud {
+    position: fixed; top: 16px; right: 16px; z-index: 15;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px;
+    background: rgba(8,8,12,0.6); backdrop-filter: blur(10px);
+    font-size: 9px; letter-spacing: 0.18em; line-height: 1.8;
+    color: #8a8a96; text-transform: uppercase; min-width: 200px;
+  }
+  #hud .row { display: flex; justify-content: space-between; gap: 18px; }
+  #hud .row span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<a class="cosmos-skip-link" href="#main" data-i18n="cosmos.skip.link">本文へ移動</a>
+
+<canvas id="cfx" class="cfx-canvas" aria-hidden="true"></canvas>
+<div id="cfxCursor" aria-hidden="true"></div>
+
+<main id="main" tabindex="-1" aria-label="P3 効果層の試験 / P3 effects test scene">
+  <h1 class="sr-only">inryokü P3 効果層の試験</h1>
+</main>
+
+<div class="corner tl" aria-hidden="true"><b>INRYOKÜ</b>P3 · 効果層</div>
+<div class="corner tr"><b>2026</b>WEBGL · ESM</div>
+<div class="corner bl"><b>効果層</b>星雲 / 星 / 橋 / ロゴ</div>
+
+<div id="hud" role="status" aria-live="polite" aria-label="観測と性能のHUD / scene and performance HUD">
+  <div class="row"><span data-i18n="cosmos.hud.scene">場面</span><span id="hScene">呼吸</span></div>
+  <div class="row"><span data-i18n="cosmos.hud.tier">階</span><span id="hTier">auto</span></div>
+  <div class="row"><span data-i18n="cosmos.hud.fps">fps</span><span id="hFps">--</span></div>
+  <div class="row"><span data-i18n="cosmos.hud.reduce">静音</span><span id="hReduce">無</span></div>
+</div>
+
+<div id="cfxTitle">
+  <div class="l1">inryokü</div>
+  <div class="l2" data-i18n="p3.title.effects">P3 · 効果層 · 2026</div>
+</div>
+
+<div id="scene" role="tablist" aria-label="場面の選び / scene selector">
+  <button type="button" data-b="breathing" data-hot class="on" aria-label="場面：呼吸 / scene: breathing" data-i18n="cosmos.scene.breathing">呼吸</button>
+  <button type="button" data-b="hover" data-hot aria-label="場面：発見 / scene: discovery" data-i18n="cosmos.scene.discovery">発見</button>
+  <button type="button" data-b="ring" data-hot aria-label="場面：発話 / scene: speaking" data-i18n="cosmos.scene.speaking">発話</button>
+  <button type="button" data-b="glyph" data-hot aria-label="場面：文字 / scene: glyph" data-i18n="cosmos.scene.glyph">文字</button>
+  <button type="button" data-b="torus" data-hot aria-label="場面：虹環 / scene: rainbow" data-i18n="cosmos.scene.rainbow">虹環</button>
+  <button type="button" data-b="yinyang" data-hot aria-label="場面：陰陽 / scene: yin-yang" data-i18n="cosmos.scene.yinyang" lang="ja">陰陽</button>
+  <button type="button" data-b="storm" data-hot aria-label="場面：嵐 / scene: storm" data-i18n="cosmos.scene.storm">嵐</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { createEffectsLayer } from './cosmos-effects.js';
+import { createPostFX } from './cosmos-postfx.js';
+import { applyA11y } from './cosmos-a11y.js';
+
+const a11y = applyA11y({});
+
+const W = () => innerWidth, H = () => innerHeight;
+const canvas = document.getElementById('cfx');
+const renderer = new THREE.WebGLRenderer({
+  canvas, antialias: false, alpha: true, powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W(), H());
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x030305, 0.010);
+const camera = new THREE.PerspectiveCamera(50, W() / H(), 0.1, 600);
+camera.position.set(0, 0, 72);
+
+// device-tier heuristic
+const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const tier =
+  /iPhone|iPad|Android/.test(navigator.userAgent) && innerWidth < 900 ? 'low' : 'auto';
+
+const effects = createEffectsLayer(renderer, scene, camera, { tier, reduceMotion: reduce });
+const post = createPostFX(renderer, scene, camera, { reduceMotion: reduce });
+
+document.getElementById('hTier').textContent = tier;
+document.getElementById('hReduce').textContent = reduce ? '在' : '無';
+
+// scene switch
+function setScene(name) {
+  effects.setActiveScene(name);
+  document.querySelectorAll('#scene button').forEach((b) =>
+    b.classList.toggle('on', b.dataset.b === name)
+  );
+  document.body.classList.remove('cfx-scene-glyph', 'cfx-scene-speaking');
+  if (name === 'glyph') document.body.classList.add('cfx-scene-glyph');
+  if (name === 'ring') document.body.classList.add('cfx-scene-speaking');
+  // Localised display for the HUD scene field.
+  const SCENE_JA = {
+    breathing: '呼吸', hover: '発見', ring: '発話', glyph: '文字',
+    torus: '虹環', yinyang: '陰陽', storm: '嵐'
+  };
+  document.getElementById('hScene').textContent = SCENE_JA[name] || name;
+  a11y.announce(`場面が ${SCENE_JA[name] || name} に変わりました / scene changed to ${name}`, 'polite');
+  const palette = {
+    breathing: '#a78bfa', hover: '#22d3ee', ring: '#f472b6',
+    glyph: '#c8c8d0', torus: '#a3e635', yinyang: '#f59e0b', storm: '#fb7185'
+  };
+  effects.fireBurst(palette[name] || '#a78bfa');
+}
+document.getElementById('scene').addEventListener('click', (e) => {
+  const b = e.target?.dataset?.b;
+  if (b) setScene(b);
+});
+
+// cursor + mouse NDC (passed to nebula)
+const cursorEl = document.getElementById('cfxCursor');
+const ctx = { mouseNDC: new THREE.Vector2(), mx: 0, my: 0 };
+addEventListener('mousemove', (e) => {
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top = e.clientY + 'px';
+  ctx.mouseNDC.set((e.clientX / W() - 0.5) * 0.5, -(e.clientY / H() - 0.5) * 0.5);
+  ctx.mx = (e.clientX / W() - 0.5) * 30;
+  ctx.my = -(e.clientY / H() - 0.5) * 20;
+});
+document.addEventListener('mouseover', (e) => {
+  if (e.target.closest('[data-hot]')) cursorEl.classList.add('hot');
+});
+document.addEventListener('mouseout', (e) => {
+  if (e.target.closest('[data-hot]')) cursorEl.classList.remove('hot');
+});
+
+addEventListener('resize', () => {
+  camera.aspect = W() / H();
+  camera.updateProjectionMatrix();
+  renderer.setSize(W(), H());
+  post.setSize(W(), H());
+});
+
+// main loop
+const clock = new THREE.Clock();
+const hFps = document.getElementById('hFps');
+let fpsT = 0, fpsN = 0;
+
+function tick() {
+  const t = clock.getElapsedTime();
+
+  // 1 frame order:
+  // nebula → stars → constellations → bridges → particles (n/a here) → logo → rings → composer
+  effects.update(t, ctx);
+
+  // camera orbit (mirror of preview) — vestibular safety:
+  // reduce-motion locks the camera to neutral
+  if (a11y.reduceMotion) {
+    camera.position.set(0, 0, 72);
+  } else {
+    camera.position.x = Math.sin(t * 0.06) * 9;
+    camera.position.y = Math.cos(t * 0.04) * 5;
+    camera.position.z = 72 + Math.sin(t * 0.03) * 3;
+  }
+  camera.lookAt(0, 0, 0);
+
+  post.render();
+
+  fpsN++;
+  if (t - fpsT > 0.5) {
+    hFps.textContent = Math.round(fpsN / (t - fpsT));
+    fpsT = t; fpsN = 0;
+  }
+  requestAnimationFrame(tick);
+}
+tick();
+
+// auto-cycle if idle
+let lastInteract = performance.now();
+['mousemove', 'click', 'keydown', 'touchstart'].forEach((ev) =>
+  addEventListener(ev, () => (lastInteract = performance.now()))
+);
+const cycle = ['breathing', 'hover', 'ring', 'torus', 'yinyang', 'storm', 'glyph'];
+let cIdx = 0;
+setInterval(() => {
+  if (performance.now() - lastInteract > 14000) {
+    cIdx = (cIdx + 1) % cycle.length;
+    setScene(cycle[cIdx]);
+  }
+}, 7000);
+</script>
+</body>
+</html>

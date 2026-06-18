@@ -15,6 +15,15 @@
     'use strict';
     if (typeof window === 'undefined') return;
 
+    // 2026-05-21 段階21: v2 rebuild が active なら旧 stage1 は完全 bow out
+    //   ?v2=1 アクセス時に p1_v2_sphere.js が起動、旧 mesh / 旧 timeline 停止
+    try {
+        if (/[\?&]v2=1/.test(location.search) || window.P1_V2_ACTIVE === true) {
+            console.info('[p1_stage1_taichi] bow out (P1 v2 active)');
+            return;
+        }
+    } catch (e) {}
+
     // 2026-05-18 P1 Stage 13: clean reset — one linear cinematic timeline post-50%
     //   When P1_STAGE13_RESET is true, all chaos overlays (tunnel/quantum/reality
     //   frame/glitch/warp) are no-oped and a single unified timeline runs.
@@ -23,21 +32,6 @@
         ? window.P1_STAGE13_RESET : true;
     window.inryokuP1 = window.inryokuP1 || {};
     window.inryokuP1.stage13Reset = window.P1_STAGE13_RESET;
-    // 2026-05-19 段階19.3 重大バグ修正:
-    // legacy の setupP1ExtensionAPI が `if (window.inryokuP1) return;` で早期 return するため、
-    // ここで stage1 が window.inryokuP1 を作ると registerStage1Handler / _invokeStage1 が作られない。
-    // 結果: 50%トリガー発火しても球が初期化されず、画面が空。これを防ぐため API スタブを先置きする。
-    if (!window.inryokuP1.registerStage1Handler) {
-        window.inryokuP1._handler = null;
-        window.inryokuP1.registerStage1Handler = function(fn) {
-            if (typeof fn === 'function') window.inryokuP1._handler = fn;
-        };
-        window.inryokuP1._invokeStage1 = function(detail) {
-            if (window.inryokuP1._handler) {
-                try { window.inryokuP1._handler(detail); } catch(e) { console.warn('[P1 ext] handler error', e); }
-            }
-        };
-    }
 
     // prefers-reduced-motion 検出
     const REDUCE_MOTION = (typeof window.matchMedia === 'function')
@@ -225,6 +219,7 @@
         precision highp float;
         varying vec3 vNormal;
         varying vec3 vPosition;
+        varying vec2 vUv;
         varying vec3 vWorldPos;
         varying vec3 vWorldNormal;
         uniform vec3 uCameraPos;
@@ -246,12 +241,11 @@
         uniform float uTunnelPhase; // tunnel 中の球の表情変化 (0..1)
         uniform float uWhitePhase;  // white world での tint (0..1)
         uniform float uEyePhase;    // eye phase 中の瞳孔風 (0..1)
+        uniform float uEyeOpen;     // 0=closed eye, 1=open eye
         uniform float uCrossPhase;  // cross phase の中心グロー (0..1)
         // 2026-05-18 Stage 13: 球そのものが白光へ変容するブレンド係数
         uniform float uWhiteBirth;  // 0=RGBCMY 球 / 1=純白光球
         uniform float uPremonitionAlpha; // 2026-05-18 段階15: 0-2s premonition core alpha (Codex P0-1)
-        // 2026-05-19 段階19.8: P3 コアルック収束 (uReveal=1 近傍だけ Newton ring + fresnel)
-        uniform float uP3Mix; // 0=既存 / 1=P3 ルック完全収束
 
         vec3 hsv2rgb(vec3 c) {
             vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
@@ -259,9 +253,10 @@
             return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
         }
 
-        // 2026-05-19 段階19.8: P3 コア球と同一の 6色スペクトル (R→Y→G→C→B→M→R)
-        vec3 spectrumP3(float t) {
-            vec3 c = vec3(0.0);
+        // 2026-05-21 段階20.7: P3 風 6色スペクトル (R→Y→G→C→B→M→R cycle)
+        // OKLCH 移行と整合する shader-side rainbow generator
+        vec3 spectrum_p3(float t) {
+            vec3 c;
             float tt = fract(t) * 6.0;
             if (tt < 1.0)      c = mix(vec3(1.0,0.0,0.0), vec3(1.0,1.0,0.0), tt);
             else if (tt < 2.0) c = mix(vec3(1.0,1.0,0.0), vec3(0.0,1.0,0.0), tt - 1.0);
@@ -309,20 +304,30 @@
 
         void main() {
             // ── reveal から派生する段階マスク ──
-            // 2026-05-20 段階19.13 司さんフィードバック「陰陽消えるのやめて」
-            //   greyMix を 0.35 で頭打ち → 陰陽が完全に灰色化しない
-            //   surfaceOpen を 0.45 で頭打ち → RGBCMY が陰陽を完全置換しない
-            float greyMix     = smoothstep(0.00, 0.48, uReveal) * 0.35;
-            float colorBirth  = smoothstep(0.38, 0.92, uReveal);
-            float surfaceOpen = smoothstep(0.58, 1.00, uReveal) * 0.45;
-            float coreRemain  = 0.18 * smoothstep(0.70, 1.00, uReveal);
+            // 50→75% は陰陽を読ませる。グレー化が早すぎると「色がない球」に見える。
+            // 急に別球へ切り替わらないよう、グレー化と色の発生を広い範囲で重ねる。
+            float greyMix     = smoothstep(0.18, 0.62, uReveal);
+            float colorBirth  = smoothstep(0.42, 0.92, uReveal);
+            float surfaceOpen = smoothstep(0.54, 1.00, uReveal);
+            float coreRemain  = 0.14 * smoothstep(0.72, 1.00, uReveal);
 
-            // ── Taichi → Grey ベース (Grey に完全には移行しない) ──
+            // ── Taichi → Grey ベース ──
             vec3 p = normalize(vPosition);
             float angle = atan(p.y, p.x);
-            float s = sin(angle + sin(p.y * 3.8 + uTime * 0.4) * 0.32 + p.z * 0.7);
-            float yin = smoothstep(-0.06, 0.06, s);
-            vec3 taichi = mix(vec3(0.0), vec3(1.0), yin);
+            // 正面から常に陰陽として読める S 字分割。
+            // 3D座標ベースは回転角で平均化しやすいため、UV基準で輪郭を固定する。
+            vec2 tuv = vUv * 2.0 - 1.0;
+            // 球UVは縫い目で太極図が崩れるため、球の正面投影座標を主座標にする。
+            vec2 faceUv = p.xy * 1.18;
+            // 太極図として読めるよう、中心線は半分割ではなく大きな S カーブにする。
+            float s = faceUv.x + sin(faceUv.y * 3.14159265) * 0.52 + sin(faceUv.y * 6.2831853 + uTime * 0.05) * 0.035;
+            float yin = smoothstep(-0.045, 0.045, s);
+            // 黒背景でも黒側が沈み切らないよう、黒を少し浮かせる。
+            vec3 taichi = mix(vec3(0.050), vec3(0.985), yin);
+            // 小さな白黒球は「中に別物がある」ように見えるため、P1では出さない。
+            // 球としての丸み。UV記号に見えないよう、中心明度とリム陰影を与える。
+            float taichiRound = 0.74 + 0.26 * pow(max(p.z * 0.5 + 0.5, 0.0), 0.7);
+            taichi *= taichiRound;
             vec3 grey   = vec3(0.50);
             vec3 base   = mix(taichi, grey, greyMix);
 
@@ -374,6 +379,17 @@
             vec3 col = mix(base, rgbcmy, surfaceMask);
             col += innerGlow;
 
+            // ── 2026-05-21 段階20.8: 陰陽境界から虹「滲む」(blend, not add)
+            //   司さん「ダメダメ」フィードバック→ additive を mix() に書き換え強度 50% へ
+            //   彩度落として既存色と馴染ませる、narrow → wide なソフト falloff
+            float leakFront    = colorBirth * 0.32;
+            float leakBand     = smoothstep(leakFront + 0.08, max(leakFront - 0.04, 0.001), abs(s));
+            float leakActive   = colorBirth * (1.0 - smoothstep(0.78, 1.0, colorBirth));
+            vec3  leakSpectrumRaw = spectrum_p3(uTime * 0.16 + p.y * 2.0 + p.x * 0.5);
+            // 既存 base 色とブレンド (50% 既存 + 50% 彩度 60% の虹)
+            vec3  leakBlended  = mix(col, mix(col, leakSpectrumRaw, 0.6), 0.5);
+            col = mix(col, leakBlended, leakBand * leakActive * 0.55);
+
             // ── 中心深層の太極核 (記憶。表面残像ではない) ──
             float coreMask = pow(facing, 5.0) * coreRemain;
             vec3 hiddenTaichi = mix(vec3(0.03), vec3(0.88), yin);
@@ -385,28 +401,6 @@
             vec3 prism = hsv2rgb(vec3(fract(newton * 0.16 + angle * 0.08), 0.82, 1.0));
             col += prism * fresnel * (0.10 + colorBirth * 0.34);
             col += prism * boundary * (1.0 - greyMix) * 0.05;
-
-            // ── 2026-05-19 段階19.9: P3 コア収束 (ortho-safe rim + Newton ring r²) ──
-            //   Codex 再診断: 旧版は ortho では fresnel≈0 → 灰色化、かつ prism に上書きされていた
-            //   新版: rimO = length(nrm.xy) で球全面に虹分布、prism の後に注入
-            if (uP3Mix > 0.001) {
-                vec3 nrm = normalize(vWorldNormal);
-                float rimO  = length(nrm.xy);
-                float fres2 = pow(rimO, 1.4);
-                float theta = acos(clamp(nrm.y, -1.0, 1.0));
-                float phi   = atan(nrm.z, nrm.x);
-                // Newton ring (r² ∝ nλR — 物理式) 全面 banding
-                float r2   = rimO * rimO;
-                float ring = sin(r2 * 38.0 - uTime * 1.8) * 0.5 + 0.5;
-                vec3 iri  = spectrumP3(ring + phi * 0.10 + uTime * 0.08);
-                vec3 iri2 = spectrumP3(ring * 1.3 - theta * 0.25 + uTime * 0.12 + 0.33);
-                vec3 iridescent = mix(iri, iri2, 0.5);
-                // base saturation 高 (0.55→1.0) + rim 強発光 + 干渉縞全面
-                vec3 p3col = mix(vec3(0.55), iridescent, 0.55 + fres2 * 0.45);
-                p3col += iridescent * pow(rimO, 3.0) * 1.4;
-                p3col += iridescent * (ring - 0.5) * 0.35;
-                col = mix(col, p3col, uP3Mix);
-            }
 
             // ── 2026-05-18 段階4: 6色 CRACK radiation (big bang) ──
             //   uBang 0→1 で球表面が方向別 (RGBCMY 6セクター) に裂け、
@@ -446,15 +440,83 @@
             // 中心の発光感 (内側から外側へ放射)
             float coreGlow = (1.0 - smoothstep(0.0, 0.7, length(vPosition))) * wb * 0.8;
             lightCol += whiteCore * coreGlow;
+            // 2026-05-21 段階20.8: 白光球の虹 halo — 極めて控えめに馴染ませる
+            //   司さん「ダメダメ」フィードバック→ additive 0.32 を mix 0.14 に下方修正
+            //   さらに「完全白塗り (wb=1)」時のみ rim だけ薄く色が漏れる設計
+            vec3  whiteRainbow = mix(vec3(1.0), spectrum_p3(uTime * 0.04 + angle * 0.10), 0.55);
+            float whiteHalo    = pow(wbFres, 3.0) * wb;
+            lightCol = mix(lightCol, whiteRainbow, whiteHalo * 0.14);
             col = lightCol;
             // 旧: float wbFres = pow(1.0 - facing, 1.8);
             // 旧: lightCol = mix(lightCol, whiteCore, wb * 0.7);
             // 旧: lightCol += whiteCore * wbFres * wb * 2.5;
-            // eye depth (中心に小さな暗い瞳孔)
-            float eyeDepth = uEyePhase * pow(facing, 5.0);
-            col = mix(col, vec3(0.02), eyeDepth * 0.18);
-            // cross center glow (RGBCMY 白光)
-            col += vec3(1.0) * uCrossPhase * fresnel * 1.2;
+            // ── 同一球体内の eye: 白光の奥に閉じた瞳 → 開眼 ──
+            float crossP0 = clamp(uCrossPhase, 0.0, 1.0);
+            float eyePhase = clamp(uEyePhase, 0.0, 1.0) * (1.0 - smoothstep(0.02, 0.34, crossP0));
+            float eyeOpen  = clamp(uEyeOpen, 0.0, 1.0);
+            vec2 eyeUv = faceUv;
+            eyeUv.y *= 1.16;
+            float eyeRegion = 1.0 - smoothstep(0.82, 1.10, length(eyeUv * vec2(0.86, 1.14)));
+            float lidCurve = eyeUv.y + 0.060 * sin(eyeUv.x * 3.14159265);
+            float openEase = smoothstep(0.08, 1.0, eyeOpen);
+            float aperture = mix(0.024, 0.46, openEase);
+            float closedLine = exp(-lidCurve * lidCurve * 1250.0) * (1.0 - openEase);
+            float apertureMask = 1.0 - smoothstep(aperture, aperture + 0.060, abs(lidCurve));
+            float lidShadow = smoothstep(aperture + 0.02, aperture + 0.13, abs(lidCurve));
+            float eyeR = length(eyeUv * vec2(1.00, 0.88));
+            float sclera = (1.0 - smoothstep(0.55, 0.75, eyeR)) * apertureMask;
+            float iris = (1.0 - smoothstep(0.32, 0.48, eyeR)) * smoothstep(0.07, 0.16, eyeR) * apertureMask;
+            float irisRing = exp(-abs(eyeR - 0.36) * 32.0) * apertureMask;
+            float pupil = (1.0 - smoothstep(0.105, 0.185, eyeR)) * apertureMask;
+            // 2026-05-21 段階20.8: 開眼演出を控えめに馴染ませる (司さん「ダメダメ」反映)
+            float catchLight  = 1.0 - smoothstep(0.035, 0.078, length(eyeUv - vec2(-0.13, 0.14)));
+            // 第二光源は廃止 (二点だと「目」感薄れる)
+            // iris hue は controlled drift (狭く)
+            float irisHueT = 0.52 + 0.10 * sin(uTime * 0.5);
+            vec3 irisCol = mix(vec3(0.00, 0.16, 0.34), vec3(0.0, 0.85, 1.0), irisHueT);
+            // Newton リング干渉は彩度 50% に落として mix ブレンド
+            float irisRing2 = sin(eyeR * 90.0 - uTime * 1.4) * 0.5 + 0.5;
+            vec3  irisInterference = mix(irisCol, spectrum_p3(eyeR * 1.4 + uTime * 0.08), 0.5);
+            col = mix(col, vec3(0.0), closedLine * eyeRegion * eyePhase * 1.0);
+            col = mix(col, vec3(0.96), sclera * eyeRegion * eyePhase * openEase * 0.42);
+            col = mix(col, irisCol, iris * eyeRegion * eyePhase * openEase * 1.0);
+            col = mix(col, irisInterference, iris * eyeRegion * eyePhase * openEase * irisRing2 * 0.18);
+            col = mix(col, vec3(0.0, 0.85, 1.0), irisRing * eyeRegion * eyePhase * openEase * 0.32);
+            col = mix(col, vec3(0.0), pupil * eyeRegion * eyePhase * openEase * 1.0);
+            col = mix(col, vec3(1.0), catchLight * eyeRegion * eyePhase * openEase * 0.78);
+            col *= mix(1.0, 0.88 + 0.12 * lidShadow, eyePhase * openEase);
+
+            // ── 同一球体内の cross: 縦=純白(RGB精神) / 横=純黒(CMY物質) ──
+            float crossP = crossP0;
+            float crossGrow = smoothstep(0.0, 0.66, crossP);
+            vec2 crossUv = faceUv;
+            float spanV = 1.0 - smoothstep(0.12 + crossGrow * 0.80, 1.06, abs(crossUv.y));
+            float spanH = 1.0 - smoothstep(0.12 + crossGrow * 0.80, 1.06, abs(crossUv.x));
+            float vBeam = exp(-crossUv.x * crossUv.x * 72.0) * spanV;
+            float hBeam = exp(-crossUv.y * crossUv.y * 72.0) * spanH;
+            float vHalo = exp(-crossUv.x * crossUv.x * 18.0) * spanV;
+            float hHalo = exp(-crossUv.y * crossUv.y * 18.0) * spanH;
+            float axisCore = exp(-dot(crossUv, crossUv) * 30.0);
+            vec3 crossBase = mix(col, vec3(0.0), hBeam * crossP * 0.96);
+            crossBase = mix(crossBase, vec3(1.0), vBeam * crossP * 0.98);
+            crossBase += vec3(1.0) * vHalo * crossP * 0.62;
+            crossBase -= vec3(0.18) * hHalo * crossP * 0.55;
+            // 2026-05-21 段階20.7: 中央コアを 2.25 → 2.7 (好評なので強化、暴発しすぎない範囲)
+            crossBase += vec3(1.0) * axisCore * crossP * 2.70;
+            // 2026-05-21 段階20.8: 軸粒子は mix ベース + 彩度 50%
+            //   司さんフィードバック「上手く馴染ませる」反映
+            float vParticle = exp(-crossUv.x * crossUv.x * 360.0)
+                           * smoothstep(0.0, 1.0, sin(crossUv.y * 16.0 - uTime * 3.0) * 0.5 + 0.5);
+            float hParticle = exp(-crossUv.y * crossUv.y * 360.0)
+                           * smoothstep(0.0, 1.0, sin(crossUv.x * 16.0 + uTime * 2.4) * 0.5 + 0.5);
+            // 彩度を落とした spectrum (mix with white で 60% 彩度)
+            vec3 vSpec = mix(vec3(1.0), spectrum_p3(uTime * 0.13 + crossUv.y * 1.0), 0.6);
+            vec3 hSpec = mix(vec3(0.0), spectrum_p3(uTime * 0.09 - crossUv.x * 0.8), 0.4);
+            // additive ではなく mix で base 色とブレンド
+            crossBase = mix(crossBase, vSpec, vParticle * crossP * 0.40 * spanV);
+            crossBase = mix(crossBase, hSpec, hParticle * crossP * 0.30 * spanH);
+            col = mix(col, crossBase, smoothstep(0.02, 0.22, crossP));
+            col += vec3(1.0) * crossP * fresnel * 1.10;
             // tunnel phase: ほのかな微震/色循環ブースト
             col += vec3(0.1, 0.1, 0.15) * uTunnelPhase * fresnel * 0.4;
 
@@ -626,7 +688,31 @@
         // 2026-05-19 段階17: concept-breaking moment (101 flash + bg ingest)
         text101Fired: false,
         bgEaten: false,
+        // 2026-05-20 段階20.6 (Codex 技術負債 #2): タイマー一括管理
+        //   dispose 時に発火する遅延コールバックが消えた DOM/state を触って例外
+        //   → state.timers Set で全 setTimeout を追跡、cleanup で一括 clear
+        timers: new Set(),
     };
+
+    /**
+     * setTimeout の管理ラッパ。state.timers Set に登録し、
+     * 自動で完了時に解除する。dispose() から clearAllTimers() で全停止可能。
+     * @param {Function} fn
+     * @param {number} ms
+     * @returns {number} timer id
+     */
+    function setT(fn, ms) {
+        const id = setTimeout(function () {
+            state.timers.delete(id);
+            try { fn(); } catch (e) {}
+        }, ms);
+        state.timers.add(id);
+        return id;
+    }
+    function clearAllTimers() {
+        state.timers.forEach(function (id) { try { clearTimeout(id); } catch (e) {} });
+        state.timers.clear();
+    }
 
     // 2026-05-17 段階3.1: モバイル検出 (FOV cap / flash skip 用)
     const IS_MOBILE = (typeof navigator !== 'undefined')
@@ -859,7 +945,7 @@
             });
             document.body.appendChild(v);
             requestAnimationFrame(function(){
-                setTimeout(function(){ try { v.style.opacity = '1'; } catch (e) {} }, 1200);
+                setT(function(){ try { v.style.opacity = '1'; } catch (e) {} }, 1200);
             });
             return v;
         } catch (e) { return null; }
@@ -1272,7 +1358,22 @@
                 '}',
                 // ── 101% breakthrough: right-edge RGBCMY color leak eruption ──
                 '#p1-lb.is-breakthrough {',
-                '  /* bar stays grey; ::after carries the only color moment */',
+                '  background: linear-gradient(90deg,',
+                '    #808080 0%,',
+                '    #ff0000 18%,',
+                '    #ffff00 32%,',
+                '    #00ff00 46%,',
+                '    #00ffff 62%,',
+                '    #0000ff 78%,',
+                '    #ff00ff 100%);',
+                '  background-size: 220% 100%;',
+                '  animation: p1BarRainbowBreach 620ms cubic-bezier(.16,1,.3,1) forwards;',
+                '  box-shadow: 0 0 12px rgba(255,255,255,.56), inset 0 1px 0 rgba(255,255,255,.7);',
+                '}',
+                '@keyframes p1BarRainbowBreach {',
+                '  0%   { background-position: 0% 0; filter: saturate(1.0) brightness(1.0); transform: scaleX(1); }',
+                '  38%  { background-position: 78% 0; filter: saturate(2.0) brightness(1.8); transform: scaleX(1.035); }',
+                '  100% { background-position: 100% 0; filter: saturate(1.45) brightness(1.25); transform: scaleX(1); }',
                 '}',
                 '#p1-lb.is-breakthrough::after {',
                 '  content: "";',
@@ -1281,7 +1382,9 @@
                 '  top: -4px;',
                 '  width: 18px;',
                 '  height: calc(100% + 8px);',
-                '  background: linear-gradient(180deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f);',
+                '  background: linear-gradient(180deg in oklch longer hue,',
+                '    oklch(65% 0.24 25), oklch(90% 0.19 95), oklch(78% 0.22 145),',
+                '    oklch(80% 0.13 200), oklch(58% 0.22 260), oklch(68% 0.27 335));',
                 '  filter: blur(2px) brightness(1.8);',
                 '  animation: p1ColorLeak 520ms ease-out forwards;',
                 '  pointer-events: none;',
@@ -1290,6 +1393,25 @@
                 '  from { opacity: 0; transform: scaleY(.4); }',
                 '  35%  { opacity: 1; transform: scaleY(1.3); }',
                 '  to   { opacity: 0; transform: translateX(34px) scaleY(.1); }',
+                '}',
+                '#p1-lpct.p1-odometer-101 {',
+                '  display: inline-block;',
+                '  color: transparent;',
+                '  -webkit-text-fill-color: transparent;',
+                '  background: linear-gradient(90deg in oklch longer hue,',
+                '    oklch(65% 0.24 25), oklch(90% 0.19 95), oklch(78% 0.22 145),',
+                '    oklch(80% 0.13 200), oklch(58% 0.22 260), oklch(68% 0.27 335));',
+                '  -webkit-background-clip: text;',
+                '  background-clip: text;',
+                '  text-shadow: 0 0 10px rgba(255,255,255,.5);',
+                '  animation: p1Odometer101 520ms steps(5,end) forwards;',
+                '}',
+                '@keyframes p1Odometer101 {',
+                '  0%   { transform: translateY(0); filter: brightness(1); }',
+                '  20%  { transform: translateY(-1px); filter: brightness(1.5); }',
+                '  40%  { transform: translateY(1px); }',
+                '  70%  { transform: translateY(-1px); filter: brightness(2); }',
+                '  100% { transform: translateY(0); filter: brightness(1.35); }',
                 '}',
                 // ── 2026-05-18 段階2.5: runner double-bump wall (override 旧 is-plateau) ──
                 '#exit-runner.is-plateau {',
@@ -1329,255 +1451,189 @@
                 '  visibility: hidden !important;',
                 '  pointer-events: none !important;',
                 '}',
-                // ── 2026-05-20 段階20: SOTA バー演出 (Codex Opus リサーチ) ──
-                //   @property + linear() で純 CSS の物理オーバーシュート
-                //   グレー → 虹 を --lb-sat で補間
-                '@property --lb-sat { syntax: "<percentage>"; inherits: false; initial-value: 0%; }',
-                '@property --lb-glow { syntax: "<number>"; inherits: false; initial-value: 0; }',
-                // 基底 (Win95 風青) + transform-origin
-                '#p1-lb {',
-                '  transform-origin: left center;',
-                '  will-change: width, transform, filter, background;',
-                '  transition: width 280ms linear(0, .35 25%, .72 55%, .94 80%, 1.0),',
-                '              transform 220ms linear(0, 1.04 60%, .985 85%, 1.01),',
-                '              --lb-sat 360ms linear(0, 1.0 80%, 1.0),',
-                '              --lb-glow 360ms linear(0, 1.0 80%, 1.0),',
-                '              filter 360ms ease-out;',
-                '}',
-                // Wall hit (100% で停止 + 圧縮振動 anticipation)
+                // ── 2026-05-18 段階15 P0-2: loading bar wall / breach states ──
                 '#p1-lb.p1-bar-wall {',
-                '  animation: p1BarWallShake 180ms linear(0, -1 25%, 1 50%, -.6 75%, 0) 1;',
-                '  filter: brightness(1.35) contrast(1.2);',
+                '  filter: brightness(1.4) contrast(1.25);',
+                '  transform: scaleX(1.015);',
                 '}',
-                '@keyframes p1BarWallShake {',
-                '  0%   { transform: translateX(0) scaleY(1); }',
-                '  20%  { transform: translateX(-.5px) scaleY(.94); }',
-                '  45%  { transform: translateX(.5px)  scaleY(1.06); }',
-                '  70%  { transform: translateX(-.3px) scaleY(.97); }',
-                '  100% { transform: translateX(0) scaleY(1); }',
-                '}',
-                // Breach (100→101): グレー → 虹 補間 + オーバーシュート + 発光
+                // 2026-05-20 段階20.4: OKLCH 虹色バー (Codex Opus 推薦)
+                //   知覚均等な色空間で補間 → 緑が眩しすぎず、青が暗すぎず、滑らか
                 '#p1-lb.p1-bar-breach {',
-                '  --lb-sat: 100%;',
-                '  --lb-glow: 1;',
-                '  background: linear-gradient(90deg,',
-                '    hsl(0   var(--lb-sat) 55%) 0%,',
-                '    hsl(45  var(--lb-sat) 58%) 15%,',
-                '    hsl(95  var(--lb-sat) 55%) 30%,',
-                '    hsl(170 var(--lb-sat) 52%) 48%,',
-                '    hsl(220 var(--lb-sat) 55%) 65%,',
-                '    hsl(285 var(--lb-sat) 55%) 82%,',
-                '    hsl(330 var(--lb-sat) 58%) 100%);',
+                '  background: linear-gradient(90deg in oklch longer hue,',
+                '    oklch(65% 0.24  25), oklch(72% 0.20  55), oklch(90% 0.19  95),',
+                '    oklch(78% 0.22 145), oklch(80% 0.13 200), oklch(58% 0.22 260),',
+                '    oklch(58% 0.24 305), oklch(68% 0.27 335));',
                 '  background-size: 200% 100%;',
                 '  animation: p1BarRainbowFlow 1.6s linear infinite;',
-                '  filter: brightness(calc(1.4 + var(--lb-glow) * .8))',
-                '          saturate(calc(1 + var(--lb-glow) * .6));',
-                '  box-shadow: 0 0 calc(var(--lb-glow) * 12px) rgba(255,255,255,.55),',
-                '              0 0 calc(var(--lb-glow) * 28px) rgba(255,80,200,.35),',
-                '              0 0 calc(var(--lb-glow) * 48px) rgba(80,180,255,.25);',
+                '  filter: brightness(1.55) saturate(1.25);',
+                '  box-shadow:',
+                '    0 0 12px oklch(98% 0 0 / .55),',
+                '    0 0 28px oklch(68% 0.27 335 / .35),',
+                '    0 0 48px oklch(58% 0.22 260 / .25);',
                 '}',
                 '@keyframes p1BarRainbowFlow {',
-                '  0%   { background-position: 0% 50%; }',
+                '  0%   { background-position:   0% 50%; }',
                 '  100% { background-position: 200% 50%; }',
                 '}',
-                // Odometer 風 「100」→「101」 一の位だけ機械式回転
-                '#p1-lpct.p1-pct-odometer {',
-                '  font-family: "MS Sans Serif", Tahoma, monospace;',
-                '  font-weight: 700;',
-                '  letter-spacing: .02em;',
-                '}',
-                '.p1-odo-wrap {',
-                '  display: inline-block; height: 1em; line-height: 1; overflow: hidden;',
-                '  vertical-align: -.05em; position: relative; width: .6em;',
-                '}',
-                '.p1-odo-roll {',
-                '  display: block;',
-                '  transform: translateY(0);',
-                '  transition: transform 380ms linear(0, 1.15 70%, .97 88%, 1.0);',
-                '}',
-                '.p1-odo-roll.is-rolled { transform: translateY(-1em); }',
-                '.p1-odo-roll > span { display: block; height: 1em; line-height: 1; }',
-                // breach 時にテキスト自体も虹色化 (background-clip)
-                '#p1-lpct.p1-pct-breach {',
-                '  background: linear-gradient(90deg,#ff5a5a,#ffb800,#fff200,#3aff8c,#3ad4ff,#9a6dff,#ff5ad4);',
-                '  background-size: 200% 100%;',
-                '  -webkit-background-clip: text;',
-                '  background-clip: text;',
-                '  color: transparent;',
-                '  -webkit-text-fill-color: transparent;',
-                '  animation: p1BarRainbowFlow 2.4s linear infinite;',
-                '  text-shadow: 0 0 6px rgba(255,255,255,.35);',
-                '}',
-                // ── 2026-05-19 段階19.7: BLACK HOLE 強化版 ──
-                // 司さんフィードバック「吸い込みありえないくらいしょぼい」
-                // → duration 1800ms→2800ms / 回転 -720→-1440 / scale .002→.0005
-                // → skewX 35→60deg / blur 8→24px / ピクセル化 + chromatic aberration
+                // ── 2026-05-18 段階15 P1-2: 強化された UI ingest (gravity crush) ──
                 '.p1-ui-shell-ingest-strong {',
                 '  transform-origin: var(--core-x) var(--core-y);',
-                '  animation: p1ShellBlackHole 2800ms cubic-bezier(.55,.0,.85,1.0) forwards;',
+                '  animation: p1CoreBlackHolePull 1900ms cubic-bezier(.025,.88,.005,1) forwards;',
                 '  will-change: transform, clip-path, filter, opacity;',
+                '  --spin: 0deg;',
                 '}',
-                // event horizon の擬似 chromatic aberration
-                '.p1-ui-shell-ingest-strong::before,',
-                '.p1-ui-shell-ingest-strong::after {',
-                '  content: ""; position: absolute; inset: 0;',
-                '  background: inherit; pointer-events: none;',
-                '  mix-blend-mode: screen;',
+                '.p1-ui-shell-ingest-strong * {',
+                '  will-change: transform, opacity, filter;',
                 '}',
-                '@keyframes p1ShellBlackHole {',
-                // 0%: 通常
-                '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1) rotate(0deg);',
-                '         clip-path: ellipse(85% 85% at 50% 50%);',
-                '         filter: blur(0) contrast(1) brightness(1) saturate(1); }',
-                // 8%: 重力波到達 - 全体が震える
-                '  8%   { opacity: 1;',
-                '         transform: translate3d(2px, -1px, 0) scale(1.02) rotate(-3deg) skewX(1deg);',
-                '         filter: blur(.3px) contrast(1.08) brightness(.98) saturate(1.05); }',
-                // 18%: 時間膨張開始
-                '  18%  { opacity: 1;',
-                '         transform: translate3d(calc(var(--pull-x) * .10), calc(var(--pull-y) * .10), 0)',
-                '                    scaleX(1.12) scaleY(.84) rotate(-58deg) skewX(4deg);',
-                '         clip-path: ellipse(82% 64% at 50% 50%);',
-                '         filter: blur(.5px) contrast(1.2) brightness(.95) saturate(1.2)',
-                '                 drop-shadow(2px 0 0 rgba(255,0,0,.5)) drop-shadow(-2px 0 0 rgba(0,200,255,.5)); }',
-                // 32%: スパゲッティ化開始 - 横に伸びて縦に薄く
-                '  32%  { opacity: .98;',
-                '         transform: translate3d(calc(var(--pull-x) * .26), calc(var(--pull-y) * .26), 0)',
-                '                    scaleX(1.42) scaleY(.42) rotate(-180deg) skewX(15deg);',
-                '         clip-path: ellipse(78% 30% at 50% 50%);',
-                '         filter: blur(.9px) contrast(1.5) brightness(.85) saturate(1.4) hue-rotate(8deg)',
-                '                 drop-shadow(4px 0 0 rgba(255,0,40,.55)) drop-shadow(-4px 0 0 rgba(0,180,255,.55)); }',
-                // 48%: 螺旋落下加速
-                '  48%  { opacity: .9;',
-                '         transform: translate3d(calc(var(--pull-x) * .48), calc(var(--pull-y) * .48), 0)',
-                '                    scaleX(1.18) scaleY(.16) rotate(-360deg) skewX(28deg);',
-                '         clip-path: ellipse(60% 14% at 50% 50%);',
-                '         filter: blur(1.5px) contrast(1.8) brightness(.7) saturate(1.6) hue-rotate(18deg)',
-                '                 drop-shadow(6px 0 0 rgba(255,0,80,.6)) drop-shadow(-6px 0 0 rgba(0,140,255,.6)); }',
-                // 62%: event horizon 近接 - 重力レンズ歪み
-                '  62%  { opacity: .8;',
-                '         transform: translate3d(calc(var(--pull-x) * .68), calc(var(--pull-y) * .68), 0)',
-                '                    scaleX(.78) scaleY(.06) rotate(-560deg) skewX(45deg);',
-                '         clip-path: ellipse(40% 6% at 50% 50%);',
-                '         filter: blur(2.5px) contrast(2.2) brightness(.55) saturate(1.4) hue-rotate(-5deg)',
-                '                 drop-shadow(8px 0 0 rgba(255,0,100,.65)) drop-shadow(-8px 0 0 rgba(0,100,255,.65)); }',
-                // 76%: spaghetti 最大 - 細く長く引き伸ばされる
-                '  76%  { opacity: .55;',
-                '         transform: translate3d(calc(var(--pull-x) * .84), calc(var(--pull-y) * .84), 0)',
-                '                    scaleX(.32) scaleY(.018) rotate(-820deg) skewX(58deg);',
-                '         clip-path: ellipse(18% 2.2% at 50% 50%);',
-                '         filter: blur(4px) contrast(2.6) brightness(.38) saturate(1.0) hue-rotate(-30deg)',
-                '                 drop-shadow(10px 0 0 rgba(255,30,140,.55)) drop-shadow(-10px 0 0 rgba(80,60,255,.55)); }',
-                // 88%: redshift / 重力赤方偏移
-                '  88%  { opacity: .25;',
-                '         transform: translate3d(calc(var(--pull-x) * .94), calc(var(--pull-y) * .94), 0)',
-                '                    scaleX(.08) scaleY(.005) rotate(-1100deg) skewX(70deg);',
-                '         clip-path: ellipse(5% .8% at 50% 50%);',
-                '         filter: blur(10px) contrast(3) brightness(.18) saturate(.7) hue-rotate(-70deg); }',
-                // 100%: singularity 消滅
-                '  100% { opacity: 0;',
-                '         transform: translate3d(var(--pull-x), var(--pull-y), 0)',
-                '                    scale(.0005) rotate(-1440deg);',
-                '         clip-path: ellipse(0.1% 0.1% at 50% 50%);',
-                '         filter: blur(24px) brightness(.01) hue-rotate(-180deg); }',
+                '.p1-ui-shell-ingest-strong .p1-gravity-part {',
+                '  animation: p1PartGravity 1100ms cubic-bezier(.04,.86,.02,1) forwards;',
+                '  animation-delay: var(--part-delay, 0ms);',
+                '  transform-origin: var(--core-x) var(--core-y);',
                 '}',
-                // 重力レンズ - 画面全体が一瞬歪む
-                '@keyframes p1GravitationalLens {',
-                '  0%   { backdrop-filter: blur(0) hue-rotate(0); }',
-                '  35%  { backdrop-filter: blur(2px) hue-rotate(10deg); }',
-                '  70%  { backdrop-filter: blur(6px) hue-rotate(-20deg); }',
-                '  100% { backdrop-filter: blur(0) hue-rotate(0); }',
-                '}',
-                '.p1-grav-lens {',
-                '  position: fixed; inset: 0; pointer-events: none;',
-                '  z-index: 2147480500;',
-                '  animation: p1GravitationalLens 2800ms ease-in-out forwards;',
-                '}',
-                // 着差円盤 (accretion disk) — 強化版 (480px / より長い / 多重リング)
-                '.p1-accretion-disk {',
+                '#p1-core-gravity-field {',
                 '  position: fixed;',
-                '  width: 480px; height: 480px;',
-                '  left: var(--disk-left); top: var(--disk-top);',
-                '  margin-left: -240px; margin-top: -240px;',
-                '  border-radius: 50%;',
-                '  background: conic-gradient(from 0deg,',
-                '    rgba(255,255,255,.0) 0%, rgba(255,80,40,.85) 6%,',
-                '    rgba(255,180,0,.95) 16%, rgba(255,255,80,1) 26%,',
-                '    rgba(80,255,160,.95) 40%, rgba(0,220,255,1) 54%,',
-                '    rgba(80,80,255,.9) 68%, rgba(255,40,200,.85) 82%,',
-                '    rgba(255,255,255,.0) 100%);',
-                '  filter: blur(18px) saturate(2.2) brightness(1.6);',
-                '  z-index: 2147481000;',
+                '  inset: 0;',
+                '  z-index: 2147481999;',
                 '  pointer-events: none;',
                 '  opacity: 0;',
-                '  animation: p1AccretionDisk 2800ms cubic-bezier(.2,.1,.7,1) forwards;',
+                '  background:',
+                '    radial-gradient(circle at var(--gx) var(--gy), rgba(255,255,255,.30) 0 1.4%, rgba(0,0,0,.92) 2.8%, rgba(255,255,255,.16) 4.2%, rgba(0,0,0,.48) 16%, rgba(0,0,0,.78) 33%, rgba(0,0,0,0) 56%),',
+                '    conic-gradient(from 18deg at var(--gx) var(--gy), rgba(255,0,0,.00), rgba(255,255,255,.07), rgba(0,0,0,0), rgba(255,255,255,.05), rgba(0,0,0,0));',
+                '  filter: blur(6px) contrast(1.55) saturate(.82);',
                 '  mix-blend-mode: screen;',
+                '  animation: p1CoreGravityField 2800ms cubic-bezier(.08,.74,.02,1) forwards;',
                 '}',
-                // 内側のホット・リング (Doppler beaming 効果)
-                '.p1-accretion-disk::before {',
-                '  content: ""; position: absolute; inset: 25%; border-radius: 50%;',
-                '  background: conic-gradient(from 90deg,',
-                '    rgba(255,255,255,1) 0%, rgba(255,255,200,.9) 20%,',
-                '    rgba(255,80,80,.7) 50%, rgba(80,80,255,.4) 80%,',
-                '    rgba(255,255,255,1) 100%);',
-                '  filter: blur(8px); opacity: .9;',
-                '  animation: p1AccretionInner 2800ms cubic-bezier(.3,.1,.7,1) forwards;',
-                '}',
-                // event horizon (中央の暗黒円)
-                '.p1-accretion-disk::after {',
-                '  content: ""; position: absolute; inset: 38%; border-radius: 50%;',
-                '  background: radial-gradient(circle, #000 60%, rgba(0,0,0,.7) 85%, transparent 100%);',
-                '  box-shadow: inset 0 0 40px rgba(255,140,0,.6);',
-                '  animation: p1EventHorizon 2800ms ease-in forwards;',
-                '}',
-                '@keyframes p1AccretionDisk {',
-                '  0%   { opacity: 0; transform: rotate(0deg) scale(.3); }',
-                '  12%  { opacity: .4; transform: rotate(160deg) scale(.7); }',
-                '  35%  { opacity: .95; transform: rotate(540deg) scale(1.1);',
-                '         filter: blur(14px) saturate(2.4) brightness(1.8); }',
-                '  62%  { opacity: 1; transform: rotate(1080deg) scale(1.35);',
-                '         filter: blur(22px) saturate(2.8) brightness(2.0); }',
-                '  82%  { opacity: .75; transform: rotate(1620deg) scale(.85);',
-                '         filter: blur(28px) saturate(2.0) brightness(1.5) hue-rotate(-30deg); }',
-                '  100% { opacity: 0; transform: rotate(2160deg) scale(.08);',
-                '         filter: blur(40px) brightness(.4) hue-rotate(-80deg); }',
-                '}',
-                '@keyframes p1AccretionInner {',
-                '  0%   { opacity: 0; transform: rotate(0deg) scale(.5); }',
-                '  40%  { opacity: 1; transform: rotate(-540deg) scale(1.0); }',
-                '  75%  { opacity: .8; transform: rotate(-1080deg) scale(.6); }',
-                '  100% { opacity: 0; transform: rotate(-1620deg) scale(.05); }',
-                '}',
-                '@keyframes p1EventHorizon {',
-                '  0%   { opacity: 0; transform: scale(.2); }',
-                '  30%  { opacity: 1; transform: scale(1); }',
-                '  80%  { opacity: 1; transform: scale(1.4); }',
-                '  100% { opacity: 0; transform: scale(2.2); }',
-                '}',
-                // ── 2026-05-19 段階19.7: 101% Newton リング漏れ (Direction C) ──
-                '.p1-newton-leak {',
+                '#p1-blackhole-ingest {',
                 '  position: fixed;',
-                '  left: var(--leak-x); top: var(--leak-y);',
-                '  width: 8px; height: 8px;',
-                '  margin-left: -4px; margin-top: -4px;',
-                '  border-radius: 50%;',
+                '  left: var(--gx);',
+                '  top: var(--gy);',
+                '  width: 430px;',
+                '  height: 430px;',
+                '  margin: -215px 0 0 -215px;',
+                '  z-index: 2147481999;',
                 '  pointer-events: none;',
-                '  z-index: 2147481200;',
-                '  background: radial-gradient(circle,',
-                '    rgba(255,255,255,1) 0%, rgba(255,255,255,.85) 8%,',
-                '    rgba(255,40,40,.9) 18%, rgba(255,180,0,.85) 28%,',
-                '    rgba(255,255,80,.8) 38%, rgba(80,255,160,.78) 50%,',
-                '    rgba(0,220,255,.78) 62%, rgba(80,80,255,.7) 75%,',
-                '    rgba(255,40,200,.6) 88%, transparent 100%);',
-                '  mix-blend-mode: screen;',
-                '  filter: blur(.5px);',
-                '  animation: p1NewtonLeak 520ms cubic-bezier(.05,.7,.1,1) forwards;',
+                '  opacity: 0;',
+                '  animation: p1BlackHoleShell 2100ms cubic-bezier(.05,.78,.02,1) forwards;',
                 '}',
-                '@keyframes p1NewtonLeak {',
-                '  0%   { transform: scale(1); opacity: 1; filter: blur(0); }',
-                '  20%  { transform: scale(8); opacity: .95; filter: blur(.5px); }',
-                '  60%  { transform: scale(36); opacity: .55; filter: blur(1.5px); }',
-                '  100% { transform: scale(80); opacity: 0; filter: blur(4px); }',
+                '#p1-blackhole-ingest .p1-bh-disk, #p1-blackhole-ingest .p1-bh-lens, #p1-blackhole-ingest .p1-bh-core, #p1-blackhole-ingest .p1-bh-tide, #p1-blackhole-ingest .p1-bh-shadow {',
+                '  position: absolute;',
+                '  inset: 50%;',
+                '  transform: translate(-50%, -50%);',
+                '  border-radius: 999px;',
+                '}',
+                '#p1-blackhole-ingest .p1-bh-shadow {',
+                '  width: 118px;',
+                '  height: 118px;',
+                '  background: radial-gradient(circle, #000 0 52%, rgba(0,0,0,.72) 62%, rgba(0,0,0,0) 78%);',
+                '  box-shadow: 0 0 34px rgba(0,0,0,.95), 0 0 96px rgba(0,0,0,.85);',
+                '  animation: p1BlackHoleShadow 2100ms cubic-bezier(.05,.78,.02,1) forwards;',
+                '}',
+                '#p1-blackhole-ingest .p1-bh-tide {',
+                '  width: 680px;',
+                '  height: 112px;',
+                '  background:',
+                '    linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.20), rgba(0,0,0,.72), rgba(255,255,255,.16), rgba(255,255,255,0)),',
+                '    repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 28px, rgba(255,255,255,.10) 29px 31px, rgba(255,255,255,0) 34px 62px);',
+                '  filter: blur(5px) contrast(1.55);',
+                '  mix-blend-mode: screen;',
+                '  animation: p1BlackHoleTide 2100ms cubic-bezier(.05,.78,.02,1) forwards;',
+                '}',
+                '#p1-blackhole-ingest .p1-bh-disk {',
+                '  width: 380px;',
+                '  height: 48px;',
+                '  background: conic-gradient(from 18deg, rgba(255,0,0,.0), rgba(255,0,0,.30), rgba(255,255,0,.28), rgba(0,255,0,.24), rgba(0,255,255,.27), rgba(0,0,255,.30), rgba(255,0,255,.31), rgba(255,0,0,.0));',
+                '  filter: blur(6px) saturate(1.05) brightness(.98) contrast(1.42);',
+                '  mix-blend-mode: screen;',
+                '  animation: p1BlackHoleDisk 2100ms cubic-bezier(.05,.78,.02,1) forwards;',
+                '}',
+                '#p1-blackhole-ingest .p1-bh-lens {',
+                '  width: 286px;',
+                '  height: 286px;',
+                '  background: radial-gradient(circle, rgba(0,0,0,1) 0 18%, rgba(255,255,255,.28) 20%, rgba(0,0,0,.42) 34%, rgba(255,255,255,.08) 50%, rgba(0,0,0,0) 74%);',
+                '  filter: blur(3px) contrast(1.65);',
+                '  animation: p1BlackHoleLens 2100ms cubic-bezier(.05,.78,.02,1) forwards;',
+                '}',
+                '#p1-blackhole-ingest .p1-bh-core {',
+                '  width: 72px;',
+                '  height: 72px;',
+                '  background: radial-gradient(circle, rgba(0,0,0,1) 0 42%, rgba(255,255,255,.36) 50%, rgba(255,255,255,0) 70%);',
+                '  filter: blur(1px) contrast(1.25);',
+                '  animation: p1BlackHoleCore 2100ms cubic-bezier(.05,.78,.02,1) forwards;',
+                '}',
+                'body.p1-core-gravity-active #win95-main {',
+                '  opacity: 0 !important;',
+                '  pointer-events: none !important;',
+                '}',
+                '@keyframes p1CoreBlackHolePull {',
+                '  0%   { opacity: 1; transform: translate3d(0,0,0) scale(1) rotate(0deg) skew(0deg,0deg);',
+                '         clip-path: polygon(0 0,100% 0,100% 100%,0 100%);',
+                '         filter: blur(0) contrast(1) brightness(1); }',
+                '  12%  { opacity: 1; transform: translate3d(calc(var(--pull-x) * .04), calc(var(--pull-y) * .04), 0) scale(.998) rotate(.12deg) skew(-.3deg,.2deg);',
+                '         clip-path: polygon(0 0,100% 0,100% 100%,0 100%);',
+                '         filter: blur(0) contrast(1.05) brightness(1.04); }',
+                '  28%  { opacity: .99; transform: translate3d(calc(var(--pull-x) * .30), calc(var(--pull-y) * .30), 0) scale(.90) rotate(-.8deg) skew(-3deg,1deg);',
+                '         clip-path: polygon(7% 10%,96% 3%,91% 91%,4% 98%);',
+                '         filter: blur(.12px) contrast(1.24) brightness(1.12); }',
+                '  48%  { opacity: .94; transform: translate3d(calc(var(--pull-x) * .66), calc(var(--pull-y) * .66), 0) scaleX(.58) scaleY(.16) rotate(4deg) skew(-14deg,0deg);',
+                '         clip-path: ellipse(58% 18% at 50% 50%);',
+                '         filter: blur(.55px) contrast(1.62) brightness(1.48) saturate(.88); }',
+                '  70%  { opacity: .58; transform: translate3d(calc(var(--pull-x) * .94), calc(var(--pull-y) * .94), 0) scaleX(.18) scaleY(.032) rotate(28deg) skew(-28deg,0deg);',
+                '         clip-path: ellipse(18% 5% at 50% 50%);',
+                '         filter: blur(1.9px) contrast(2.4) brightness(2.6) saturate(.55); }',
+                '  100% { opacity: 0; transform: translate3d(var(--pull-x), var(--pull-y), 0) scaleX(.012) scaleY(.004) rotate(112deg) skew(-38deg,0deg);',
+                '         clip-path: ellipse(2% 1% at 50% 50%);',
+                '         filter: blur(5px) brightness(4.4) saturate(.35); }',
+                '}',
+                '@keyframes p1PartGravity {',
+                '  0%   { transform: translate3d(0,0,0) scale(1); opacity: 1; filter: none; }',
+                '  24%  { transform: translate3d(calc(var(--pull-x) * .28), calc(var(--pull-y) * .28), 0) scale(.98); opacity: 1; }',
+                '  58%  { transform: translate3d(calc(var(--pull-x) * .86), calc(var(--pull-y) * .86), 0) scale(.34); opacity: .78; filter: blur(.4px) brightness(1.4); }',
+                '  100% { transform: translate3d(var(--pull-x), var(--pull-y), 0) scale(.04); opacity: 0; filter: blur(2px) brightness(3.2); }',
+                '}',
+                '@keyframes p1CoreGravityField {',
+                '  0%   { opacity: 0; transform: scale(.82); }',
+                '  18%  { opacity: .36; transform: scale(.92) rotate(0deg); }',
+                '  52%  { opacity: .66; transform: scale(1.03) rotate(2deg); }',
+                '  78%  { opacity: .40; transform: scale(1.12) rotate(-1deg); }',
+                '  100% { opacity: 0; transform: scale(1.24) rotate(0deg); }',
+                '}',
+                '@keyframes p1BlackHoleShell {',
+                '  0%   { opacity: 0; transform: scale(.72) rotate(0deg); }',
+                '  18%  { opacity: .72; transform: scale(.92) rotate(0deg); }',
+                '  58%  { opacity: .95; transform: scale(1.08) rotate(0deg); }',
+                '  100% { opacity: 0; transform: scale(.42) rotate(0deg); }',
+                '}',
+                '@keyframes p1BlackHoleDisk {',
+                '  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0deg) scaleX(.25) scaleY(.12); }',
+                '  22%  { opacity: .55; transform: translate(-50%, -50%) rotate(18deg) scaleX(.70) scaleY(.22); }',
+                '  58%  { opacity: .92; transform: translate(-50%, -50%) rotate(150deg) scaleX(1.22) scaleY(.32); }',
+                '  88%  { opacity: .55; transform: translate(-50%, -50%) rotate(285deg) scaleX(.68) scaleY(.16); }',
+                '  100% { opacity: 0; transform: translate(-50%, -50%) rotate(360deg) scaleX(.18) scaleY(.06); }',
+                '}',
+                '@keyframes p1BlackHoleTide {',
+                '  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(-8deg) scaleX(.15) scaleY(.18); }',
+                '  20%  { opacity: .38; transform: translate(-50%, -50%) rotate(-5deg) scaleX(.70) scaleY(.30); }',
+                '  54%  { opacity: .72; transform: translate(-50%, -50%) rotate(4deg) scaleX(1.06) scaleY(.42); }',
+                '  82%  { opacity: .42; transform: translate(-50%, -50%) rotate(18deg) scaleX(.55) scaleY(.16); }',
+                '  100% { opacity: 0; transform: translate(-50%, -50%) rotate(38deg) scaleX(.08) scaleY(.04); }',
+                '}',
+                '@keyframes p1BlackHoleLens {',
+                '  0%   { opacity: 0; transform: translate(-50%, -50%) scale(.40); }',
+                '  24%  { opacity: .46; transform: translate(-50%, -50%) scale(.84); }',
+                '  62%  { opacity: .75; transform: translate(-50%, -50%) scale(1.15); }',
+                '  100% { opacity: 0; transform: translate(-50%, -50%) scale(.55); }',
+                '}',
+                '@keyframes p1BlackHoleCore {',
+                '  0%   { opacity: 0; transform: translate(-50%, -50%) scale(.35); }',
+                '  34%  { opacity: .88; transform: translate(-50%, -50%) scale(.95); }',
+                '  72%  { opacity: .98; transform: translate(-50%, -50%) scale(1.18); }',
+                '  100% { opacity: 0; transform: translate(-50%, -50%) scale(.18); }',
+                '}',
+                '@keyframes p1BlackHoleShadow {',
+                '  0%   { opacity: 0; transform: translate(-50%, -50%) scale(.40); }',
+                '  24%  { opacity: .96; transform: translate(-50%, -50%) scale(.92); }',
+                '  72%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }',
+                '  100% { opacity: 0; transform: translate(-50%, -50%) scale(.34); }',
                 '}'
             ].join('\n');
             const style = document.createElement('style');
@@ -2043,7 +2099,7 @@
             try {
                 const runner = document.getElementById('exit-runner');
                 if (runner) {
-                    setTimeout(function(){
+                    setT(function(){
                         try { runner.style.visibility = 'hidden'; runner.style.opacity = '0'; } catch (e) {}
                     }, 1400);
                 }
@@ -2069,13 +2125,13 @@
                     if (!REDUCE_MOTION) {
                         pair.clone.classList.add('is-cmy-ink');
                         state.easterCmyInked = true;
-                        setTimeout(function(){
+                        setT(function(){
                             try { pair.clone.classList.remove('is-cmy-ink'); } catch (e) {}
                         }, 600);
                     }
                 } catch (e) {}
                 // ingest dur (2.4s) + 余裕 ~0.1s 後に clone / overlay を片付ける
-                setTimeout(function(){
+                setT(function(){
                     try {
                         if (state.realityFrame && state.realityFrame.clone) {
                             state.realityFrame.clone.remove();
@@ -2215,7 +2271,7 @@
             state.droneOsc = ctx.createOscillator();
             state.droneGain = ctx.createGain();
             state.droneOsc.type = 'sine';
-            state.droneOsc.frequency.value = 220; // A3
+            state.droneOsc.frequency.value = 110; // A2: 101%まで下で鳴る基音
             state.droneGain.gain.setValueAtTime(0.0001, now);
             state.droneGain.gain.exponentialRampToValueAtTime(0.10, now + 0.6);
             state.droneOsc.connect(state.droneGain).connect(state.audioMaster);
@@ -2231,7 +2287,7 @@
             state.harmGain = ctx.createGain();
             state.harmOsc.type = 'sine';
             harmOsc2.type = 'sine';
-            state.harmOsc.frequency.value = 220;      // A
+            state.harmOsc.frequency.value = 220;      // A3
             harmOsc2.frequency.value = 277.18;        // C#4
             state.harmGain.gain.setValueAtTime(0.0001, now);
             state.harmGain.gain.exponentialRampToValueAtTime(0.08, now + 1.5);
@@ -2289,7 +2345,7 @@
                     g.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
                 } catch (e) {}
             });
-            setTimeout(function(){
+            setT(function(){
                 try { if (state.droneOsc) state.droneOsc.stop(); } catch(e){}
                 try { if (state.harmOsc)  state.harmOsc.stop();  } catch(e){}
             }, durSec * 1000 + 50);
@@ -2346,12 +2402,12 @@
                 uTunnelPhase: { value: 0 },
                 uWhitePhase:  { value: 0 },
                 uEyePhase:    { value: 0 },
+                uEyeOpen:     { value: 0 },
                 uCrossPhase:  { value: 0 },
                 // 2026-05-18 Stage 13: white-birth (球そのものが白光へ変容)
                 uWhiteBirth:  { value: 0 },
                 // 2026-05-18 段階15: premonition core (0-2s) — Codex P0-1
                 uPremonitionAlpha: { value: 0.0 },
-                uP3Mix:      { value: 0.0 },
                 // 2026-05-18 段階15: gravity pulse (7.2-8.5s ingest punch) — Codex P1-2
                 uGravityPulse: { value: 0.0 },
             },
@@ -2362,9 +2418,6 @@
         state.mesh = new THREE.Mesh(state.geo, state.mat);
         state.mesh.name = 'p1Stage1TaichiSphere';
         state.mesh.position.set(0, 0, 0.7);
-        // 2026-05-19 段階19.9: DEBUG — console から uP3Mix を強制操作可能に
-        //   window.__p1mat.uniforms.uP3Mix.value = 1.0 で P3 ルック即確認
-        try { window.__p1mat = state.mat; } catch (e) {}
         state.mesh.renderOrder = 999;
         state.mesh.scale.setScalar(REDUCE_MOTION ? 1 : 0.001);
         state.scene.add(state.mesh);
@@ -2418,21 +2471,21 @@
             state.stage2Fired = true;
             state.prewarpEventFired = true;
             state.breakthroughFired = true;
-            setTimeout(function() {
+            setT(function() {
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1_prewarp', {
                         detail: { scene: state.scene, camera: state.camera, renderer: state.renderer }
                     }));
                 } catch (e) {}
             }, 80);
-            setTimeout(function() {
+            setT(function() {
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1_breakthrough', {
                         detail: { scene: state.scene, camera: state.camera, renderer: state.renderer }
                     }));
                 } catch (e) {}
             }, 140);
-            setTimeout(function() {
+            setT(function() {
                 try {
                     window.dispatchEvent(new CustomEvent('inryoku:p1stage2complete'));
                 } catch (e) {}
@@ -2468,49 +2521,17 @@
     // 2026-05-18 段階14: UI shell ingest — sphere absorbs Win95 shell at 7.2s
     //   Codex final plan: subject is sphere, UI is固定概念 → one thin DOM clone
     //   absorbed cleanly into the sphere center. Followed by scissor unlock.
-    // 2026-05-19 段階19.7: Newton リング漏れ (Codex Direction C)
-    //   バー右端の1点から同心円干渉縞 (RGBCMY) が画面へ滲み出す
-    //   「見えない波 (精神) が見える波 (光) になる瞬間」
-    //   微小な「101」テキストをリング中心に重ねる (ピクセル等倍)
+    // 2026-05-19 段階17: "101" text flash (concept-breaking moment)
     function triggerStage17TextFlash() {
+        // 2026-05-20 Codex: 中央/外部 101 は廃止。数字は loading text 自体を odometer 化する。
         try {
             if (typeof document === 'undefined') return;
-            const bar = document.getElementById('p1-lb');
-            if (!bar) return;
-            const rect = bar.getBoundingClientRect();
-            // バー右端 = 漏れの起点
-            const leakX = rect.right;
-            const leakY = rect.top + rect.height / 2;
-            // Newton リング
-            const ring = document.createElement('div');
-            ring.className = 'p1-newton-leak';
-            ring.style.setProperty('--leak-x', leakX + 'px');
-            ring.style.setProperty('--leak-y', leakY + 'px');
-            document.body.appendChild(ring);
-            // 微小 101 テキスト (リング中心、スケールしない)
-            const txt = document.createElement('div');
-            txt.textContent = '101';
-            Object.assign(txt.style, {
-                position: 'fixed',
-                left: leakX + 'px', top: leakY + 'px',
-                transform: 'translate(-50%, -50%)',
-                font: '700 10px/1 ui-monospace, monospace',
-                color: '#fff',
-                textShadow: '0 0 4px rgba(255,255,255,.9), 0 0 8px rgba(255,80,180,.7)',
-                letterSpacing: '0',
-                mixBlendMode: 'screen',
-                pointerEvents: 'none',
-                zIndex: '2147481300',
-                opacity: '0',
-                transition: 'opacity 80ms linear'
-            });
-            document.body.appendChild(txt);
-            requestAnimationFrame(function () { txt.style.opacity = '1'; });
-            setTimeout(function () { txt.style.opacity = '0'; }, 380);
-            setTimeout(function () {
-                try { ring.remove(); } catch (e) {}
-                try { txt.remove(); } catch (e) {}
-            }, 600);
+            const lpct = document.getElementById('p1-lpct');
+            if (!lpct) return;
+            lpct.classList.remove('p1-odometer-101');
+            void lpct.offsetWidth;
+            lpct.textContent = 'Loading reality... 101%';
+            lpct.classList.add('p1-odometer-101');
         } catch (e) {}
     }
 
@@ -2535,6 +2556,19 @@
                 el.id = 'shell-' + el.id;
             });
             clone.querySelectorAll('canvas').forEach(function (c) { c.remove(); });
+            [
+                '.title-bar',
+                '#shell-p1-lpct',
+                '#shell-p1-lb',
+                '#shell-exit-runner',
+                '#shell-win95-status',
+                '#shell-bar-wrap'
+            ].forEach(function(sel, i) {
+                const part = clone.querySelector(sel);
+                if (!part) return;
+                part.classList.add('p1-gravity-part');
+                part.style.setProperty('--part-delay', (i * 90) + 'ms');
+            });
             // 2026-05-18 段階15 P1-2: 強化版 ingest (shorter, gravity crush)
             //   旧: clone.classList.add('p1-ui-shell-ingest');
             clone.classList.add('p1-ui-shell-ingest-strong');
@@ -2554,29 +2588,35 @@
             clone.style.setProperty('--pull-x', (sx - rect.left - rect.width / 2) + 'px');
             clone.style.setProperty('--pull-y', (sy - rect.top - rect.height / 2) + 'px');
 
+            const well = document.createElement('div');
+            well.id = 'p1-core-gravity-field';
+            well.style.setProperty('--gx', sx + 'px');
+            well.style.setProperty('--gy', sy + 'px');
+
+            const blackhole = document.createElement('div');
+            blackhole.id = 'p1-blackhole-ingest';
+            blackhole.style.setProperty('--gx', sx + 'px');
+            blackhole.style.setProperty('--gy', sy + 'px');
+            blackhole.innerHTML = '<div class="p1-bh-tide"></div><div class="p1-bh-disk"></div><div class="p1-bh-lens"></div><div class="p1-bh-shadow"></div><div class="p1-bh-core"></div>';
+
             document.body.appendChild(clone);
+            document.body.appendChild(well);
+            document.body.appendChild(blackhole);
+            document.body.classList.add('p1-core-gravity-active');
             // 元の win95-main は非表示 (clone が吸引アニメを担う)
             win.style.opacity = '0';
-            state.stage14Clone = clone;
-
-            // 2026-05-19 段階19.7: accretion disk + gravity lens
             try {
-                const disk = document.createElement('div');
-                disk.className = 'p1-accretion-disk';
-                disk.style.setProperty('--disk-left', sx + 'px');
-                disk.style.setProperty('--disk-top', sy + 'px');
-                document.body.appendChild(disk);
-                state.stage14Disk = disk;
-                // 重力レンズ - 画面全体歪み
-                const lens = document.createElement('div');
-                lens.className = 'p1-grav-lens';
-                document.body.appendChild(lens);
-                state.stage14Lens = lens;
-                setTimeout(function () {
-                    try { if (state.stage14Disk === disk) disk.remove(); } catch (e) {}
-                    try { if (state.stage14Lens === lens) lens.remove(); } catch (e) {}
-                }, 2900);
+                const taskbar = document.getElementById('win95-start-btn') &&
+                    document.getElementById('win95-start-btn').parentElement;
+                if (taskbar) {
+                    taskbar.style.transition = 'opacity 360ms ease, transform 520ms cubic-bezier(.08,.74,.02,1), filter 520ms ease';
+                    taskbar.style.opacity = '0';
+                    taskbar.style.transform = 'translateY(10px) scale(.98)';
+                    taskbar.style.filter = 'blur(2px) brightness(1.6)';
+                    taskbar.style.pointerEvents = 'none';
+                }
             } catch (e) {}
+            state.stage14Clone = clone;
             // Priority 2: runner も球へ吸われる (既存 is-ingesting class を利用)
             try {
                 const runner = document.getElementById('exit-runner');
@@ -2586,31 +2626,39 @@
                     runner.classList.add('is-ingesting');
                 }
             } catch (e) {}
-            // 2026-05-18 段階15 P1-2: cleanup を 1350ms に短縮 (旧 1700ms)
-            setTimeout(function () {
-                try { if (state.stage14Clone === clone) clone.remove(); } catch (e) {}
-            }, 1350);
+            // 2026-05-19 Codex: gravity pull は 1.3s。残骸が残らないよう余韻後に掃除する。
+            setT(function () {
+                try {
+                    if (state.stage14Clone === clone) {
+                        clone.remove();
+                        state.stage14Clone = null;
+                    }
+                } catch (e) {}
+                try { well.remove(); } catch (e) {}
+                try { blackhole.remove(); } catch (e) {}
+            }, 2400);
         } catch (e) {}
     }
 
     // 2026-05-18 段階15: Stage 13 loading bar sync (Codex P0-2)
     //   バー (#p1-lb) とテキスト (#p1-lpct) を Stage 13 の 14s タイムラインに合わせて駆動。
     //   50→99.5 → wall(100) → breach(101)
-    // 2026-05-19 段階19: 22s timeline (option A 中速) — bar progress 再設計
-    // 0-13s: 50→99.5 (smoothstep) / 13-14s: 100 wall / 14s+: 101 breach
+    // 2026-05-21 Codex: 12段階P1に合わせたバー進行
+    // 0-4s: 50→75 (核凝結) / 4-13s: 75→99.5 (陰陽が読める→100壁手前)
+    // 13-14s: 100 wall / 14.42s+: 101 breach
     function stage13Progress(t) {
-        // 2026-05-19 段階19.6: 融合演出を見せるため bar も遅らせる
-        // 0-4s: 50% で停滞 (legacy fusion 演出中)
-        // 4-16s: 50 → 99.5 (12 秒かけて緩やかに上昇)
-        // 16-17s: 100 wall / 17-17.5s: 101 hold
-        if (t < 4.0) return 50;
-        if (t < 16.0) {
-            const p = (t - 4.0) / 12.0;
+        if (t < 4.0) {
+            const p = Math.max(0, Math.min(1, t / 4.0));
             const ease = p * p * (3 - 2 * p);
-            return 50 + ease * 49.5;
+            return 50 + ease * 25; // 50 → 75
         }
-        if (t < 17.0) return 100;
-        if (t < 17.5) return 100;
+        if (t < 13.2) {
+            const p = Math.max(0, Math.min(1, (t - 4.0) / 9.2));
+            const ease = p * p * (3 - 2 * p);
+            return 75 + ease * 24.5; // 75 → 99.5
+        }
+        if (t < 14.2) return 100;
+        if (t < 14.8) return 100; // hold during 101 flash setup
         return 101;
     }
     // 旧 stage13Progress (14s timeline) — 2026-05-19 段階19 で置換、保持コメント
@@ -2618,18 +2666,6 @@
     //     const p = Math.max(0, Math.min(1, t / 14.0));
     //     if (p < 0.72) { ... 50→99.5 ... } if (p<0.78) return 100; ... 100→101
     // }
-    // 2026-05-20 段階20: SOTA バー駆動 — odometer 風 100→101
-    function ensureOdometer(lpct) {
-        if (!lpct || lpct.querySelector('.p1-odo-wrap')) return;
-        // Loading reality... 10[X] の最後の桁を odometer 化
-        lpct.classList.add('p1-pct-odometer');
-        lpct.innerHTML =
-            'Loading reality... 10' +
-            '<span class="p1-odo-wrap">' +
-              '<span class="p1-odo-roll"><span>0</span><span>1</span></span>' +
-            '</span>' +
-            '<span class="p1-odo-pct">%</span>';
-    }
     function updateStage13Bar(t) {
         try {
             const lb = document.getElementById('p1-lb');
@@ -2637,29 +2673,23 @@
             if (!lb && !lpct) return;
             const percent = stage13Progress(t);
             const visual = Math.min(percent, 101);
-            const wall   = visual >= 99.5 && visual < 100.5;
-            const breach = visual >= 100.5;
-
             if (lb) lb.style.width = visual + '%';
-
             if (lpct) {
-                if (wall || breach) {
-                    // Odometer モード (100 / 101 の段階)
-                    ensureOdometer(lpct);
-                    const roll = lpct.querySelector('.p1-odo-roll');
-                    if (roll) roll.classList.toggle('is-rolled', breach);
-                    lpct.classList.toggle('p1-pct-breach', breach);
-                } else {
-                    // 通常進捗テキスト
-                    if (lpct.classList.contains('p1-pct-odometer')) {
-                        lpct.classList.remove('p1-pct-odometer', 'p1-pct-breach');
-                    }
+                // 2026-05-19 段階19: 22s timeline テキスト
+                if (t < 13.2) {
+                    lpct.classList.remove('p1-odometer-101');
                     lpct.textContent = 'Loading reality... ' + Math.round(visual) + '%';
+                } else if (t < 14.8) {
+                    lpct.classList.remove('p1-odometer-101');
+                    lpct.textContent = 'Loading reality... 100%';
+                } else {
+                    lpct.textContent = 'Loading reality... 101%';
                 }
             }
             if (lb) {
-                lb.classList.toggle('p1-bar-wall',   wall);
-                lb.classList.toggle('p1-bar-breach', breach);
+                lb.classList.toggle('p1-bar-wall',   visual >= 99.5 && visual < 100.5);
+                lb.classList.toggle('p1-bar-breach', visual >= 100.5);
+                lb.classList.toggle('is-breakthrough', visual >= 100.5);
             }
         } catch (e) {}
     }
@@ -2680,8 +2710,8 @@
             runner.classList.toggle('is-plateau',
                 percent >= 99.5 && percent < 100.5);
             runner.classList.toggle('is-breakthrough',
-                percent >= 100.5 && t < 14.5);
-            runner.classList.toggle('is-ingesting', t >= 17.6);
+                percent >= 100.5 && t < 14.9);
+            runner.classList.toggle('is-ingesting', t >= 14.9);
         } catch (e) {}
     }
 
@@ -2704,24 +2734,11 @@
         if (state.camera && u.uCameraPos) {
             u.uCameraPos.value.copy(state.camera.position);
         }
-        // 球はゆったり回転 (12°/s)
-        state.mesh.rotation.y = t * 0.2094;
-
-        // 2026-05-19 段階19.8: P3 コアルック収束係数を動的計算
-        //   uReveal 0.85→1.0 で立ち上がり、後段フェーズ (white/eye/cross/bang) で自動抑制
-        if (u.uP3Mix) {
-            const rv = u.uReveal.value;
-            const wb = u.uWhiteBirth ? u.uWhiteBirth.value : 0;
-            const ep = u.uEyePhase   ? u.uEyePhase.value   : 0;
-            const cp = u.uCrossPhase ? u.uCrossPhase.value : 0;
-            const bg = u.uBang       ? u.uBang.value       : 0;
-            const rampIn  = Math.max(0, Math.min(1, (rv - 0.85) / 0.15));
-            const rampSm  = rampIn * rampIn * (3 - 2 * rampIn);
-            const suppress = Math.max(wb, ep, cp);
-            const bangSup  = Math.max(0, Math.min(1, bg / 0.3));
-            // 2026-05-20 段階19.13: P3 ルックも陰陽を消さないよう上限 0.45 (旧 1.0)
-            u.uP3Mix.value = rampSm * (1 - suppress) * (1 - bangSup) * 0.45;
-        }
+        // 球は「回っている」より「同じ核が変容している」ことを優先。
+        // 連続Y回転は陰陽を横から見せてしまい、ただの白黒半球に見えるため、
+        // P1中は正面を保ったまま微細な首振りだけにする。
+        state.mesh.rotation.y = Math.sin(t * 0.28) * 0.16;
+        state.mesh.rotation.x = Math.sin(t * 0.18) * 0.05;
 
         if (!state.s13_chaosHidden) {
             state.s13_chaosHidden = true;
@@ -2732,80 +2749,161 @@
         updateStage13Bar(t);
         updateStage13Runner(t);
 
+        // 2026-05-20 段階20.2: 哲学音響 (harmonic drone)
+        //   t=0 で 110Hz root 起動 (グレー)
+        //   bar の進行と同期して倍音追加 (色が見える)
+        //   t=17.5s で bass hit + pull root (101% 突破の身体的体感)
+        try {
+            var H = window.inryokuHarmonic;
+            if (H && !state.s20_audioStarted) {
+                state.s20_audioStarted = true;
+                H.start({ fadeIn: 1.8, masterGain: 0.07 });
+            }
+            if (H && state.s20_audioStarted) {
+                // bar progress (50..101) → harmonic progress (0..1)
+                var pct = stage13Progress(t);
+                var hp = Math.max(0, Math.min(1, (pct - 50) / 51));
+                H.driveByProgress(hp);
+                // 101% breach 瞬間 = pull root + bass hit (1度だけ)
+                if (!state.s20_breachFired && t >= 17.3 && t < 18.0) {
+                    state.s20_breachFired = true;
+                    H.pullRoot({ duration: 0.7 });
+                    setT(function () { try { H.bassHit({ gain: 0.42 }); } catch (e) {} }, 60);
+                }
+                // P1 end (eye/cross 完了) で drone をフェードアウト
+                if (!state.s20_audioStopped && t >= 22.8) {
+                    state.s20_audioStopped = true;
+                    H.stop(1.2);
+                }
+            }
+        } catch (e) {}
+
+        // 2026-05-20 段階20.1: 重力レンズ uMass を timeline 駆動
+        //   17.0-17.6s: 微かに立ち上がり (101% 突破直前の予兆)
+        //   17.6-20.0s: 強烈に発火 (ingest = 球が世界を曲げる)
+        //   20.0-22.0s: white birth に向けて減衰
+        //   22.0+: eye/cross では 0 (uniform 上書き)
+        try {
+            const lp = window.lensPass;
+            if (lp && !window._p1LensDisabled) {
+                let mass = 0;
+                let einstein = 0.22;
+                let disp = 0.012;
+                if (t >= 17.0 && t < 17.6) {
+                    const p = (t - 17.0) / 0.6;
+                    mass = 0.04 * p;
+                    disp = 0.008 + 0.012 * p;
+                } else if (t >= 17.6 && t < 20.0) {
+                    const p = (t - 17.6) / 2.4;
+                    const ease = p < 0.3 ? p / 0.3 : 1.0 - (p - 0.3) / 0.7 * 0.5;
+                    mass = 0.04 + 0.20 * ease;
+                    einstein = 0.22 + 0.06 * Math.sin(p * 6.28);
+                    disp = 0.020 + 0.018 * ease;
+                } else if (t >= 20.0 && t < 22.0) {
+                    const p = (t - 20.0) / 2.0;
+                    mass = 0.12 * (1 - p);
+                    disp = 0.020 * (1 - p);
+                }
+                lp.uniforms.uMass.value = mass;
+                lp.uniforms.uEinstein.value = einstein;
+                lp.uniforms.uDispersion.value = disp;
+            }
+        } catch (e) {}
+
         // sphere は常に可視 (premonition → full)
         state.mesh.visible = true;
 
-        // 2026-05-19 段階19.6: 司さんフィードバック「融合してないのに球体が存在する」
-        // → 0-4s: 球体完全非表示 (legacy fusion 演出に専念)
-        //   4-7s: フェードイン (陰陽パターン弱)
-        //   7-10s: 陰陽はっきり
-        //   10-15s: 陰陽 → グレー → RGBCMY
-        //   15-16s: RGBCMY 確定 (bar 99→100 直前)
-        //   16-17s: bar 100 wall
-        //   17-17.5s: 101 flash
-        //   17.5-20s: ingest + bg fade
-        //   20-22s: white light breathing
-        //   22+: eye/cross 等
-        // PHASE 0: 融合中 (0-4s) — 球体非表示
-        if (t < 4.0) {
-            state.mesh.visible = false;
-            return;
-        }
-        // 4s以降は可視
-        state.mesh.visible = true;
-
-        // PHASE 0.5: フェードイン (4-7s) — premonition alpha 0 → 1
-        if (t < 7.0) {
-            const pre = (t - 4.0) / 3.0;
+        // PHASE 0: legacy merge play (0-6s)
+        // 2026-05-19 Codex: 50→75% で球が薄すぎたため、予兆ではなく「読める陰陽コア」として出す。
+        if (t < 6.0) {
+            const pre = Math.min(1, t / 6.0);
             const preEase = pre * pre * (3 - 2 * pre);
-            state.mesh.scale.setScalar(0.6 + preEase * 0.4);
-            if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = preEase;
-            u.uTaichiMix.value  = preEase * 0.5;
+            state.mesh.scale.setScalar(0.82 + preEase * 0.15);
+            if (u.uPremonitionAlpha) {
+                u.uPremonitionAlpha.value = 0.72 + preEase * 0.28;
+            }
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
+            u.uTaichiMix.value  = 1.0;
             return;
         }
 
-        // PHASE A: 陰陽はっきり (7-10s)
+        // t>=6s: 通常 alpha + full scale
         state.mesh.scale.setScalar(1.0);
         if (u.uPremonitionAlpha) u.uPremonitionAlpha.value = 1.0;
-        if (t < 10.0) {
-            const p = (t - 7.0) / 3.0;
-            const eased = p * p * (3 - 2 * p);
-            u.uTaichiMix.value  = 0.5 + 0.5 * eased; // 0.5 → 1.0
+
+        // PHASE A: 陰陽球がはっきり見える (6-7.5s 急速建立 / 7.5-9s 微小呼吸)
+        // 2026-05-20 段階20.5 (Codex pacing 圧縮):
+        //   旧版は 3 秒間静的に陰陽を保持していたが、観客は 1.5 秒で陰陽を認識し終わる。
+        //   後半 1.5 秒を「すでに不安定」な微小呼吸 (scale ±2%) で予兆化し、観客を前のめりに。
+        if (t < 9.0) {
+            if (t < 7.5) {
+                // 急速立ち上がり (3秒→1.5秒)
+                const p = (t - 6.0) / 1.5;
+                u.uTaichiMix.value = Math.min(1, p * 1.4);
+            } else {
+                // 後半: 完成形ホールド + 微小 breathing (predator 化)
+                u.uTaichiMix.value = 1;
+                const breath = Math.sin((t - 7.5) * 5.2) * 0.02;
+                state.mesh.scale.setScalar(1.0 + breath);
+            }
             u.uReveal.value     = 0;
             u.uWhiteBirth.value = 0;
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             return;
         }
 
-        // PHASE B: 陰陽 → グレー → RGBCMY (10-15s)
-        if (t < 15.0) {
-            u.uTaichiMix.value  = 1;
-            const raw = (t - 10.0) / 5.0;
-            u.uReveal.value     = holdThenJump(Math.max(0, Math.min(1, raw)));
+        // PHASE B: 陰陽 → グレー → RGBCMY (9-13s) — タメ + 跳躍 構造
+        // 2026-05-20 段階20.5 (Codex 違和感マップ #3):
+        //   旧版は 4 秒で uReveal 0→1 の滑らか smoothstep だった。
+        //   「100% は存在しない、50% から直接 101% へ跳ぶ」の哲学を実装で表現する:
+        //     9.0-12.5s (3.5s): タメ — uReveal 0→0.55 (グレー化主体、まだ虹は遠い)
+        //     12.5-12.85s (0.35s): 暴力的 ジャンプ — easeOutExpo で 0.55→1.0
+        //     12.85-13.0s (0.15s): 着地 / RGBCMY 確定
+        if (t < 13.0) {
+            u.uTaichiMix.value = 1;
+            state.mesh.scale.setScalar(1.0);
+            if (t < 12.5) {
+                const p = (t - 9.0) / 3.5;
+                const ease = p * p * (3 - 2 * p);
+                u.uReveal.value = ease * 0.55;
+            } else if (t < 12.85) {
+                const p = (t - 12.5) / 0.35;
+                // easeOutExpo (Maxime Heckel 系 attack curve)
+                const ease = p >= 1 ? 1 : 1 - Math.pow(2, -10 * p);
+                u.uReveal.value = 0.55 + ease * 0.45;
+            } else {
+                u.uReveal.value = 1.0;
+            }
             u.uWhiteBirth.value = 0;
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             return;
         }
 
-        // PHASE B2: RGBCMY 確定保持 (15-16s)
-        if (t < 16.0) {
+        // PHASE C: bar 99→100 wall (13-14s, sphere holds RGBCMY)
+        if (t < 14.0) {
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
-            u.uWhiteBirth.value = 0;
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             return;
         }
 
-        // PHASE C: bar 99→100 wall (16-17s, sphere holds RGBCMY)
-        if (t < 17.0) {
+        // PHASE D: "101" text flash (14-14.42s)
+        if (t < 14.42) {
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
-            return;
-        }
-
-        // PHASE D: "101" text flash (17-17.5s)
-        if (t < 17.5) {
-            u.uTaichiMix.value = 1;
-            u.uReveal.value    = 1;
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             if (!state.text101Fired) {
                 state.text101Fired = true;
                 triggerStage17TextFlash();
@@ -2813,10 +2911,13 @@
             return;
         }
 
-        // PHASE E: UI ingest + bg fade (17.5-20s, ingest起動は17.6)
-        if (t < 20.0) {
+        // PHASE E: UI ingest + bg fade (14.42-17s, ingest起動は14.5)
+        if (t < 17.0) {
             u.uTaichiMix.value = 1;
             u.uReveal.value    = 1;
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             if (!state.stage14UnlockFired) {
                 state.stage14UnlockFired = true;
                 window.p1FullScreenUnlocked = true;
@@ -2831,14 +2932,18 @@
                     } catch (e) {}
                 }
             }
-            if (t >= 17.6 && !state.stage14IngestFired) {
+            if (t >= 14.5 && !state.stage14IngestFired) {
                 startStage14UiIngest();
             }
             // Smooth bg fade — opacity / u_alpha 経由 (snap visible=false 回避)
             try {
                 const dualBg = state.scene && state.scene.getObjectByName('p1-old-dual-bg');
                 if (dualBg && dualBg.material) {
-                    const c = Math.max(0, Math.min(1, (t - 17.6) / 2.5));
+                    const c = Math.max(0, Math.min(1, (t - 14.5) / 2.5));
+                    if (c > 0.72) {
+                        // Fade が shader 経由で効かない環境でも、吸収後に白黒パネルを残さない。
+                        dualBg.visible = false;
+                    }
                     if (dualBg.material.uniforms && dualBg.material.uniforms.u_frameCollapse) {
                         const bu = dualBg.material.uniforms;
                         bu.u_frameCollapse.value = Math.max(bu.u_frameCollapse.value || 0, c);
@@ -2865,12 +2970,12 @@
                 }
             } catch (e) {}
             // White birth ramp (14.5-17s)
-            if (t >= 17.6) {
-                const w = Math.min(1, (t - 17.6) / 2.5);
+            if (t >= 14.5) {
+                const w = Math.min(1, (t - 14.5) / 2.5);
                 u.uWhiteBirth.value = w;
             }
             // Force black bg from 14.5
-            if (!state.bgBlackSet && t >= 17.6) {
+            if (!state.bgBlackSet && t >= 14.5) {
                 state.bgBlackSet = true;
                 try {
                     if (state.renderer && state.renderer.setClearColor) {
@@ -2886,12 +2991,15 @@
             return;
         }
 
-        // PHASE F: white light alone (20-22s) — sphere breathes
-        if (t < 22.0) {
+        // PHASE F: white light alone (17-19s) — sphere breathes
+        if (t < 19.0) {
             u.uTaichiMix.value  = 1;
             u.uReveal.value     = 1;
             u.uWhiteBirth.value = 1;
-            state.mesh.scale.setScalar(1.0 + Math.sin((t - 20.0) * 2.0) * 0.03);
+            if (u.uEyePhase) u.uEyePhase.value = 0;
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
+            state.mesh.scale.setScalar(1.0);
             // bgPlane を完全に隠す (fade完了後のみ)
             if (!state.bgEaten) {
                 state.bgEaten = true;
@@ -2910,45 +3018,43 @@
             return;
         }
 
-        // PHASE G: eye fade-in (22-24s)
-        if (t < 24.0) {
+        // PHASE G: eye fade-in (19-21s)
+        if (t < 21.0) {
             u.uWhiteBirth.value = 1;
-            u.uEyePhase.value   = Math.min(1, (t - 22.0) / 2.0);
+            u.uEyePhase.value   = Math.min(1, (t - 19.0) / 2.0);
+            if (u.uEyeOpen) u.uEyeOpen.value = 0;
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             state.mesh.scale.setScalar(1.0);
-            if (!state.s13_eyeFired) {
-                state.s13_eyeFired = true;
-                try {
-                    window.dispatchEvent(new CustomEvent('inryoku:p1stage5complete'));
-                } catch (e) {}
-            }
+            state.s13_eyeFired = true;
             return;
         }
 
-        // PHASE H: eye opens + solar flash (24-25s)
-        if (t < 25.0) {
+        // PHASE H: eye opens + solar flash (21-22s)
+        if (t < 22.0) {
             u.uWhiteBirth.value = 1;
             u.uEyePhase.value   = 1;
+            if (u.uEyeOpen) u.uEyeOpen.value = Math.max(0, Math.min(1, (t - 21.0) / 1.0));
+            if (u.uCrossPhase) u.uCrossPhase.value = 0;
             if (!state.s13_eyeOpenFired) {
                 state.s13_eyeOpenFired = true;
             }
             return;
         }
 
-        // PHASE I: cross flash (25-26s)
-        if (t < 26.0) {
+        // PHASE I: cross flash (22-23s)
+        if (t < 23.0) {
             u.uWhiteBirth.value = 1;
             u.uEyePhase.value   = 1;
-            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 25.0)));
+            if (u.uEyeOpen) u.uEyeOpen.value = 1;
+            u.uCrossPhase.value = Math.max(0, Math.min(1, (t - 22.0)));
             if (!state.s13_crossFired) {
                 state.s13_crossFired = true;
-                try {
-                    window.dispatchEvent(new CustomEvent('inryoku:p1stage6complete'));
-                } catch (e) {}
             }
             return;
         }
 
         // PHASE J: end (P1_ONLY_MODE blocks renderPhase2)
+        if (u.uEyeOpen) u.uEyeOpen.value = 1;
         u.uCrossPhase.value = 1;
         if (!state.s13_p2Fired) {
             state.s13_p2Fired = true;
@@ -3175,7 +3281,7 @@
                 }
                 if (!REDUCE_MOTION && !state.audio_tunnelRiseFired) {
                     state.audio_tunnelRiseFired = true;
-                    setTimeout(playTunnelRiseCue, 100);
+                    setT(playTunnelRiseCue, 100);
                 }
                 // Dispatch bigbang + stage2complete (stage3 listens for stage2complete)
                 try {
@@ -3260,6 +3366,15 @@
         //   ※ tunnelPlane.visible 自体は legacy phase ロジック側 (phase >= WARP_GROW)
         //     で既に true になるが、stage1 時間軸で先行的に visible にしておくと
         //     reveal 0.7+ で薄く立ち上がってブレイクスルー前後を繋げる。
+        if (window.P1_STAGE13_RESET) {
+            try {
+                const tunnelObj = state.scene && state.scene.getObjectByName('p1-old-tunnel-plane');
+                const warpObj = state.scene && state.scene.getObjectByName('p1-old-warp-tunnel');
+                if (tunnelObj) tunnelObj.visible = false;
+                if (warpObj) warpObj.visible = false;
+            } catch (e) {}
+            return;
+        }
         try {
             if (state.scene) {
                 const bangV = (u.uBang && typeof u.uBang.value === 'number') ? u.uBang.value : 0;
@@ -3377,7 +3492,7 @@
                         state.bled50 = true;
                         try {
                             barFill.classList.add('is-bleed-50');
-                            setTimeout(function () {
+                            setT(function () {
                                 try { barFill.classList.remove('is-bleed-50'); } catch (e) {}
                             }, 260);
                         } catch (e) {}
@@ -3470,6 +3585,9 @@
         state.disposed = true;
         state.running  = false;
         if (state.rafId) cancelAnimationFrame(state.rafId);
+        // 2026-05-20 段階20.6: 予約済み setTimeout 全停止
+        //   dispose 後に発火すると消えた DOM/clone/audio を触って例外 → サイレント故障
+        clearAllTimers();
         if (state.mesh && state.scene) {
             state.scene.remove(state.mesh);
         }
@@ -3519,7 +3637,7 @@
         }
         setEnabled();
         if (attempts <= 0) return;
-        setTimeout(function() { tryRegister(attempts - 1); }, 100);
+        setT(function() { tryRegister(attempts - 1); }, 100);
     }
     tryRegister(50);
 

@@ -1,0 +1,2138 @@
+{
+  "_meta": {
+    "version": "1.3.0",
+    "updated": "2026-05-12",
+    "description": "inryokü i18n dictionary. ja is the source of truth (1st language). en is the secondary language. ko added 2026-05-05. Keys use dot notation: section.element.purpose. Add new keys at the bottom of their section.",
+    "philosophy_glossary": {
+      "50% → 101%": "kept symbolic in all languages",
+      "観測者": "the observer / 관찰자",
+      "見えないものの可視化": "making the invisible visible / 보이지 않는 것의 가시화",
+      "グレーの中に虹": "the rainbow within grey / 회색 속의 무지개",
+      "50→101を観測する者たちへ": "for those who observe the 50→101 / 50→101을 관찰하는 이들에게",
+      "哲学を纏う服": "philosophy worn as cloth / 철학을 입는 옷",
+      "引力": "inryokü (gravity) / 인력 (引力)",
+      "原色論": "the doctrine of primary color / 원색론",
+      "我思うゆえに我らあり": "I think, therefore we are / 나는 생각한다, 고로 우리는 존재한다"
+    },
+    "note": " P3 UX copy wave merged 2026-05-12."
+  },
+  "meta.title": {
+    "ja": "inryokü — 50% → 101% / 見えないものの可視化",
+    "en": "inryokü — 50% → 101% / making the invisible visible",
+    "ko": "inryokü — 50% → 101% / 보이지 않는 것의 가시화"
+  },
+  "meta.description": {
+    "ja": "inryokü は哲学を纏う服。RGB=Black, CMY=White, You=Rainbow。観測することで世界は 50% から 101% へ変わる。グレーの中に虹を見る人のためのアパレルと宇宙インタラクション。",
+    "en": "inryokü is philosophy worn as cloth. RGB=Black, CMY=White, You=Rainbow. By observing, the world shifts from 50% to 101%. Apparel and a cosmic interaction for those who see the rainbow within grey.",
+    "ko": "inryokü는 철학을 입는 옷. RGB=Black, CMY=White, You=Rainbow. 관찰함으로써 세계는 50%에서 101%로 변한다. 회색 속의 무지개를 보는 이들을 위한 어패럴과 우주적 인터랙션."
+  },
+  "meta.description_short": {
+    "ja": "観測すれば世界は変わる。グレーの中に虹がある。哲学を纏う服。",
+    "en": "Observe, and the world changes. The rainbow lives within grey. Philosophy worn as cloth.",
+    "ko": "관찰하면 세계가 변한다. 회색 속에 무지개가 있다. 철학을 입는 옷."
+  },
+  "meta.og_image_alt": {
+    "ja": "inryokü — グレーの中に虹がある。50% から 101% への観測。",
+    "en": "inryokü — the rainbow within grey. The observation from 50% to 101%.",
+    "ko": "inryokü — 회색 속에 무지개가 있다. 50%에서 101%로의 관찰."
+  },
+  "meta.og.description": {
+    "ja": "観測すれば世界は変わる。グレーの中に虹がある。哲学を纏う服 inryokü。",
+    "en": "Observe, and the world changes. The rainbow lives within grey. inryokü is philosophy worn as cloth.",
+    "ko": "관찰하면 세계가 변한다. 회색 속에 무지개가 있다. 철학을 입는 옷, inryokü."
+  },
+  "meta.twitter.title": {
+    "ja": "inryokü — 50% → 101%",
+    "en": "inryokü — 50% → 101%",
+    "ko": "inryokü — 50% → 101%"
+  },
+  "meta.twitter.description": {
+    "ja": "観測すれば世界は変わる。グレーの中に虹がある。哲学を纏う服。",
+    "en": "Observe, and the world changes. The rainbow lives within grey. Philosophy worn as cloth.",
+    "ko": "관찰하면 세계가 변한다. 회색 속에 무지개가 있다. 철학을 입는 옷."
+  },
+  "meta.organization_description": {
+    "ja": "哲学を纏う服。RGB×CMY の原色論と観測の50%→101%を具現化したアパレルブランド。",
+    "en": "Philosophy worn as cloth. An apparel brand that embodies the RGB×CMY doctrine of primary color and the 50%→101% of observation.",
+    "ko": "철학을 입는 옷. RGB×CMY의 원색론과 관찰의 50%→101%를 구현한 어패럴 브랜드."
+  },
+  "meta.slogan": {
+    "ja": "50% → 101% / 見えないものの可視化",
+    "en": "50% → 101% / making the invisible visible",
+    "ko": "50% → 101% / 보이지 않는 것의 가시화"
+  },
+  "brand.name": {
+    "ja": "inryokü",
+    "en": "inryokü",
+    "ko": "inryokü"
+  },
+  "brand.name_alt": {
+    "ja": "引力",
+    "en": "inryokü (gravity)",
+    "ko": "인력 (引力)"
+  },
+  "brand.tagline": {
+    "ja": "哲学を纏う服",
+    "en": "philosophy worn as cloth",
+    "ko": "철학을 입는 옷"
+  },
+  "brand.truth": {
+    "ja": "RGB=Black / CMY=White / You=Rainbow",
+    "en": "RGB=Black / CMY=White / You=Rainbow",
+    "ko": "RGB=Black / CMY=White / You=Rainbow"
+  },
+  "brand.symbol": {
+    "ja": "50% → 101%",
+    "en": "50% → 101%",
+    "ko": "50% → 101%"
+  },
+  "p0.welcome.title": {
+    "ja": "ようこそ",
+    "en": "Welcome",
+    "ko": "환영합니다"
+  },
+  "p0.welcome.subtitle": {
+    "ja": "見えないものの可視化",
+    "en": "making the invisible visible",
+    "ko": "보이지 않는 것의 가시화"
+  },
+  "p0.welcome.cta": {
+    "ja": "ENTER",
+    "en": "ENTER",
+    "ko": "ENTER"
+  },
+  "p0.welcome.hint": {
+    "ja": "観測する準備はできましたか",
+    "en": "Are you ready to observe?",
+    "ko": "관찰할 준비가 되셨습니까"
+  },
+  "p1.loading.title": {
+    "ja": "INRYOKU LOGO",
+    "en": "INRYOKU LOGO",
+    "ko": "INRYOKU LOGO"
+  },
+  "p1.loading.label": {
+    "ja": "読み込み中...",
+    "en": "loading...",
+    "ko": "불러오는 중..."
+  },
+  "p1.loading.subtitle": {
+    "ja": "粒子を整列させています",
+    "en": "aligning particles",
+    "ko": "입자를 정렬하는 중"
+  },
+  "p2.passcode.title": {
+    "ja": "PASSCODE",
+    "en": "PASSCODE",
+    "ko": "PASSCODE"
+  },
+  "p2.passcode.label": {
+    "ja": "観測者だけが入れる",
+    "en": "for observers only",
+    "ko": "관찰자만이 들어갈 수 있다"
+  },
+  "p2.passcode.placeholder": {
+    "ja": "コードを入力",
+    "en": "enter code",
+    "ko": "코드 입력"
+  },
+  "p2.passcode.submit": {
+    "ja": "確認",
+    "en": "VERIFY",
+    "ko": "확인"
+  },
+  "p2.passcode.hint": {
+    "ja": "ヒント: 50 から始まる数",
+    "en": "hint: a number that begins with 50",
+    "ko": "힌트: 50으로 시작하는 숫자"
+  },
+  "p2.passcode.error": {
+    "ja": "違う。もう一度観測してください。",
+    "en": "wrong. observe again.",
+    "ko": "틀렸다. 다시 관찰하라."
+  },
+  "p2.selection.title": {
+    "ja": "どちらを選びますか",
+    "en": "which do you choose?",
+    "ko": "어느 쪽을 선택하시겠습니까"
+  },
+  "p2.selection.subtitle": {
+    "ja": "選んだ瞬間、世界は変わる",
+    "en": "the world shifts the moment you choose",
+    "ko": "선택하는 순간, 세계는 변한다"
+  },
+  "p2.selection.analog": {
+    "ja": "アナログ",
+    "en": "ANALOG",
+    "ko": "아날로그"
+  },
+  "p2.selection.analog_sub": {
+    "ja": "白の中に色がある",
+    "en": "color lives in white",
+    "ko": "흰색 속에 색이 있다"
+  },
+  "p2.selection.digital": {
+    "ja": "デジタル",
+    "en": "DIGITAL",
+    "ko": "디지털"
+  },
+  "p2.selection.digital_sub": {
+    "ja": "黒の中に色がある",
+    "en": "color lives in black",
+    "ko": "검은색 속에 색이 있다"
+  },
+  "p2.selection.plus": {
+    "ja": "+",
+    "en": "+",
+    "ko": "+"
+  },
+  "p2.convergence.title.analog": {
+    "ja": "アナログ",
+    "en": "ANALOG",
+    "ko": "아날로그"
+  },
+  "p2.convergence.title.digital": {
+    "ja": "デジタル",
+    "en": "DIGITAL",
+    "ko": "디지털"
+  },
+  "p2.convergence.subtitle": {
+    "ja": "両極が出会うとき、虹が生まれる",
+    "en": "when poles meet, the rainbow is born",
+    "ko": "양극이 만날 때, 무지개가 태어난다"
+  },
+  "p3.flash.header": {
+    "ja": "INRYOKU",
+    "en": "INRYOKU",
+    "ko": "INRYOKU"
+  },
+  "p3.flash.accent": {
+    "ja": "ü",
+    "en": "ü",
+    "ko": "ü"
+  },
+  "p3.flash.panel.title": {
+    "ja": "観測を開始",
+    "en": "begin observation",
+    "ko": "관찰을 시작하라"
+  },
+  "p3.flash.panel.line1": {
+    "ja": "RGB=Black",
+    "en": "RGB=Black",
+    "ko": "RGB=Black"
+  },
+  "p3.flash.panel.line2": {
+    "ja": "CMY=White",
+    "en": "CMY=White",
+    "ko": "CMY=White"
+  },
+  "p3.flash.panel.line3": {
+    "ja": "You=Rainbow",
+    "en": "You=Rainbow",
+    "ko": "You=Rainbow"
+  },
+  "p3.singularity.title": {
+    "ja": "特異点",
+    "en": "Singularity",
+    "ko": "특이점"
+  },
+  "p3.singularity.subtitle": {
+    "ja": "50→101 を観測する者たちへ",
+    "en": "for those who observe the 50→101",
+    "ko": "50→101을 관찰하는 이들에게"
+  },
+  "philosophy.main": {
+    "ja": "我思うゆえに我らあり",
+    "en": "I think, therefore we are.",
+    "ko": "나는 생각한다, 고로 우리는 존재한다"
+  },
+  "philosophy.sub": {
+    "ja": "",
+    "en": "",
+    "ko": ""
+  },
+  "shop.title": {
+    "ja": "STORE",
+    "en": "STORE",
+    "ko": "STORE"
+  },
+  "shop.subtitle": {
+    "ja": "哲学を纏う",
+    "en": "wear the philosophy",
+    "ko": "철학을 입다"
+  },
+  "shop.add_to_cart": {
+    "ja": "カートに入れる",
+    "en": "ADD TO CART",
+    "ko": "장바구니에 담기"
+  },
+  "shop.buy_now": {
+    "ja": "今すぐ購入",
+    "en": "BUY NOW",
+    "ko": "바로 구매"
+  },
+  "shop.size_label": {
+    "ja": "サイズ",
+    "en": "SIZE",
+    "ko": "사이즈"
+  },
+  "shop.color_label": {
+    "ja": "カラー",
+    "en": "COLOR",
+    "ko": "컬러"
+  },
+  "shop.in_stock": {
+    "ja": "在庫あり",
+    "en": "in stock",
+    "ko": "재고 있음"
+  },
+  "shop.out_of_stock": {
+    "ja": "在庫切れ",
+    "en": "sold out",
+    "ko": "품절"
+  },
+  "shop.coming_soon": {
+    "ja": "近日公開",
+    "en": "coming soon",
+    "ko": "출시 예정"
+  },
+  "shop.stripe_secured": {
+    "ja": "Stripe で安全に決済",
+    "en": "Secure checkout by Stripe",
+    "ko": "Stripe로 안전하게 결제"
+  },
+  "shop.free_shipping": {
+    "ja": "全国送料無料",
+    "en": "Free shipping",
+    "ko": "무료 배송"
+  },
+  "shop.worldwide_shipping": {
+    "ja": "WORLDWIDE SHIPPING",
+    "en": "WORLDWIDE SHIPPING",
+    "ko": "WORLDWIDE SHIPPING"
+  },
+  "shop.delivery_window": {
+    "ja": "配送目安 7–14 営業日",
+    "en": "DELIVERY · 7–14 BUSINESS DAYS",
+    "ko": "배송 예정 7–14 영업일"
+  },
+  "shop.checkout_soon": {
+    "ja": "CHECKOUT SOON",
+    "en": "CHECKOUT SOON",
+    "ko": "CHECKOUT SOON"
+  },
+  "shop.currency_jpy": {
+    "ja": "円",
+    "en": "JPY",
+    "ko": "엔"
+  },
+  "product.enter_hoodie.name": {
+    "ja": "ENTER フーディー",
+    "en": "ENTER HOODIE",
+    "ko": "ENTER 후디"
+  },
+  "product.enter_hoodie.desc": {
+    "ja": "EXIT だけが選択肢じゃない。未知に ENTER せよ。400gsm ヘビーウェイト・オーバーサイズ・DTFプリント。",
+    "en": "EXIT is not the only option. ENTER the unknown. Heavyweight 400gsm · Oversized Fit · DTF Print.",
+    "ko": "EXIT만이 선택지는 아니다. 미지로 ENTER하라. 400gsm 헤비웨이트 · 오버사이즈 핏 · DTF 프린트."
+  },
+  "product.logo_hoodie.name": {
+    "ja": "inryokü ロゴ フーディー",
+    "en": "inryokü LOGO HOODIE",
+    "ko": "inryokü 로고 후디"
+  },
+  "product.logo_hoodie.desc": {
+    "ja": "原点。グレーの中にすべての色がある — 観測する者にだけ見える。",
+    "en": "The origin point. Grey contains every color — you just have to look.",
+    "ko": "원점. 회색 속에 모든 색이 있다 — 관찰하는 이에게만 보인다."
+  },
+  "product.enter_tee.name": {
+    "ja": "ENTER Tシャツ",
+    "en": "ENTER TEE",
+    "ko": "ENTER 티셔츠"
+  },
+  "product.enter_tee.desc": {
+    "ja": "軽量シグナル。扉はいつでも開いている。200gsm。",
+    "en": "Lightweight signal. The door is always open. 200gsm.",
+    "ko": "가벼운 시그널. 문은 언제나 열려 있다. 200gsm."
+  },
+  "product.logo_tee.name": {
+    "ja": "inryokü ロゴ Tシャツ",
+    "en": "inryokü LOGO TEE",
+    "ko": "inryokü 로고 티셔츠"
+  },
+  "product.logo_tee.desc": {
+    "ja": "印。外は最小、内は無限。",
+    "en": "The mark. Minimal outside, infinite inside.",
+    "ko": "표식. 밖은 최소, 안은 무한."
+  },
+  "size.s": {
+    "ja": "S",
+    "en": "S",
+    "ko": "S"
+  },
+  "size.m": {
+    "ja": "M",
+    "en": "M",
+    "ko": "M"
+  },
+  "size.l": {
+    "ja": "L",
+    "en": "L",
+    "ko": "L"
+  },
+  "size.xl": {
+    "ja": "XL",
+    "en": "XL",
+    "ko": "XL"
+  },
+  "size.xxl": {
+    "ja": "XXL",
+    "en": "XXL",
+    "ko": "XXL"
+  },
+  "cart.title": {
+    "ja": "カート",
+    "en": "Cart",
+    "ko": "장바구니"
+  },
+  "cart.empty": {
+    "ja": "カートは空です",
+    "en": "Your cart is empty",
+    "ko": "장바구니가 비어 있습니다"
+  },
+  "cart.subtotal": {
+    "ja": "小計",
+    "en": "Subtotal",
+    "ko": "소계"
+  },
+  "cart.shipping": {
+    "ja": "送料",
+    "en": "Shipping",
+    "ko": "배송비"
+  },
+  "cart.total": {
+    "ja": "合計",
+    "en": "Total",
+    "ko": "합계"
+  },
+  "cart.checkout": {
+    "ja": "決済へ進む",
+    "en": "Proceed to checkout",
+    "ko": "결제로 진행"
+  },
+  "cart.remove": {
+    "ja": "削除",
+    "en": "Remove",
+    "ko": "삭제"
+  },
+  "cart.continue": {
+    "ja": "買い物を続ける",
+    "en": "Continue shopping",
+    "ko": "쇼핑 계속하기"
+  },
+  "philosophy.window.title": {
+    "ja": "哲学",
+    "en": "Philosophy",
+    "ko": "철학"
+  },
+  "philosophy.observer": {
+    "ja": "観測者",
+    "en": "the observer",
+    "ko": "관찰자"
+  },
+  "philosophy.invisible": {
+    "ja": "見えないものの可視化",
+    "en": "making the invisible visible",
+    "ko": "보이지 않는 것의 가시화"
+  },
+  "philosophy.rainbow_grey": {
+    "ja": "グレーの中に虹",
+    "en": "the rainbow within grey",
+    "ko": "회색 속의 무지개"
+  },
+  "philosophy.for_observers": {
+    "ja": "50→101 を観測する者たちへ",
+    "en": "for those who observe the 50→101",
+    "ko": "50→101을 관찰하는 이들에게"
+  },
+  "philosophy.rgb_black": {
+    "ja": "RGB は混ぜれば黒",
+    "en": "RGB mixed becomes black",
+    "ko": "RGB는 섞이면 검은색"
+  },
+  "philosophy.cmy_white": {
+    "ja": "CMY は混ぜれば白",
+    "en": "CMY mixed becomes white",
+    "ko": "CMY는 섞이면 흰색"
+  },
+  "philosophy.you_rainbow": {
+    "ja": "あなたは虹",
+    "en": "you are the rainbow",
+    "ko": "당신은 무지개"
+  },
+  "chat.title": {
+    "ja": "観測者AI",
+    "en": "Observer AI",
+    "ko": "관찰자 AI"
+  },
+  "chat.info_name": {
+    "ja": "info",
+    "en": "info",
+    "ko": "info"
+  },
+  "chat.placeholder": {
+    "ja": "問いを投げかけてください",
+    "en": "ask a question",
+    "ko": "질문을 던져 주세요"
+  },
+  "chat.input_placeholder_compact": {
+    "ja": "message...",
+    "en": "message...",
+    "ko": "message..."
+  },
+  "chat.send": {
+    "ja": "送信",
+    "en": "Send",
+    "ko": "전송"
+  },
+  "chat.greeting": {
+    "ja": "こんにちは、私は、infoです",
+    "en": "hello, i am info",
+    "ko": "안녕하세요, 저는 info입니다"
+  },
+  "chat.thinking": {
+    "ja": "観測中...",
+    "en": "observing...",
+    "ko": "관찰 중..."
+  },
+  "chat.error": {
+    "ja": "応答に失敗しました。もう一度お試しください。",
+    "en": "Response failed. Please try again.",
+    "ko": "응답에 실패했습니다. 다시 시도해 주세요."
+  },
+  "chat.system_prompt_lang": {
+    "ja": "日本語で返答してください。inryokü の哲学（50→101、観測、グレーの中の虹）を保ちながら。",
+    "en": "Respond in English. Preserve the inryokü philosophy (50→101, observation, the rainbow within grey).",
+    "ko": "한국어로 답해 주세요. inryokü의 철학(50→101, 관찰, 회색 속의 무지개)을 유지하면서."
+  },
+  "footer.copyright": {
+    "ja": "© inryokü — すべての色はあなたの中にある",
+    "en": "© inryokü — every color lives within you",
+    "ko": "© inryokü — 모든 색은 당신 안에 있다"
+  },
+  "footer.legal": {
+    "ja": "特定商取引法",
+    "en": "Legal Notice",
+    "ko": "법적 고지"
+  },
+  "footer.privacy": {
+    "ja": "プライバシーポリシー",
+    "en": "Privacy Policy",
+    "ko": "개인정보 처리방침"
+  },
+  "footer.returns": {
+    "ja": "返品ポリシー",
+    "en": "Return Policy",
+    "ko": "반품 정책"
+  },
+  "footer.size_guide": {
+    "ja": "サイズガイド",
+    "en": "Size Guide",
+    "ko": "사이즈 가이드"
+  },
+  "footer.contact": {
+    "ja": "お問い合わせ",
+    "en": "Contact",
+    "ko": "문의"
+  },
+  "p3.footer.info": {
+    "ja": "info",
+    "en": "info",
+    "ko": "info"
+  },
+  "p3.footer.copyright_short": {
+    "ja": "© 2026 inryokü",
+    "en": "© 2026 inryokü",
+    "ko": "© 2026 inryokü"
+  },
+  "p3.footer.legal": {
+    "ja": "特定商取引法",
+    "en": "Legal Notice",
+    "ko": "법적 고지"
+  },
+  "p3.footer.privacy": {
+    "ja": "プライバシー",
+    "en": "Privacy",
+    "ko": "개인정보"
+  },
+  "p3.footer.returns": {
+    "ja": "返品",
+    "en": "Returns",
+    "ko": "반품"
+  },
+  "p3.footer.secure_checkout": {
+    "ja": "Secure Checkout",
+    "en": "Secure Checkout",
+    "ko": "Secure Checkout"
+  },
+  "common.close": {
+    "ja": "閉じる",
+    "en": "Close",
+    "ko": "닫기"
+  },
+  "common.open": {
+    "ja": "開く",
+    "en": "Open",
+    "ko": "열기"
+  },
+  "common.next": {
+    "ja": "次へ",
+    "en": "Next",
+    "ko": "다음"
+  },
+  "common.back": {
+    "ja": "戻る",
+    "en": "Back",
+    "ko": "뒤로"
+  },
+  "common.skip": {
+    "ja": "スキップ",
+    "en": "Skip",
+    "ko": "건너뛰기"
+  },
+  "common.loading": {
+    "ja": "読み込み中",
+    "en": "Loading",
+    "ko": "불러오는 중"
+  },
+  "common.yes": {
+    "ja": "はい",
+    "en": "Yes",
+    "ko": "예"
+  },
+  "common.no": {
+    "ja": "いいえ",
+    "en": "No",
+    "ko": "아니오"
+  },
+  "common.menu": {
+    "ja": "メニュー",
+    "en": "Menu",
+    "ko": "메뉴"
+  },
+  "a11y.skip_to_main": {
+    "ja": "メインコンテンツへスキップ",
+    "en": "Skip to main content",
+    "ko": "메인 콘텐츠로 건너뛰기"
+  },
+  "a11y.lang_toggle": {
+    "ja": "言語を切り替える",
+    "en": "Switch language",
+    "ko": "언어 전환"
+  },
+  "a11y.bgm_toggle": {
+    "ja": "BGM 再生 / 停止",
+    "en": "Toggle background music",
+    "ko": "배경 음악 재생 / 정지"
+  },
+  "a11y.cart_open": {
+    "ja": "カートを開く",
+    "en": "Open cart",
+    "ko": "장바구니 열기"
+  },
+  "a11y.menu_open": {
+    "ja": "メニューを開く",
+    "en": "Open menu",
+    "ko": "메뉴 열기"
+  },
+  "lang.toggle.ja": {
+    "ja": "日本語",
+    "en": "JA",
+    "ko": "일본어"
+  },
+  "lang.toggle.en": {
+    "ja": "English",
+    "en": "EN",
+    "ko": "영어"
+  },
+  "lang.toggle.ko": {
+    "ja": "韓国語",
+    "en": "KO",
+    "ko": "한국어"
+  },
+  "lang.toggle.aria": {
+    "ja": "言語: 日本語 / English / 한국어",
+    "en": "Language: 日本語 / English / 한국어",
+    "ko": "언어: 日本語 / English / 한국어"
+  },
+  "modal.coming_soon.title": {
+    "ja": "Coming Soon",
+    "en": "Coming Soon",
+    "ko": "Coming Soon"
+  },
+  "modal.coming_soon.body": {
+    "ja": "この体験はまだ観測できません。もう少しだけ待ってください。",
+    "en": "This experience cannot yet be observed. Please wait just a little longer.",
+    "ko": "이 경험은 아직 관찰할 수 없습니다. 조금만 더 기다려 주세요."
+  },
+  "checkout.success.title": {
+    "ja": "観測が完了しました",
+    "en": "Observation complete",
+    "ko": "관찰이 완료되었습니다"
+  },
+  "checkout.success.body": {
+    "ja": "ご注文ありがとうございます。あなたの 50→101 が始まりました。",
+    "en": "Thank you for your order. Your 50→101 has begun.",
+    "ko": "주문해 주셔서 감사합니다. 당신의 50→101이 시작되었습니다."
+  },
+  "checkout.cancel.title": {
+    "ja": "キャンセルされました",
+    "en": "Cancelled",
+    "ko": "취소되었습니다"
+  },
+  "checkout.cancel.body": {
+    "ja": "決済はキャンセルされました。いつでも戻ってきてください。",
+    "en": "Checkout was cancelled. You can return whenever you wish.",
+    "ko": "결제가 취소되었습니다. 언제든 다시 돌아오세요."
+  },
+  "legal.meta.title": {
+    "ja": "特定商取引法に基づく表記 — inryokü",
+    "en": "Specified Commercial Transactions Act Notice — inryokü",
+    "ko": "특정상거래법에 의거한 표기 — inryokü"
+  },
+  "legal.title": {
+    "ja": "特定商取引法に基づく表記",
+    "en": "Specified Commercial Transactions Act Notice",
+    "ko": "특정상거래법에 의거한 표기"
+  },
+  "legal.label.seller": {
+    "ja": "販売業者",
+    "en": "Seller",
+    "ko": "판매자"
+  },
+  "legal.placeholder.seller": {
+    "ja": "[TODO: 正式な販売者名を記載 / 個人事業の場合は氏名]",
+    "en": "[TODO: Add the seller's legal name / use your personal legal name if operating as a sole proprietor]",
+    "ko": "[TODO: 정식 판매자명 기재 / 개인사업자의 경우 성명]"
+  },
+  "legal.label.operator": {
+    "ja": "運営責任者",
+    "en": "Operations Manager",
+    "ko": "운영 책임자"
+  },
+  "legal.placeholder.operator": {
+    "ja": "[TODO: 運営責任者の氏名]",
+    "en": "[TODO: Add the name of the operations manager]",
+    "ko": "[TODO: 운영 책임자의 성명]"
+  },
+  "legal.label.address": {
+    "ja": "所在地",
+    "en": "Address",
+    "ko": "소재지"
+  },
+  "legal.placeholder.address": {
+    "ja": "[TODO: 〒xxx-xxxx 都道府県市区町村番地まで記載]",
+    "en": "[TODO: Add full postal address including postal code, prefecture/state, city, and street address]",
+    "ko": "[TODO: 우편번호 포함 전체 주소 기재]"
+  },
+  "legal.label.phone": {
+    "ja": "電話番号",
+    "en": "Phone",
+    "ko": "전화번호"
+  },
+  "legal.placeholder.phone": {
+    "ja": "[TODO: 連絡可能な電話番号]",
+    "en": "[TODO: Add a working phone number]",
+    "ko": "[TODO: 연락 가능한 전화번호]"
+  },
+  "legal.label.phone_hours": {
+    "ja": "受付時間:",
+    "en": "Hours:",
+    "ko": "접수 시간:"
+  },
+  "legal.placeholder.phone_hours": {
+    "ja": "[TODO: 例) 平日 10:00-18:00]",
+    "en": "[TODO: Example: Weekdays 10:00-18:00]",
+    "ko": "[TODO: 예) 평일 10:00-18:00]"
+  },
+  "legal.label.email": {
+    "ja": "メールアドレス",
+    "en": "Email",
+    "ko": "이메일"
+  },
+  "legal.label.price": {
+    "ja": "販売価格",
+    "en": "Price",
+    "ko": "판매 가격"
+  },
+  "legal.value.price": {
+    "ja": "各商品ページに表示の価格（消費税込）",
+    "en": "As displayed on each product page (tax included)",
+    "ko": "각 상품 페이지에 표시된 가격 (소비세 포함)"
+  },
+  "legal.label.shipping": {
+    "ja": "送料",
+    "en": "Shipping",
+    "ko": "배송비"
+  },
+  "legal.placeholder.shipping": {
+    "ja": "[TODO: 国内送料無料 / 海外発送有無と料金体系を確定]",
+    "en": "[TODO: Confirm domestic free shipping / whether international shipping is offered / and the shipping fee table]",
+    "ko": "[TODO: 국내 무료 배송 / 해외 배송 여부와 요금 체계 확정]"
+  },
+  "legal.label.extra_fees": {
+    "ja": "商品以外の必要料金",
+    "en": "Additional Fees",
+    "ko": "상품 외 필요 요금"
+  },
+  "legal.placeholder.extra_fees": {
+    "ja": "[TODO: 関税・手数料等。なければ「なし」と記載]",
+    "en": "[TODO: Add duties, fees, or write 'none' if there are no additional charges]",
+    "ko": "[TODO: 관세·수수료 등. 없으면 '없음'으로 기재]"
+  },
+  "legal.label.payment": {
+    "ja": "支払方法",
+    "en": "Payment Methods",
+    "ko": "결제 방법"
+  },
+  "legal.value.payment": {
+    "ja": "クレジットカード決済（Visa / Mastercard / American Express / JCB / Diners / Discover）",
+    "en": "Credit card (Visa / Mastercard / American Express / JCB / Diners / Discover)",
+    "ko": "신용카드 결제 (Visa / Mastercard / American Express / JCB / Diners / Discover)"
+  },
+  "legal.value.payment_note": {
+    "ja": "決済処理は Stripe 社が行います。",
+    "en": "Payments are processed by Stripe.",
+    "ko": "결제 처리는 Stripe 사가 수행합니다."
+  },
+  "legal.label.payment_timing": {
+    "ja": "支払時期",
+    "en": "Payment Timing",
+    "ko": "결제 시기"
+  },
+  "legal.value.payment_timing": {
+    "ja": "注文確定時に即時決済",
+    "en": "Charged immediately upon order confirmation",
+    "ko": "주문 확정 시 즉시 결제"
+  },
+  "legal.label.delivery": {
+    "ja": "商品引渡時期",
+    "en": "Delivery Timing",
+    "ko": "상품 인도 시기"
+  },
+  "legal.placeholder.delivery": {
+    "ja": "[TODO: 例) 7〜14営業日以内]",
+    "en": "[TODO: Example: within 7-14 business days]",
+    "ko": "[TODO: 예) 7~14 영업일 이내]"
+  },
+  "legal.value.delivery_suffix": {
+    "ja": "に発送",
+    "en": "to ship",
+    "ko": "에 발송"
+  },
+  "legal.value.delivery_note": {
+    "ja": "※ オンデマンド生産のため、生産状況により前後する場合があります。",
+    "en": "Note: Made on demand. Timing may vary with production.",
+    "ko": "※ 주문 제작이므로 생산 상황에 따라 변동될 수 있습니다."
+  },
+  "legal.label.returns": {
+    "ja": "返品・交換",
+    "en": "Returns / Exchanges",
+    "ko": "반품·교환"
+  },
+  "legal.value.returns_customer": {
+    "ja": "お客様都合による返品: 商品到着後7日以内、未使用・未洗濯・タグ付きの商品に限り承ります（返送送料はお客様負担）。",
+    "en": "Customer-initiated returns: Within 7 days of arrival, unused / unwashed / tagged items only. Return shipping at customer's expense.",
+    "ko": "고객 사유에 의한 반품: 상품 도착 후 7일 이내, 미사용·미세탁·태그 부착 상품에 한합니다 (반송 배송비는 고객 부담)."
+  },
+  "legal.value.returns_defect": {
+    "ja": "不良品・誤配送: 商品到着後7日以内にご連絡いただければ、当社負担で交換いたします。",
+    "en": "Defects / wrong items: Contact us within 7 days of arrival; we exchange at our cost.",
+    "ko": "불량품·오배송: 상품 도착 후 7일 이내에 연락해 주시면 당사 부담으로 교환해 드립니다."
+  },
+  "legal.value.returns_link": {
+    "ja": "詳細は 返品ポリシー をご確認ください。",
+    "en": "See the Return Policy for details.",
+    "ko": "자세한 내용은 반품 정책을 확인해 주세요."
+  },
+  "legal.link.returns": {
+    "ja": "返品ポリシー",
+    "en": "Return Policy",
+    "ko": "반품 정책"
+  },
+  "legal.label.cancel": {
+    "ja": "キャンセル",
+    "en": "Cancellation",
+    "ko": "취소"
+  },
+  "legal.value.cancel": {
+    "ja": "オンデマンド生産のため、注文確定後のキャンセルは原則お受けできません。",
+    "en": "As items are made on demand, cancellations after order confirmation are generally not accepted.",
+    "ko": "주문 제작이므로 주문 확정 후의 취소는 원칙적으로 받지 않습니다."
+  },
+  "legal.value.cancel_defect": {
+    "ja": "不良品の場合は返品・交換の対象となります。詳細は返品ポリシーをご確認ください。",
+    "en": "Defective items are eligible for return / exchange. See the returns policy for details.",
+    "ko": "불량품의 경우 반품·교환 대상이 됩니다. 자세한 내용은 반품 정책을 확인해 주세요."
+  },
+  "legal.value.cancel_window": {
+    "ja": "注文確定から30分以内にご連絡いただければ、生産前であればキャンセル対応可能な場合があります（contact@inryoku.com）。",
+    "en": "If you contact us within 30 minutes of order confirmation, cancellation may be possible before production starts (contact@inryoku.com).",
+    "ko": "주문 확정 후 30분 이내에 연락 주시면, 생산 전이라면 취소 대응이 가능한 경우가 있습니다 (contact@inryoku.com)."
+  },
+  "legal.value.extra_fees_default": {
+    "ja": "国内: なし（送料込み価格を表示）",
+    "en": "Domestic: none (prices include shipping).",
+    "ko": "국내: 없음 (가격에 배송비 포함)."
+  },
+  "legal.value.extra_fees_intl": {
+    "ja": "海外発送: 配送先国の関税・輸入税・手数料はお客様のご負担となります。",
+    "en": "International: customs duties, import taxes, and handling fees in the destination country are paid by the customer.",
+    "ko": "해외 발송: 배송지국의 관세·수입세·수수료는 고객 부담입니다."
+  },
+  "legal.label.usage": {
+    "ja": "商品の使用条件",
+    "en": "Usage Conditions",
+    "ko": "상품 사용 조건"
+  },
+  "legal.placeholder.usage": {
+    "ja": "[TODO: アパレル: 洗濯表示に従ってください 等]",
+    "en": "[TODO: Example: For apparel, follow the care label instructions]",
+    "ko": "[TODO: 어패럴: 세탁 표시에 따라 주세요 등]"
+  },
+  "legal.label.conditions": {
+    "ja": "販売数量・販売条件",
+    "en": "Sales Conditions",
+    "ko": "판매 수량·판매 조건"
+  },
+  "legal.placeholder.conditions": {
+    "ja": "[TODO: 受注生産 / サイズ展開 XS-3XL 等の条件]",
+    "en": "[TODO: Add made-to-order status, size range such as XS-3XL, and any sales conditions]",
+    "ko": "[TODO: 주문 제작 / 사이즈 전개 XS-3XL 등의 조건]"
+  },
+  "legal.label.updated": {
+    "ja": "表記更新日",
+    "en": "Last Updated",
+    "ko": "표기 갱신일"
+  },
+  "legal.placeholder.updated": {
+    "ja": "[TODO: YYYY-MM-DD]",
+    "en": "[TODO: YYYY-MM-DD]",
+    "ko": "[TODO: YYYY-MM-DD]"
+  },
+  "legal.back": {
+    "ja": "← ショップへ戻る",
+    "en": "← BACK TO SHOP",
+    "ko": "← 쇼핑몰로 돌아가기"
+  },
+  "privacy.meta.title": {
+    "ja": "プライバシーポリシー — inryokü",
+    "en": "Privacy Policy — inryokü",
+    "ko": "개인정보 처리방침 — inryokü"
+  },
+  "privacy.title": {
+    "ja": "プライバシーポリシー",
+    "en": "Privacy Policy",
+    "ko": "개인정보 처리방침"
+  },
+  "privacy.section.collect": {
+    "ja": "収集する情報",
+    "en": "Information We Collect",
+    "ko": "수집하는 정보"
+  },
+  "privacy.body.collect": {
+    "ja": "注文処理に必要な情報（氏名、住所、メールアドレス）のみを収集します。決済情報（カード番号等）は Stripe 社が直接処理し、当社のサーバーには保存されません。",
+    "en": "We collect only what is needed to process your order (name, address, email). Payment details (card numbers, etc.) are handled directly by Stripe and never stored on our servers.",
+    "ko": "주문 처리에 필요한 정보 (성명, 주소, 이메일)만 수집합니다. 결제 정보 (카드 번호 등)는 Stripe 사가 직접 처리하며 당사 서버에는 저장되지 않습니다."
+  },
+  "privacy.section.purpose": {
+    "ja": "利用目的",
+    "en": "Purpose of Use",
+    "ko": "이용 목적"
+  },
+  "privacy.body.purpose": {
+    "ja": "収集した情報は、商品の配送、注文に関するご連絡、カスタマーサポートの目的にのみ使用します。",
+    "en": "We use collected information only for shipping, order-related communication, and customer support.",
+    "ko": "수집한 정보는 상품 배송, 주문 관련 연락, 고객 지원 목적으로만 사용합니다."
+  },
+  "privacy.section.third_party": {
+    "ja": "第三者への提供",
+    "en": "Third-Party Disclosure",
+    "ko": "제3자 제공"
+  },
+  "privacy.body.third_party": {
+    "ja": "商品の生産・配送に必要な範囲で、当社の生産・配送パートナーおよび決済処理業者（Stripe）に最小限の情報を提供する場合があります。それ以外の目的で第三者に個人情報を提供することはありません。",
+    "en": "We share the minimum necessary information with our production and shipping partners and our payment processor (Stripe) for order fulfillment. We do not otherwise provide personal information to third parties.",
+    "ko": "상품 생산·배송에 필요한 범위에서 당사의 생산·배송 파트너 및 결제 처리 업체 (Stripe) 에 최소한의 정보를 제공하는 경우가 있습니다. 그 외의 목적으로 제3자에게 개인정보를 제공하지 않습니다."
+  },
+  "privacy.section.cookie": {
+    "ja": "Cookie および localStorage の使用",
+    "en": "Cookies and localStorage",
+    "ko": "Cookie 및 localStorage 사용"
+  },
+  "privacy.body.cookie_intro": {
+    "ja": "当サイトでは以下の目的で Cookie / localStorage を使用しています:",
+    "en": "We use Cookies / localStorage for the following purposes:",
+    "ko": "본 사이트에서는 다음 목적으로 Cookie / localStorage를 사용하고 있습니다:"
+  },
+  "privacy.body.cookie_cart": {
+    "ja": "カート情報の保持 (localStorage): ブラウザを閉じてもカート内容を維持するため。",
+    "en": "Cart persistence (localStorage): keeps your cart between sessions.",
+    "ko": "장바구니 정보 유지 (localStorage): 브라우저를 닫아도 장바구니 내용을 유지하기 위해."
+  },
+  "privacy.body.cookie_session": {
+    "ja": "セッション識別 Cookie (inryoku_grey 等): 不正アクセス対策および簡易的なセッション管理のために、HTTP Only かつ SameSite=Lax の Cookie を発行する場合があります。広告トラッキングや行動分析の目的では使用しません。",
+    "en": "Session cookies (e.g., inryoku_grey): HTTP-only, SameSite=Lax cookies used solely for abuse prevention and lightweight session management. Not used for advertising or behavioral tracking.",
+    "ko": "세션 식별 Cookie (inryoku_grey 등): 부정 접근 방지 및 간이 세션 관리를 위해 HTTP Only이며 SameSite=Lax인 Cookie를 발행하는 경우가 있습니다. 광고 트래킹이나 행동 분석 목적으로는 사용하지 않습니다."
+  },
+  "privacy.body.cookie_lang": {
+    "ja": "言語設定: ?lang=en 切替時のみ localStorage に保存。",
+    "en": "Language preference: stored in localStorage only when ?lang=en is selected.",
+    "ko": "언어 설정: ?lang=en 또는 ?lang=ko로 전환 시에만 localStorage에 저장."
+  },
+  "privacy.body.cookie_no_ads": {
+    "ja": "第三者による広告配信目的のトラッキング Cookie は使用していません。",
+    "en": "We do not use third-party advertising or tracking cookies.",
+    "ko": "제3자에 의한 광고 배포 목적의 트래킹 Cookie는 사용하지 않습니다."
+  },
+  "privacy.section.security": {
+    "ja": "データの保護",
+    "en": "Data Protection",
+    "ko": "데이터 보호"
+  },
+  "privacy.body.security": {
+    "ja": "SSL/TLS 暗号化により通信を保護しています。決済情報は PCI DSS 準拠の Stripe が処理します。",
+    "en": "Communications are protected by SSL/TLS. Payment data is handled by PCI-DSS compliant Stripe.",
+    "ko": "SSL/TLS 암호화로 통신을 보호하고 있습니다. 결제 정보는 PCI DSS 준수 Stripe가 처리합니다."
+  },
+  "privacy.section.rights": {
+    "ja": "開示・訂正・削除請求",
+    "en": "Disclosure / Correction / Deletion",
+    "ko": "공개·정정·삭제 청구"
+  },
+  "privacy.body.rights": {
+    "ja": "ご自身の個人情報の開示・訂正・削除をご希望の場合は、下記までご連絡ください。本人確認のうえ、合理的な期間内に対応いたします。",
+    "en": "To request access, correction, or deletion of your personal information, contact us below. We will respond within a reasonable time after verifying identity.",
+    "ko": "본인의 개인정보 공개·정정·삭제를 원하시는 경우, 아래로 연락해 주세요. 본인 확인 후 합리적인 기간 내에 대응합니다."
+  },
+  "privacy.section.contact": {
+    "ja": "お問い合わせ",
+    "en": "Contact",
+    "ko": "문의"
+  },
+  "privacy.body.contact": {
+    "ja": "プライバシーに関するご質問: contact@inryoku.com",
+    "en": "Privacy questions: contact@inryoku.com",
+    "ko": "개인정보 관련 문의: contact@inryoku.com"
+  },
+  "privacy.updated": {
+    "ja": "最終更新: 2026年4月28日",
+    "en": "Last updated: 2026-04-28",
+    "ko": "최종 갱신: 2026년 4월 28일"
+  },
+  "returns.meta.title": {
+    "ja": "返品ポリシー — inryokü",
+    "en": "Return Policy — inryokü",
+    "ko": "반품 정책 — inryokü"
+  },
+  "returns.title": {
+    "ja": "返品・交換ポリシー",
+    "en": "Return / Exchange Policy",
+    "ko": "반품·교환 정책"
+  },
+  "returns.section.customer": {
+    "ja": "お客様都合による返品の条件",
+    "en": "Customer-Initiated Returns",
+    "ko": "고객 사유에 의한 반품 조건"
+  },
+  "returns.body.customer": {
+    "ja": "商品到着後7日以内、未使用・未洗濯・タグ付きの商品に限り返品を承ります。返送送料はお客様のご負担となります。",
+    "en": "Returns accepted within 7 days of arrival for unused, unwashed, tagged items only. Return shipping is paid by the customer.",
+    "ko": "상품 도착 후 7일 이내, 미사용·미세탁·태그 부착 상품에 한해 반품을 받습니다. 반송 배송비는 고객 부담입니다."
+  },
+  "returns.section.exclusions": {
+    "ja": "返品をお受けできない場合",
+    "en": "Non-Returnable Cases",
+    "ko": "반품 불가 사례"
+  },
+  "returns.body.exclusion_used": {
+    "ja": "使用済み・洗濯済みの商品",
+    "en": "Used or washed items",
+    "ko": "사용·세탁된 상품"
+  },
+  "returns.body.exclusion_tag": {
+    "ja": "タグを外した商品",
+    "en": "Items with tags removed",
+    "ko": "태그가 제거된 상품"
+  },
+  "returns.body.exclusion_late": {
+    "ja": "到着後8日以上経過した商品",
+    "en": "Items more than 8 days after arrival",
+    "ko": "도착 후 8일 이상 경과된 상품"
+  },
+  "returns.body.exclusion_damage": {
+    "ja": "お客様の責によって破損・汚損した商品",
+    "en": "Items damaged or soiled by the customer",
+    "ko": "고객의 책임으로 파손·오염된 상품"
+  },
+  "returns.section.defect": {
+    "ja": "不良品・誤配送の場合",
+    "en": "Defects / Wrong Items",
+    "ko": "불량품·오배송의 경우"
+  },
+  "returns.body.defect": {
+    "ja": "印刷不良・破損・誤配送の場合は、当社負担（送料含む）で交換いたします。商品到着後7日以内に contact@inryoku.com までご連絡ください。状況確認のため、商品の写真をお送りいただく場合がございます。",
+    "en": "For print defects, damage, or wrong items, we exchange at our expense (including shipping). Contact contact@inryoku.com within 7 days of arrival. We may ask for photos to verify.",
+    "ko": "인쇄 불량·파손·오배송의 경우 당사 부담 (배송비 포함)으로 교환합니다. 상품 도착 후 7일 이내에 contact@inryoku.com으로 연락해 주세요. 상태 확인을 위해 상품 사진을 요청할 수 있습니다."
+  },
+  "returns.section.made_to_order": {
+    "ja": "受注生産品について",
+    "en": "About Made-to-Order Items",
+    "ko": "주문 제작 상품에 대하여"
+  },
+  "returns.body.made_to_order": {
+    "ja": "inryokü のアパレルは受注生産（オンデマンド・プリント）です。注文確定後にお客様専用に生産・印刷を行うため、お客様都合（サイズ違い・イメージ違い等）による返品は原則お受けできません。サイズにご不安がある場合はサイズガイドをご確認ください。不良品・印刷不良・誤配送の場合は当社が責任を持って対応いたします。",
+    "en": "inryokü apparel is made to order (print on demand). Since each item is produced specifically for you after order confirmation, returns due to customer reasons (size mismatch, look different from image, etc.) are generally not accepted. Please review the size guide carefully. For defects, print errors, or wrong items, we will take full responsibility.",
+    "ko": "inryokü 의류는 주문 제작 (온디맨드 프린트) 입니다. 주문 확정 후 고객 전용으로 생산·인쇄하기 때문에, 고객 사유 (사이즈 차이·이미지 차이 등) 의 반품은 원칙적으로 받지 않습니다. 사이즈가 불안하시면 사이즈 가이드를 확인해 주세요. 불량품·인쇄 불량·오배송의 경우 당사가 책임지고 대응합니다."
+  },
+  "returns.section.intl": {
+    "ja": "海外発送・関税について",
+    "en": "International Shipping & Customs",
+    "ko": "해외 발송·관세에 대하여"
+  },
+  "returns.body.intl": {
+    "ja": "海外発送の場合、配送先国の関税・輸入税・通関手数料はお客様のご負担となります。返品時の国際送料（往復分）もお客様負担となりますのでご注意ください。発送目安: 注文確定から 7〜14営業日（生産 + 国際配送）。",
+    "en": "For international orders, customs duties, import taxes, and handling fees in the destination country are the customer's responsibility. For returns, international shipping costs (round trip) are also the customer's responsibility. Estimated delivery: 7–14 business days from order confirmation (production + international shipping).",
+    "ko": "해외 발송의 경우, 배송지국의 관세·수입세·통관 수수료는 고객 부담입니다. 반품 시 국제 배송비 (왕복분) 도 고객 부담이오니 주의해 주세요. 발송 예정: 주문 확정 후 7~14영업일 (생산 + 국제 배송)."
+  },
+  "returns.section.refund": {
+    "ja": "返金",
+    "en": "Refunds",
+    "ko": "환불"
+  },
+  "returns.body.refund": {
+    "ja": "返品商品の到着・状態確認後、5営業日以内に Stripe 経由で返金処理を行います。クレジットカード会社の締め日により、お客様の口座への反映には1〜2か月かかる場合があります。",
+    "en": "After we receive and inspect the return, refunds are processed via Stripe within 5 business days. Depending on your card issuer, it may take 1–2 months to appear on your statement.",
+    "ko": "반품 상품 도착·상태 확인 후, 5영업일 이내에 Stripe를 통해 환불 처리합니다. 신용카드사의 마감일에 따라 고객 계좌에 반영되기까지 1~2개월이 걸릴 수 있습니다."
+  },
+  "returns.section.steps": {
+    "ja": "返品手順",
+    "en": "How to Return",
+    "ko": "반품 절차"
+  },
+  "returns.body.steps": {
+    "ja": "1. contact@inryoku.com に注文番号と返品理由をご連絡 / 2. 当社より返送先住所をご案内 / 3. 商品到着後、確認・返金処理を実施",
+    "en": "1. Email contact@inryoku.com with your order number and reason. 2. We reply with the return address. 3. After we receive and inspect the item, we issue the refund.",
+    "ko": "1. contact@inryoku.com으로 주문번호와 반품 사유를 연락 / 2. 당사가 반송지 주소를 안내 / 3. 상품 도착 후 확인·환불 처리 실시"
+  },
+  "returns.updated": {
+    "ja": "最終更新: 2026年4月28日",
+    "en": "Last updated: 2026-04-28",
+    "ko": "최종 갱신: 2026년 4월 28일"
+  },
+  "size_guide.meta.title": {
+    "ja": "サイズガイド — inryokü",
+    "en": "Size Guide — inryokü",
+    "ko": "사이즈 가이드 — inryokü"
+  },
+  "size_guide.title": {
+    "ja": "サイズガイド",
+    "en": "Size Guide",
+    "ko": "사이즈 가이드"
+  },
+  "size_guide.subtitle": {
+    "ja": "inryokü Apparel — Hoodie / Tee / Long Sleeve / Crewneck / Tank",
+    "en": "inryokü Apparel — Hoodie / Tee / Long Sleeve / Crewneck / Tank",
+    "ko": "inryokü Apparel — Hoodie / Tee / Long Sleeve / Crewneck / Tank"
+  },
+  "size_guide.note_intro": {
+    "ja": "※ 海外規格のため、普段より1サイズ下をおすすめします。下記は HOODIE 系の代表寸法です。Tee / Long Sleeve 等は商品ページの個別表記をご確認ください。",
+    "en": "Note: Sized to international standards. We recommend going one size down. Below shows representative HOODIE measurements. For Tee / Long Sleeve / etc., see each product page.",
+    "ko": "※ 해외 규격이므로 평소보다 한 사이즈 작은 것을 권장합니다. 아래는 HOODIE 계열의 대표 치수입니다. Tee / Long Sleeve 등은 상품 페이지의 개별 표기를 확인해 주세요."
+  },
+  "size_guide.col.size": {
+    "ja": "サイズ",
+    "en": "Size",
+    "ko": "사이즈"
+  },
+  "size_guide.col.length": {
+    "ja": "着丈(cm)",
+    "en": "Length (cm)",
+    "ko": "기장(cm)"
+  },
+  "size_guide.col.width": {
+    "ja": "身幅(cm)",
+    "en": "Width (cm)",
+    "ko": "가슴 너비(cm)"
+  },
+  "size_guide.col.sleeve": {
+    "ja": "袖丈(cm)",
+    "en": "Sleeve (cm)",
+    "ko": "소매 길이(cm)"
+  },
+  "size_guide.col.jp": {
+    "ja": "日本サイズ目安",
+    "en": "JP Size Equivalent",
+    "ko": "일본 사이즈 환산"
+  },
+  "size_guide.note_tolerance": {
+    "ja": "採寸は商品により±2cm程度の誤差がございます",
+    "en": "Measurements may vary by ±2 cm per item.",
+    "ko": "측정은 상품에 따라 ±2cm 정도의 오차가 있을 수 있습니다"
+  },
+  "size_guide.section.howto": {
+    "ja": "測り方",
+    "en": "How to Measure",
+    "ko": "측정 방법"
+  },
+  "size_guide.howto.length": {
+    "ja": "着丈",
+    "en": "Length",
+    "ko": "기장"
+  },
+  "size_guide.howto.length_desc": {
+    "ja": "後ろ襟の付け根中央から裾までの長さ",
+    "en": "From the center base of the back collar to the hem.",
+    "ko": "뒷깃 밑부분 중앙에서 밑단까지의 길이"
+  },
+  "size_guide.howto.width": {
+    "ja": "身幅",
+    "en": "Width",
+    "ko": "가슴 너비"
+  },
+  "size_guide.howto.width_desc": {
+    "ja": "左右の脇下を直線で結んだ長さ",
+    "en": "Straight line between the left and right underarms.",
+    "ko": "좌우 겨드랑이를 직선으로 연결한 길이"
+  },
+  "size_guide.howto.sleeve": {
+    "ja": "袖丈",
+    "en": "Sleeve",
+    "ko": "소매 길이"
+  },
+  "size_guide.howto.sleeve_desc": {
+    "ja": "肩の縫い目から袖口までの長さ",
+    "en": "From the shoulder seam to the cuff.",
+    "ko": "어깨 솔기에서 소매 끝까지의 길이"
+  },
+  "success.meta.title": {
+    "ja": "ご注文完了 — inryokü",
+    "en": "ORDER CONFIRMED — inryokü",
+    "ko": "주문 완료 — inryokü"
+  },
+  "success.title": {
+    "ja": "ORDER CONFIRMED",
+    "en": "ORDER CONFIRMED",
+    "ko": "ORDER CONFIRMED"
+  },
+  "success.subtitle": {
+    "ja": "あなたの宇宙は、また少し広がった",
+    "en": "Your universe just expanded a little more.",
+    "ko": "당신의 우주가 또 조금 넓어졌다"
+  },
+  "success.back": {
+    "ja": "BACK TO UNIVERSE",
+    "en": "BACK TO UNIVERSE",
+    "ko": "BACK TO UNIVERSE"
+  },
+  "offline.meta.title": {
+    "ja": "inryokü — 接続はグレー",
+    "en": "inryokü — the connection is grey",
+    "ko": "inryokü — 연결은 회색"
+  },
+  "offline.label": {
+    "ja": "オフライン / 50%",
+    "en": "offline / 50%",
+    "ko": "오프라인 / 50%"
+  },
+  "offline.title": {
+    "ja": "the connection is grey",
+    "en": "the connection is grey",
+    "ko": "the connection is grey"
+  },
+  "offline.body_jp": {
+    "ja": "接続が途切れています。 でも、グレーは欠落ではありません。",
+    "en": "The connection has dropped — but grey is not absence.",
+    "ko": "연결이 끊겼습니다. 그러나 회색은 결여가 아닙니다."
+  },
+  "offline.body_en": {
+    "ja": "ネットワークは途絶え、信号は薄れる。世界はまだここにある、ただ観測されていないだけ。",
+    "en": "Networks fail. Signals fade. The world is still here, just unobserved.",
+    "ko": "네트워크는 끊기고, 신호는 옅어진다. 세계는 여전히 여기 있다, 단지 관찰되지 않을 뿐."
+  },
+  "offline.quote": {
+    "ja": "観測すれば、50% は 101% になる。",
+    "en": "observe, and the 50% becomes 101%.",
+    "ko": "관찰하면, 50%는 101%가 된다."
+  },
+  "offline.retry": {
+    "ja": "retry",
+    "en": "retry",
+    "ko": "retry"
+  },
+  "offline.reconnect": {
+    "ja": "reconnect",
+    "en": "reconnect",
+    "ko": "reconnect"
+  },
+  "offline.home": {
+    "ja": "return to inryokü",
+    "en": "return to inryokü",
+    "ko": "return to inryokü"
+  },
+  "offline.footer": {
+    "ja": "inryokü — 見えないものの可視化",
+    "en": "inryokü — making the invisible visible",
+    "ko": "inryokü — 보이지 않는 것의 가시화"
+  },
+  "common.back_to_shop": {
+    "ja": "← ショップへ戻る",
+    "en": "← BACK TO SHOP",
+    "ko": "← 쇼핑몰로 돌아가기"
+  },
+  "cosmos.gate.title": {
+    "ja": "観測の窓",
+    "en": "observation window"
+  },
+  "cosmos.gate.body": {
+    "ja": "触れて、観測を始める",
+    "en": "Touch to begin observing"
+  },
+  "cosmos.gate.sub": {
+    "ja": "音と粒子の観測へ",
+    "en": "Toward the observation of sound and particle"
+  },
+  "cosmos.gate.aria": {
+    "ja": "観測を始めるには触れる",
+    "en": "Touch or press Enter to begin observing"
+  },
+  "cosmos.gate.button": {
+    "ja": "観測を始める",
+    "en": "begin observing"
+  },
+  "cosmos.mute.observing": {
+    "ja": "観測",
+    "en": "observing"
+  },
+  "cosmos.mute.silent": {
+    "ja": "静寂",
+    "en": "silence"
+  },
+  "cosmos.mute.aria_observing": {
+    "ja": "音を静かにする",
+    "en": "fall to silence"
+  },
+  "cosmos.mute.aria_silent": {
+    "ja": "音を戻す",
+    "en": "return to observing"
+  },
+  "cosmos.mic.begin": {
+    "ja": "マイクで吹く",
+    "en": "blow into the mic"
+  },
+  "cosmos.mic.stop": {
+    "ja": "マイク停止",
+    "en": "stop the mic"
+  },
+  "cosmos.mic.armed": {
+    "ja": "マイクで観測しています",
+    "en": "the mic is observing"
+  },
+  "cosmos.mic.denied": {
+    "ja": "マイクの許可が下りませんでした。声以外でも観測できます。",
+    "en": "The microphone was not permitted. You can observe without your voice."
+  },
+  "cosmos.mic.off": {
+    "ja": "マイクを下げました",
+    "en": "the mic has been lowered"
+  },
+  "cosmos.contact.label": {
+    "ja": "CONTACT",
+    "en": "CONTACT"
+  },
+  "cosmos.contact.aria": {
+    "ja": "問いを届ける — 円環粒子で受け取ります",
+    "en": "send a question — received as a particle ring"
+  },
+  "cosmos.contact.handoff_canon": {
+    "ja": "宣言の円環が灯ります",
+    "en": "the ring of declaration is kindled"
+  },
+  "cosmos.scene.idle": {
+    "ja": "静止",
+    "en": "idle"
+  },
+  "cosmos.scene.breathing": {
+    "ja": "呼吸",
+    "en": "breathing"
+  },
+  "cosmos.scene.discovery": {
+    "ja": "発見",
+    "en": "discovery"
+  },
+  "cosmos.scene.speaking": {
+    "ja": "発話",
+    "en": "speaking"
+  },
+  "cosmos.scene.glyph": {
+    "ja": "文字",
+    "en": "glyph"
+  },
+  "cosmos.scene.rainbow": {
+    "ja": "虹環",
+    "en": "rainbow"
+  },
+  "cosmos.scene.yinyang": {
+    "ja": "陰陽",
+    "en": "yin-yang"
+  },
+  "cosmos.scene.storm": {
+    "ja": "嵐",
+    "en": "storm"
+  },
+  "cosmos.scene.leap": {
+    "ja": "跳躍",
+    "en": "leap"
+  },
+  "cosmos.scene.aria.idle": {
+    "ja": "場面：静止",
+    "en": "scene: idle"
+  },
+  "cosmos.scene.aria.breathing": {
+    "ja": "場面：呼吸",
+    "en": "scene: breathing"
+  },
+  "cosmos.scene.aria.discovery": {
+    "ja": "場面：発見",
+    "en": "scene: discovery"
+  },
+  "cosmos.scene.aria.speaking": {
+    "ja": "場面：発話",
+    "en": "scene: speaking"
+  },
+  "cosmos.scene.aria.glyph": {
+    "ja": "場面：文字",
+    "en": "scene: glyph"
+  },
+  "cosmos.scene.aria.rainbow": {
+    "ja": "場面：虹環",
+    "en": "scene: rainbow"
+  },
+  "cosmos.scene.aria.yinyang": {
+    "ja": "場面：陰陽",
+    "en": "scene: yin-yang"
+  },
+  "cosmos.scene.aria.storm": {
+    "ja": "場面：嵐",
+    "en": "scene: storm"
+  },
+  "cosmos.hud.scene": {
+    "ja": "場面",
+    "en": "scene"
+  },
+  "cosmos.hud.behavior": {
+    "ja": "振る舞い",
+    "en": "behavior"
+  },
+  "cosmos.hud.particles": {
+    "ja": "粒子",
+    "en": "particles"
+  },
+  "cosmos.hud.fps": {
+    "ja": "fps",
+    "en": "fps"
+  },
+  "cosmos.hud.canon": {
+    "ja": "円環",
+    "en": "canon"
+  },
+  "cosmos.hud.tier": {
+    "ja": "階",
+    "en": "tier"
+  },
+  "cosmos.hud.reduce": {
+    "ja": "静音",
+    "en": "reduce"
+  },
+  "cosmos.hud.reduce_on": {
+    "ja": "在",
+    "en": "yes"
+  },
+  "cosmos.hud.reduce_off": {
+    "ja": "無",
+    "en": "no"
+  },
+  "cosmos.hud.field": {
+    "ja": "場",
+    "en": "field"
+  },
+  "cosmos.hud.pulses": {
+    "ja": "鼓動",
+    "en": "pulses"
+  },
+  "cosmos.hud.state": {
+    "ja": "状態",
+    "en": "state"
+  },
+  "cosmos.hud.phase": {
+    "ja": "相",
+    "en": "phase"
+  },
+  "cosmos.hud.audio": {
+    "ja": "音",
+    "en": "audio"
+  },
+  "cosmos.hud.audio_silent": {
+    "ja": "静寂",
+    "en": "silence"
+  },
+  "cosmos.hud.audio_live": {
+    "ja": "鳴る",
+    "en": "live"
+  },
+  "cosmos.observe.label": {
+    "ja": "観測",
+    "en": "observation"
+  },
+  "cosmos.observe.pct": {
+    "ja": "観測 {pct}%",
+    "en": "observation {pct}%"
+  },
+  "cosmos.observe.wrap": {
+    "ja": "99% から 50% に戻りました。もう一度観測が始まります。",
+    "en": "99% wrapped back to 50%. The observation begins again."
+  },
+  "cosmos.observe.revelation": {
+    "ja": "101% は無い。しかし、観測された。",
+    "en": "101% does not exist. And yet, it was observed."
+  },
+  "cosmos.observe.tick": {
+    "ja": "観測 +1%",
+    "en": "+1% observed"
+  },
+  "cosmos.announce.scene_changed": {
+    "ja": "場面が {scene} に変わりました",
+    "en": "scene changed to {scene}"
+  },
+  "cosmos.announce.canon_played": {
+    "ja": "円環：{canon}",
+    "en": "canon: {canon}"
+  },
+  "cosmos.announce.audio_began": {
+    "ja": "音が始まりました。観測が開きます。",
+    "en": "Audio has begun. The observation opens."
+  },
+  "cosmos.announce.audio_muted": {
+    "ja": "静寂に落ちました",
+    "en": "fallen to silence"
+  },
+  "cosmos.announce.audio_unmuted": {
+    "ja": "観測に戻りました",
+    "en": "returned to observing"
+  },
+  "cosmos.announce.mic_armed": {
+    "ja": "マイクで観測しています",
+    "en": "the mic is observing"
+  },
+  "cosmos.announce.mic_denied": {
+    "ja": "マイクは届きませんでした",
+    "en": "the mic could not be reached"
+  },
+  "cosmos.announce.help_opened": {
+    "ja": "操作の案内を開きました",
+    "en": "the controls panel is open"
+  },
+  "cosmos.announce.help_closed": {
+    "ja": "操作の案内を閉じました",
+    "en": "the controls panel is closed"
+  },
+  "cosmos.announce.reset": {
+    "ja": "観測を最初に戻しました",
+    "en": "the observation has returned to the start"
+  },
+  "cosmos.error.webgl": {
+    "ja": "WebGL が見つかりません。観測の窓が開きません。",
+    "en": "WebGL is not available. The observation window will not open."
+  },
+  "cosmos.error.audio_blocked": {
+    "ja": "音はまだ始まっていません。一度触れてください。",
+    "en": "Audio has not begun. Touch the screen once."
+  },
+  "cosmos.error.mic_denied": {
+    "ja": "マイクの許可が下りませんでした。",
+    "en": "The microphone was not permitted."
+  },
+  "cosmos.error.generic_observation": {
+    "ja": "観測できませんでした。",
+    "en": "Observation did not begin."
+  },
+  "cosmos.reducemotion.note": {
+    "ja": "動きを抑えて観測しています。",
+    "en": "Observing with reduced motion."
+  },
+  "cosmos.skip.link": {
+    "ja": "本文へ移動",
+    "en": "Skip to content"
+  },
+  "cosmos.help.title": {
+    "ja": "操作",
+    "en": "Controls"
+  },
+  "cosmos.help.subtitle": {
+    "ja": "観測のための鍵",
+    "en": "Keys for observing"
+  },
+  "cosmos.help.row.toggle": {
+    "ja": "? — この案内を開閉",
+    "en": "? — open or close this panel"
+  },
+  "cosmos.help.row.mute": {
+    "ja": "M — 静寂と観測の切替",
+    "en": "M — fall to silence, or return"
+  },
+  "cosmos.help.row.resonance": {
+    "ja": "R — 共鳴 (kyōmei) を鳴らす",
+    "en": "R — sound the resonance"
+  },
+  "cosmos.help.row.revelation": {
+    "ja": "I — 啓示 (keiji) を鳴らす",
+    "en": "I — sound the revelation"
+  },
+  "cosmos.help.row.escape": {
+    "ja": "Esc — 開いている窓を閉じる",
+    "en": "Esc — close any open window"
+  },
+  "cosmos.help.row.tab": {
+    "ja": "Tab — 操作の順に移る",
+    "en": "Tab — move through controls"
+  },
+  "cosmos.help.close": {
+    "ja": "閉じる",
+    "en": "close"
+  },
+  "cosmos.replay.button": {
+    "ja": "もう一度はじめる",
+    "en": "begin again"
+  },
+  "cosmos.replay.aria": {
+    "ja": "起動の場面を最初から観測する",
+    "en": "observe the boot sequence from the start"
+  },
+  "cosmos.canon.silence.name": {
+    "ja": "沈黙",
+    "en": "silence"
+  },
+  "cosmos.canon.silence.romaji": {
+    "ja": "chinmoku",
+    "en": "chinmoku"
+  },
+  "cosmos.canon.silence.desc": {
+    "ja": "鳴らないことで鳴る音",
+    "en": "the sound that sounds by not sounding"
+  },
+  "cosmos.canon.core.name": {
+    "ja": "中心",
+    "en": "core"
+  },
+  "cosmos.canon.core.romaji": {
+    "ja": "chūshin",
+    "en": "chūshin"
+  },
+  "cosmos.canon.core.desc": {
+    "ja": "引力の起点",
+    "en": "the origin of gravity"
+  },
+  "cosmos.canon.ma.name": {
+    "ja": "間",
+    "en": "ma"
+  },
+  "cosmos.canon.ma.romaji": {
+    "ja": "ma",
+    "en": "ma"
+  },
+  "cosmos.canon.ma.desc": {
+    "ja": "音と音の間にある重力",
+    "en": "the gravity between two sounds"
+  },
+  "cosmos.canon.shadow.name": {
+    "ja": "影",
+    "en": "shadow"
+  },
+  "cosmos.canon.shadow.romaji": {
+    "ja": "kage",
+    "en": "kage"
+  },
+  "cosmos.canon.shadow.desc": {
+    "ja": "光が落とした残像",
+    "en": "the afterimage that light dropped"
+  },
+  "cosmos.canon.emit.name": {
+    "ja": "放出",
+    "en": "emit"
+  },
+  "cosmos.canon.emit.romaji": {
+    "ja": "hōshutsu",
+    "en": "hōshutsu"
+  },
+  "cosmos.canon.emit.desc": {
+    "ja": "内側から外へ抜ける粒子",
+    "en": "particles that pass from inside outward"
+  },
+  "cosmos.canon.observation.name": {
+    "ja": "観測",
+    "en": "observation"
+  },
+  "cosmos.canon.observation.romaji": {
+    "ja": "kansoku",
+    "en": "kansoku"
+  },
+  "cosmos.canon.observation.desc": {
+    "ja": "+1% の引き金",
+    "en": "the trigger of +1%"
+  },
+  "cosmos.canon.self_question.name": {
+    "ja": "自問",
+    "en": "self question"
+  },
+  "cosmos.canon.self_question.romaji": {
+    "ja": "jimon",
+    "en": "jimon"
+  },
+  "cosmos.canon.self_question.desc": {
+    "ja": "答える前にひらく問い",
+    "en": "the question that opens before its answer"
+  },
+  "cosmos.canon.declaration.name": {
+    "ja": "宣言",
+    "en": "declaration"
+  },
+  "cosmos.canon.declaration.romaji": {
+    "ja": "sengen",
+    "en": "sengen"
+  },
+  "cosmos.canon.declaration.desc": {
+    "ja": "一度だけ強く立てる言葉",
+    "en": "the word stood up once, firmly"
+  },
+  "cosmos.canon.leap.name": {
+    "ja": "跳躍",
+    "en": "leap"
+  },
+  "cosmos.canon.leap.romaji": {
+    "ja": "chōyaku",
+    "en": "chōyaku"
+  },
+  "cosmos.canon.leap.desc": {
+    "ja": "段を踏まずに次へ行く",
+    "en": "to reach the next without the step between"
+  },
+  "cosmos.canon.resonance.name": {
+    "ja": "共鳴",
+    "en": "resonance"
+  },
+  "cosmos.canon.resonance.romaji": {
+    "ja": "kyōmei",
+    "en": "kyōmei"
+  },
+  "cosmos.canon.resonance.desc": {
+    "ja": "三つの音が同じ場所を指す",
+    "en": "three sounds point to the same place"
+  },
+  "cosmos.canon.consensus.name": {
+    "ja": "合意",
+    "en": "consensus"
+  },
+  "cosmos.canon.consensus.romaji": {
+    "ja": "gōi",
+    "en": "gōi"
+  },
+  "cosmos.canon.consensus.desc": {
+    "ja": "違う色が同じ円に並ぶ",
+    "en": "different colors aligned along one ring"
+  },
+  "cosmos.canon.past_speculation.name": {
+    "ja": "過去推測",
+    "en": "past speculation"
+  },
+  "cosmos.canon.past_speculation.romaji": {
+    "ja": "kakosuisoku",
+    "en": "kakosuisoku"
+  },
+  "cosmos.canon.past_speculation.desc": {
+    "ja": "過ぎたものを逆から鳴らす",
+    "en": "what has passed, sounded in reverse"
+  },
+  "cosmos.canon.future_command.name": {
+    "ja": "未来命令",
+    "en": "future command"
+  },
+  "cosmos.canon.future_command.romaji": {
+    "ja": "miraimei",
+    "en": "miraimei"
+  },
+  "cosmos.canon.future_command.desc": {
+    "ja": "まだ来ない時間への指示",
+    "en": "an instruction sent to a time not yet arrived"
+  },
+  "cosmos.canon.echo.name": {
+    "ja": "反響",
+    "en": "echo"
+  },
+  "cosmos.canon.echo.romaji": {
+    "ja": "hankyō",
+    "en": "hankyō"
+  },
+  "cosmos.canon.echo.desc": {
+    "ja": "戻ってきた自分の声",
+    "en": "one's own voice, returned"
+  },
+  "cosmos.canon.quotation.name": {
+    "ja": "引用",
+    "en": "quotation"
+  },
+  "cosmos.canon.quotation.romaji": {
+    "ja": "in'yō",
+    "en": "in'yō"
+  },
+  "cosmos.canon.quotation.desc": {
+    "ja": "他者の声を借りて立つ",
+    "en": "to stand by borrowing another's voice"
+  },
+  "cosmos.canon.summon.name": {
+    "ja": "召喚",
+    "en": "summon"
+  },
+  "cosmos.canon.summon.romaji": {
+    "ja": "shōkan",
+    "en": "shōkan"
+  },
+  "cosmos.canon.summon.desc": {
+    "ja": "見えないものを呼ぶ",
+    "en": "to call what cannot be seen"
+  },
+  "cosmos.canon.revelation.name": {
+    "ja": "啓示",
+    "en": "revelation"
+  },
+  "cosmos.canon.revelation.romaji": {
+    "ja": "keiji",
+    "en": "keiji"
+  },
+  "cosmos.canon.revelation.desc": {
+    "ja": "50% を 101% に裏返す瞬間",
+    "en": "the instant 50% turns inside out into 101%"
+  },
+  "p1.title.short": {
+    "ja": "目覚め",
+    "en": "awakening"
+  },
+  "p1.boot.window": {
+    "ja": "INRYOKÜ.SYS — 起動",
+    "en": "INRYOKÜ.SYS — boot"
+  },
+  "p1.boot.init": {
+    "ja": "観測の場を整えています",
+    "en": "preparing the observation field"
+  },
+  "p1.boot.loading": {
+    "ja": "円環粒子を読み込み中",
+    "en": "loading particle canon"
+  },
+  "p1.cap.preroll": {
+    "ja": "意識 — まだ凝らない",
+    "en": "consciousness — not yet condensed"
+  },
+  "p1.state.drifting": {
+    "ja": "漂う",
+    "en": "drifting"
+  },
+  "p1.state.attract": {
+    "ja": "引き寄せ",
+    "en": "attract"
+  },
+  "p1.state.fuse": {
+    "ja": "融合",
+    "en": "fuse"
+  },
+  "p1.state.duality": {
+    "ja": "二極",
+    "en": "duality"
+  },
+  "p1.state.singular": {
+    "ja": "ひとつのグレー",
+    "en": "singular grey"
+  },
+  "p1.state.warp": {
+    "ja": "通路がひらく",
+    "en": "tunnel opening"
+  },
+  "p1.state.breach": {
+    "ja": "境界がほどける",
+    "en": "border unbinding"
+  },
+  "p1.state.consume": {
+    "ja": "現実を呑む",
+    "en": "drawing reality in"
+  },
+  "p1.hint.reality": {
+    "ja": "R-E-A-L-I-T-Y と打つ",
+    "en": "type R-E-A-L-I-T-Y"
+  },
+  "p2.title.short": {
+    "ja": "陰陽多様体",
+    "en": "yin-yang manifold"
+  },
+  "p2.subtitle": {
+    "ja": "観測すると場は崩れる",
+    "en": "observation collapses the field"
+  },
+  "p2.corner.observe": {
+    "ja": "陰陽 (in'yō) を観測する",
+    "en": "yin-yang · observe"
+  },
+  "p2.corner.rainbow": {
+    "ja": "グレーは全ての色を抱える",
+    "en": "grey holds every color"
+  },
+  "p2.corner.hover": {
+    "ja": "101% の球に触れる",
+    "en": "touch the 101% sphere"
+  },
+  "p2.state.potential": {
+    "ja": "潜在",
+    "en": "potential"
+  },
+  "p2.hint.observe": {
+    "ja": "左の球に触れ、右へ動き、観測する",
+    "en": "touch the left orb, move right, observe"
+  },
+  "p3.title.unified": {
+    "ja": "P3 · 統合 · 2026",
+    "en": "P3 · UNIFIED · 2026"
+  },
+  "p3.title.effects": {
+    "ja": "P3 · 効果層 · 2026",
+    "en": "P3 · EFFECTS · 2026"
+  },
+  "p3.corner.unified": {
+    "ja": "効果 · 振る舞い · 音 · 観測",
+    "en": "effects · behavior · audio · observation"
+  },
+  "p3.corner.effects": {
+    "ja": "WebGL · ESM",
+    "en": "WebGL · ESM"
+  },
+  "p3.corner.layers": {
+    "ja": "効果層：星雲 / 星 / 橋 / ロゴ",
+    "en": "effects: nebula / stars / bridges / logo"
+  },
+  "p3.audio.subtitle": {
+    "ja": "17 円環の試聴 · 観測 +1% · 触れて始まる · 白黒禁則",
+    "en": "17 canon audition · +1% per observation · gesture-gated · light=0.5 only"
+  },
+  "p3.audio.reset": {
+    "ja": "観測を戻す",
+    "en": "reset observation"
+  },
+  "p3.audio.sequence": {
+    "ja": "17 円環を順に鳴らす",
+    "en": "play all 17 canon"
+  },
+  "p3.audio.hint": {
+    "ja": "鍵：R=共鳴 · I=啓示 · M=静寂",
+    "en": "keys: R=resonance · I=revelation · M=silence"
+  },
+  "p3.audio.eventlog": {
+    "ja": "観測の記録",
+    "en": "observation log"
+  },
+  "p3.logo.title": {
+    "ja": "ロゴ発話の試験",
+    "en": "logo speech test"
+  },
+  "p3.logo.subtitle": {
+    "ja": "円環粒子 × ロゴ球 — P3",
+    "en": "particle canon × logo sphere — P3"
+  },
+  "p3.logo.section.canon": {
+    "ja": "17 円環",
+    "en": "17 canon"
+  },
+  "p3.logo.section.register": {
+    "ja": "発話の高さ",
+    "en": "register"
+  },
+  "p3.logo.section.ai": {
+    "ja": "AI の声から円環を導く",
+    "en": "AI input · resolve canon"
+  },
+  "p3.logo.label.register": {
+    "ja": "高さ",
+    "en": "register"
+  },
+  "p3.logo.label.intent": {
+    "ja": "意図",
+    "en": "intent"
+  },
+  "p3.logo.label.tone": {
+    "ja": "色合い",
+    "en": "tone"
+  },
+  "p3.logo.label.certainty": {
+    "ja": "確かさ",
+    "en": "certainty"
+  },
+  "p3.logo.label.direction": {
+    "ja": "向き",
+    "en": "direction"
+  },
+  "p3.logo.label.phase": {
+    "ja": "相",
+    "en": "phase"
+  },
+  "p3.logo.label.current": {
+    "ja": "今",
+    "en": "current"
+  },
+  "p3.logo.label.queue": {
+    "ja": "並び",
+    "en": "queue"
+  },
+  "p3.logo.queue.empty": {
+    "ja": "なし",
+    "en": "none"
+  },
+  "p3.logo.current.idle": {
+    "ja": "静止",
+    "en": "idle"
+  },
+  "p3.logo.btn.speak": {
+    "ja": "導いて発話する",
+    "en": "resolve then speak"
+  },
+  "p3.logo.btn.resolve": {
+    "ja": "導きだけ見る",
+    "en": "resolve only"
+  },
+  "p3.logo.btn.interrupt": {
+    "ja": "全て止める",
+    "en": "interrupt all"
+  },
+  "p3.logo.toggle.reduced": {
+    "ja": "動きを抑える",
+    "en": "force reduced motion"
+  },
+  "p3.logo.section.log": {
+    "ja": "出来事の記録",
+    "en": "event log"
+  },
+  "p3.logo.register.whisper": {
+    "ja": "ささやき",
+    "en": "whisper"
+  },
+  "p3.logo.register.hover": {
+    "ja": "触れる",
+    "en": "hover"
+  },
+  "p3.logo.register.click": {
+    "ja": "押す",
+    "en": "click"
+  },
+  "p3.logo.register.summon": {
+    "ja": "召喚",
+    "en": "summon"
+  },
+  "p3.logo.register.revelation": {
+    "ja": "啓示",
+    "en": "revelation"
+  },
+  "p3.logo.intent.greet": {
+    "ja": "挨拶",
+    "en": "greet"
+  },
+  "p3.logo.intent.question": {
+    "ja": "問い",
+    "en": "question"
+  },
+  "p3.logo.intent.assert": {
+    "ja": "断言",
+    "en": "assert"
+  },
+  "p3.logo.intent.doubt": {
+    "ja": "疑い",
+    "en": "doubt"
+  },
+  "p3.logo.intent.agree": {
+    "ja": "同意",
+    "en": "agree"
+  },
+  "p3.logo.intent.conclude": {
+    "ja": "結び",
+    "en": "conclude"
+  },
+  "p3.logo.intent.summon": {
+    "ja": "召喚",
+    "en": "summon"
+  },
+  "p3.logo.intent.reveal": {
+    "ja": "啓示",
+    "en": "reveal"
+  },
+  "p3.logo.intent.silence": {
+    "ja": "沈黙",
+    "en": "silence"
+  },
+  "p3.logo.intent.quote": {
+    "ja": "引用",
+    "en": "quote"
+  },
+  "p3.logo.tone.neutral": {
+    "ja": "中庸",
+    "en": "neutral"
+  },
+  "p3.logo.tone.warm": {
+    "ja": "温い",
+    "en": "warm"
+  },
+  "p3.logo.tone.cold": {
+    "ja": "冷たい",
+    "en": "cold"
+  },
+  "p3.logo.tone.urgent": {
+    "ja": "急ぐ",
+    "en": "urgent"
+  },
+  "p3.logo.tone.gentle": {
+    "ja": "穏やか",
+    "en": "gentle"
+  },
+  "p3.logo.tone.intense": {
+    "ja": "強い",
+    "en": "intense"
+  },
+  "p3.logo.direction.inward": {
+    "ja": "内へ",
+    "en": "inward"
+  },
+  "p3.logo.direction.outward": {
+    "ja": "外へ",
+    "en": "outward"
+  },
+  "transitions.p0.question": {
+    "ja": "あなたは、自分を知っているか。",
+    "en": "do you know yourself?"
+  },
+  "transitions.p1.boot.line1": {
+    "ja": "inryokü BIOS v1.0 · 相 P1 起動",
+    "en": "inryokü BIOS v1.0 · phase 1 boot"
+  },
+  "transitions.p1.boot.line2": {
+    "ja": "記憶の点検 ... 256 の運び手を受信",
+    "en": "memory check ... 256 carriers received"
+  },
+  "transitions.p1.boot.line3": {
+    "ja": "意識のドライバを読み込み中 ...",
+    "en": "loading consciousness drivers ..."
+  }
+}

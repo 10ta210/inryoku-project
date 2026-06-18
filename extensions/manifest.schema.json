@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://inryoku.space/schemas/extension-manifest.json",
+  "title": "inryokü Extension Manifest",
+  "type": "object",
+  "required": ["id", "name", "version", "type", "entry"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$",
+      "description": "Unique extension id. lowercase, dashes ok."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[a-z0-9.]+)?$",
+      "description": "Semver-style."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["bundle", "behavior", "canon", "scene", "command"]
+    },
+    "entry": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+\\.js$",
+      "description": "Filename of the entry module, relative to the extension folder. Must end .js."
+    },
+    "deps": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+      "default": []
+    },
+    "contributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "behaviors": { "type": "array", "items": { "type": "string" } },
+        "canons":    { "type": "array", "items": { "type": "string" } },
+        "scenes":    {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["state", "behavior"],
+            "properties": {
+              "state": { "type": "string" },
+              "behavior": { "type": "string" }
+            }
+          }
+        },
+        "commands":  { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "description": { "type": "string", "maxLength": 280 }
+  }
+}

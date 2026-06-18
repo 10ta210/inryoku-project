@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<title>inryokü — 粒子の質感サンプル 10種</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;background:#0a0a0a;color:#ddd;font:13px/1.6 -apple-system,"Helvetica Neue",sans-serif;padding:32px;}
+  h1{font-weight:300;letter-spacing:0.05em;font-size:18px;margin:0 0 4px;}
+  .sub{color:#777;font-size:11px;margin-bottom:32px;}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:1100px;}
+  .card{background:#111;border:1px solid #222;border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;transition:border-color .2s,transform .2s;}
+  .card:hover{border-color:#444;transform:translateY(-2px);}
+  .thumb{aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;color:#333;font:10px monospace;border-bottom:1px solid #1a1a1a;position:relative;overflow:hidden;}
+  .thumb iframe{width:100%;height:100%;border:0;pointer-events:none;}
+  .meta{padding:12px 14px;}
+  .num{color:#666;font:10px monospace;letter-spacing:0.1em;}
+  .name{font-size:14px;margin:2px 0 4px;color:#eee;}
+  .desc{color:#888;font-size:11px;}
+</style>
+</head>
+<body>
+<h1>inryokü — 粒子の質感サンプル 10種</h1>
+<div class="sub">同じ位置・同じサイズ分布・同じ動き。違うのは「光の質感」だけ。</div>
+<div class="grid">
+  <a class="card" href="sample_01.html"><div class="thumb"><iframe src="sample_01.html" loading="lazy"></iframe></div><div class="meta"><div class="num">01</div><div class="name">Sharp Core / No Halo</div><div class="desc">単色の硬い円。エッジくっきり、光を持たない物体感。</div></div></a>
+  <a class="card" href="sample_02.html"><div class="thumb"><iframe src="sample_02.html" loading="lazy"></iframe></div><div class="meta"><div class="num">02</div><div class="name">Gaussian Soft</div><div class="desc">中央から滑らかに減衰する典型的な光球。</div></div></a>
+  <a class="card" href="sample_03.html"><div class="thumb"><iframe src="sample_03.html" loading="lazy"></iframe></div><div class="meta"><div class="num">03</div><div class="name">Two Layer Glow</div><div class="desc">鋭いコア + 広いハロー。光源らしさ。</div></div></a>
+  <a class="card" href="sample_04.html"><div class="thumb"><iframe src="sample_04.html" loading="lazy"></iframe></div><div class="meta"><div class="num">04</div><div class="name">Three Layer Glow</div><div class="desc">コア + 中ハロー + 外ベール。深い発光。</div></div></a>
+  <a class="card" href="sample_05.html"><div class="thumb"><iframe src="sample_05.html" loading="lazy"></iframe></div><div class="meta"><div class="num">05</div><div class="name">Lens Flare Cross</div><div class="desc">ガウシアン + 縦横の光線。レンズフレア。</div></div></a>
+  <a class="card" href="sample_06.html"><div class="thumb"><iframe src="sample_06.html" loading="lazy"></iframe></div><div class="meta"><div class="num">06</div><div class="name">Ring (Donut)</div><div class="desc">中央が暗く、リング状に光るドーナツ。</div></div></a>
+  <a class="card" href="sample_07.html"><div class="thumb"><iframe src="sample_07.html" loading="lazy"></iframe></div><div class="meta"><div class="num">07</div><div class="name">Noisy / Granular</div><div class="desc">ランダムテクスチャを乗算した粗い粒度。</div></div></a>
+  <a class="card" href="sample_08.html"><div class="thumb"><iframe src="sample_08.html" loading="lazy"></iframe></div><div class="meta"><div class="num">08</div><div class="name">Chromatic Aberration</div><div class="desc">RGBが微妙にずれて重なる虹滲み。</div></div></a>
+  <a class="card" href="sample_09.html"><div class="thumb"><iframe src="sample_09.html" loading="lazy"></iframe></div><div class="meta"><div class="num">09</div><div class="name">Twinkle / 4-pt Star</div><div class="desc">4方向に細い光線が出る星形。</div></div></a>
+  <a class="card" href="sample_10.html"><div class="thumb"><iframe src="sample_10.html" loading="lazy"></iframe></div><div class="meta"><div class="num">10</div><div class="name">Nebula / Reverse Glow</div><div class="desc">中心が薄く、外周が滲んで霧状。</div></div></a>
+</div>
+</body></html>

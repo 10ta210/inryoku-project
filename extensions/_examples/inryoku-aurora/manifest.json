@@ -1,0 +1,13 @@
+{
+  "id": "inryoku-aurora",
+  "name": "Aurora",
+  "version": "0.1.0",
+  "type": "bundle",
+  "entry": "index.js",
+  "description": "Adds an aurora behavior + an aurora_breath canon + an 'inspired' scene.",
+  "contributes": {
+    "behaviors": ["aurora"],
+    "canons":    ["aurora_breath"],
+    "scenes":    [{ "state": "inspired", "behavior": "aurora" }]
+  }
+}

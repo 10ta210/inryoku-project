@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — P3 Upgrade Preview v3</title>
+<style>
+  :root { color-scheme: dark; --ink:#f0f0f6; --dim:#6b6b78; --line:#2a2a32; --accent:#a78bfa; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #030305; color: var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; overflow: hidden; cursor: none; }
+  canvas { display: block; position: fixed; inset: 0; }
+  #cursor { position: fixed; width: 14px; height: 14px; border: 1px solid rgba(240,240,246,0.7); border-radius: 50%; pointer-events: none; z-index: 99; mix-blend-mode: difference; transform: translate(-50%,-50%); transition: width .2s, height .2s, border-color .2s; }
+  #cursor.hot { width: 30px; height: 30px; border-color: var(--accent); }
+
+  .corner { position: fixed; z-index: 10; font-size: 10px; letter-spacing: 0.32em; color: var(--dim);
+    text-transform: uppercase; padding: 16px 20px; pointer-events: none; }
+  .tl { top: 0; left: 0; } .tr { top: 0; right: 0; text-align: right; }
+  .bl { bottom: 0; left: 0; } .br { bottom: 0; right: 0; text-align: right; pointer-events: auto; }
+  .corner b { color: var(--ink); font-weight: 300; letter-spacing: 0.42em; display: block; margin-bottom: 4px; font-size: 11px; }
+  .corner .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; display: inline-block; margin-right: 6px; vertical-align: middle; box-shadow: 0 0 10px #4ade80; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .corner a { color: var(--dim); text-decoration: none; cursor: none; transition: color .3s, letter-spacing .3s; }
+  .corner a:hover { color: var(--ink); letter-spacing: 0.42em; }
+
+  #title { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    z-index: 5; text-align: center; mix-blend-mode: screen; pointer-events: none; }
+  #title .l1 { font-size: clamp(64px, 12vw, 200px); letter-spacing: 0.24em; font-weight: 100; color: #f8f8fc; opacity: 0; transform: scale(0.92); transition: opacity 1.8s cubic-bezier(.2,.7,.2,1) 0.3s, transform 2.2s cubic-bezier(.2,.7,.2,1) 0.3s; text-shadow: 0 0 40px rgba(167,139,250,0.25); }
+  #title .l2 { font-size: 10px; letter-spacing: 0.6em; color: #9090a0; opacity: 0; margin-top: 8px; transition: opacity 2s ease 1.2s; }
+  body.ready #title .l1 { opacity: 0.97; transform: scale(1); }
+  body.ready #title .l2 { opacity: 0.85; }
+  body.scene-glyph #title { opacity: 0; transition: opacity .8s; }
+
+  #scene { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 20;
+    display: flex; gap: 3px; padding: 5px; border: 1px solid var(--line); border-radius: 999px;
+    background: rgba(8,8,12,0.78); backdrop-filter: blur(14px) saturate(140%); }
+  #scene button { appearance: none; border: 0; background: transparent; color: #9a9aa6; cursor: none;
+    padding: 8px 16px; border-radius: 999px; font: inherit; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; transition: all 0.3s cubic-bezier(.2,.7,.2,1); position: relative; }
+  #scene button.on { background: #1c1c26; color: var(--ink); box-shadow: inset 0 0 0 1px #3a3a44, 0 0 24px rgba(167,139,250,0.18); }
+  #scene button:hover { color: var(--ink); }
+
+  #hud {
+    position: fixed; top: 16px; right: 16px; z-index: 15;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px;
+    background: rgba(8,8,12,0.6); backdrop-filter: blur(10px);
+    font-size: 9px; letter-spacing: 0.18em; line-height: 1.8; color: #8a8a96; text-transform: uppercase;
+    min-width: 220px;
+  }
+  #hud .row { display: flex; justify-content: space-between; gap: 18px; }
+  #hud .row span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; }
+  #hud .bar { height: 2px; background: #1a1a22; margin-top: 8px; overflow: hidden; }
+  #hud .bar i { display: block; height: 100%; background: linear-gradient(90deg,#ef4444,#f59e0b,#22c55e,#06b6d4,#6366f1,#ec4899); transform: scaleX(0.5); transform-origin: left; transition: transform 0.6s ease; }
+  #hud .canon { font-size: 8px; color: #6b6b78; letter-spacing: 0.3em; margin-top: 6px; opacity: 0; transition: opacity .4s; }
+  body.scene-speaking #hud .canon, body.scene-glyph #hud .canon { opacity: 1; }
+
+  /* boot reveal */
+  #boot { position: fixed; inset: 0; background: #030305; z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 1.5s ease 0.4s, visibility 0s 2s; gap: 18px; }
+  body.ready #boot { opacity: 0; visibility: hidden; }
+  #boot .ring { width: 56px; height: 56px; border: 1px solid #2a2a32; border-top-color: #f8f8fc; border-radius: 50%; animation: spin 1.2s linear infinite; }
+  #boot .lbl { font-size: 9px; letter-spacing: 0.5em; color: #6b6b78; text-transform: uppercase; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="cursor"></div>
+
+<div class="corner tl"><b>INRYOKÜ</b>P3 / UNIVERSE</div>
+<div class="corner tr"><b>2026</b><span class="dot"></span>LIVE · WEBGL</div>
+<div class="corner bl"><b>JP / EN</b>language</div>
+<div class="corner br"><a id="contactBtn" data-hot>CONTACT  →</a></div>
+
+<div id="hud">
+  <div class="row"><span>scene</span><span id="hScene">idle</span></div>
+  <div class="row"><span>behavior</span><span id="hBeh">breathing</span></div>
+  <div class="row"><span>particles</span><span id="hPart">38,000</span></div>
+  <div class="row"><span>fps</span><span id="hFps">--</span></div>
+  <div class="bar"><i id="hBar"></i></div>
+  <div class="canon" id="hCanon">canon · silence</div>
+</div>
+
+<div id="title">
+  <div class="l1">inryokü</div>
+  <div class="l2">P3 · BEHAVIOR ENGINE · 2026</div>
+</div>
+
+<div id="scene">
+  <button data-b="breathing" data-hot class="on">idle</button>
+  <button data-b="hover" data-hot>discovery</button>
+  <button data-b="ring" data-hot>speaking</button>
+  <button data-b="glyph" data-hot>glyph</button>
+  <button data-b="torus" data-hot>rainbow</button>
+  <button data-b="yinyang" data-hot>陰陽</button>
+  <button data-b="storm" data-hot>storm</button>
+</div>
+
+<div id="boot">
+  <div class="ring"></div>
+  <div class="lbl">INITIALIZING UNIVERSE</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="./p3_proto.js"></script>
+</body>
+</html>

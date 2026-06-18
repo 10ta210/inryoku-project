@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryoku wire / sf brand font lab</title>
+<style>
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("vendor/fonts/press-start-2p.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --grey: #808080;
+  --r: #ff0000;
+  --g: #00ff00;
+  --b: #0044ff;
+  --c: #00ffff;
+  --m: #ff00ff;
+  --y: #ffff00;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(0,255,255,0.045), transparent 20%),
+    radial-gradient(circle at 78% 74%, rgba(255,0,255,0.038), transparent 24%),
+    #000;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  padding: 28px clamp(14px, 3vw, 42px) 56px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  align-items: end;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+h1 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.76);
+}
+
+.note {
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.42);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.14);
+  text-decoration: none;
+  padding: 10px 12px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.card {
+  position: relative;
+  min-height: 210px;
+  overflow: hidden;
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(255,255,255,0.075);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.006)),
+    #000;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.035), transparent);
+  transform: translateX(-120%);
+  animation: sweep 9s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  0%, 66% { transform: translateX(-120%); opacity: 0; }
+  76% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 34px;
+  color: rgba(255,255,255,0.42);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  min-height: 92px;
+  white-space: nowrap;
+  line-height: 0.88;
+}
+
+.brand span {
+  --col: #fff;
+  display: inline-block;
+  position: relative;
+  color: var(--col);
+}
+
+.brand span:nth-child(1) { --col: var(--grey); }
+.brand span:nth-child(2) { --col: var(--r); }
+.brand span:nth-child(3) { --col: var(--g); }
+.brand span:nth-child(4) { --col: var(--b); }
+.brand span:nth-child(5) { --col: var(--c); }
+.brand span:nth-child(6) { --col: var(--m); }
+.brand span:nth-child(7) { --col: var(--y); }
+
+.desc {
+  margin-top: 28px;
+  color: rgba(255,255,255,0.34);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.75;
+}
+
+/* 01: Wire Pixel Flat */
+.w01 .brand {
+  font: 400 clamp(28px, 4.8vw, 62px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.03em;
+}
+.w01 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--col);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--col) 28%, transparent);
+}
+
+/* 02: Wire Pixel Thin */
+.w02 .brand {
+  font: 400 clamp(25px, 4.3vw, 55px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.085em;
+}
+.w02 .brand span {
+  color: color-mix(in srgb, var(--col) 9%, transparent);
+  -webkit-text-stroke: 0.7px var(--col);
+}
+
+/* 03: Monospace SF */
+.w03 .brand {
+  font: 300 clamp(48px, 8vw, 108px)/0.76 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.09em;
+  transform: scaleX(0.72);
+}
+.w03 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.9px var(--col);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--col) 24%, transparent);
+}
+
+/* 04: Condensed Control */
+.w04 .brand {
+  font: 900 clamp(44px, 8vw, 110px)/0.74 "Arial Narrow", "Avenir Next Condensed", sans-serif;
+  letter-spacing: -0.12em;
+  transform: scaleX(0.58);
+}
+.w04 .brand span {
+  color: rgba(255,255,255,0.02);
+  -webkit-text-stroke: 1px var(--col);
+}
+
+/* 05: Future Sans Filled */
+.w05 .brand {
+  font: 200 clamp(48px, 8.5vw, 116px)/0.78 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.08em;
+}
+.w05 .brand span {
+  color: color-mix(in srgb, var(--col) 78%, #fff 8%);
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--col) 30%, transparent),
+    0 0 20px color-mix(in srgb, var(--col) 12%, transparent);
+}
+
+/* 06: Future Sans Hollow */
+.w06 .brand {
+  font: 200 clamp(48px, 8.5vw, 116px)/0.78 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.08em;
+}
+.w06 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.8px var(--col);
+}
+.w06 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  transform: translate(0.7px, 0);
+  color: transparent;
+  -webkit-text-stroke: 0.5px rgba(255,255,255,0.2);
+}
+
+/* 07: Sci Serif */
+.w07 .brand {
+  font: italic 900 clamp(48px, 8.2vw, 112px)/0.76 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.12em;
+}
+.w07 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.75px var(--col);
+  text-shadow:
+    -0.5px 0 rgba(255,0,0,0.48),
+    0.5px 0 rgba(0,255,255,0.48);
+}
+
+/* 08: Circuit Cut */
+.w08 .brand {
+  font: 900 clamp(42px, 7.5vw, 104px)/0.76 "Arial Black", Arial, sans-serif;
+  letter-spacing: -0.09em;
+}
+.w08 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--col);
+  clip-path: polygon(0 0, 100% 0, 100% 36%, 86% 36%, 86% 48%, 100% 48%, 100% 100%, 0 100%, 0 64%, 14% 64%, 14% 52%, 0 52%);
+}
+
+/* 09: Glass Thin */
+.w09 .brand {
+  font: 100 clamp(50px, 8.7vw, 120px)/0.76 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.08em;
+}
+.w09 .brand span {
+  color: rgba(255,255,255,0.04);
+  -webkit-text-stroke: 0.55px color-mix(in srgb, var(--col) 72%, #fff);
+  text-shadow:
+    1px 0 rgba(255,0,0,0.22),
+    -1px 0 rgba(0,255,255,0.22);
+}
+
+/* 10: Modular Rounded */
+.w10 .brand {
+  font: 900 clamp(42px, 7.5vw, 104px)/0.78 "Trebuchet MS", Arial, sans-serif;
+  letter-spacing: -0.095em;
+}
+.w10 .brand span {
+  color: color-mix(in srgb, var(--col) 82%, white 6%);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--col) 20%, transparent));
+}
+
+/* 11: Micro Offset */
+.w11 .brand {
+  font: 400 clamp(28px, 4.8vw, 62px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.05em;
+}
+.w11 .brand span {
+  color: var(--col);
+  text-shadow:
+    -0.45px 0 rgba(255,0,0,0.65),
+    0.45px 0 rgba(0,255,255,0.65),
+    0 -0.45px rgba(255,255,0,0.45),
+    0 0.45px rgba(255,0,255,0.45);
+}
+
+/* 12: Space Mono Block */
+.w12 .brand {
+  font: 700 clamp(44px, 7.8vw, 108px)/0.76 "Courier New", monospace;
+  letter-spacing: -0.16em;
+  transform: scaleX(0.72);
+}
+.w12 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--col);
+}
+
+/* 13: Low Wide */
+.w13 .brand {
+  font: 900 clamp(42px, 8vw, 110px)/0.68 Verdana, Arial, sans-serif;
+  letter-spacing: -0.12em;
+  transform: scaleY(0.58);
+}
+.w13 .brand span {
+  color: color-mix(in srgb, var(--col) 78%, transparent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--col) 20%, transparent);
+}
+
+/* 14: Vector Tech */
+.w14 .brand {
+  font: 300 clamp(46px, 8vw, 112px)/0.76 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.07em;
+}
+.w14 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.65px var(--col);
+}
+.w14 .brand span::before {
+  content: "";
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 49%;
+  height: 1px;
+  background: currentColor;
+  box-shadow: 0 0 7px currentColor;
+  opacity: 0.66;
+}
+
+/* 15: Selected Direction Candidate */
+.w15 .brand {
+  font: 300 clamp(45px, 8vw, 112px)/0.76 "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: -0.06em;
+  transform: scaleX(0.82);
+}
+.w15 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.85px var(--col);
+  text-shadow:
+    0 0 7px color-mix(in srgb, var(--col) 32%, transparent),
+    0 0 22px color-mix(in srgb, var(--col) 14%, transparent);
+}
+.w15 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  transform: translate(0.55px, 0);
+  color: color-mix(in srgb, var(--col) 12%, transparent);
+  opacity: 0.72;
+}
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .top { display: block; }
+  .nav { margin-top: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div>
+      <h1>wire / sf font lab</h1>
+      <p class="note">5番の「細い線」を軸に、ピクセル以外のSFフォント方向も混ぜた15案。</p>
+    </div>
+    <nav class="nav">
+      <a href="brand_font_lab_15.html">old 15</a>
+      <a href="p3_test.html?nocache=20260509-corelogo1">P3</a>
+    </nav>
+  </header>
+  <main class="grid" id="grid"></main>
+</div>
+
+<script>
+const ideas = [
+  ["01", "Wire Pixel Flat", "5番の原型。細いピクセルアウトライン"],
+  ["02", "Wire Pixel Thin", "余白多め。最も静か"],
+  ["03", "Monospace SF", "細い未来感。服ブランド向き"],
+  ["04", "Condensed Control", "横幅を潰した制御室系"],
+  ["05", "Future Sans Filled", "ピクセルを捨てた上品SF"],
+  ["06", "Future Sans Hollow", "05の線画版"],
+  ["07", "Sci Serif", "古典×未来。クセ強め"],
+  ["08", "Circuit Cut", "切り欠きのあるテックロゴ"],
+  ["09", "Glass Thin", "透明・薄線・高級寄り"],
+  ["10", "Modular Rounded", "丸みあり。アパレル向き"],
+  ["11", "Micro Offset", "微細RGB/CMYズレ"],
+  ["12", "Space Mono Block", "低解像度SF端末"],
+  ["13", "Low Wide", "横長・低重心"],
+  ["14", "Vector Tech", "中心線のあるベクター系"],
+  ["15", "Candidate", "本番候補。細線SF + 微発光"]
+];
+
+function brand() {
+  return ["i","n","r","y","o","k","ü"].map((ch) => `<span data-ch="${ch}">${ch}</span>`).join("");
+}
+
+document.getElementById("grid").innerHTML = ideas.map(([num, title, desc], i) => `
+  <section class="card w${String(i + 1).padStart(2, "0")}">
+    <div class="meta"><span>${num} / ${title}</span><span>RGBCMY</span></div>
+    <div class="brand">${brand()}</div>
+    <div class="desc">${desc}</div>
+  </section>
+`).join("");
+</script>
+</body>
+</html>

@@ -5,13 +5,47 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node --test tests/*.test.mjs tests/visual/*.test.mjs tests/behaviors/*.test.mjs tests/integration/*.test.mjs",
+    "test:coverage": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage.lcov --test-reporter=spec --test-reporter-destination=stdout tests/*.test.mjs tests/visual/*.test.mjs tests/behaviors/*.test.mjs tests/integration/*.test.mjs",
+    "test:visual": "node --test tests/visual/*.test.mjs",
+    "test:visual:update": "VISUAL_UPDATE=1 node --test tests/visual/*.test.mjs",
+    "test:e2e": "playwright test --config tests/e2e/playwright.config.mjs",
+    "test:e2e:ui": "playwright test --config tests/e2e/playwright.config.mjs --ui",
+    "test:e2e:update": "playwright test --config tests/e2e/playwright.config.mjs --update-snapshots",
+    "lint": "bash scripts/precommit.sh",
+    "check": "npm test && npm run lint",
+    "check:env": "bash scripts/check-env.sh",
+    "release": "bash scripts/release.sh",
+    "release:dry": "bash scripts/release.sh --dry-run",
+    "healthcheck": "bash scripts/healthcheck.sh",
+    "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "check:sitemap": "bash scripts/check-sitemap.sh",
+    "monitor": "bash scripts/monitor.sh",
+    "backup": "bash scripts/backup.sh",
+    "restore": "bash scripts/restore.sh",
+    "verify:data": "node scripts/verify-data.mjs",
+    "data:stats": "bash scripts/data-stats.sh",
+    "precommit": "bash scripts/precommit.sh",
+    "perf:budget": "node scripts/perf-budget.mjs",
+    "perf:budget:json": "node scripts/perf-budget.mjs --json",
+    "perf:gate": "bash scripts/perf-gate.sh",
+    "biome": "biome check --write .",
+    "biome:ci": "biome ci .",
+    "typecheck": "tsc --noEmit",
+    "lhci": "lhci autorun",
+    "quality": "npm run biome:ci && npm run typecheck && npm test"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@lhci/cli": "^0.14.0",
+    "@playwright/test": "^1.60.0",
     "canvas": "^3.2.3",
-    "qrcode": "^1.5.4"
+    "jsdom": "^29.1.0",
+    "qrcode": "^1.5.4",
+    "typescript": "^5.6.3"
   }
 }

@@ -1,0 +1,11 @@
+{
+  "id": "inryoku-haiku",
+  "name": "Haiku",
+  "version": "0.1.0",
+  "type": "command",
+  "entry": "index.js",
+  "description": "Adds a `haiku.recite` command that emits 17-canon sequences forming a 5-7-5 poem.",
+  "contributes": {
+    "commands": ["haiku.recite"]
+  }
+}

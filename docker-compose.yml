@@ -1,0 +1,41 @@
+# Local development compose for inryokü.
+# Usage:
+#   docker compose up --build
+#   docker compose down
+#
+# - Mounts the repo so edits in your editor are picked up by `node server.js`
+#   (no hot reload here; restart the container or use `npm run dev` on the host).
+# - Reads .env from the repo root. Do NOT commit a real .env.
+# - Exposes port 3000 on the host.
+
+services:
+  inryoku:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: inryoku:dev
+    container_name: inryoku
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      # Source bind-mount for fast iteration. Keep node_modules from the image.
+      - ./:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/robots.txt"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# Reserved for future:
+#  redis:
+#    image: redis:7-alpine
+#    restart: unless-stopped
+#    ports: ["6379:6379"]

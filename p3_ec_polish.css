@@ -1,0 +1,699 @@
+/**
+ * p3_ec_polish.css — P3 EC デザインポリッシュ (frontend-design + design-critique + Codex Opus)
+ *
+ * Aesthetic Direction: 「Iridescent Terminal」(Calm-mode default)
+ *   - Win95 chrome × thin-film 干渉 × レトロ CRT
+ *   - @property + conic-gradient + OKLCH 知覚均等色
+ *   - mix-blend-mode: plus-lighter (HDR 物理発光)
+ *
+ * 既存 p3_styles.css を上書きする overlay。rollback はこのファイル削除のみ。
+ *
+ * v2 (2026-05-23) 改善 (design-critique + Codex Opus 統合):
+ *   - VT323 を Google Fonts から実ロード (旧: Courier New fallback)
+ *   - Hover-only animation (旧: 常時 hue 回転 → battery 食い)
+ *   - focus-visible iridescent ring (a11y WCAG 2.4.7)
+ *   - forced-colors mode fallback (high-contrast 強制時)
+ *   - Win95 sharp 1px bevel に統一 (border-radius 4px / text-shadow 1px)
+ *   - ADD TO CART hover 強化 (scale + brightness + shadow)
+ *   - will-change を hover-only 動的化 (GPU 節約)
+ *   - scrollbar-gutter: stable (cart drawer ずれ防止)
+ *
+ * Pending follow-up (Codex Opus 提案、未実装):
+ *   - View Transitions API (modal/drawer flow)
+ *   - Constellation Provenance (商品の星座出自)
+ *   - 50→101 Threshold Ritual (カート投入儀式)
+ */
+
+/* ─── VT323 (retro terminal) — design-critique #1 ─── */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* ─── Animatable custom properties (2024 baseline) ─────── */
+@property --p3p-hue       { syntax: '<angle>';    inherits: true; initial-value: 0deg; }
+@property --p3p-iri-amt   { syntax: '<number>';   inherits: true; initial-value: 0;    }
+@property --p3p-edge-glow { syntax: '<number>';   inherits: true; initial-value: 0.18; }
+
+/* 2026-05-24 v8 (司「もっとデザイン配置下に置きサイズ大きく」):
+   carousel-scene を下にオフセットしてロゴと距離を取る + サイズ拡大用の余白確保 */
+.carousel-scene {
+    margin-top: 120px !important;
+}
+@media (max-width: 768px) {
+    .carousel-scene { margin-top: 80px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   1. CAROUSEL ITEM — Iridescent thin-film card
+   ═══════════════════════════════════════════════════════ */
+.carousel-item {
+    /* 2026-05-24: p3_styles.css の absolute 配置を維持。
+       relative にするとカードが通常フローに戻り、縦散らばりが再発する。 */
+    position: absolute;
+    /* 2026-05-30 司「螺旋になった」再発修正:
+       transform は JS(updateFrontCard)が毎フレ書き換えるので transition 禁止。
+       CSS が 480ms 補間しようとして追いつかず螺旋に見えていた。filter のみ残す。 */
+    transition:
+        filter 360ms ease,
+        --p3p-iri-amt 480ms linear;
+    /* will-change は hover-only に (Codex Opus #6 改善) */
+}
+.carousel-item:hover,
+.carousel-item.carousel-front {
+    will-change: transform, filter;
+}
+
+/* 2026-05-24 司さん「螺旋階段みたいになってるからメリーゴーランドに戻して」
+   → 虹色 conic-gradient エッジを全 carousel-item で削除
+   → 正面カードのみ「光が通り抜ける」レインボー spotlight を後段に追加 */
+.carousel-item::before {
+    content: none;  /* スパイラル感の原因だったエッジ削除 */
+}
+.carousel-item::after {
+    content: none;  /* inset shadow も削除 (シンプル メリーゴーランドへ) */
+}
+
+/* ─── 2026-05-24 v4 (司さん「ハロじゃなくて服をタッチしたら虹色に見える背景」) ───
+   カード外側の丸い halo は停止し、服画像コンテナ内の背景としてだけ出す。 */
+.carousel-item.carousel-front::before {
+    content: none;
+}
+
+/* hover (非正面) の丸い halo も停止 */
+.carousel-item:hover:not(.carousel-front)::before {
+    content: none;
+}
+
+/* 2026-06-19 司「背景に白いのがある」: 白グラデ背景を撤去。服画像を透明地に。 */
+.carousel-item.carousel-front .product-card-img,
+.carousel-item.carousel-active .product-card-img,
+.carousel-item.is-tapped .product-card-img {
+    background: transparent;
+}
+
+/* 2026-06-19 司「白いのがある・服が見えない」:
+   常時の虹背景が服を覆って白飛び/隠れていた。
+   → 常時(front/active)は虹背景なし。タップ(is-tapped)時だけ、
+     服の"背後の縁"に虹オーラを薄く出す(中央白radialは廃止=白飛び解消)。 */
+.carousel-item.is-tapped .product-card-img::before {
+    content: '';
+    display: block;
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    background:
+        conic-gradient(from 210deg at 50% 50%,
+            rgba(255, 0, 0, 0.30),
+            rgba(255, 232, 0, 0.28),
+            rgba(0, 255, 80, 0.26),
+            rgba(0, 229, 255, 0.28),
+            rgba(0, 60, 255, 0.28),
+            rgba(255, 0, 255, 0.26),
+            rgba(255, 0, 0, 0.30));
+    mix-blend-mode: plus-lighter;
+    filter: blur(22px) saturate(1.5);
+    pointer-events: none;
+    z-index: -1;          /* 服の背後 */
+    opacity: 0.7;
+    animation: p3p-touch-bg-flow 3.2s ease-in-out infinite;
+    transform: translateZ(0);
+}
+
+.carousel-item.carousel-front .product-card-img img,
+.carousel-item.carousel-active .product-card-img img,
+.carousel-item.is-tapped .product-card-img img {
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes p3p-touch-bg-flow {
+    0%, 100% { transform: scale(1.02) rotate(-2deg); opacity: 0.82; }
+    50%      { transform: scale(1.08) rotate(2deg); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .carousel-item.carousel-front .product-card-img::before,
+    .carousel-item.carousel-active .product-card-img::before,
+    .carousel-item.is-tapped .product-card-img::before { animation: none; }
+}
+
+/* ─── 2026-05-24 v3: 螺旋階段感の根本治療 ───
+   司さん「まだ螺旋階段のまま」: 非正面カードが縦に並んで見えるのが原因
+   → 非正面カードを大幅に縮小 + 透明度ダウン + blur 強化 で
+     視覚的に「ぼやけた背景の点」として完全に脇役化、正面 1 枚だけが立つ
+   既存 .carousel-item の opacity 0.42 / filter brightness 0.5 を上書き */
+.carousel-item:not(.carousel-front):not(:hover) {
+    opacity: 0.18;
+    filter: brightness(0.32) saturate(0.4) blur(2.5px);
+    transform-origin: center center;
+}
+/* 正面に近いほど少し見える (深度感) */
+.carousel-item:not(.carousel-front):not(:hover):hover {
+    opacity: 0.45;
+    filter: brightness(0.7) saturate(0.6) blur(1px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   2. PRODUCT-CARD-STATUS — Retro Terminal "PENDING" pill
+   ═══════════════════════════════════════════════════════ */
+.product-card-status {
+    /* 既存スタイル上書き */
+    position: relative;
+    font-family: 'VT323', 'Courier New', monospace;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 2px 10px 1px 24px;
+    border: 1px solid oklch(80% 0.13 200 / 0.45);
+    background:
+        linear-gradient(180deg,
+            oklch(80% 0.13 200 / 0.10),
+            oklch(58% 0.22 260 / 0.04));
+    color: oklch(88% 0.10 200);
+    border-radius: 2px;
+    opacity: 0.92;
+    overflow: hidden;
+}
+/* LED dot 点滅 (左) */
+.product-card-status::before {
+    content: '';
+    position: absolute;
+    left: 8px; top: 50%;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: oklch(72% 0.20 55);
+    box-shadow: 0 0 6px oklch(72% 0.20 55), 0 0 10px oklch(72% 0.20 55 / 0.5);
+    transform: translateY(-50%);
+    animation: p3p-led-pulse 1.4s ease-in-out infinite;
+}
+/* CRT scan line (繊細) */
+.product-card-status::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255,255,255,0) 0px,
+        rgba(255,255,255,0) 2px,
+        rgba(255,255,255,0.03) 2px,
+        rgba(255,255,255,0.03) 3px);
+    pointer-events: none;
+    mix-blend-mode: plus-lighter;
+}
+@keyframes p3p-led-pulse {
+    0%, 100% { opacity: 0.4; transform: translateY(-50%) scale(1); }
+    50%      { opacity: 1.0; transform: translateY(-50%) scale(1.15); }
+}
+
+/* チェックアウト準備中 → 表示テキストはそのままだが、見た目で「意図的な status」に */
+/* purchasable 状態は緑系に */
+.product-card-status:not(:empty) {
+    /* default = pending (cyan/blue tone) */
+}
+/* "available" のとき緑色 LED */
+[data-availability="available"] .product-card-status,
+.carousel-item:not(.product-card-disabled) .product-card-status {
+    color: oklch(85% 0.20 145);
+    border-color: oklch(78% 0.22 145 / 0.45);
+    background:
+        linear-gradient(180deg,
+            oklch(78% 0.22 145 / 0.12),
+            oklch(58% 0.18 145 / 0.04));
+}
+.carousel-item:not(.product-card-disabled) .product-card-status::before {
+    background: oklch(85% 0.22 145);
+    box-shadow: 0 0 6px oklch(85% 0.22 145), 0 0 10px oklch(85% 0.22 145 / 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. PRODUCT-CARD-NAME / PRICE — Refined typography
+   ═══════════════════════════════════════════════════════ */
+.product-card-name {
+    font-feature-settings: "ss01" on, "tnum" on;
+    letter-spacing: 0.04em;
+    text-shadow:
+        0 0 1px rgba(255, 255, 255, 0.12),
+        0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.product-card-price {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    background: linear-gradient(180deg,
+        oklch(98% 0 0),
+        oklch(76% 0.04 90));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. ADD-TO-CART BUTTON — Chromatic edge glow
+   ═══════════════════════════════════════════════════════ */
+.add-to-cart-btn,
+.add-btn {
+    position: relative;
+    transition:
+        transform 280ms linear(0, 1.04 60%, 0.99 85%, 1.01),
+        --p3p-edge-glow 360ms ease,
+        filter 240ms ease;
+}
+.add-to-cart-btn:not(.disabled):not(:disabled)::before,
+.add-btn:not(.disabled):not(:disabled)::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(120deg,
+        oklch(72% 0.20 55  / 0.0),
+        oklch(85% 0.20 145 / 0.35),
+        oklch(80% 0.13 200 / 0.45),
+        oklch(68% 0.27 335 / 0.35),
+        oklch(72% 0.20 55  / 0.0));
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    filter: blur(1.5px);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 320ms ease;
+    animation: p3p-edge-flow 3.2s linear infinite;
+    mix-blend-mode: plus-lighter;
+    pointer-events: none;
+}
+.add-to-cart-btn:not(.disabled):not(:disabled):hover::before,
+.add-btn:not(.disabled):not(:disabled):hover::before {
+    opacity: 1;
+}
+.add-to-cart-btn:not(.disabled):not(:disabled):hover,
+.add-btn:not(.disabled):not(:disabled):hover {
+    /* design-critique #3: hover punch 強化 */
+    transform: translateY(-2px) scale(1.02);
+    filter: brightness(1.12) saturate(1.20);
+    box-shadow:
+        0 8px 24px oklch(68% 0.27 335 / 0.35),
+        0 2px 8px oklch(80% 0.13 200 / 0.25);
+}
+.add-to-cart-btn:not(.disabled):not(:disabled):active,
+.add-btn:not(.disabled):not(:disabled):active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 80ms;
+}
+@keyframes p3p-edge-flow {
+    to { background-position: 200% 50%; }
+}
+
+/* pending / disabled 状態は穏やかに */
+.add-to-cart-btn.disabled,
+.add-to-cart-btn.is-pending,
+.add-btn.is-pending {
+    background: linear-gradient(180deg,
+        oklch(40% 0.02 220 / 0.35),
+        oklch(28% 0.02 220 / 0.45));
+    border: 1px solid oklch(50% 0.05 220 / 0.40);
+    color: oklch(72% 0.04 220);
+    cursor: not-allowed;
+    filter: contrast(0.9);
+}
+
+/* ═══════════════════════════════════════════════════════
+   5. PRODUCT-CARD-DISABLED — Holographic "PENDING" treatment
+   ═══════════════════════════════════════════════════════ */
+.product-card-disabled {
+    /* "売り出してない"商品は「未公開アーティファクト」感を出す */
+}
+.product-card-disabled::before {
+    /* 虹色エッジは保持しつつ 60% 落とす */
+    opacity: calc(var(--p3p-iri-amt) * 0.35);
+    filter: blur(2px) saturate(0.6) grayscale(0.3);
+}
+.product-card-disabled .product-card-img {
+    filter: grayscale(0.55) brightness(0.78) contrast(1.1);
+    transition: filter 360ms ease;
+}
+.product-card-disabled:hover .product-card-img {
+    filter: grayscale(0.30) brightness(0.92) contrast(1.05);
+}
+
+/* ═══════════════════════════════════════════════════════
+   6. PRODUCT MODAL — Subtle iridescent backdrop
+   ═══════════════════════════════════════════════════════ */
+.product-modal {
+    backdrop-filter: blur(8px) saturate(1.3);
+    -webkit-backdrop-filter: blur(8px) saturate(1.3);
+}
+.product-modal::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 30% 30%,
+            oklch(72% 0.20 55  / 0.06),
+            transparent 55%),
+        radial-gradient(ellipse at 70% 70%,
+            oklch(58% 0.22 260 / 0.08),
+            transparent 60%),
+        radial-gradient(ellipse at 50% 90%,
+            oklch(68% 0.27 335 / 0.05),
+            transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    mix-blend-mode: plus-lighter;
+}
+
+/* ═══════════════════════════════════════════════════════
+   7. CART DRAWER — Glassmorphism + Win95 chrome edge
+   ═══════════════════════════════════════════════════════ */
+.cart-drawer {
+    background:
+        linear-gradient(180deg,
+            oklch(18% 0.02 240 / 0.92),
+            oklch(10% 0.01 240 / 0.95));
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-left: 1px solid oklch(80% 0.13 200 / 0.18);
+    box-shadow:
+        -8px 0 32px rgba(0, 0, 0, 0.6),
+        inset 1px 0 0 oklch(80% 0.13 200 / 0.10);
+}
+
+/* ═══════════════════════════════════════════════════════
+   8. REDUCE MOTION
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    .carousel-item::before { animation: none; }
+    .product-card-status::before { animation: none; opacity: 0.7; }
+    .add-to-cart-btn::before,
+    .add-btn::before { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   9. FOCUS-VISIBLE — a11y WCAG 2.4.7 (Codex Opus #1)
+   全 interactive 要素に iridescent ring
+   ═══════════════════════════════════════════════════════ */
+.carousel-item:focus-visible,
+.add-to-cart-btn:focus-visible,
+.add-btn:focus-visible,
+.cart-icon:focus-visible,
+.size-btn:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px oklch(20% 0.02 240),
+        0 0 0 4px oklch(80% 0.13 200),
+        0 0 16px oklch(80% 0.13 200 / 0.65),
+        0 0 32px oklch(68% 0.27 335 / 0.35);
+    z-index: 10;
+}
+
+/* ═══════════════════════════════════════════════════════
+   10. FORCED-COLORS — Windows High Contrast / system override
+   (Codex Opus #4: price が消える問題)
+   ═══════════════════════════════════════════════════════ */
+@media (forced-colors: active) {
+    .product-card-price {
+        -webkit-text-fill-color: CanvasText;
+        color: CanvasText;
+        background: transparent;
+    }
+    .carousel-item::before,
+    .carousel-item::after,
+    .add-to-cart-btn::before,
+    .add-btn::before {
+        display: none;  /* system color に従う */
+    }
+    .product-card-status {
+        border-color: ButtonBorder;
+        background: ButtonFace;
+        color: ButtonText;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   11. CART DRAWER scrollbar-gutter (Codex Opus #5)
+   商品追加で content がずれない
+   ═══════════════════════════════════════════════════════ */
+.cart-drawer,
+.cart-drawer-content,
+.cart-drawer-items {
+    scrollbar-gutter: stable;
+}
+
+/* ═══════════════════════════════════════════════════════
+   12. WIN95 SHARP BEVEL 統一 (Codex Opus brand consistency)
+   text-shadow 2段 → 1px sharp、border-radius 14px → 4px
+   ═══════════════════════════════════════════════════════ */
+.product-card-name {
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.55);  /* Win95 DNA: 1px bevel */
+}
+.carousel-item::before { border-radius: 4px; }   /* 14px → 4px */
+.carousel-item::after  { border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════════════
+   2026-05-31 司「最初から CONTACT が出てておかしい」
+   → 旧「常時固定チップ」化を撤去。元の自然な挙動 (singularity-content
+     末尾、フッター付近でスクロールして出会う) に戻す。
+   旧 CSS は git 履歴に保持。ここでは何も上書きしない。
+   ═══════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════
+   2026-05-25 司「P3 仕上げ ①」: 選択した服のガラス台座
+   選択カードの足元に、反射する光の楕円台座を敷く。
+   「宇宙に浮かぶ商品」→「展示台に置かれた一点物」へ接地感を出す。
+   服画像の背後 (z-index:-1)、carousel transform に同乗 (::after なので)。
+   ═══════════════════════════════════════════════════════ */
+.carousel-item.carousel-front::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -7%;
+    width: 82%;
+    height: 16%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    /* シルバー〜虹のにじむ反射 (普段は淡く、selected で灯る) */
+    background: radial-gradient(ellipse at center,
+        oklch(88% 0.08 220 / 0.40) 0%,
+        oklch(74% 0.16 285 / 0.18) 42%,
+        oklch(70% 0.20 330 / 0.08) 64%,
+        transparent 78%);
+    filter: blur(8px) saturate(1.3);
+    mix-blend-mode: plus-lighter;
+    z-index: -1;            /* 服画像の背後 */
+    pointer-events: none;
+    opacity: 0.9;
+    animation: p3-pedestal-breath 4.8s ease-in-out infinite;
+}
+/* tap 中は台座が強く光る (服が「選ばれた」実感) */
+.carousel-item.carousel-front.is-tapped::after,
+.carousel-item.carousel-front:active::after {
+    filter: blur(10px) saturate(1.7) brightness(1.2);
+    opacity: 1;
+}
+
+/* 2026-05-30 司「ホログラム変更前に戻して」: ロゴのホログラム追加分
+   (走査線/虹オーラ/色収差/コア球脈動/margin-top48) を撤去。
+   退避先: p3_ec_polish_logo_holo.css.bak。復活はそれを末尾に append。 */
+/* ═══════════════════════════════════════════════════════
+   2026-05-31 司「ホログラムの薄い色が卵からはみ出てて安っぽい」
+   真因: ロゴの holo-scanlines / holo-overlay / holo-scanline (薄い走査線の
+   矩形 div) が卵殻の楕円の外まで四角く広がっていた = 安っぽい原因。
+   → これら矩形オーバーレイを非表示にして、卵殻+コア球+i だけの
+     洗練されたシルエットに。コア球サイズは元のまま (いじらない)。
+   ═══════════════════════════════════════════════════════ */
+.logo-holo-wrap .holo-scanlines,
+.logo-holo-wrap .holo-overlay,
+.logo-holo-wrap .holo-scanline {
+    /* 卵殻の楕円内だけにマスク → はみ出さない上品なホログラム感を維持 */
+    -webkit-mask: radial-gradient(ellipse 42% 50% at 50% 50%, #000 60%, transparent 78%);
+            mask: radial-gradient(ellipse 42% 50% at 50% 50%, #000 60%, transparent 78%);
+    opacity: 0.5 !important;
+}
+
+/* ═══════════════════════════════════════════════════════
+   2026-05-31 司「メール欄を CONTACT に統合」: news チェックの見た目
+   ═══════════════════════════════════════════════════════ */
+.contact-news {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 10px;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: oklch(82% 0.10 200);
+    cursor: pointer;
+    user-select: none;
+}
+.contact-news input { accent-color: oklch(72% 0.18 200); width: 15px; height: 15px; cursor: pointer; }
+
+/* ═══════════════════════════════════════════════════════
+   2026-05-31 司「服のカードもっと洗練されたデザインに」
+   平面化した横並びカードを上質に:
+     - 正面カードに細い光のフレーム (Win95 bevel ではなく薄いガラス縁)
+     - 商品名/価格のタイポ階層を整理 (字間・ウェイト)
+     - 非正面カードは静かに、正面だけ際立つ
+   ═══════════════════════════════════════════════════════ */
+.carousel-item.carousel-front .product-card-img {
+    border-radius: 14px;
+    box-shadow:
+        0 0 0 1px oklch(85% 0.05 220 / 0.18),
+        0 18px 50px -12px oklch(60% 0.10 260 / 0.45);
+}
+.product-card-name {
+    font-family: var(--font-sans, 'Inter', sans-serif);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+.carousel-item.carousel-front .product-card-name {
+    color: #fff;
+    text-shadow: 0 0 12px oklch(85% 0.08 230 / 0.35);
+}
+.product-card-price {
+    font-family: 'VT323', monospace;
+    letter-spacing: 0.08em;
+    opacity: 0.92;
+}
+
+/* 2026-06-19 mobile polish:
+   旧 v20260619: PC用のカード情報を左右カードにも表示していたため、
+   375px 幅で商品名/価格/「チェックアウト準備中」が横に重なって安っぽく見えた。
+   mobile は「服は横に気配として見せる / 文字は中央カードだけ」に整理する。 */
+@media (max-width: 768px) {
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .singularity-content {
+        padding-top: calc(84px + env(safe-area-inset-top, 0px));
+        gap: 4px;
+    }
+
+    .logo-holo-wrap {
+        width: clamp(62px, 18vw, 78px);
+        margin-top: 0;
+    }
+
+    .carousel-scene {
+        width: 180px !important;
+        height: 300px !important;
+        margin-top: 36px !important;
+        transform: none !important;
+        transform-origin: 50% 50%;
+    }
+
+    .carousel-item {
+        width: 160px !important;
+        left: 10px !important;
+    }
+
+    .product-showcase {
+        aspect-ratio: 1 / 1.08;
+        padding: 8px 2px 12px;
+    }
+
+    .product-card-img {
+        border-radius: 12px;
+    }
+
+    .carousel-item.carousel-front .product-card-img {
+        /* 旧 v20260619: 完全透明だと黒Tが宇宙背景に沈んで見えなかった。
+           白背景には戻さず、mobile中央だけ薄い黒ガラスで輪郭を立てる。 */
+        background:
+            radial-gradient(circle at 50% 32%, rgba(255,255,255,0.12), rgba(255,255,255,0.035) 38%, transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015));
+        box-shadow:
+            0 0 0 1px rgba(255,255,255,0.12),
+            0 18px 44px -22px rgba(180,210,255,0.38),
+            0 28px 54px -26px rgba(0,0,0,0.72);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    .product-card-img img {
+        width: 96%;
+        height: 96%;
+        transform: translateY(-1px) rotateX(6deg) scale(1);
+        filter:
+            drop-shadow(0 12px 12px rgba(0,0,0,0.36))
+            drop-shadow(0 0 14px rgba(255,255,255,0.10));
+    }
+
+    .carousel-item:not(.carousel-front) .product-card-info {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .carousel-item.carousel-front .product-card-info {
+        opacity: 1;
+        visibility: visible;
+        padding: 10px 0 0;
+    }
+
+    .product-card-name {
+        width: 100%;
+        max-width: 160px;
+        margin: 0 auto;
+        font-size: 12px;
+        line-height: 1.16;
+        letter-spacing: 0.02em;
+        text-wrap: balance;
+        overflow-wrap: anywhere;
+    }
+
+    .product-card-price {
+        margin-top: 4px;
+        font-size: 13px;
+        line-height: 1;
+    }
+
+    .product-card-status {
+        max-width: 150px;
+        margin-top: 7px;
+        padding: 3px 7px 2px 18px;
+        font-size: 10px;
+        line-height: 1.05;
+        letter-spacing: 0.04em;
+        white-space: normal;
+        box-sizing: border-box;
+    }
+
+    .product-card-status::before {
+        left: 7px;
+        width: 5px;
+        height: 5px;
+    }
+
+    .contact-form {
+        width: min(320px, calc(100vw - 32px));
+        margin-top: 34px !important;
+    }
+
+    .contact-toggle {
+        min-width: 128px;
+        min-height: 44px;
+    }
+
+    .contact-body {
+        width: 100%;
+    }
+
+    .contact-input,
+    .contact-textarea {
+        width: 100%;
+        min-height: 44px;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    .contact-submit-btn {
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-scene {
+        transform: none !important;
+    }
+}

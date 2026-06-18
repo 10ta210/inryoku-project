@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>inryokü — P3 WebGPU PoC</title>
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --fg: #cfcfd2;
+      --muted: #8a8a90;
+      --accent: #d0d0d4;
+      --panel: rgba(20,20,24,0.72);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
+                 font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+    .panel {
+      position: fixed; top: 16px; left: 16px; padding: 14px 16px;
+      background: var(--panel); backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+      max-width: 320px; z-index: 5;
+    }
+    .panel h1 { font-size: 13px; margin: 0 0 6px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .panel .meta { color: var(--muted); margin-bottom: 10px; }
+    .btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    button {
+      font: inherit; color: var(--fg); background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 5px;
+      padding: 6px 10px; cursor: pointer;
+    }
+    button[aria-pressed="true"] { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.24); }
+    button:hover { background: rgba(255,255,255,0.10); }
+    .hud {
+      position: fixed; right: 16px; top: 16px; padding: 10px 12px;
+      background: var(--panel); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px; color: var(--muted); font-variant-numeric: tabular-nums;
+    }
+    .hud strong { color: var(--fg); font-weight: 600; }
+    .fallback {
+      position: fixed; inset: 0; display: grid; place-items: center;
+      padding: 24px; background: var(--bg); text-align: center;
+    }
+    .fallback .box { max-width: 480px; }
+    .fallback h2 { font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+    .fallback p { color: var(--fg); margin: 0 0 14px; }
+    .fallback a { color: var(--accent); }
+    .err { color: #d6a0a0; }
+  </style>
+</head>
+<body>
+  <canvas id="gfx"></canvas>
+
+  <section class="panel" id="panel">
+    <h1>WebGPU PoC · P3</h1>
+    <div class="meta" id="meta">initialising…</div>
+    <div class="btns" id="behaviors">
+      <button data-b="0" aria-pressed="true">Breathing Sphere</button>
+      <button data-b="1" aria-pressed="false">Ring Resonance</button>
+      <button data-b="2" aria-pressed="false">Torus Knot</button>
+    </div>
+  </section>
+
+  <aside class="hud" id="hud">— fps</aside>
+
+  <section class="fallback" id="fallback" hidden>
+    <div class="box">
+      <h2>WebGPU not available</h2>
+      <p id="fallback-reason">This browser does not expose <code>navigator.gpu</code>.</p>
+      <p>The CPU fallback works in every browser.</p>
+      <p><a href="./p3_unified_test.html">→ Open the CPU version (p3_unified_test.html)</a></p>
+    </div>
+  </section>
+
+  <script type="module">
+    import { initWebGPU } from './webgpu/init.js';
+    import { createComputePipeline, createParticleRenderer } from './webgpu/pipeline.js';
+
+    const COUNT = 500_000;
+    const WORKGROUP = 64;
+
+    const $meta = document.getElementById('meta');
+    const $hud  = document.getElementById('hud');
+    const $fb   = document.getElementById('fallback');
+    const $fbR  = document.getElementById('fallback-reason');
+    const $panel = document.getElementById('panel');
+    const $canvas = document.getElementById('gfx');
+
+    async function loadWGSL() {
+      const r = await fetch('./webgpu/behaviors.wgsl');
+      if (!r.ok) throw new Error('failed to fetch behaviors.wgsl: ' + r.status);
+      return await r.text();
+    }
+
+    function showFallback(reason) {
+      $panel.hidden = true;
+      $hud.hidden = true;
+      $canvas.hidden = true;
+      $fb.hidden = false;
+      $fbR.textContent = reason;
+    }
+
+    // --- tiny mat4 helpers (perspective + lookAt + multiply) -------------
+    function mat4Identity() {
+      return new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+    }
+    function mat4Perspective(fovy, aspect, near, far) {
+      const f = 1 / Math.tan(fovy / 2);
+      const nf = 1 / (near - far);
+      return new Float32Array([
+        f/aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0,
+      ]);
+    }
+    function mat4LookAt(eye, center, up) {
+      const [ex, ey, ez] = eye;
+      let zx = ex - center[0], zy = ey - center[1], zz = ez - center[2];
+      let zl = Math.hypot(zx, zy, zz); zx/=zl; zy/=zl; zz/=zl;
+      let xx = up[1]*zz - up[2]*zy, xy = up[2]*zx - up[0]*zz, xz = up[0]*zy - up[1]*zx;
+      let xl = Math.hypot(xx, xy, xz) || 1; xx/=xl; xy/=xl; xz/=xl;
+      const yx = zy*xz - zz*xy, yy = zz*xx - zx*xz, yz = zx*xy - zy*xx;
+      return new Float32Array([
+        xx, yx, zx, 0,
+        xy, yy, zy, 0,
+        xz, yz, zz, 0,
+        -(xx*ex + xy*ey + xz*ez),
+        -(yx*ex + yy*ey + yz*ez),
+        -(zx*ex + zy*ey + zz*ez),
+        1,
+      ]);
+    }
+    function mat4Mul(a, b) {
+      const out = new Float32Array(16);
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          out[i*4+j] = a[0*4+j]*b[i*4+0] + a[1*4+j]*b[i*4+1] + a[2*4+j]*b[i*4+2] + a[3*4+j]*b[i*4+3];
+        }
+      }
+      return out;
+    }
+
+    async function main() {
+      const gpu = await initWebGPU({ onLost: (info) => {
+        console.warn('[webgpu] device lost', info);
+        showFallback('GPU device was lost: ' + (info?.reason || 'unknown'));
+      }});
+
+      if (!gpu.supported) {
+        const map = {
+          'no-navigator-gpu': 'This browser does not expose navigator.gpu (Firefox, older Safari, older Chrome).',
+          'no-adapter':       'No suitable GPU adapter available.',
+          'no-device':        'GPU device request returned null.',
+          'adapter-request-failed': 'Adapter request threw an error.',
+          'device-request-failed':  'Device request threw an error.',
+        };
+        showFallback(map[gpu.reason] || ('WebGPU init failed: ' + gpu.reason));
+        return;
+      }
+
+      const { device, queue, adapter } = gpu;
+      const ctx = $canvas.getContext('webgpu');
+      const format = navigator.gpu.getPreferredCanvasFormat();
+      ctx.configure({ device, format, alphaMode: 'opaque' });
+
+      const wgsl = await loadWGSL();
+      const compute = createComputePipeline(device, wgsl, COUNT);
+      const renderer = createParticleRenderer(device, format);
+
+      $meta.innerHTML = `<strong>${(COUNT/1000)|0}k</strong> particles · adapter: ${(adapter.info?.vendor||'gpu')} · 60fps target`;
+
+      // initial position seed — small random spread so first frame isn't all (0,0,0)
+      // before compute runs. Compute overwrites posOut completely each frame.
+      const seed = new Float32Array(COUNT * 4);
+      for (let i = 0; i < COUNT; i++) {
+        seed[i*4+0] = (Math.random() - 0.5) * 0.1;
+        seed[i*4+1] = (Math.random() - 0.5) * 0.1;
+        seed[i*4+2] = (Math.random() - 0.5) * 0.1;
+        seed[i*4+3] = 1.0;
+      }
+      queue.writeBuffer(compute.posA, 0, seed);
+      queue.writeBuffer(compute.posB, 0, seed);
+
+      // behavior switch UI
+      let behaviorId = 0;
+      let mouseX = 0, mouseY = 0;
+      document.querySelectorAll('#behaviors button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          behaviorId = Number(btn.dataset.b);
+          document.querySelectorAll('#behaviors button').forEach(b => {
+            b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+          });
+        });
+      });
+      window.addEventListener('pointermove', (e) => {
+        mouseX = (e.clientX / window.innerWidth)  * 2 - 1;
+        mouseY = -((e.clientY / window.innerHeight) * 2 - 1);
+      });
+
+      // resize handling
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = (window.innerWidth  * dpr) | 0;
+        const h = (window.innerHeight * dpr) | 0;
+        $canvas.width = w; $canvas.height = h;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const uniArr = new Float32Array(compute.uniformFloats);
+      const viewArr = new Float32Array(20); // mat4 + 4 floats
+
+      // double-buffer toggle: which bind group to use this frame.
+      let useAB = true;
+
+      let frame = 0;
+      let lastFpsT = performance.now();
+      let fps = 0;
+
+      function tick(tMs) {
+        frame++;
+        const t = tMs * 0.001;
+
+        // compute pass
+        uniArr[0] = t;
+        uniArr[1] = COUNT;
+        uniArr[2] = behaviorId;
+        uniArr[3] = mouseX;
+        uniArr[4] = mouseY;
+        queue.writeBuffer(compute.uniformBuffer, 0, uniArr);
+
+        // view matrix — slow orbit
+        const radius = 56;
+        const ex = Math.cos(t * 0.07) * radius;
+        const ez = Math.sin(t * 0.07) * radius;
+        const ey = 6 + Math.sin(t * 0.12) * 4;
+        const aspect = $canvas.width / Math.max(1, $canvas.height);
+        const proj = mat4Perspective(Math.PI / 4, aspect, 0.1, 500);
+        const view = mat4LookAt([ex, ey, ez], [0,0,0], [0,1,0]);
+        const mvp  = mat4Mul(proj, view);
+        viewArr.set(mvp, 0);
+        viewArr[16] = 1.5; // pointSize (unused — point-list ignores; reserved)
+        queue.writeBuffer(renderer.viewBuffer, 0, viewArr);
+
+        const cmd = device.createCommandEncoder();
+
+        // compute
+        {
+          const pass = cmd.beginComputePass();
+          pass.setPipeline(compute.pipeline);
+          pass.setBindGroup(0, useAB ? compute.bindGroupAB : compute.bindGroupBA);
+          pass.dispatchWorkgroups(Math.ceil(COUNT / WORKGROUP));
+          pass.end();
+        }
+
+        // which pos buffer holds this frame's output?
+        const outPos = useAB ? compute.posB : compute.posA;
+        const renderBG = renderer.bindGroupFor(outPos, compute.color);
+
+        // render
+        {
+          const view = ctx.getCurrentTexture().createView();
+          const pass = cmd.beginRenderPass({
+            colorAttachments: [{
+              view,
+              clearValue: { r: 0.039, g: 0.039, b: 0.047, a: 1 },
+              loadOp: 'clear',
+              storeOp: 'store',
+            }],
+          });
+          pass.setPipeline(renderer.pipeline);
+          pass.setBindGroup(0, renderBG);
+          pass.draw(COUNT);
+          pass.end();
+        }
+
+        queue.submit([cmd.finish()]);
+        useAB = !useAB;
+
+        // fps every ~500ms
+        if (tMs - lastFpsT > 500) {
+          fps = Math.round((frame / ((tMs - lastFpsT) / 1000)) * 10) / 10;
+          $hud.innerHTML = `<strong>${fps}</strong> fps · ${(COUNT/1000)|0}k`;
+          frame = 0;
+          lastFpsT = tMs;
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    main().catch((e) => {
+      console.error('[webgpu poc] fatal', e);
+      showFallback('Initialisation error: ' + (e?.message || String(e)));
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+/* ════════════════════════════════════════════════════════════════
+   p3_brandfont_variants.css — 2026-05-09
+   司「ブランド名フォント 6 パターン切替」
+   p3_test.html 専用 dev addon。production (index.html) では未読込。
+   body[data-brandfont="1"〜"6"] で発動。空 / "0" でデフォルト (p3_styles.css の brand-char)。
+   ════════════════════════════════════════════════════════════════ */
+
+/* RGBCMY パレットは p3_styles.css の brand-char:nth-child(N) と完全同一を維持。
+   各バリアントは text 装飾のみ追加し、color は基本そのまま。 */
+
+/* ─── 共通: アニメーション・装飾を一旦オフ (variant 自前) ─── */
+body[data-brandfont]:not([data-brandfont="0"]):not([data-brandfont=""]) .brand-char {
+  animation: charFloat 8.2s ease-in-out infinite, charGlow 6.8s ease-in-out infinite !important;
+}
+body[data-brandfont]:not([data-brandfont="0"]):not([data-brandfont=""]) .brand-char::after {
+  /* charGhost は variant 内で必要に応じて再定義 */
+  animation: none !important;
+}
+
+/* ────────────────────────────────────────────
+   #1  PIXEL 3D — Press Start 2P + 11層 extrude
+──────────────────────────────────────────── */
+body[data-brandfont="1"] .brand-name{
+  transform: rotateX(6deg) rotateY(-8deg);
+  transform-style:preserve-3d;
+}
+body[data-brandfont="1"] .brand-char{
+  text-shadow:
+    1px 1px 0 rgba(0,0,0,0.55),
+    2px 2px 0 rgba(0,0,0,0.50),
+    3px 3px 0 rgba(0,0,0,0.45),
+    4px 4px 0 rgba(0,0,0,0.40),
+    5px 5px 0 rgba(0,0,0,0.36),
+    6px 6px 0 rgba(0,0,0,0.32),
+    7px 7px 0 rgba(0,0,0,0.28),
+    8px 8px 0 rgba(0,0,0,0.24),
+    9px 9px 0 rgba(0,0,0,0.20),
+   10px 10px 0 rgba(0,0,0,0.16),
+   11px 11px 0 rgba(0,0,0,0.12),
+   12px 12px 18px rgba(0,0,0,0.65),
+    0 0 12px var(--brand-space-glow) !important;
+}
+body[data-brandfont="1"] .brand-char::after{ content:none !important; }
+
+/* ────────────────────────────────────────────
+   #2  CHROME SF — Orbitron 900 + 金属反射 + RGBCMY 外光
+──────────────────────────────────────────── */
+body[data-brandfont="2"] .brand-char{
+  font-family: 'Orbitron', 'Inter Tight', sans-serif !important;
+  font-weight: 900 !important;
+  -webkit-font-smoothing: antialiased !important;
+  letter-spacing: 0.02em !important;
+  background:linear-gradient(180deg,
+    #ffffff 0%, #d8e0e8 18%, #6a7080 38%, #2a2e36 50%,
+    #0c0e12 52%, #2a2e36 56%, #6a7080 70%, #cfd6dd 86%, #f8fafc 100%) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;
+  color:transparent !important;
+  text-shadow:none !important;
+}
+body[data-brandfont="2"] .brand-char:nth-child(1){filter:drop-shadow(0 0 12px rgba(160,160,160,0.55)) drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char:nth-child(2){filter:drop-shadow(0 0 12px rgba(255,30,30,0.55))   drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char:nth-child(3){filter:drop-shadow(0 0 12px rgba(40,255,80,0.55))   drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char:nth-child(4){filter:drop-shadow(0 0 12px rgba(40,90,255,0.62))   drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char:nth-child(5){filter:drop-shadow(0 0 12px rgba(30,240,255,0.55))  drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char:nth-child(6){filter:drop-shadow(0 0 12px rgba(255,30,220,0.55))  drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char:nth-child(7){filter:drop-shadow(0 0 12px rgba(255,235,30,0.55))  drop-shadow(0 4px 16px rgba(0,0,0,0.55))}
+body[data-brandfont="2"] .brand-char::after{
+  content: attr(data-char) !important;
+  background:linear-gradient(180deg,
+    transparent 0%, transparent 38%,
+    rgba(255,255,255,0.55) 49%, rgba(255,255,255,0.55) 51%,
+    transparent 62%, transparent 100%) !important;
+  -webkit-background-clip:text !important;background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;color:transparent !important;
+  mix-blend-mode:screen !important;opacity:1 !important;
+  transform: none !important;
+  text-shadow:none !important;
+}
+
+/* ────────────────────────────────────────────
+   #3  HOLO PIXEL — Press Start 2P + 動く銀ハイライト
+──────────────────────────────────────────── */
+body[data-brandfont="3"] .brand-char{
+  text-shadow: 0 0 14px currentColor, 0 0 32px color-mix(in srgb, currentColor 55%, transparent) !important;
+}
+body[data-brandfont="3"] .brand-char::after{
+  content: attr(data-char) !important;
+  background:linear-gradient(110deg,
+    transparent 30%, rgba(255,255,255,0.85) 50%, transparent 70%) !important;
+  background-size:300% 100% !important;
+  -webkit-background-clip:text !important;background-clip:text !important;
+  -webkit-text-fill-color:transparent !important;color:transparent !important;
+  mix-blend-mode:screen !important;opacity:1 !important;
+  transform: none !important;
+  text-shadow:none !important;
+  animation: holoSweepBF 5.4s linear infinite !important;
+}
+@keyframes holoSweepBF{
+  0%{background-position:0% 0%}
+  100%{background-position:300% 0%}
+}
+
+/* ────────────────────────────────────────────
+   #4  WIREFRAME — Audiowide outline + RGBCMY stroke
+──────────────────────────────────────────── */
+body[data-brandfont="4"] .brand-char{
+  font-family: 'Audiowide', 'Orbitron', sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.04em !important;
+  -webkit-font-smoothing: antialiased !important;
+  text-shadow: 0 0 14px currentColor, 0 0 28px color-mix(in srgb, currentColor 38%, transparent) !important;
+}
+body[data-brandfont="4"] .brand-char:nth-child(1){-webkit-text-stroke:1px #808080 !important;color:rgba(128,128,128,0.06) !important}
+body[data-brandfont="4"] .brand-char:nth-child(2){-webkit-text-stroke:1px #FF0000 !important;color:rgba(255,0,0,0.06) !important}
+body[data-brandfont="4"] .brand-char:nth-child(3){-webkit-text-stroke:1px #00FF00 !important;color:rgba(0,255,0,0.06) !important}
+body[data-brandfont="4"] .brand-char:nth-child(4){-webkit-text-stroke:1px #0044FF !important;color:rgba(0,68,255,0.07) !important}
+body[data-brandfont="4"] .brand-char:nth-child(5){-webkit-text-stroke:1px #00FFFF !important;color:rgba(0,255,255,0.06) !important}
+body[data-brandfont="4"] .brand-char:nth-child(6){-webkit-text-stroke:1px #FF00FF !important;color:rgba(255,0,255,0.06) !important}
+body[data-brandfont="4"] .brand-char:nth-child(7){-webkit-text-stroke:1px #FFFF00 !important;color:rgba(255,255,0,0.06) !important}
+body[data-brandfont="4"] .brand-char::after{ content:none !important; }
+
+/* ────────────────────────────────────────────
+   #5  CRT TERMINAL — VT323 + 重RGB split + flicker
+──────────────────────────────────────────── */
+body[data-brandfont="5"] .brand-char{
+  font-family: 'VT323', 'IBM Plex Mono', monospace !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.005em !important;
+  -webkit-font-smoothing: antialiased !important;
+  text-shadow:
+    -1.5px 0 0 rgba(255,40,40,0.78),
+     1.5px 0 0 rgba(0,220,255,0.82),
+     0 0 10px currentColor,
+     0 0 28px color-mix(in srgb, currentColor 50%, transparent) !important;
+  animation:
+    charFloat 8.2s ease-in-out infinite,
+    charGlow 6.8s ease-in-out infinite,
+    crtFlickerBF 4.1s steps(1,end) infinite !important;
+}
+body[data-brandfont="5"] .brand-char::after{ content:none !important; }
+@keyframes crtFlickerBF{
+  0%,93%,97%,100%{opacity:1}
+  94%,96%{opacity:0.85}
+  95%{opacity:0.62}
+}
+
+/* ────────────────────────────────────────────
+   #6  PRISM GLASS — Major Mono 透明 + RGBCMY 4軸屈折
+──────────────────────────────────────────── */
+body[data-brandfont="6"] .brand-char{
+  font-family: 'Major Mono Display', 'IBM Plex Mono', monospace !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.005em !important;
+  -webkit-font-smoothing: antialiased !important;
+  text-shadow:
+     2px  0 0 rgba(255, 28, 28, 0.55),
+    -2px  0 0 rgba(  0,220,255, 0.55),
+     0  2px 0 rgba(255,  0,210, 0.45),
+     0 -2px 0 rgba(255,240,  0, 0.45),
+     0 0 24px currentColor,
+     0 0 48px color-mix(in srgb, currentColor 35%, transparent) !important;
+}
+body[data-brandfont="6"] .brand-char:nth-child(1){color:rgba(180,180,180,0.10) !important;-webkit-text-stroke:0.5px rgba(180,180,180,0.65) !important}
+body[data-brandfont="6"] .brand-char:nth-child(2){color:rgba(255,80,80,0.12) !important;-webkit-text-stroke:0.5px rgba(255,80,80,0.62) !important}
+body[data-brandfont="6"] .brand-char:nth-child(3){color:rgba(80,255,120,0.10) !important;-webkit-text-stroke:0.5px rgba(80,255,120,0.62) !important}
+body[data-brandfont="6"] .brand-char:nth-child(4){color:rgba(80,140,255,0.14) !important;-webkit-text-stroke:0.5px rgba(80,140,255,0.72) !important}
+body[data-brandfont="6"] .brand-char:nth-child(5){color:rgba(80,240,255,0.10) !important;-webkit-text-stroke:0.5px rgba(80,240,255,0.62) !important}
+body[data-brandfont="6"] .brand-char:nth-child(6){color:rgba(255,80,220,0.10) !important;-webkit-text-stroke:0.5px rgba(255,80,220,0.62) !important}
+body[data-brandfont="6"] .brand-char:nth-child(7){color:rgba(255,240,80,0.10) !important;-webkit-text-stroke:0.5px rgba(255,240,80,0.62) !important}
+body[data-brandfont="6"] .brand-char::after{ content:none !important; }
+
+/* ════════════════════════════════════════════════════════════════
+   FONT switcher panel — 右上 (cart-icon の近く避ける) 左上に配置
+   ════════════════════════════════════════════════════════════════ */
+#brandfont-switcher{
+  position:fixed; top:10px; left:10px; z-index:9998;
+  display:flex; flex-direction:column; gap:4px;
+  background:rgba(10,10,14,0.86);
+  border:1px solid rgba(255,255,255,0.10);
+  padding:8px 8px 9px;
+  font-family:'IBM Plex Mono',monospace;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  user-select:none;
+  transition: opacity 0.4s ease;
+}
+#brandfont-switcher.is-faded{ opacity:0.18 }
+#brandfont-switcher.is-faded:hover{ opacity:1 }
+#brandfont-switcher .bf-label{
+  font-size:8px; letter-spacing:0.32em; color:rgba(255,255,255,0.42);
+  text-transform:uppercase; padding-bottom:4px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  margin-bottom:2px;
+}
+#brandfont-switcher .bf-row{ display:flex; gap:3px; }
+#brandfont-switcher button{
+  width:24px; height:22px; padding:0;
+  background:transparent; color:rgba(255,255,255,0.55);
+  border:1px solid rgba(255,255,255,0.14);
+  font:500 10px/1 'IBM Plex Mono',monospace;
+  cursor:pointer; transition: all 0.2s ease;
+}
+#brandfont-switcher button:hover{ color:#fff; border-color:rgba(255,255,255,0.45) }
+#brandfont-switcher button.is-active{ color:#000; background:#fff; border-color:#fff }
+#brandfont-switcher .bf-hint{
+  font-size:8px; color:rgba(255,255,255,0.32);
+  letter-spacing:0.08em; margin-top:2px;
+}
+@media (max-width:600px){
+  #brandfont-switcher{ top:6px; left:6px; padding:6px }
+  #brandfont-switcher button{ width:21px; height:19px; font-size:9px }
+}

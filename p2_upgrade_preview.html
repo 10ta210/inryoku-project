@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — P2 · 陰陽多様体 (in'yō tayōtai)</title>
+<link rel="stylesheet" href="cosmos-a11y.css" />
+<style>
+  :root { color-scheme: dark; --ink:#f0f0f6; --dim:#9a9aaa; --accent:#a78bfa; }
+  *,*::before,*::after { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:#04040a; color:var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; cursor:none; }
+  canvas { display:block; position:fixed; inset:0; }
+
+  #cursor { position:fixed; width:14px; height:14px; border:1px solid rgba(240,240,246,.7); border-radius:50%;
+    pointer-events:none; z-index:99; mix-blend-mode:difference; transform:translate(-50%,-50%);
+    transition:width .25s, height .25s, border-color .25s; }
+  #cursor.observe { width:48px; height:48px; border-color:var(--accent); }
+
+  .corner { position:fixed; z-index:10; font-size:10px; letter-spacing:.32em; color:var(--dim);
+    text-transform:uppercase; padding:14px 18px; pointer-events:none; }
+  .tl { top:0; left:0; } .tr { top:0; right:0; text-align:right; }
+  .bl { bottom:0; left:0; } .br { bottom:0; right:0; text-align:right; pointer-events:auto; }
+  .corner b { color:var(--ink); font-weight:300; letter-spacing:.42em; display:block; margin-bottom:4px; font-size:11px; }
+
+  #hud {
+    position:fixed; top:14px; right:14px; z-index:15;
+    padding:12px 14px; border:1px solid #2a2a32; border-radius:6px;
+    background:rgba(8,8,12,.65); backdrop-filter:blur(10px);
+    font-size:9px; letter-spacing:.18em; line-height:1.8; color:#8a8a96; text-transform:uppercase;
+    min-width:240px;
+  }
+  #hud .row { display:flex; justify-content:space-between; gap:18px; }
+  #hud .row b { color:var(--ink); font-weight:400; font-variant-numeric:tabular-nums; }
+  #hud .counter { margin-top:10px; padding-top:10px; border-top:1px solid #2a2a32;
+    font-size:24px; letter-spacing:.1em; text-align:center; color:#fff; font-weight:200; }
+  #hud .counter.locked { color:#a78bfa; text-shadow:0 0 12px rgba(167,139,250,.6); }
+  #hud .hint { margin-top:8px; font-size:8px; color:#5a5a66; }
+
+  #title { position:fixed; left:50%; top:6%; transform:translateX(-50%); z-index:5;
+    text-align:center; pointer-events:none; mix-blend-mode:screen; }
+  #title b { font-size:11px; letter-spacing:.6em; font-weight:300; color:#c8c8d4; }
+  #title .sub { font-size:9px; letter-spacing:.4em; color:#7a7a86; margin-top:4px; }
+</style>
+</head>
+<body>
+
+<a class="cosmos-skip-link" href="#main" data-i18n="cosmos.skip.link">本文へ移動</a>
+
+<canvas id="c" aria-hidden="true"></canvas>
+<div id="cursor" aria-hidden="true"></div>
+
+<main id="main" tabindex="-1" aria-label="P2 陰陽多様体の試演 / P2 yin-yang manifold preview">
+  <h1 class="sr-only">inryokü P2 陰陽多様体の試演</h1>
+</main>
+
+<div class="corner tl"><b>INRYOKÜ</b>P2 · 多様体 (tayōtai)</div>
+<div class="corner tr"><b>2026</b>陰陽 (in'yō) を観測する</div>
+<div class="corner bl"><b>50% → 101%</b>グレーは全ての色を抱える</div>
+<div class="corner br"><b>触れる</b>101% の球へ</div>
+
+<div id="hud" role="status" aria-live="polite" aria-label="多様体のHUD / manifold HUD">
+  <div class="row"><span data-i18n="cosmos.hud.field">場</span><b id="hField">多様体</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.pulses">鼓動</span><b id="hPulses">6</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.particles">粒子</span><b id="hP">12,000 + 3,000</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.state">状態</span><b id="hState" data-i18n="p2.state.potential">潜在</b></div>
+  <div class="row"><span data-i18n="cosmos.hud.fps">fps</span><b id="hFps">--</b></div>
+  <div class="counter" id="hCounter">50%</div>
+  <div class="hint" data-i18n="p2.hint.observe">左の球に触れ、右へ動き、観測する</div>
+</div>
+
+<div id="title">
+  <b>陰陽多様体</b>
+  <div class="sub" data-i18n="p2.subtitle">観測すると場は崩れる</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const W = () => innerWidth, H = () => innerHeight;
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W(), H());
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x04040a, 0.018);
+
+const camera = new THREE.PerspectiveCamera(50, W()/H(), 0.1, 200);
+camera.position.set(0, 0, 8.5);
+
+const __reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
+
+/* ───────── BACKGROUND: dim digital code rain (existing P2 stand-in) ───────── */
+{
+  const N = 1800;
+  const g = new THREE.BufferGeometry();
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    pos[i*3] = (Math.random() - 0.5) * 40;
+    pos[i*3+1] = (Math.random() - 0.5) * 24;
+    pos[i*3+2] = -30 - Math.random() * 50;
+    /* very dim, slight green tint to evoke the code world */
+    const v = 0.10 + Math.random() * 0.12;
+    col[i*3] = v * 0.4; col[i*3+1] = v; col[i*3+2] = v * 0.5;
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.PointsMaterial({ size: 0.06, vertexColors: true, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
+  scene.add(new THREE.Points(g, m));
+}
+
+/* ───────── soft point sprite texture ───────── */
+const pointTex = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const cx = cv.getContext('2d');
+  const g = cx.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.25,'rgba(255,255,255,0.7)');
+  g.addColorStop(0.6, 'rgba(255,255,255,0.15)');
+  g.addColorStop(1,   'rgba(255,255,255,0)');
+  cx.fillStyle = g; cx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(cv);
+})();
+
+/* ───────── YIN-YANG MANIFOLD ───────── */
+const YY_CENTER = new THREE.Vector3(-1.6, 0, 0);
+const YY_R = 1.8;
+const N_YY = 12000;
+const yyG = new THREE.BufferGeometry();
+const yyPos = new Float32Array(N_YY * 3);
+const yyCol = new Float32Array(N_YY * 3);
+const yyBase = new Float32Array(N_YY * 3); // baseline positions on unit sphere
+const yyTheta = new Float32Array(N_YY);    // arclength parameter (azimuth, 0..2π)
+const yyHemi = new Int8Array(N_YY);        // +1 yang / -1 yin
+
+function divider(theta) { return Math.PI/2 + (Math.PI/6) * Math.sin(theta) * Math.cos(theta/2); }
+
+/* sample by acceptance based on density */
+function sampleManifold() {
+  let idx = 0;
+  let safety = 0;
+  while (idx < N_YY && safety < N_YY * 60) {
+    safety++;
+    /* uniform on sphere */
+    const u = Math.random(), v = Math.random();
+    const theta = 2 * Math.PI * u;        // azimuth
+    const phi = Math.acos(2 * v - 1);     // polar
+    const d = phi - divider(theta);
+    const rho_curve = Math.exp(-d * d * 12) * 3.5;
+    /* yin dot at (theta=π/2, phi=divider+0.5); yang dot at (theta=3π/2, phi=divider-0.5) */
+    const yinDotPhi  = divider(Math.PI*0.5) + 0.55;
+    const yangDotPhi = divider(Math.PI*1.5) - 0.55;
+    const dy1 = (phi - yinDotPhi),  dt1 = ((theta - Math.PI*0.5));
+    const dy2 = (phi - yangDotPhi), dt2 = ((theta - Math.PI*1.5));
+    const rho_dot = Math.exp(-(dy1*dy1 + dt1*dt1) * 8) * 2.0
+                  + Math.exp(-(dy2*dy2 + dt2*dt2) * 8) * 2.0;
+    const rho = 1.0 + rho_curve + rho_dot;
+    /* accept based on rho/maxRho */
+    if (Math.random() * 6.5 < rho) {
+      const sp = Math.sin(phi);
+      const x = sp * Math.cos(theta);
+      const y = Math.cos(phi);
+      const z = sp * Math.sin(theta);
+      yyBase[idx*3] = x; yyBase[idx*3+1] = y; yyBase[idx*3+2] = z;
+      yyPos[idx*3] = YY_CENTER.x + x * YY_R;
+      yyPos[idx*3+1] = YY_CENTER.y + y * YY_R;
+      yyPos[idx*3+2] = YY_CENTER.z + z * YY_R;
+      yyTheta[idx] = theta;
+      yyHemi[idx] = d < 0 ? -1 : 1;
+      /* base colour: greyfield with tiny hue tint */
+      const tint = yyHemi[idx] > 0 ? 0.02 : -0.02;
+      yyCol[idx*3]   = 0.50 + tint + (Math.random()-0.5) * 0.04;
+      yyCol[idx*3+1] = 0.50 + (Math.random()-0.5) * 0.04;
+      yyCol[idx*3+2] = 0.50 - tint + (Math.random()-0.5) * 0.04;
+      idx++;
+    }
+  }
+  /* fill remainder with random sphere points if undersampled */
+  for (; idx < N_YY; idx++) {
+    const u = Math.random(), v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const sp = Math.sin(phi);
+    const x = sp * Math.cos(theta); const y = Math.cos(phi); const z = sp * Math.sin(theta);
+    yyBase[idx*3] = x; yyBase[idx*3+1] = y; yyBase[idx*3+2] = z;
+    yyPos[idx*3] = YY_CENTER.x + x * YY_R;
+    yyPos[idx*3+1] = YY_CENTER.y + y * YY_R;
+    yyPos[idx*3+2] = YY_CENTER.z + z * YY_R;
+    yyTheta[idx] = theta;
+    yyHemi[idx] = (phi - divider(theta)) < 0 ? -1 : 1;
+    yyCol[idx*3] = yyCol[idx*3+1] = yyCol[idx*3+2] = 0.5;
+  }
+}
+sampleManifold();
+
+yyG.setAttribute('position', new THREE.BufferAttribute(yyPos, 3));
+yyG.setAttribute('color', new THREE.BufferAttribute(yyCol, 3));
+const yyMat = new THREE.PointsMaterial({
+  size: 0.06, vertexColors: true, transparent: true, opacity: 0.95,
+  blending: THREE.AdditiveBlending, depthWrite: false, map: pointTex, sizeAttenuation: true,
+});
+const yyPoints = new THREE.Points(yyG, yyMat);
+scene.add(yyPoints);
+
+/* ───────── PULSES on dividing curve ───────── */
+const PULSE_COLORS = [
+  [1.0, 0.20, 0.20],   // R
+  [0.20, 1.0, 0.30],   // G
+  [0.30, 0.45, 1.0],   // B
+  [0.20, 0.95, 1.0],   // C
+  [1.0, 0.30, 0.95],   // M
+  [1.0, 0.95, 0.25],   // Y
+];
+const pulses = [];
+for (let i = 0; i < 6; i++) {
+  pulses.push({
+    theta: (i / 6) * Math.PI * 2,
+    speed: 0.55,
+    color: PULSE_COLORS[i],
+    life: Infinity,        // persistent system pulses
+    born: 0,
+    width: 0.35,
+    intensity: 1.0,
+  });
+}
+
+/* ───────── 101% REVELATION SPHERE ───────── */
+const REV_CENTER = new THREE.Vector3(2.0, 0, 0);
+const REV_R = 1.4;
+const N_REV = 3000;
+const revG = new THREE.BufferGeometry();
+const revPos = new Float32Array(N_REV * 3);
+const revCol = new Float32Array(N_REV * 3);
+const revBase = new Float32Array(N_REV * 3); // unit sphere direction
+const revShell = new Int8Array(N_REV);       // 0..5 colour shell
+for (let i = 0; i < N_REV; i++) {
+  const u = Math.random(), v = Math.random();
+  const theta = 2 * Math.PI * u;
+  const phi = Math.acos(2 * v - 1);
+  const sp = Math.sin(phi);
+  revBase[i*3] = sp * Math.cos(theta);
+  revBase[i*3+1] = Math.cos(phi);
+  revBase[i*3+2] = sp * Math.sin(theta);
+  revShell[i] = i % 6;
+  /* start positions: identical to centre (collapsed potential) */
+  revPos[i*3] = REV_CENTER.x;
+  revPos[i*3+1] = REV_CENTER.y;
+  revPos[i*3+2] = REV_CENTER.z;
+  revCol[i*3] = revCol[i*3+1] = revCol[i*3+2] = 0;
+}
+revG.setAttribute('position', new THREE.BufferAttribute(revPos, 3));
+revG.setAttribute('color', new THREE.BufferAttribute(revCol, 3));
+const revMat = new THREE.PointsMaterial({
+  size: 0.09, vertexColors: true, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, map: pointTex, sizeAttenuation: true,
+});
+const revPoints = new THREE.Points(revG, revMat);
+scene.add(revPoints);
+
+/* Subtle outline halo to hint at the invisible sphere when revealing */
+const revHalo = new THREE.Mesh(
+  new THREE.SphereGeometry(REV_R * 1.02, 32, 32),
+  new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { u_op: { value: 0 }, u_t: { value: 0 } },
+    vertexShader: `varying vec3 vN; void main(){ vN = normalize(normalMatrix*normal); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `varying vec3 vN; uniform float u_op; uniform float u_t;
+      void main(){
+        float fres = pow(1.0 - max(dot(vN, vec3(0,0,1)), 0.0), 2.2);
+        float h = fract(u_t * 0.1 + vN.y * 0.3);
+        vec3 c;
+        c.r = 0.5 + 0.5 * sin(h * 6.2831);
+        c.g = 0.5 + 0.5 * sin(h * 6.2831 + 2.094);
+        c.b = 0.5 + 0.5 * sin(h * 6.2831 + 4.188);
+        gl_FragColor = vec4(c, fres * u_op);
+      }`,
+  })
+);
+revHalo.position.copy(REV_CENTER);
+scene.add(revHalo);
+
+/* ───────── INPUT: mouse → world ray, observe ───────── */
+const cursorEl = document.getElementById('cursor');
+const mouseNDC = new THREE.Vector2();
+const raycaster = new THREE.Raycaster();
+let revealHold = 0;          // ms accumulated within range
+let revealActive = false;
+let revealAmount = 0;        // 0..1
+let pulseInjections = 0;
+
+addEventListener('mousemove', e => {
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top = e.clientY + 'px';
+  mouseNDC.x = (e.clientX / W()) * 2 - 1;
+  mouseNDC.y = -(e.clientY / H()) * 2 + 1;
+});
+
+function rayClosestToPoint(p) {
+  const ro = raycaster.ray.origin, rd = raycaster.ray.direction;
+  const v = new THREE.Vector3().subVectors(p, ro);
+  const t = Math.max(0, v.dot(rd));
+  const closest = new THREE.Vector3().copy(ro).addScaledVector(rd, t);
+  return closest.distanceTo(p);
+}
+
+/* ───────── HUD ───────── */
+const hCounter = document.getElementById('hCounter');
+const hState = document.getElementById('hState');
+const hFps = document.getElementById('hFps');
+function setCounter(percent, locked) {
+  hCounter.textContent = percent;
+  hCounter.classList.toggle('locked', !!locked);
+}
+
+/* ───────── POSTPROCESSING ───────── */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W(), H()), 0.9, 0.7, 0.0));
+
+addEventListener('resize', () => {
+  camera.aspect = W()/H(); camera.updateProjectionMatrix();
+  renderer.setSize(W(), H()); composer.setSize(W(), H());
+});
+
+/* ───────── MAIN LOOP ───────── */
+const clock = new THREE.Clock();
+const yyRotY = { v: 0 };
+let fpsT = 0, fpsN = 0;
+
+function tick() {
+  const t = clock.getElapsedTime();
+  const dt = clock.getDelta();
+  yyRotY.v += dt * 0.10;
+
+  /* ray from mouse */
+  raycaster.setFromCamera(mouseNDC, camera);
+
+  /* check hover on yin-yang manifold sphere */
+  const distYY = rayClosestToPoint(YY_CENTER);
+  const onYY = distYY < YY_R + 0.3;
+  cursorEl.classList.toggle('observe', onYY || (rayClosestToPoint(REV_CENTER) < REV_R + 0.4));
+
+  /* inject pulses on hover (rate limited) */
+  if (onYY && Math.random() < 0.18) {
+    /* approximate the closest theta where ray meets sphere */
+    const theta = Math.atan2(raycaster.ray.direction.z, raycaster.ray.direction.x + 0.001) + yyRotY.v;
+    pulses.push({
+      theta: (theta + Math.PI * 2) % (Math.PI * 2),
+      speed: 0.0,        // injected pulses don't travel — they ping
+      color: PULSE_COLORS[Math.floor(Math.random()*6)],
+      life: 0.8,
+      born: t,
+      width: 0.25,
+      intensity: 1.4,
+    });
+    pulseInjections++;
+    /* trim */
+    while (pulses.length > 18) pulses.shift();
+  }
+
+  /* check hover on 101% sphere */
+  const distREV = rayClosestToPoint(REV_CENTER);
+  if (distREV < REV_R + 0.4) {
+    revealHold = Math.min(2000, revealHold + dt * 1000);
+  } else {
+    revealHold = Math.max(0, revealHold - dt * 1500);
+  }
+  revealActive = revealHold > 600;
+  revealAmount = revealActive
+    ? Math.min(1, (revealHold - 600) / 600)
+    : Math.max(0, revealHold / 600 * 0.4); // pre-fade hint
+
+  /* ───── UPDATE YIN-YANG PARTICLES ───── */
+  for (let i = 0; i < N_YY; i++) {
+    /* rotate base by yyRotY around y-axis */
+    const bx = yyBase[i*3], by = yyBase[i*3+1], bz = yyBase[i*3+2];
+    const cs = Math.cos(yyRotY.v), sn = Math.sin(yyRotY.v);
+    const rx = bx * cs + bz * sn;
+    const rz = -bx * sn + bz * cs;
+    yyPos[i*3]   = YY_CENTER.x + rx * YY_R;
+    yyPos[i*3+1] = YY_CENTER.y + by * YY_R;
+    yyPos[i*3+2] = YY_CENTER.z + rz * YY_R;
+
+    /* base colour: grey field with tint */
+    const tint = yyHemi[i] > 0 ? 0.018 : -0.018;
+    let cr = 0.50 + tint;
+    let cg = 0.50;
+    let cb = 0.50 - tint;
+
+    /* pulse contribution: compute current theta after rotation */
+    const thetaP = (yyTheta[i] + yyRotY.v + Math.PI * 2) % (Math.PI * 2);
+    let accent = 0;
+    let pr = 0, pg = 0, pb = 0;
+    for (let k = 0; k < pulses.length; k++) {
+      const p = pulses[k];
+      let pt = (p.theta + (t - p.born) * p.speed) % (Math.PI * 2);
+      if (pt < 0) pt += Math.PI * 2;
+      let dT = Math.abs(thetaP - pt);
+      if (dT > Math.PI) dT = Math.PI * 2 - dT;
+      const w = Math.exp(-(dT / p.width) * (dT / p.width) * 6);
+      /* also weighted by proximity to dividing curve */
+      const phi = Math.acos(yyBase[i*3+1]);
+      const d = Math.abs(phi - divider(yyTheta[i]));
+      const curveW = Math.exp(-d * d * 18);
+      const w2 = w * curveW * p.intensity;
+      /* life decay for transient injected pulses */
+      const ageK = (p.life === Infinity) ? 1 : Math.max(0, 1 - (t - p.born) / p.life);
+      const W = w2 * ageK;
+      pr += p.color[0] * W;
+      pg += p.color[1] * W;
+      pb += p.color[2] * W;
+      accent += W;
+    }
+    if (accent > 0.001) {
+      const mix = Math.min(1, accent);
+      cr = cr * (1 - mix) + pr / Math.max(0.001, accent) * mix;
+      cg = cg * (1 - mix) + pg / Math.max(0.001, accent) * mix;
+      cb = cb * (1 - mix) + pb / Math.max(0.001, accent) * mix;
+    }
+    /* clamp away from pure white/black */
+    cr = Math.min(0.97, Math.max(0.04, cr));
+    cg = Math.min(0.97, Math.max(0.04, cg));
+    cb = Math.min(0.97, Math.max(0.04, cb));
+    yyCol[i*3] = cr; yyCol[i*3+1] = cg; yyCol[i*3+2] = cb;
+  }
+  yyG.attributes.position.needsUpdate = true;
+  yyG.attributes.color.needsUpdate = true;
+
+  /* prune expired transient pulses */
+  for (let k = pulses.length - 1; k >= 0; k--) {
+    if (pulses[k].life !== Infinity && (t - pulses[k].born) > pulses[k].life) pulses.splice(k, 1);
+  }
+
+  /* ───── UPDATE 101% REVELATION ───── */
+  revMat.opacity = revealAmount * 0.95;
+  revHalo.material.uniforms.u_op.value = revealAmount * 0.5;
+  revHalo.material.uniforms.u_t.value = t;
+  revHalo.rotation.y = t * 0.4;
+  revHalo.rotation.x = t * 0.25;
+
+  for (let i = 0; i < N_REV; i++) {
+    /* unfold from centre to shell radius based on revealAmount */
+    const r = revealAmount * REV_R * (0.85 + 0.15 * Math.sin(t * 2 + i * 0.13));
+    /* shell rotation: each shell rotates on a different axis */
+    const shell = revShell[i];
+    const a = t * (0.3 + shell * 0.15);
+    const sx = revBase[i*3], sy = revBase[i*3+1], sz = revBase[i*3+2];
+    let x, y, z;
+    if (shell === 0) { /* X axis */
+      const c = Math.cos(a), s = Math.sin(a);
+      x = sx; y = sy*c - sz*s; z = sy*s + sz*c;
+    } else if (shell === 1) {
+      const c = Math.cos(a), s = Math.sin(a);
+      x = sx*c + sz*s; y = sy; z = -sx*s + sz*c;
+    } else if (shell === 2) {
+      const c = Math.cos(a), s = Math.sin(a);
+      x = sx*c - sy*s; y = sx*s + sy*c; z = sz;
+    } else if (shell === 3) {
+      /* combined */
+      const c = Math.cos(a*1.1), s = Math.sin(a*1.1);
+      x = sx*c + sy*s; y = -sx*s + sy*c; z = sz;
+    } else if (shell === 4) {
+      const c = Math.cos(a*0.7), s = Math.sin(a*0.7);
+      x = sx; y = sy*c + sz*s; z = -sy*s + sz*c;
+    } else {
+      const c = Math.cos(a*1.3), s = Math.sin(a*1.3);
+      x = sx*c + sz*s; y = sy; z = -sx*s + sz*c;
+    }
+    revPos[i*3]   = REV_CENTER.x + x * r;
+    revPos[i*3+1] = REV_CENTER.y + y * r;
+    revPos[i*3+2] = REV_CENTER.z + z * r;
+    const col = PULSE_COLORS[shell];
+    revCol[i*3] = col[0] * revealAmount;
+    revCol[i*3+1] = col[1] * revealAmount;
+    revCol[i*3+2] = col[2] * revealAmount;
+  }
+  revG.attributes.position.needsUpdate = true;
+  revG.attributes.color.needsUpdate = true;
+
+  /* ───── HUD ───── */
+  if (revealActive && revealAmount > 0.95) {
+    setCounter('101%', true); // 101% は無い、しかし観測された
+    hState.textContent = '観測された';
+  } else if (revealHold > 0) {
+    const pct = 50 + Math.floor(revealHold / 600 * 49);
+    setCounter(Math.min(99, pct) + '%', false);
+    hState.textContent = '観測中';
+  } else {
+    setCounter('50%', false);
+    hState.textContent = '潜在';
+  }
+
+  /* camera idle drift — gated for vestibular safety */
+  if (__reduceMotion) {
+    camera.position.set(0, 0, 8.5);
+  } else {
+    camera.position.x = Math.sin(t * 0.08) * 0.6;
+    camera.position.y = Math.cos(t * 0.06) * 0.35;
+  }
+  camera.lookAt(0, 0, 0);
+
+  composer.render();
+
+  fpsN++;
+  if (t - fpsT > 0.5) { hFps.textContent = Math.round(fpsN / (t - fpsT)); fpsT = t; fpsN = 0; }
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>

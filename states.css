@@ -1,0 +1,119 @@
+/* ──────────────────────────────────────────────────────────────────────────
+ *  states.css — inryokü 空状態 / 読み込み中 / エラー UX 統一スタイル
+ *  2026-04-28
+ *
+ *  美学:
+ *    - grey ベース (#9a9a9a / #c8c8c8 / #1a1a1a)
+ *    - 静謐: 動きは最小限、勾配・影なし
+ *    - 余白: padding 多め、行間広め
+ *    - 装飾過多回避: グリフは ASCII (· — ·)
+ *
+ *  設計:
+ *    - 既存 DOM の中に absolute 重ね or block 置換 どちらでも動くよう block 既定
+ *    - prefers-reduced-motion 対応
+ *    - dark/light どちらでも grey で破綻しないよう中間値を使う
+ * ────────────────────────────────────────────────────────────────────────── */
+
+.inryoku-state {
+  /* layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  min-height: 6em;
+  padding: 2.4em 1.6em;
+  box-sizing: border-box;
+
+  /* type */
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  text-align: center;
+
+  /* color: grey ベース (light/dark 両対応の中間) */
+  color: #9a9a9a;
+  background: transparent;
+
+  /* 静かな登場 */
+  opacity: 0;
+  animation: inryoku-state-fade 480ms ease-out forwards;
+}
+
+.inryoku-state__glyph {
+  display: block;
+  font-size: 1.05rem;
+  letter-spacing: 0.4em;
+  color: #b8b8b8;
+  user-select: none;
+}
+
+.inryoku-state__message {
+  margin: 0;
+  color: #8a8a8a;
+  font-weight: 400;
+  font-style: normal;
+  /* 引用調を避けつつ静謐に */
+}
+
+.inryoku-state__sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #aaaaaa;
+  opacity: 0.85;
+}
+
+/* ── kind 別の微差 ─────────────────────────────────── */
+
+.state-loading .inryoku-state__glyph {
+  /* 呼吸するような点滅。装飾的すぎない速度。 */
+  animation: inryoku-state-breathe 2400ms ease-in-out infinite;
+}
+
+.state-empty .inryoku-state__glyph {
+  /* 一本線。silence is also a color. */
+  letter-spacing: 0;
+  color: #c8c8c8;
+}
+
+.state-error .inryoku-state__message {
+  color: #7e7e7e;
+}
+.state-error .inryoku-state__glyph {
+  color: #9a9a9a;
+}
+
+/* ── アニメーション ─────────────────────────────────── */
+
+@keyframes inryoku-state-fade {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes inryoku-state-breathe {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+/* ── prefers-reduced-motion ────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .inryoku-state {
+    animation: none;
+    opacity: 1;
+  }
+  .state-loading .inryoku-state__glyph {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* ── dark scheme フォローアップ (任意) ─────────────── */
+
+@media (prefers-color-scheme: dark) {
+  .inryoku-state         { color: #8a8a8a; }
+  .inryoku-state__glyph  { color: #6a6a6a; }
+  .inryoku-state__message{ color: #9a9a9a; }
+  .inryoku-state__sub    { color: #7a7a7a; }
+}

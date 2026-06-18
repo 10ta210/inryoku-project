@@ -18,30 +18,71 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/inryoku_logo_icon.png">
   <link rel="apple-touch-icon" href="/inryoku_logo_icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- External font preconnect disabled for local P1 parity/CSP stability. -->
 
   <!-- P3 スタイル -->
   <link rel="stylesheet" href="p3_styles.css?v=20260405onebit1">
 
-  <!-- Three.js 0.160.0 CDN (UMD版: グローバルTHREEオブジェクト) -->
-  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <!-- Local Three.js: CSP blocks unpkg on the local server. Postprocessing falls back safely in p1_code. -->
+  <script src="vendor/three.min.js"></script>
 
   <style>
+    /* ───────────────────────────────────────────────
+       2026-05-20 段階20.4: OKLCH 哲学カラートークン (Codex Opus 推薦)
+       知覚均等な色補間 = 「グレーの中の虹」の物理的実装
+       sRGB hex は灰色化・ステップ感が出るため OKLCH に統一
+       rollback: この :root 1 ブロックを戻すだけ
+       ─────────────────────────────────────────────── */
+    :root {
+      /* 50% コア (現実=グレー) */
+      --ink-void:     oklch(8%  0 0);           /* 純黒 (CMY 合一) */
+      --ink-grey:     oklch(55% 0 0);           /* グレー = 現実 */
+      --ink-paper:    oklch(98% 0 0);           /* 純白 (RGB 合一) */
+      /* 7色虹 (knee 点ごとに彩度ピーク、知覚均等) */
+      --rainbow-r:    oklch(65% 0.24  25);
+      --rainbow-o:    oklch(72% 0.20  55);
+      --rainbow-y:    oklch(90% 0.19  95);
+      --rainbow-g:    oklch(78% 0.22 145);
+      --rainbow-c:    oklch(80% 0.13 200);
+      --rainbow-b:    oklch(58% 0.22 260);
+      --rainbow-v:    oklch(58% 0.24 305);
+      --rainbow-m:    oklch(68% 0.27 335);
+      /* Win95 native palette (機械感維持のため hex のまま) */
+      --win95-bg:     #c0c0c0;
+      --win95-shadow: #808080;
+      --win95-light:  #ffffff;
+      --win95-dark:   #000000;
+      --win95-blue:   #0000aa;
+      /* グラデーション (in oklch longer hue で虹の正しい補間) */
+      --grad-rainbow: linear-gradient(90deg in oklch longer hue,
+        var(--rainbow-r), var(--rainbow-o), var(--rainbow-y),
+        var(--rainbow-g), var(--rainbow-c), var(--rainbow-b),
+        var(--rainbow-v), var(--rainbow-m));
+      --grad-rainbow-flow: linear-gradient(90deg in oklch longer hue,
+        var(--rainbow-r) 0%, var(--rainbow-y) 25%, var(--rainbow-g) 50%,
+        var(--rainbow-c) 65%, var(--rainbow-b) 80%, var(--rainbow-m) 100%);
+    }
+    /* prefers-reduced-motion: 彩度を下げる (光過敏配慮) */
+    @media (prefers-reduced-motion: reduce) {
+      :root {
+        --rainbow-r: oklch(65% 0.12  25);
+        --rainbow-o: oklch(72% 0.10  55);
+        --rainbow-y: oklch(90% 0.10  95);
+        --rainbow-g: oklch(78% 0.11 145);
+        --rainbow-c: oklch(80% 0.07 200);
+        --rainbow-b: oklch(58% 0.11 260);
+        --rainbow-v: oklch(58% 0.12 305);
+        --rainbow-m: oklch(68% 0.13 335);
+      }
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background: #000; }
+    html, body { width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background: var(--ink-void); }
     #root { width: 100%; height: 100%; position: relative; overflow: hidden; }
 
     /* Welcome画面 (Web 1.0) */
     .phase-1 {
-      background: #808080;
+      background: var(--ink-grey);
       padding: 40px 20px;
       overflow-y: auto;
       height: 100%;
@@ -55,22 +96,29 @@
   </script>
   <div id="root"></div>
 
+  <!-- 2026-05-20 段階20: harmonic drone (110Hz A2 + overtones) — 哲学音響 -->
+  <script src="cosmos-audio-harmonic.js?v=20260520lens1"></script>
+  <!-- 2026-05-31: 進行=taichi(ローディング駆動エンジン) / 球描画=v2(立体ライティング)。
+       taichi の球は v2 起動時に非表示化され二重にならない (init で getObjectByName 抑制)。
+       genesis(ONE BREATH 完全再設計)は進行ロジック統合が未完のため温存。 -->
+  <script src="p1_v2_sphere.js?v=20260608auto1"></script>
+  <!-- <script src="p1_genesis.js?v=20260531genesis1"></script> -->
   <!-- P1 Stage 1 拡張シーン (2026-05-17 太極→グレー溶解 / 2026-05-18 Stage 13 clean reset) -->
-  <script src="p1_stage1_taichi.js?v=20260518s13"></script>
+  <!-- 2026-05-31 司「v2 の球が良い・二重を消す」: p1_v2_sphere.js を本番デフォルト化したため
+       旧 taichi(球を二重に描く 186KB)を停止。戻す時はこの行を復活 + p1_v2_sphere に ?v2=0。 -->
+  <script src="p1_stage1_taichi.js?v=20260520morph1"></script>
   <!-- 2026-05-18 Stage 13 (clean reset): Stage 6 (eye) / Stage 7 (cross) を再有効化。
        Stage 5 (white world) は p1_stage1_taichi.js の uWhiteBirth に inlined されたため
        一旦コメントアウト維持。Stage 3 (tunnel) は chaos 扱いで停止のまま。 -->
   <!-- <script src="p1_stage3_tunnel.js?v=20260517"></script> -->
   <!-- <script src="p1_stage5_white.js?v=20260518"></script> -->
-  <script src="p1_stage6_eye.js?v=20260518s13"></script>
-  <script src="p1_stage7_cross.js?v=20260518s13"></script>
+  <!-- 2026-05-20 Codex: eye/cross は同一球体 shader に統合。別 mesh plane は読み込まない。 -->
+  <!-- <script src="p1_stage6_eye.js?v=20260518s13"></script> -->
+  <!-- <script src="p1_stage7_cross.js?v=20260518s13"></script> -->
 
   <!-- P1コード -->
-  <script src="p1_code_for_claude.js?v=20260405onebit1"></script>
-  <!-- P2コード（P1完了後に起動） -->
-  <script src="p2_code_for_claude.js?v=20260405onebit1"></script>
-  <!-- P3コード（P2完了後に起動） -->
-  <script src="p3_code_for_claude.js?v=20260405onebit1"></script>
+  <script src="p1_code_for_claude.js?v=20260608fuse2"></script>
+  <!-- P1 only: P2/P3 scripts are intentionally not loaded on this verification page. -->
 
   <script>
     // モバイル検出: P0/P1/P2をスキップしてP3直行

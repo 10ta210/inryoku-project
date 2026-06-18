@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryoku brand font lab 15</title>
+<style>
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("vendor/fonts/press-start-2p.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --grey: #808080;
+  --r: #ff0000;
+  --g: #00ff00;
+  --b: #0044ff;
+  --c: #00ffff;
+  --m: #ff00ff;
+  --y: #ffff00;
+  --ink: #050506;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000;
+  color: #f3f3f3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(0,255,255,0.05), transparent 22%),
+    radial-gradient(circle at 78% 32%, rgba(255,0,255,0.045), transparent 24%),
+    radial-gradient(circle at 50% 88%, rgba(255,255,0,0.032), transparent 24%),
+    #000;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  padding: 28px clamp(14px, 3vw, 42px) 56px;
+}
+
+.top {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+h1 {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.72);
+  font-weight: 500;
+}
+
+.note {
+  margin: 8px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.42);
+}
+
+.open {
+  color: rgba(255,255,255,0.74);
+  border: 1px solid rgba(255,255,255,0.14);
+  text-decoration: none;
+  padding: 10px 13px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.card {
+  position: relative;
+  min-height: 214px;
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(255,255,255,0.075);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0.01)),
+    rgba(0,0,0,0.68);
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  transform: translateX(-110%);
+  animation: cardSweep 8s ease-in-out infinite;
+}
+
+@keyframes cardSweep {
+  0%, 62% { transform: translateX(-110%); opacity: 0; }
+  72% { opacity: 1; }
+  100% { transform: translateX(110%); opacity: 0; }
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 34px;
+  color: rgba(255,255,255,0.42);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tag {
+  color: rgba(255,255,255,0.34);
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  min-height: 92px;
+  white-space: nowrap;
+  line-height: 0.92;
+  transform-style: preserve-3d;
+}
+
+.brand span {
+  display: inline-block;
+  position: relative;
+  color: var(--col);
+  text-shadow:
+    0 0 5px color-mix(in srgb, var(--col) 58%, transparent),
+    0 0 16px color-mix(in srgb, var(--col) 28%, transparent);
+}
+
+.brand span:nth-child(1) { --col: var(--grey); }
+.brand span:nth-child(2) { --col: var(--r); }
+.brand span:nth-child(3) { --col: var(--g); }
+.brand span:nth-child(4) { --col: var(--b); }
+.brand span:nth-child(5) { --col: var(--c); }
+.brand span:nth-child(6) { --col: var(--m); }
+.brand span:nth-child(7) { --col: var(--y); }
+
+.pick {
+  margin-top: 30px;
+  color: rgba(255,255,255,0.34);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.7;
+}
+
+.v01 .brand {
+  font: 400 clamp(28px, 4.8vw, 58px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.035em;
+}
+.v01 .brand span {
+  text-shadow:
+    1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 rgba(0,0,0,0.9),
+    4px 4px 12px rgba(0,0,0,0.9),
+    0 0 10px color-mix(in srgb, var(--col) 42%, transparent);
+}
+
+.v02 .brand {
+  font: 900 clamp(42px, 8vw, 104px)/0.8 Impact, "Arial Black", sans-serif;
+  letter-spacing: -0.055em;
+  transform: scaleY(0.74);
+}
+.v02 .brand span {
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--col) 72%, #fff);
+  color: color-mix(in srgb, var(--col) 18%, transparent);
+}
+
+.v03 .brand {
+  font: 400 clamp(30px, 5.2vw, 66px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: -0.01em;
+}
+.v03 .brand span::before,
+.v03 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  opacity: 0.72;
+  pointer-events: none;
+}
+.v03 .brand span::before { color: #ff0000; transform: translate(-0.55px, 0); }
+.v03 .brand span::after { color: #00ffff; transform: translate(0.55px, 0); }
+
+.v04 .brand {
+  font: 600 clamp(44px, 7.6vw, 96px)/0.8 "Arial Narrow", "Avenir Next Condensed", sans-serif;
+  letter-spacing: -0.08em;
+  transform: skewX(-7deg);
+}
+.v04 .brand span {
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--col) 34%, transparent));
+}
+
+.v05 .brand {
+  font: 400 clamp(31px, 5vw, 62px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.02em;
+}
+.v05 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--col);
+}
+.v05 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  color: color-mix(in srgb, var(--col) 16%, transparent);
+  transform: translateY(3px);
+}
+
+.v06 .brand {
+  font: 800 clamp(39px, 7vw, 88px)/0.82 "Trebuchet MS", Arial, sans-serif;
+  letter-spacing: -0.055em;
+}
+.v06 .brand span {
+  border-bottom: 2px solid currentColor;
+  transform: rotate(var(--rot));
+}
+.v06 .brand span:nth-child(odd) { --rot: -1.6deg; }
+.v06 .brand span:nth-child(even) { --rot: 1.2deg; }
+
+.v07 .brand {
+  font: 400 clamp(29px, 4.8vw, 60px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.08em;
+}
+.v07 .brand span {
+  transform: scaleX(0.78);
+  filter: contrast(1.2);
+}
+.v07 .brand span::after {
+  content: "";
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: 46%;
+  height: 1px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  opacity: 0.72;
+}
+
+.v08 .brand {
+  font: 900 clamp(39px, 7.4vw, 94px)/0.78 Georgia, serif;
+  letter-spacing: -0.09em;
+  font-style: italic;
+}
+.v08 .brand span {
+  text-shadow:
+    -0.5px 0 #ff0000,
+    0.5px 0 #00ffff,
+    0 0 16px color-mix(in srgb, var(--col) 32%, transparent);
+}
+
+.v09 .brand {
+  font: 400 clamp(26px, 4.5vw, 56px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.07em;
+  transform: perspective(600px) rotateX(14deg);
+}
+.v09 .brand span {
+  transform: translateY(var(--y));
+}
+.v09 .brand span:nth-child(1) { --y: 0px; }
+.v09 .brand span:nth-child(2) { --y: -6px; }
+.v09 .brand span:nth-child(3) { --y: 3px; }
+.v09 .brand span:nth-child(4) { --y: -9px; }
+.v09 .brand span:nth-child(5) { --y: 2px; }
+.v09 .brand span:nth-child(6) { --y: -5px; }
+.v09 .brand span:nth-child(7) { --y: 1px; }
+
+.v10 .brand {
+  font: 900 clamp(42px, 7.8vw, 100px)/0.76 "Arial Black", Arial, sans-serif;
+  letter-spacing: -0.09em;
+}
+.v10 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.8px var(--col);
+  text-shadow:
+    0 0 4px color-mix(in srgb, var(--col) 50%, transparent),
+    0 0 18px color-mix(in srgb, var(--col) 28%, transparent);
+}
+
+.v11 .brand {
+  font: 400 clamp(30px, 5vw, 62px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.02em;
+}
+.v11 .brand span {
+  text-shadow:
+    0 -0.5px #fff,
+    0 0 8px currentColor,
+    0 0 24px color-mix(in srgb, currentColor 26%, transparent);
+}
+.v11 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  transform: translate(0.5px, 0.5px);
+  opacity: 0.26;
+  color: #fff;
+}
+
+.v12 .brand {
+  font: 400 clamp(28px, 4.6vw, 58px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.035em;
+}
+.v12 .brand span {
+  clip-path: polygon(0 0, 100% 0, 100% 42%, 82% 42%, 82% 58%, 100% 58%, 100% 100%, 0 100%);
+}
+
+.v13 .brand {
+  font: 700 clamp(44px, 8vw, 104px)/0.78 "Courier New", monospace;
+  letter-spacing: -0.14em;
+  text-transform: lowercase;
+}
+.v13 .brand span {
+  transform: scaleX(0.68);
+  text-shadow:
+    -0.45px 0 rgba(255,0,0,0.7),
+    0.45px 0 rgba(0,255,255,0.7),
+    0 0 12px color-mix(in srgb, var(--col) 32%, transparent);
+}
+
+.v14 .brand {
+  font: 900 clamp(41px, 7.4vw, 96px)/0.78 "Arial Black", sans-serif;
+  letter-spacing: -0.07em;
+  transform: rotateX(10deg);
+}
+.v14 .brand span {
+  background:
+    linear-gradient(180deg, #fff 0%, var(--col) 28%, #080808 56%, var(--col) 80%, #fff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--col) 28%, transparent));
+}
+
+.v15 .brand {
+  font: 400 clamp(27px, 4.6vw, 58px)/0.9 "Press Start 2P", monospace;
+  letter-spacing: 0.055em;
+}
+.v15 .brand span {
+  animation: breathe 5.5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.18s);
+}
+.v15 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  color: #fff;
+  opacity: 0.13;
+  transform: translateY(-1px);
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+  50% { transform: translateY(-3px) scale(1.035); filter: brightness(1.24); }
+}
+
+@media (max-width: 960px) {
+  .grid { grid-template-columns: 1fr; }
+  .top { display: block; }
+  .open { display: inline-block; margin-top: 16px; }
+  .card { min-height: 190px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div>
+      <h1>brand font lab / 15 samples</h1>
+      <p class="note">RGBCMY character color fixed. Pixel / SF direction only. This page does not touch P3.</p>
+    </div>
+    <a class="open" href="p3_test.html?nocache=20260509-corelogo1">back to P3</a>
+  </header>
+
+  <main class="grid" id="grid"></main>
+</div>
+
+<script>
+const names = [
+  ["01", "Pixel Extrude", "current close, more dimensional"],
+  ["02", "Compressed Future", "bold sci-fi, not pixel but strong"],
+  ["03", "Subpixel Split", "0.5px RGB/CMY drift"],
+  ["04", "Oblique Signal", "fast logo, future sports"],
+  ["05", "Wire Pixel", "thin outline, quiet premium"],
+  ["06", "Anti Gravity", "floating uneven baseline"],
+  ["07", "Scan Cut", "pixel with horizontal core line"],
+  ["08", "Italic Relic", "old serif warped into SF"],
+  ["09", "Depth Steps", "staggered pixel orbit"],
+  ["10", "Neon Skeleton", "large hollow lettering"],
+  ["11", "White Spark", "tiny white refraction only"],
+  ["12", "Broken Glyph", "cut pixel language"],
+  ["13", "Mono Condensed", "technical lowercase future"],
+  ["14", "Chrome Core", "metal + RGBCMY core"],
+  ["15", "Living Pixel", "current-safe animated candidate"]
+];
+
+function brand() {
+  return ["i","n","r","y","o","k","ü"]
+    .map((ch, i) => `<span data-ch="${ch}" style="--i:${i}">${ch}</span>`)
+    .join("");
+}
+
+document.getElementById("grid").innerHTML = names.map(([num, title, note], i) => `
+  <section class="card v${String(i + 1).padStart(2, "0")}">
+    <div class="meta"><span>${num} / ${title}</span><span class="tag">RGBCMY</span></div>
+    <div class="brand" aria-label="inryoku">${brand()}</div>
+    <div class="pick">${note}</div>
+  </section>
+`).join("");
+</script>
+</body>
+</html>

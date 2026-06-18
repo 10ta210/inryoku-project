@@ -3,9 +3,15 @@
   "configurations": [
     {
       "name": "inryoku",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["server.js"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "inryoku-static",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "3017"],
+      "port": 3017
     }
   ]
 }

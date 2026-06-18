@@ -1,0 +1,114 @@
+/**
+ * i18n.css — 言語切替 UI のスタイル (最小限・控えめ)
+ * inryokü 美学: 薄い grey、輪郭は border 1px、ホバーで観測される。
+ * フッター右下に固定。コンテンツに被らないようサイズは抑制。
+ */
+
+#inryoku-lang-toggle {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 9000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: 'Inter', 'Courier New', Arial, sans-serif;
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  user-select: none;
+  pointer-events: auto;
+  opacity: 0.55;
+  transition: opacity 0.3s ease, border-color 0.3s ease;
+}
+
+#inryoku-lang-toggle:hover,
+#inryoku-lang-toggle:focus-within {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.inryoku-lang-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  font: inherit;
+  letter-spacing: inherit;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+  touch-action: manipulation;
+  /* KO ボタン等で同一サイズ感をキープ */
+  min-width: 22px;
+  text-align: center;
+}
+
+/* 韓国語表示時のフォントフォールバック (ハングル対応) */
+html[lang="ko"] body,
+html[lang="ko"] .philosophy-copy,
+html[lang="ko"] .philosophy-sub {
+  font-family: 'Orbitron', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Yu Gothic', sans-serif;
+}
+
+.inryoku-lang-btn:hover,
+.inryoku-lang-btn:focus-visible {
+  color: #fff;
+  outline: none;
+}
+
+.inryoku-lang-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.inryoku-lang-btn.is-active {
+  color: #fff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+}
+
+.inryoku-lang-sep {
+  color: #555;
+  font-weight: 300;
+}
+
+/* 明るい背景 (phase-1 grey #808080 や phase-2 #ebebeb) ではコントラスト調整 */
+@media (prefers-color-scheme: light) {
+  #inryoku-lang-toggle {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(0, 0, 0, 0.10);
+  }
+  .inryoku-lang-btn { color: #555; }
+  .inryoku-lang-btn:hover,
+  .inryoku-lang-btn.is-active { color: #000; }
+  .inryoku-lang-sep { color: #999; }
+}
+
+/* モバイル: もう一段階控えめに */
+@media (max-width: 640px) {
+  #inryoku-lang-toggle {
+    bottom: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
+
+/* p3-overlap-fix-2026-04-30: contact-toggle (flow, ~bottom=779) と
+   lang-toggle (fixed bottom:10) が mobile で 3px 重なる問題を解消。
+   lang-toggle を contact-toggle 上方に押し上げ、16px 以上のクリアランスを確保。 */
+@media (max-width: 480px) {
+  #inryoku-lang-toggle {
+    bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* reduced motion 尊重 */
+@media (prefers-reduced-motion: reduce) {
+  #inryoku-lang-toggle,
+  .inryoku-lang-btn { transition: none; }
+}

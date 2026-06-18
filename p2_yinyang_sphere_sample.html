@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryokü P2 Yin-Yang Sphere Sample</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    color: rgba(255,255,255,0.72);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .caption {
+    position: fixed;
+    left: 22px;
+    bottom: 20px;
+    z-index: 4;
+    max-width: min(560px, calc(100vw - 44px));
+    pointer-events: none;
+  }
+  .caption h1 {
+    margin: 0 0 9px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+  }
+  .caption p {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.75;
+    letter-spacing: 0.11em;
+    color: rgba(255,255,255,0.42);
+  }
+  .badge {
+    position: fixed;
+    top: 16px;
+    right: 18px;
+    z-index: 4;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.34);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="badge">P2 / 50% sphere</div>
+<div class="caption">
+  <h1>inRYOKU 50% — Yin-Yang Sphere</h1>
+  <p>白と黒は対立ではなく、同じ球面の流れ。50% は内側に沈む密度として存在する。</p>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(function(){
+  if (!window.THREE) {
+    document.body.insertAdjacentHTML('beforeend', '<p style="padding:20px">Three.js not loaded</p>');
+    return;
+  }
+
+  const canvas = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance'
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  if ('toneMapping' in renderer) {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+  }
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.045);
+
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 80);
+  camera.position.set(0, 0.08, 5.7);
+
+  const root = new THREE.Group();
+  scene.add(root);
+
+  const uniforms = {
+    uTime: { value: 0 },
+    uMouse: { value: new THREE.Vector2(0, 0) }
+  };
+
+  const yinYangMat = new THREE.ShaderMaterial({
+    uniforms,
+    transparent: true,
+    depthWrite: true,
+    vertexShader: `
+      varying vec3 vN;
+      varying vec3 vP;
+      varying vec3 vW;
+      void main() {
+        vN = normalize(normalMatrix * normal);
+        vP = position;
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vW = wp.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      uniform vec2 uMouse;
+      varying vec3 vN;
+      varying vec3 vP;
+      varying vec3 vW;
+
+      vec3 hsv2rgb(vec3 c) {
+        vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+        return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+      }
+
+      void main() {
+        vec3 n = normalize(vN);
+        vec3 p = normalize(vP);
+        float view = clamp(dot(n, normalize(vec3(0.0, 0.05, 1.0))), 0.0, 1.0);
+        float rim = pow(1.0 - view, 2.1);
+
+        // Camera-facing disk coordinates on the sphere. This keeps the symbol readable.
+        vec2 q = p.xy;
+        float disk = length(q);
+        float edgeFade = smoothstep(1.02, 0.82, disk);
+
+        // Traditional S boundary, but softly alive so it remains 3D, not a flat decal.
+        float slow = sin(uTime * 0.28) * 0.035;
+        float sBoundary = q.x - (0.34 + slow) * sin(q.y * 3.14159265);
+        float side = smoothstep(-0.030, 0.030, sBoundary);
+
+        vec3 dark = vec3(0.012, 0.013, 0.017);
+        vec3 light = vec3(0.77, 0.78, 0.82);
+        vec3 grey = vec3(0.50);
+        vec3 symbol = mix(dark, light, side);
+
+        // Classic opposite dots. Centered vertically so the sphere reads as yin-yang immediately.
+        float topDot = smoothstep(0.150, 0.038, length(q - vec2(0.0, 0.46)));
+        float botDot = smoothstep(0.150, 0.038, length(q - vec2(0.0,-0.46)));
+        symbol = mix(symbol, dark, topDot * side * 0.96);
+        symbol = mix(symbol, light, botDot * (1.0 - side) * 0.92);
+
+        // Thin dividing glow. Not a hard sticker line, more like pressure in the surface.
+        float seam = 1.0 - smoothstep(0.000, 0.085, abs(sBoundary));
+        float dotEdge = max(
+          1.0 - smoothstep(0.145, 0.175, length(q - vec2(0.0, 0.46))),
+          1.0 - smoothstep(0.145, 0.175, length(q - vec2(0.0,-0.46)))
+        );
+
+        float hue = fract(atan(q.y, q.x) / 6.2831853 + 0.5 + p.z * 0.12 + uTime * 0.018);
+        vec3 prism = hsv2rgb(vec3(hue, 0.78, 1.0));
+
+        vec3 col = mix(grey, symbol, 0.76);
+        col += prism * seam * 0.045;
+        col += prism * dotEdge * 0.030;
+
+        // 3D lighting: sphere first, symbol second.
+        float key = 0.34 + view * 0.78;
+        float lowerShadow = smoothstep(0.65, -0.65, p.y) * 0.16;
+        col *= key - lowerShadow;
+        col += vec3(0.025, 0.028, 0.033) * rim;
+        col += prism * pow(rim, 1.25) * 0.22;
+
+        // Subtle glass skin.
+        float skin = pow(rim, 4.6) * 0.28;
+        col += vec3(0.80, 0.86, 1.0) * skin;
+        col = pow(max(col, vec3(0.0)), vec3(0.92));
+
+        gl_FragColor = vec4(col, (0.95 + rim * 0.05) * edgeFade);
+      }
+    `
+  });
+
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(1.28, 192, 128),
+    yinYangMat
+  );
+  root.add(sphere);
+
+  const auraMat = new THREE.ShaderMaterial({
+    uniforms,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      varying vec3 vN;
+      varying vec3 vP;
+      void main() {
+        vN = normalize(normalMatrix * normal);
+        vP = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      varying vec3 vN;
+      varying vec3 vP;
+      vec3 hsv2rgb(vec3 c) {
+        vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+        return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+      }
+      void main() {
+        float view = clamp(dot(normalize(vN), normalize(vec3(0.0, 0.0, 1.0))), 0.0, 1.0);
+        float rim = pow(1.0 - view, 2.35);
+        float hue = fract(atan(vP.y, vP.x) / 6.2831853 + 0.5 + uTime * 0.026);
+        vec3 col = hsv2rgb(vec3(hue, 0.76, 1.0));
+        gl_FragColor = vec4(col, rim * 0.13);
+      }
+    `
+  });
+  const aura = new THREE.Mesh(new THREE.SphereGeometry(1.46, 128, 96), auraMat);
+  root.add(aura);
+
+  const dustGeo = new THREE.BufferGeometry();
+  const dustCount = 460;
+  const dPos = new Float32Array(dustCount * 3);
+  const dSeed = new Float32Array(dustCount);
+  for (let i = 0; i < dustCount; i++) {
+    const r = 2.1 + Math.random() * 4.8;
+    const a = Math.random() * Math.PI * 2;
+    dPos[i*3] = Math.cos(a) * r;
+    dPos[i*3+1] = (Math.random() - 0.5) * 3.4;
+    dPos[i*3+2] = Math.sin(a) * r - 0.8;
+    dSeed[i] = Math.random() * 1000;
+  }
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+  dustGeo.setAttribute('aSeed', new THREE.BufferAttribute(dSeed, 1));
+  const dustMat = new THREE.ShaderMaterial({
+    uniforms,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: `
+      uniform float uTime;
+      attribute float aSeed;
+      varying float vAlpha;
+      void main() {
+        vec3 p = position;
+        float t = uTime * 0.12 + aSeed;
+        p.xz = mat2(cos(t), -sin(t), sin(t), cos(t)) * p.xz;
+        p.y += sin(uTime * 0.34 + aSeed) * 0.045;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        float pulse = 0.55 + 0.45 * sin(uTime * 1.1 + aSeed);
+        vAlpha = 0.08 + pulse * 0.16;
+        gl_PointSize = (1.0 + pulse * 1.1) * (280.0 / max(1.0, -mv.z));
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      varying float vAlpha;
+      void main() {
+        vec2 uv = gl_PointCoord - 0.5;
+        float d = length(uv);
+        float a = smoothstep(0.48, 0.02, d);
+        gl_FragColor = vec4(0.62, 0.64, 0.70, a * vAlpha);
+      }
+    `
+  });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  scene.add(dust);
+
+  function resize() {
+    const w = window.innerWidth || 1;
+    const h = window.innerHeight || 1;
+    renderer.setSize(w, h, true);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    root.scale.setScalar(Math.min(w, h) < 520 ? 0.82 : 1.0);
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('pointermove', (ev) => {
+    uniforms.uMouse.value.x = (ev.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
+    uniforms.uMouse.value.y = 1 - (ev.clientY / Math.max(1, window.innerHeight)) * 2;
+  }, { passive: true });
+  resize();
+
+  const clock = new THREE.Clock();
+  function animate() {
+    const t = clock.getElapsedTime();
+    uniforms.uTime.value = t;
+    root.rotation.y = Math.sin(t * 0.10) * 0.18;
+    root.rotation.x = Math.sin(t * 0.08) * 0.045;
+    sphere.rotation.y = t * 0.055;
+    sphere.rotation.z = Math.sin(t * 0.12) * 0.030;
+    aura.rotation.y = -t * 0.040;
+    dust.rotation.y = t * 0.020;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

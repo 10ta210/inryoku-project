@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>inryokü — ロゴ発話の試験 (P3)</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --fg: #d6d6d6;
+      --dim: #777;
+      --line: rgba(255,255,255,0.12);
+      --panel: rgba(255,255,255,0.04);
+      --panel-hi: rgba(255,255,255,0.09);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      letter-spacing: 0.04em;
+      min-height: 100%;
+    }
+    body.inryoku-speaking #stage::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,0.55) 80%);
+      pointer-events: none;
+    }
+    h1 {
+      font-size: 12px; letter-spacing: 0.28em; text-transform: uppercase;
+      color: #888; text-align: center; margin: 20px 0 4px;
+    }
+    p.subtitle {
+      text-align: center; color: var(--dim);
+      font-size: 11px; margin: 0 0 18px; letter-spacing: 0.18em;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 360px 1fr 320px;
+      gap: 18px;
+      padding: 0 18px 32px;
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      min-height: 220px;
+    }
+    section h2 {
+      font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+      color: #888; margin: 0 0 10px;
+    }
+    #stage {
+      position: relative;
+      background: #020202;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      min-height: 480px;
+      overflow: hidden;
+    }
+    #stage canvas { display: block; width: 100%; height: 100%; }
+    .canon-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .canon-grid button {
+      appearance: none;
+      background: var(--panel-hi);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      padding: 7px 4px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .canon-grid button:hover {
+      border-color: rgba(255,255,255,0.32);
+      background: rgba(255,255,255,0.12);
+    }
+    .canon-grid button[data-priority="special"] {
+      border-color: rgba(255,180,120,0.4);
+    }
+    .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 11px; color: var(--dim); }
+    .row label { min-width: 80px; letter-spacing: 0.12em; text-transform: uppercase; font-size: 10px; }
+    select, input[type="number"], input[type="range"] {
+      appearance: none;
+      background: var(--panel-hi);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      padding: 6px 8px; font-size: 11px;
+      border-radius: 6px;
+      flex: 1;
+    }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      border: 1px solid var(--line); background: var(--panel);
+      font-size: 10px; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .pill--r { color: #ff8a8a; border-color: #ff8a8a55; }
+    .pill--g { color: #8aff95; border-color: #8aff9555; }
+    .pill--b { color: #8ac6ff; border-color: #8ac6ff55; }
+    .pill--c { color: #8af0ff; border-color: #8af0ff55; }
+    .pill--m { color: #ff8ad6; border-color: #ff8ad655; }
+    .pill--y { color: #fff08a; border-color: #fff08a55; }
+    #log {
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 10px; color: var(--dim);
+      max-height: 220px; overflow-y: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 8px; margin-top: 8px;
+      line-height: 1.55;
+    }
+    #queue-list, #current-display {
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 10px;
+      padding: 6px 8px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      min-height: 32px;
+    }
+    button.action {
+      appearance: none;
+      width: 100%;
+      padding: 9px;
+      font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+      background: var(--panel-hi);
+      color: var(--fg);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    button.action:hover { border-color: rgba(255,255,255,0.32); }
+    [aria-live] {
+      position: absolute; left: -9999px;
+      width: 1px; height: 1px; overflow: hidden;
+    }
+  </style>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/window-shim.js"
+      }
+    }
+  </script>
+  <script src="vendor/three.min.js"></script>
+</head>
+<body>
+  <h1>inryokü — ロゴ発話の試験</h1>
+  <p class="subtitle" data-i18n="p3.logo.subtitle">円環粒子 × ロゴ球 — P3</p>
+
+  <div id="live" aria-live="polite" aria-atomic="true"></div>
+
+  <main>
+    <!-- Left: 17 canon + AI form -->
+    <section>
+      <h2 data-i18n="p3.logo.section.canon">17 円環 (en'kan)</h2>
+      <div class="canon-grid" id="canon-buttons"></div>
+      <h2 style="margin-top: 18px;" data-i18n="p3.logo.section.register">発話の高さ</h2>
+      <div class="row">
+        <label data-i18n="p3.logo.label.register">高さ</label>
+        <select id="register-select" aria-label="発話の高さ / register">
+          <option value="whisper">ささやき</option>
+          <option value="hover" selected>触れる</option>
+          <option value="click">押す</option>
+          <option value="summon">召喚</option>
+          <option value="revelation">啓示</option>
+        </select>
+      </div>
+
+      <h2 style="margin-top: 18px;" data-i18n="p3.logo.section.ai">AI の声から円環を導く</h2>
+      <div class="row">
+        <label data-i18n="p3.logo.label.intent">意図</label>
+        <select id="intent" aria-label="意図 / intent">
+          <option value="greet">挨拶</option><option value="question">問い</option><option value="assert">断言</option>
+          <option value="doubt" selected>疑い</option><option value="agree">同意</option><option value="conclude">結び</option>
+          <option value="summon">召喚</option><option value="reveal">啓示</option><option value="silence">沈黙</option>
+          <option value="quote">引用</option>
+        </select>
+      </div>
+      <div class="row">
+        <label data-i18n="p3.logo.label.tone">色合い</label>
+        <select id="tone" aria-label="色合い / tone">
+          <option value="neutral">中庸</option><option value="warm">温い</option><option value="cold">冷たい</option>
+          <option value="urgent">急ぐ</option><option value="gentle" selected>穏やか</option><option value="intense">強い</option>
+        </select>
+      </div>
+      <div class="row">
+        <label data-i18n="p3.logo.label.certainty">確かさ</label>
+        <input id="certainty" type="range" min="0" max="1" step="0.05" value="0.45" aria-label="確かさ / certainty" />
+        <span id="cert-readout" style="font-size:10px;color:var(--dim);min-width:32px;text-align:right;">0.45</span>
+      </div>
+      <div class="row">
+        <label data-i18n="p3.logo.label.direction">向き</label>
+        <select id="direction" aria-label="向き / direction"><option value="inward" selected>内へ</option><option value="outward">外へ</option></select>
+      </div>
+      <button class="action" id="ai-speak" data-i18n="p3.logo.btn.speak">導いて発話する</button>
+      <button class="action" id="ai-resolve" data-i18n="p3.logo.btn.resolve">導きだけ見る</button>
+      <div id="ai-preview" class="row" style="margin-top:8px;font-family:monospace;color:#aaa;"></div>
+    </section>
+
+    <!-- Center: stage -->
+    <section id="stage" aria-label="ロゴ球の場 / logo sphere stage"></section>
+
+    <!-- Right: status + log -->
+    <section>
+      <h2>状態 (jōtai)</h2>
+      <div class="row"><label data-i18n="p3.logo.label.phase">相</label><span id="phase-pill" class="pill pill--r">R</span></div>
+      <div class="row"><label data-i18n="p3.logo.label.current">今</label><div id="current-display" style="flex:1;" data-i18n="p3.logo.current.idle">静止</div></div>
+      <div class="row"><label data-i18n="p3.logo.label.queue">並び</label><div id="queue-list" style="flex:1;" data-i18n="p3.logo.queue.empty">なし</div></div>
+      <button class="action" id="interrupt-btn" data-i18n="p3.logo.btn.interrupt">全て止める</button>
+      <div class="row">
+        <label><input type="checkbox" id="reduced-toggle" /> <span data-i18n="p3.logo.toggle.reduced">動きを抑える</span></label>
+      </div>
+      <h2 style="margin-top: 14px;" data-i18n="p3.logo.section.log">出来事の記録</h2>
+      <div id="log" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { createBus } from './cosmos-bus.js';
+    import { createAudio } from './cosmos-audio.js';
+    import { createLogoSpeech } from './logo-speech.js';
+    import { createSpeechRenderer } from './logo-speech-renderer.js';
+    import { resolveCanon } from './logo-canon-resolver.js';
+    import { CANON_KINDS, COLOR_HEX, PHASE_ORDER } from './logo-glyph.js';
+
+    // ── Tiny THREE stage with a procedural sphere ────────────
+    const stage = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setClearColor(0x020202, 1);
+    stage.appendChild(renderer.domElement);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 7);
+
+    const sphereGeo = new THREE.SphereGeometry(1, 64, 48);
+    const sphereMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      metalness: 0.55,
+      roughness: 0.25,
+      emissive: new THREE.Color(COLOR_HEX.R),
+      emissiveIntensity: 0.15
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+    scene.add(sphereMesh);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    const key = new THREE.PointLight(0xffffff, 0.95, 20);
+    key.position.set(3, 3, 4);
+    scene.add(key);
+
+    function fit() {
+      const r = stage.getBoundingClientRect();
+      const w = Math.max(320, r.width);
+      const h = Math.max(360, r.height);
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    fit();
+    new ResizeObserver(fit).observe(stage);
+
+    // ── Infrastructure ──────────────────────────────────────
+    const bus = createBus();
+    const audio = createAudio({ masterVolume: 0.3 });
+    document.body.addEventListener('pointerdown', () => audio.start(), { once: true });
+
+    // Fake effects layer (logs scene changes)
+    let activeScene = 'idle';
+    const effects = {
+      setActiveScene(s) { activeScene = s; log(`effects: scene → ${s}`); },
+      getActiveScene() { return activeScene; }
+    };
+
+    const reducedToggle = document.getElementById('reduced-toggle');
+    function reducedMotion() {
+      if (reducedToggle.checked) return true;
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    const speechRenderer = createSpeechRenderer({
+      scene,
+      getSpherePosition: () => sphereMesh.position,
+      getSphereRadius: () => 1.0,
+      reducedMotion
+    });
+
+    const speech = createLogoSpeech({
+      bus, audio, effects,
+      getSphere: () => ({ position: sphereMesh.position, radius: 1 }),
+      reducedMotion,
+      ariaLive: document.getElementById('live'),
+      renderer: speechRenderer
+    });
+
+    // ── UI wiring ───────────────────────────────────────────
+    const logEl = document.getElementById('log');
+    function log(msg) {
+      const t = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.textContent = `[${t}] ${msg}`;
+      logEl.prepend(div);
+      while (logEl.children.length > 60) logEl.removeChild(logEl.lastChild);
+    }
+
+    const canonBtns = document.getElementById('canon-buttons');
+    const SPECIAL = new Set(['summon', 'revelation', 'leap']);
+    CANON_KINDS.forEach((c) => {
+      const b = document.createElement('button');
+      b.textContent = c;
+      if (SPECIAL.has(c)) b.dataset.priority = 'special';
+      b.addEventListener('click', () => {
+        const reg = SPECIAL.has(c)
+          ? (c === 'revelation' ? 'revelation' : (c === 'summon' ? 'summon' : 'click'))
+          : document.getElementById('register-select').value;
+        speech.speak(c, reg);
+      });
+      canonBtns.appendChild(b);
+    });
+
+    const certInput = document.getElementById('certainty');
+    const certReadout = document.getElementById('cert-readout');
+    certInput.addEventListener('input', () => { certReadout.textContent = (+certInput.value).toFixed(2); });
+
+    function readAiForm() {
+      return {
+        intent: document.getElementById('intent').value,
+        tone: document.getElementById('tone').value,
+        certainty: +certInput.value,
+        direction: document.getElementById('direction').value
+      };
+    }
+    document.getElementById('ai-resolve').addEventListener('click', () => {
+      const f = readAiForm();
+      const r = resolveCanon(f.intent, f.tone, f.certainty, f.direction);
+      document.getElementById('ai-preview').textContent =
+        `→ canon=${r.canon}  register=${r.register}`;
+    });
+    document.getElementById('ai-speak').addEventListener('click', () => {
+      const f = readAiForm();
+      const r = resolveCanon(f.intent, f.tone, f.certainty, f.direction);
+      document.getElementById('ai-preview').textContent =
+        `→ canon=${r.canon}  register=${r.register}`;
+      speech.speak(r.canon, r.register);
+    });
+    document.getElementById('interrupt-btn').addEventListener('click', () => speech.interrupt());
+
+    // ── Status panel updates ────────────────────────────────
+    const phasePill = document.getElementById('phase-pill');
+    const currentEl = document.getElementById('current-display');
+    const queueEl = document.getElementById('queue-list');
+    function refreshPanel() {
+      const cur = speech.getCurrent();
+      currentEl.textContent = cur ? `${cur.canon} (${cur.register})` : '静止';
+      const q = speech.getQueue();
+      queueEl.textContent = q.length === 0
+        ? 'なし'
+        : q.map((x) => `${x.canon}/${x.register}`).join('  →  ');
+    }
+    function refreshPhase() {
+      const p = speech.getPhase();
+      phasePill.className = 'pill pill--' + p.color.toLowerCase();
+      phasePill.textContent = p.color;
+    }
+    bus.on('speech:start', (e) => { log(`start ${e.canon}/${e.register}`); refreshPanel(); });
+    bus.on('speech:end', (e) => { log(`end   ${e.canon} (${e.reason}) → phase ${e.phaseIndexAfter}`); refreshPanel(); refreshPhase(); });
+    bus.on('speech:queue', (e) => { log(`queue depth=${e.depth}`); refreshPanel(); });
+    bus.on('logo:phase', (e) => {
+      log(`phase ${e.index} (${e.color})`);
+      sphereMat.emissive.set(e.hex);
+      sphereMat.emissiveIntensity = 0.22;
+      refreshPhase();
+    });
+    bus.on('inryoku:reveal', (e) => { log(`★ inryoku:reveal — combo ${e.combo.join(' + ')}`); });
+
+    refreshPhase();
+    refreshPanel();
+
+    // ── Frame loop ──────────────────────────────────────────
+    let last = performance.now();
+    function tick(t) {
+      const dt = (t - last) / 1000; last = t;
+      sphereMesh.rotation.y += dt * 0.4;
+      speechRenderer.update(dt);
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>

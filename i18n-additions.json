@@ -1,0 +1,506 @@
+{
+  "_meta": {
+    "version": "1.3.0-additions",
+    "spec": "docs/superpowers/specs/2026-05-12-ux-copy-style.md",
+    "merges_into": "i18n.json",
+    "note": "P3 upgrade UI copy. JP is source; EN is faithful translation. No ko in this wave."
+  },
+
+  "cosmos.gate.title": {
+    "ja": "観測の窓",
+    "en": "observation window"
+  },
+  "cosmos.gate.body": {
+    "ja": "触れて、観測を始める",
+    "en": "Touch to begin observing"
+  },
+  "cosmos.gate.sub": {
+    "ja": "音と粒子の観測へ",
+    "en": "Toward the observation of sound and particle"
+  },
+  "cosmos.gate.aria": {
+    "ja": "観測を始めるには触れる",
+    "en": "Touch or press Enter to begin observing"
+  },
+  "cosmos.gate.button": {
+    "ja": "観測を始める",
+    "en": "begin observing"
+  },
+
+  "cosmos.mute.observing": {
+    "ja": "観測",
+    "en": "observing"
+  },
+  "cosmos.mute.silent": {
+    "ja": "静寂",
+    "en": "silence"
+  },
+  "cosmos.mute.aria_observing": {
+    "ja": "音を静かにする",
+    "en": "fall to silence"
+  },
+  "cosmos.mute.aria_silent": {
+    "ja": "音を戻す",
+    "en": "return to observing"
+  },
+
+  "cosmos.mic.begin": {
+    "ja": "マイクで吹く",
+    "en": "blow into the mic"
+  },
+  "cosmos.mic.stop": {
+    "ja": "マイク停止",
+    "en": "stop the mic"
+  },
+  "cosmos.mic.armed": {
+    "ja": "マイクで観測しています",
+    "en": "the mic is observing"
+  },
+  "cosmos.mic.denied": {
+    "ja": "マイクの許可が下りませんでした。声以外でも観測できます。",
+    "en": "The microphone was not permitted. You can observe without your voice."
+  },
+  "cosmos.mic.off": {
+    "ja": "マイクを下げました",
+    "en": "the mic has been lowered"
+  },
+
+  "cosmos.contact.label": {
+    "ja": "CONTACT",
+    "en": "CONTACT"
+  },
+  "cosmos.contact.aria": {
+    "ja": "問いを届ける — 円環粒子で受け取ります",
+    "en": "send a question — received as a particle ring"
+  },
+  "cosmos.contact.handoff_canon": {
+    "ja": "宣言の円環が灯ります",
+    "en": "the ring of declaration is kindled"
+  },
+
+  "cosmos.scene.idle": {
+    "ja": "静止",
+    "en": "idle"
+  },
+  "cosmos.scene.breathing": {
+    "ja": "呼吸",
+    "en": "breathing"
+  },
+  "cosmos.scene.discovery": {
+    "ja": "発見",
+    "en": "discovery"
+  },
+  "cosmos.scene.speaking": {
+    "ja": "発話",
+    "en": "speaking"
+  },
+  "cosmos.scene.glyph": {
+    "ja": "文字",
+    "en": "glyph"
+  },
+  "cosmos.scene.rainbow": {
+    "ja": "虹環",
+    "en": "rainbow"
+  },
+  "cosmos.scene.yinyang": {
+    "ja": "陰陽",
+    "en": "yin-yang"
+  },
+  "cosmos.scene.storm": {
+    "ja": "嵐",
+    "en": "storm"
+  },
+  "cosmos.scene.leap": {
+    "ja": "跳躍",
+    "en": "leap"
+  },
+
+  "cosmos.scene.aria.idle": {
+    "ja": "場面：静止",
+    "en": "scene: idle"
+  },
+  "cosmos.scene.aria.breathing": {
+    "ja": "場面：呼吸",
+    "en": "scene: breathing"
+  },
+  "cosmos.scene.aria.discovery": {
+    "ja": "場面：発見",
+    "en": "scene: discovery"
+  },
+  "cosmos.scene.aria.speaking": {
+    "ja": "場面：発話",
+    "en": "scene: speaking"
+  },
+  "cosmos.scene.aria.glyph": {
+    "ja": "場面：文字",
+    "en": "scene: glyph"
+  },
+  "cosmos.scene.aria.rainbow": {
+    "ja": "場面：虹環",
+    "en": "scene: rainbow"
+  },
+  "cosmos.scene.aria.yinyang": {
+    "ja": "場面：陰陽",
+    "en": "scene: yin-yang"
+  },
+  "cosmos.scene.aria.storm": {
+    "ja": "場面：嵐",
+    "en": "scene: storm"
+  },
+
+  "cosmos.hud.scene": {
+    "ja": "場面",
+    "en": "scene"
+  },
+  "cosmos.hud.behavior": {
+    "ja": "振る舞い",
+    "en": "behavior"
+  },
+  "cosmos.hud.particles": {
+    "ja": "粒子",
+    "en": "particles"
+  },
+  "cosmos.hud.fps": {
+    "ja": "fps",
+    "en": "fps"
+  },
+  "cosmos.hud.canon": {
+    "ja": "円環",
+    "en": "canon"
+  },
+  "cosmos.hud.tier": {
+    "ja": "階",
+    "en": "tier"
+  },
+  "cosmos.hud.reduce": {
+    "ja": "静音",
+    "en": "reduce"
+  },
+  "cosmos.hud.reduce_on": {
+    "ja": "在",
+    "en": "yes"
+  },
+  "cosmos.hud.reduce_off": {
+    "ja": "無",
+    "en": "no"
+  },
+  "cosmos.hud.field": {
+    "ja": "場",
+    "en": "field"
+  },
+  "cosmos.hud.pulses": {
+    "ja": "鼓動",
+    "en": "pulses"
+  },
+  "cosmos.hud.state": {
+    "ja": "状態",
+    "en": "state"
+  },
+  "cosmos.hud.phase": {
+    "ja": "相",
+    "en": "phase"
+  },
+  "cosmos.hud.audio": {
+    "ja": "音",
+    "en": "audio"
+  },
+  "cosmos.hud.audio_silent": {
+    "ja": "静寂",
+    "en": "silence"
+  },
+  "cosmos.hud.audio_live": {
+    "ja": "鳴る",
+    "en": "live"
+  },
+
+  "cosmos.observe.label": {
+    "ja": "観測",
+    "en": "observation"
+  },
+  "cosmos.observe.pct": {
+    "ja": "観測 {pct}%",
+    "en": "observation {pct}%"
+  },
+  "cosmos.observe.wrap": {
+    "ja": "99% から 50% に戻りました。もう一度観測が始まります。",
+    "en": "99% wrapped back to 50%. The observation begins again."
+  },
+  "cosmos.observe.revelation": {
+    "ja": "101% は無い。しかし、観測された。",
+    "en": "101% does not exist. And yet, it was observed."
+  },
+  "cosmos.observe.tick": {
+    "ja": "観測 +1%",
+    "en": "+1% observed"
+  },
+
+  "cosmos.announce.scene_changed": {
+    "ja": "場面が {scene} に変わりました",
+    "en": "scene changed to {scene}"
+  },
+  "cosmos.announce.canon_played": {
+    "ja": "円環：{canon}",
+    "en": "canon: {canon}"
+  },
+  "cosmos.announce.audio_began": {
+    "ja": "音が始まりました。観測が開きます。",
+    "en": "Audio has begun. The observation opens."
+  },
+  "cosmos.announce.audio_muted": {
+    "ja": "静寂に落ちました",
+    "en": "fallen to silence"
+  },
+  "cosmos.announce.audio_unmuted": {
+    "ja": "観測に戻りました",
+    "en": "returned to observing"
+  },
+  "cosmos.announce.mic_armed": {
+    "ja": "マイクで観測しています",
+    "en": "the mic is observing"
+  },
+  "cosmos.announce.mic_denied": {
+    "ja": "マイクは届きませんでした",
+    "en": "the mic could not be reached"
+  },
+  "cosmos.announce.help_opened": {
+    "ja": "操作の案内を開きました",
+    "en": "the controls panel is open"
+  },
+  "cosmos.announce.help_closed": {
+    "ja": "操作の案内を閉じました",
+    "en": "the controls panel is closed"
+  },
+  "cosmos.announce.reset": {
+    "ja": "観測を最初に戻しました",
+    "en": "the observation has returned to the start"
+  },
+
+  "cosmos.error.webgl": {
+    "ja": "WebGL が見つかりません。観測の窓が開きません。",
+    "en": "WebGL is not available. The observation window will not open."
+  },
+  "cosmos.error.audio_blocked": {
+    "ja": "音はまだ始まっていません。一度触れてください。",
+    "en": "Audio has not begun. Touch the screen once."
+  },
+  "cosmos.error.mic_denied": {
+    "ja": "マイクの許可が下りませんでした。",
+    "en": "The microphone was not permitted."
+  },
+  "cosmos.error.generic_observation": {
+    "ja": "観測できませんでした。",
+    "en": "Observation did not begin."
+  },
+
+  "cosmos.reducemotion.note": {
+    "ja": "動きを抑えて観測しています。",
+    "en": "Observing with reduced motion."
+  },
+
+  "cosmos.skip.link": {
+    "ja": "本文へ移動",
+    "en": "Skip to content"
+  },
+
+  "cosmos.help.title": {
+    "ja": "操作",
+    "en": "Controls"
+  },
+  "cosmos.help.subtitle": {
+    "ja": "観測のための鍵",
+    "en": "Keys for observing"
+  },
+  "cosmos.help.row.toggle": {
+    "ja": "? — この案内を開閉",
+    "en": "? — open or close this panel"
+  },
+  "cosmos.help.row.mute": {
+    "ja": "M — 静寂と観測の切替",
+    "en": "M — fall to silence, or return"
+  },
+  "cosmos.help.row.resonance": {
+    "ja": "R — 共鳴 (kyōmei) を鳴らす",
+    "en": "R — sound the resonance"
+  },
+  "cosmos.help.row.revelation": {
+    "ja": "I — 啓示 (keiji) を鳴らす",
+    "en": "I — sound the revelation"
+  },
+  "cosmos.help.row.escape": {
+    "ja": "Esc — 開いている窓を閉じる",
+    "en": "Esc — close any open window"
+  },
+  "cosmos.help.row.tab": {
+    "ja": "Tab — 操作の順に移る",
+    "en": "Tab — move through controls"
+  },
+  "cosmos.help.close": {
+    "ja": "閉じる",
+    "en": "close"
+  },
+
+  "cosmos.replay.button": {
+    "ja": "もう一度はじめる",
+    "en": "begin again"
+  },
+  "cosmos.replay.aria": {
+    "ja": "起動の場面を最初から観測する",
+    "en": "observe the boot sequence from the start"
+  },
+
+  "cosmos.canon.silence.name":     { "ja": "沈黙",     "en": "silence" },
+  "cosmos.canon.silence.romaji":   { "ja": "chinmoku", "en": "chinmoku" },
+  "cosmos.canon.silence.desc":     { "ja": "鳴らないことで鳴る音", "en": "the sound that sounds by not sounding" },
+
+  "cosmos.canon.core.name":        { "ja": "中心",     "en": "core" },
+  "cosmos.canon.core.romaji":      { "ja": "chūshin",  "en": "chūshin" },
+  "cosmos.canon.core.desc":        { "ja": "引力の起点", "en": "the origin of gravity" },
+
+  "cosmos.canon.ma.name":          { "ja": "間",       "en": "ma" },
+  "cosmos.canon.ma.romaji":        { "ja": "ma",       "en": "ma" },
+  "cosmos.canon.ma.desc":          { "ja": "音と音の間にある重力", "en": "the gravity between two sounds" },
+
+  "cosmos.canon.shadow.name":      { "ja": "影",       "en": "shadow" },
+  "cosmos.canon.shadow.romaji":    { "ja": "kage",     "en": "kage" },
+  "cosmos.canon.shadow.desc":      { "ja": "光が落とした残像", "en": "the afterimage that light dropped" },
+
+  "cosmos.canon.emit.name":        { "ja": "放出",     "en": "emit" },
+  "cosmos.canon.emit.romaji":      { "ja": "hōshutsu", "en": "hōshutsu" },
+  "cosmos.canon.emit.desc":        { "ja": "内側から外へ抜ける粒子", "en": "particles that pass from inside outward" },
+
+  "cosmos.canon.observation.name": { "ja": "観測",     "en": "observation" },
+  "cosmos.canon.observation.romaji":{ "ja": "kansoku","en": "kansoku" },
+  "cosmos.canon.observation.desc": { "ja": "+1% の引き金", "en": "the trigger of +1%" },
+
+  "cosmos.canon.self_question.name":   { "ja": "自問",   "en": "self question" },
+  "cosmos.canon.self_question.romaji": { "ja": "jimon",  "en": "jimon" },
+  "cosmos.canon.self_question.desc":   { "ja": "答える前にひらく問い", "en": "the question that opens before its answer" },
+
+  "cosmos.canon.declaration.name":   { "ja": "宣言",   "en": "declaration" },
+  "cosmos.canon.declaration.romaji": { "ja": "sengen", "en": "sengen" },
+  "cosmos.canon.declaration.desc":   { "ja": "一度だけ強く立てる言葉", "en": "the word stood up once, firmly" },
+
+  "cosmos.canon.leap.name":   { "ja": "跳躍",   "en": "leap" },
+  "cosmos.canon.leap.romaji": { "ja": "chōyaku","en": "chōyaku" },
+  "cosmos.canon.leap.desc":   { "ja": "段を踏まずに次へ行く", "en": "to reach the next without the step between" },
+
+  "cosmos.canon.resonance.name":   { "ja": "共鳴",   "en": "resonance" },
+  "cosmos.canon.resonance.romaji": { "ja": "kyōmei", "en": "kyōmei" },
+  "cosmos.canon.resonance.desc":   { "ja": "三つの音が同じ場所を指す", "en": "three sounds point to the same place" },
+
+  "cosmos.canon.consensus.name":   { "ja": "合意",   "en": "consensus" },
+  "cosmos.canon.consensus.romaji": { "ja": "gōi",    "en": "gōi" },
+  "cosmos.canon.consensus.desc":   { "ja": "違う色が同じ円に並ぶ", "en": "different colors aligned along one ring" },
+
+  "cosmos.canon.past_speculation.name":   { "ja": "過去推測",   "en": "past speculation" },
+  "cosmos.canon.past_speculation.romaji": { "ja": "kakosuisoku","en": "kakosuisoku" },
+  "cosmos.canon.past_speculation.desc":   { "ja": "過ぎたものを逆から鳴らす", "en": "what has passed, sounded in reverse" },
+
+  "cosmos.canon.future_command.name":   { "ja": "未来命令",   "en": "future command" },
+  "cosmos.canon.future_command.romaji": { "ja": "miraimei",   "en": "miraimei" },
+  "cosmos.canon.future_command.desc":   { "ja": "まだ来ない時間への指示", "en": "an instruction sent to a time not yet arrived" },
+
+  "cosmos.canon.echo.name":   { "ja": "反響",   "en": "echo" },
+  "cosmos.canon.echo.romaji": { "ja": "hankyō", "en": "hankyō" },
+  "cosmos.canon.echo.desc":   { "ja": "戻ってきた自分の声", "en": "one's own voice, returned" },
+
+  "cosmos.canon.quotation.name":   { "ja": "引用",   "en": "quotation" },
+  "cosmos.canon.quotation.romaji": { "ja": "in'yō",  "en": "in'yō" },
+  "cosmos.canon.quotation.desc":   { "ja": "他者の声を借りて立つ", "en": "to stand by borrowing another's voice" },
+
+  "cosmos.canon.summon.name":   { "ja": "召喚",   "en": "summon" },
+  "cosmos.canon.summon.romaji": { "ja": "shōkan", "en": "shōkan" },
+  "cosmos.canon.summon.desc":   { "ja": "見えないものを呼ぶ", "en": "to call what cannot be seen" },
+
+  "cosmos.canon.revelation.name":   { "ja": "啓示",   "en": "revelation" },
+  "cosmos.canon.revelation.romaji": { "ja": "keiji",  "en": "keiji" },
+  "cosmos.canon.revelation.desc":   { "ja": "50% を 101% に裏返す瞬間", "en": "the instant 50% turns inside out into 101%" },
+
+  "p1.title.short":   { "ja": "目覚め", "en": "awakening" },
+  "p1.boot.window":   { "ja": "INRYOKÜ.SYS — 起動", "en": "INRYOKÜ.SYS — boot" },
+  "p1.boot.init":     { "ja": "観測の場を整えています", "en": "preparing the observation field" },
+  "p1.boot.loading":  { "ja": "円環粒子を読み込み中", "en": "loading particle canon" },
+  "p1.cap.preroll":   { "ja": "意識 — まだ凝らない", "en": "consciousness — not yet condensed" },
+  "p1.state.drifting":   { "ja": "漂う", "en": "drifting" },
+  "p1.state.attract":    { "ja": "引き寄せ", "en": "attract" },
+  "p1.state.fuse":       { "ja": "融合", "en": "fuse" },
+  "p1.state.duality":    { "ja": "二極", "en": "duality" },
+  "p1.state.singular":   { "ja": "ひとつのグレー", "en": "singular grey" },
+  "p1.state.warp":       { "ja": "通路がひらく", "en": "tunnel opening" },
+  "p1.state.breach":     { "ja": "境界がほどける", "en": "border unbinding" },
+  "p1.state.consume":    { "ja": "現実を呑む", "en": "drawing reality in" },
+  "p1.hint.reality":  { "ja": "R-E-A-L-I-T-Y と打つ", "en": "type R-E-A-L-I-T-Y" },
+
+  "p2.title.short":   { "ja": "陰陽多様体", "en": "yin-yang manifold" },
+  "p2.subtitle":      { "ja": "観測すると場は崩れる", "en": "observation collapses the field" },
+  "p2.corner.observe": { "ja": "陰陽 (in'yō) を観測する", "en": "yin-yang · observe" },
+  "p2.corner.rainbow": { "ja": "グレーは全ての色を抱える", "en": "grey holds every color" },
+  "p2.corner.hover":   { "ja": "101% の球に触れる", "en": "touch the 101% sphere" },
+  "p2.state.potential":{ "ja": "潜在", "en": "potential" },
+  "p2.hint.observe":   { "ja": "左の球に触れ、右へ動き、観測する", "en": "touch the left orb, move right, observe" },
+
+  "p3.title.unified":   { "ja": "P3 · 統合 · 2026", "en": "P3 · UNIFIED · 2026" },
+  "p3.title.effects":   { "ja": "P3 · 効果層 · 2026", "en": "P3 · EFFECTS · 2026" },
+  "p3.corner.unified":  { "ja": "効果 · 振る舞い · 音 · 観測", "en": "effects · behavior · audio · observation" },
+  "p3.corner.effects":  { "ja": "WebGL · ESM", "en": "WebGL · ESM" },
+  "p3.corner.layers":   { "ja": "効果層：星雲 / 星 / 橋 / ロゴ", "en": "effects: nebula / stars / bridges / logo" },
+
+  "p3.audio.subtitle":  { "ja": "17 円環の試聴 · 観測 +1% · 触れて始まる · 白黒禁則", "en": "17 canon audition · +1% per observation · gesture-gated · light=0.5 only" },
+  "p3.audio.reset":     { "ja": "観測を戻す", "en": "reset observation" },
+  "p3.audio.sequence":  { "ja": "17 円環を順に鳴らす", "en": "play all 17 canon" },
+  "p3.audio.hint":      { "ja": "鍵：R=共鳴 · I=啓示 · M=静寂", "en": "keys: R=resonance · I=revelation · M=silence" },
+  "p3.audio.eventlog":  { "ja": "観測の記録", "en": "observation log" },
+
+  "p3.logo.title":      { "ja": "ロゴ発話の試験", "en": "logo speech test" },
+  "p3.logo.subtitle":   { "ja": "円環粒子 × ロゴ球 — P3", "en": "particle canon × logo sphere — P3" },
+  "p3.logo.section.canon":    { "ja": "17 円環", "en": "17 canon" },
+  "p3.logo.section.register": { "ja": "発話の高さ", "en": "register" },
+  "p3.logo.section.ai":       { "ja": "AI の声から円環を導く", "en": "AI input · resolve canon" },
+  "p3.logo.label.register":   { "ja": "高さ", "en": "register" },
+  "p3.logo.label.intent":     { "ja": "意図", "en": "intent" },
+  "p3.logo.label.tone":       { "ja": "色合い", "en": "tone" },
+  "p3.logo.label.certainty":  { "ja": "確かさ", "en": "certainty" },
+  "p3.logo.label.direction":  { "ja": "向き", "en": "direction" },
+  "p3.logo.label.phase":      { "ja": "相", "en": "phase" },
+  "p3.logo.label.current":    { "ja": "今", "en": "current" },
+  "p3.logo.label.queue":      { "ja": "並び", "en": "queue" },
+  "p3.logo.queue.empty":      { "ja": "なし", "en": "none" },
+  "p3.logo.current.idle":     { "ja": "静止", "en": "idle" },
+  "p3.logo.btn.speak":        { "ja": "導いて発話する", "en": "resolve then speak" },
+  "p3.logo.btn.resolve":      { "ja": "導きだけ見る", "en": "resolve only" },
+  "p3.logo.btn.interrupt":    { "ja": "全て止める", "en": "interrupt all" },
+  "p3.logo.toggle.reduced":   { "ja": "動きを抑える", "en": "force reduced motion" },
+  "p3.logo.section.log":      { "ja": "出来事の記録", "en": "event log" },
+
+  "p3.logo.register.whisper":    { "ja": "ささやき", "en": "whisper" },
+  "p3.logo.register.hover":      { "ja": "触れる", "en": "hover" },
+  "p3.logo.register.click":      { "ja": "押す", "en": "click" },
+  "p3.logo.register.summon":     { "ja": "召喚", "en": "summon" },
+  "p3.logo.register.revelation": { "ja": "啓示", "en": "revelation" },
+
+  "p3.logo.intent.greet":    { "ja": "挨拶", "en": "greet" },
+  "p3.logo.intent.question": { "ja": "問い", "en": "question" },
+  "p3.logo.intent.assert":   { "ja": "断言", "en": "assert" },
+  "p3.logo.intent.doubt":    { "ja": "疑い", "en": "doubt" },
+  "p3.logo.intent.agree":    { "ja": "同意", "en": "agree" },
+  "p3.logo.intent.conclude": { "ja": "結び", "en": "conclude" },
+  "p3.logo.intent.summon":   { "ja": "召喚", "en": "summon" },
+  "p3.logo.intent.reveal":   { "ja": "啓示", "en": "reveal" },
+  "p3.logo.intent.silence":  { "ja": "沈黙", "en": "silence" },
+  "p3.logo.intent.quote":    { "ja": "引用", "en": "quote" },
+
+  "p3.logo.tone.neutral": { "ja": "中庸", "en": "neutral" },
+  "p3.logo.tone.warm":    { "ja": "温い", "en": "warm" },
+  "p3.logo.tone.cold":    { "ja": "冷たい", "en": "cold" },
+  "p3.logo.tone.urgent":  { "ja": "急ぐ", "en": "urgent" },
+  "p3.logo.tone.gentle":  { "ja": "穏やか", "en": "gentle" },
+  "p3.logo.tone.intense": { "ja": "強い", "en": "intense" },
+
+  "p3.logo.direction.inward":  { "ja": "内へ", "en": "inward" },
+  "p3.logo.direction.outward": { "ja": "外へ", "en": "outward" },
+
+  "transitions.p0.question": { "ja": "あなたは、自分を知っているか。", "en": "do you know yourself?" },
+  "transitions.p1.boot.line1": { "ja": "inryokü BIOS v1.0 · 相 P1 起動", "en": "inryokü BIOS v1.0 · phase 1 boot" },
+  "transitions.p1.boot.line2": { "ja": "記憶の点検 ... 256 の運び手を受信", "en": "memory check ... 256 carriers received" },
+  "transitions.p1.boot.line3": { "ja": "意識のドライバを読み込み中 ...", "en": "loading consciousness drivers ..." }
+}

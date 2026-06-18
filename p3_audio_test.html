@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü P3 — 音と観測の試験</title>
+<link rel="stylesheet" href="cosmos-a11y.css" />
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; padding: 0; background: hsl(0,0%,8%); color: hsl(0,0%,92%); font-family: ui-sans-serif, -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; min-height: 100vh; overflow-x: hidden; }
+  #scene { position: fixed; inset: 0; z-index: 0; }
+  main {
+    position: relative; z-index: 1;
+    max-width: 920px; margin: 0 auto;
+    padding: 80px 24px 200px;
+  }
+  h1 { font-size: 20px; letter-spacing: 0.14em; font-weight: 500; margin: 0 0 6px; }
+  .sub { opacity: 0.62; font-size: 12px; margin-bottom: 28px; }
+  .chrome {
+    position: fixed; top: 14px; left: 14px; z-index: 1000;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .chrome button, .canon-grid button {
+    appearance: none; border: 1px solid hsla(0,0%,100%,0.18);
+    background: hsla(0,0%,12%,0.7); color: hsl(0,0%,92%);
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 12px; letter-spacing: 0.06em;
+    cursor: pointer; transition: background 140ms ease, border-color 140ms ease;
+    backdrop-filter: blur(8px);
+  }
+  .chrome button:hover, .canon-grid button:hover {
+    background: hsla(0,0%,20%,0.85);
+    border-color: hsla(180,75%,50%,0.5);
+  }
+  .chrome button[aria-pressed="true"] {
+    border-color: hsl(50,85%,55%);
+    color: hsl(50,85%,75%);
+  }
+  .canon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .canon-grid button {
+    text-align: left;
+    padding: 14px 12px;
+    font-family: inherit;
+  }
+  .canon-grid button strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+  .canon-grid button span {
+    display: block;
+    font-size: 10px;
+    opacity: 0.6;
+    line-height: 1.4;
+  }
+  section { margin-top: 36px; }
+  section h2 { font-size: 13px; letter-spacing: 0.18em; opacity: 0.7; margin: 0 0 10px; }
+  .log {
+    margin-top: 12px;
+    padding: 12px;
+    background: hsla(0,0%,4%,0.6);
+    border: 1px solid hsla(0,0%,100%,0.08);
+    border-radius: 8px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    height: 160px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+  .log span { opacity: 0.55; }
+  .hint { font-size: 11px; opacity: 0.55; margin-top: 8px; }
+  .pre-gesture {
+    position: fixed; inset: 0; z-index: 9000;
+    display: flex; align-items: center; justify-content: center;
+    background: hsla(0,0%,4%,0.92);
+    backdrop-filter: blur(12px);
+  }
+  .pre-gesture button {
+    appearance: none; border: 1px solid hsl(50,85%,55%);
+    background: transparent; color: hsl(50,85%,72%);
+    padding: 22px 36px; border-radius: 14px;
+    font-size: 14px; letter-spacing: 0.24em;
+    cursor: pointer; font-family: inherit;
+  }
+  .pre-gesture button:hover { background: hsla(50,85%,55%,0.08); }
+</style>
+</head>
+<body>
+
+<a class="cosmos-skip-link" href="#main" data-i18n="cosmos.skip.link">本文へ移動</a>
+
+<div class="pre-gesture" id="gesture" role="dialog" aria-modal="true" aria-labelledby="gesture-title">
+  <h2 id="gesture-title" class="sr-only" data-i18n="cosmos.gate.title">観測の窓</h2>
+  <button id="enter" type="button" data-i18n="cosmos.gate.button" aria-label="観測を始める / begin observing">観測を始める</button>
+</div>
+
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<div class="chrome" data-cosmos-chrome role="toolbar" aria-label="観測の操作 / audio controls">
+  <button id="mute" type="button" aria-pressed="false" aria-label="音を静かにする / fall to silence" data-i18n="cosmos.mute.observing">観測</button>
+  <button id="mic" type="button" aria-pressed="false" aria-label="マイクで吹いて観測する / blow into the mic" data-i18n="cosmos.mic.begin">マイクで吹く</button>
+  <button id="reset" type="button" aria-label="観測を最初に戻す / reset observation" data-i18n="p3.audio.reset">観測を戻す</button>
+  <button id="seq" type="button" aria-label="17 円環を順に鳴らす / play all 17 canon" data-i18n="p3.audio.sequence">17 円環を順に鳴らす</button>
+</div>
+
+<main id="main" tabindex="-1">
+  <h1>inryokü P3 — 音と観測の試験</h1>
+  <div class="sub" data-i18n="p3.audio.subtitle">17 円環の試聴 · 観測 +1% · 触れて始まる · 白黒禁則</div>
+
+  <section>
+    <h2>17 円環 (en'kan)</h2>
+    <div class="canon-grid" id="canons" data-cosmos-chrome></div>
+    <div class="hint" data-i18n="p3.audio.hint">鍵：R=共鳴 · I=啓示 · M=静寂</div>
+  </section>
+
+  <section>
+    <h2 data-i18n="p3.audio.eventlog">観測の記録</h2>
+    <div class="log" id="log" data-cosmos-chrome role="log" aria-live="polite" aria-label="観測の記録 / observation log"></div>
+  </section>
+</main>
+
+<script type="module">
+import { createAudio, CANON_LIST } from './cosmos-audio.js';
+import { createObservation } from './cosmos-observation.js';
+import { wireInteractions } from './cosmos-interaction.js';
+import { createPercentageHud } from './cosmos-percentage-hud.js';
+import { applyA11y } from './cosmos-a11y.js';
+
+// Canon descriptions: 漢字 (romaji) — 一行で。i18n key: cosmos.canon.*.desc
+const CANON_DESC = {
+  silence:          '沈黙 (chinmoku) — 鳴らないことで鳴る音',
+  core:             '中心 (chūshin) — 引力の起点',
+  ma:               '間 (ma) — 音と音の間にある重力',
+  shadow:           '影 (kage) — 光が落とした残像',
+  emit:             '放出 (hōshutsu) — 内側から外へ抜ける粒子',
+  observation:      '観測 (kansoku) — +1% の引き金',
+  self_question:    '自問 (jimon) — 答える前にひらく問い',
+  declaration:      '宣言 (sengen) — 一度だけ強く立てる言葉',
+  leap:             '跳躍 (chōyaku) — 段を踏まずに次へ行く',
+  resonance:        '共鳴 (kyōmei) — 三つの音が同じ場所を指す',
+  consensus:        '合意 (gōi) — 違う色が同じ円に並ぶ',
+  past_speculation: '過去推測 (kakosuisoku) — 過ぎたものを逆から鳴らす',
+  future_command:   '未来命令 (miraimei) — まだ来ない時間への指示',
+  echo:             '反響 (hankyō) — 戻ってきた自分の声',
+  quotation:        '引用 (in\'yō) — 他者の声を借りて立つ',
+  summon:           '召喚 (shōkan) — 見えないものを呼ぶ',
+  revelation:       '啓示 (keiji) — 50% を 101% に裏返す瞬間'
+};
+
+const audio = createAudio({ masterVolume: 0.34 });
+const obs   = createObservation({ persist: true });
+const hud   = createPercentageHud({ observation: obs, label: '観測' });
+const a11y  = applyA11y({ audio });
+// Trap focus inside the gesture overlay until the user activates it
+a11y.focusTrap(document.getElementById('gesture'));
+
+const logEl = document.getElementById('log');
+function log(msg) {
+  const ts = new Date().toLocaleTimeString();
+  const line = document.createElement('div');
+  line.innerHTML = `<span>${ts}</span> ${msg}`;
+  logEl.prepend(line);
+  while (logEl.children.length > 80) logEl.lastChild.remove();
+}
+
+obs.onPulse(({ pct, source, wrapped }) => {
+  // 99% → 50% wrap is the canon. 100% は無い。
+  log(`観測 +1% · ${source} → ${pct}%${wrapped ? ' · 50% に戻る' : ''}`);
+});
+
+// Canon grid
+const grid = document.getElementById('canons');
+CANON_LIST.forEach(canon => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', `円環：${canon} を鳴らす / play canon ${canon}`);
+  b.innerHTML = `<strong lang="en">${canon}</strong><span lang="ja">${CANON_DESC[canon] || ''}</span>`;
+  b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    audio.play(canon);
+    obs.pulse('audition:' + canon);
+    log(`円環：${canon}`);
+    a11y.announce(`円環 ${canon} / canon ${canon}`, 'polite');
+  });
+  grid.appendChild(b);
+});
+
+let interaction = null;
+
+// Gesture gate — audio context must start from user gesture
+document.getElementById('enter').addEventListener('click', async () => {
+  await audio.start();
+  const g = document.getElementById('gesture');
+  g.style.display = 'none';
+  g.setAttribute('aria-hidden', 'true');
+  a11y.releaseFocus();
+  document.getElementById('main')?.focus();
+  interaction = wireInteractions({ audio, observation: obs, scope: document.body });
+  log('音が始まりました。観測が開きます。');
+  a11y.announce('音が始まりました。観測が開きます。 / Audio has begun. The observation opens.', 'polite');
+  audio.play('core');
+});
+
+// Chrome controls
+const muteBtn = document.getElementById('mute');
+let muted = false;
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  audio.setMuted(muted);
+  muteBtn.setAttribute('aria-pressed', String(muted));
+  muteBtn.textContent = muted ? '静寂' : '観測';
+  muteBtn.setAttribute('aria-label', muted ? '音を戻す / return to observing' : '音を静かにする / fall to silence');
+  log(muted ? '静寂に落ちる' : '観測に戻る');
+  a11y.announce(muted ? '静寂に落ちました / fallen to silence' : '観測に戻りました / returned to observing', 'polite');
+});
+
+const micBtn = document.getElementById('mic');
+let micOn = false;
+micBtn.addEventListener('click', async () => {
+  if (!interaction) return;
+  if (!micOn) {
+    const ok = await interaction.startMicBlowDetection();
+    micOn = !!ok;
+    micBtn.setAttribute('aria-pressed', String(micOn));
+    micBtn.textContent = micOn ? 'マイク停止' : 'マイクで吹く';
+    log(micOn ? 'マイクで観測しています。吹くと放出が灯ります。' : 'マイクの許可が下りませんでした。声以外でも観測できます。');
+    a11y.announce(micOn ? 'マイクで観測しています / the mic is observing' : 'マイクの許可が下りませんでした / the microphone was not permitted', 'polite');
+  } else {
+    interaction.stopMicBlowDetection();
+    micOn = false;
+    micBtn.setAttribute('aria-pressed', 'false');
+    micBtn.textContent = 'マイクで吹く';
+    log('マイクを下げました');
+  }
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  obs.reset();
+  log('観測を最初に戻しました');
+  a11y.announce('観測を最初に戻しました / the observation has returned to the start', 'polite');
+});
+
+document.getElementById('seq').addEventListener('click', () => {
+  if (interaction) interaction.playSequence();
+});
+
+// Minimal scene — pulsing field driven by analyzer + observation
+const canvas = document.getElementById('scene');
+const ctx2d = canvas.getContext('2d');
+function resize() {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width  = innerWidth  * dpr;
+  canvas.height = innerHeight * dpr;
+  canvas.style.width  = innerWidth  + 'px';
+  canvas.style.height = innerHeight + 'px';
+  ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+addEventListener('resize', resize); resize();
+
+const stars = Array.from({ length: 120 }, () => ({
+  x: Math.random(), y: Math.random(),
+  r: Math.random() * 1.4 + 0.4,
+  h: [0, 120, 220, 180, 300, 55][Math.floor(Math.random() * 6)],
+  ph: Math.random() * Math.PI * 2
+}));
+
+function frame(t) {
+  const W = innerWidth, H = innerHeight;
+  ctx2d.fillStyle = 'hsla(0,0%,6%,0.92)';
+  ctx2d.fillRect(0, 0, W, H);
+  const spec = audio.getSpectrum();
+  let energy = 0;
+  if (spec) {
+    for (let i = 0; i < 64; i++) energy += spec[i];
+    energy = energy / 64 / 255; // 0..1
+  }
+  const pct = obs.getPct();
+  const pctNorm = (pct - 50) / 49;
+  stars.forEach((s, i) => {
+    const tw = 0.5 + 0.5 * Math.sin(t * 0.001 + s.ph + i * 0.13);
+    const rad = s.r * (1 + energy * 2 + pctNorm * 0.4) * tw;
+    ctx2d.beginPath();
+    ctx2d.fillStyle = `hsla(${s.h}, 75%, 50%, ${0.25 + tw * 0.6})`;
+    ctx2d.arc(s.x * W, s.y * H, rad, 0, Math.PI * 2);
+    ctx2d.fill();
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// expose for console poking
+window.__cosmos = { audio, obs, hud, get interaction(){return interaction;} };
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<title>inRYOKU</title>
+<link rel="stylesheet" href="./inryoku.css" />
+<style>
+  /* Pre-boot fallback in case JS is off */
+  .inryoku-noscript {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    color: #aaa; font: 14px serif;
+  }
+</style>
+<noscript>
+  <div class="inryoku-noscript">この場所は JavaScript の上に置かれています。</div>
+</noscript>
+</head>
+<body>
+  <!-- Gaze cursor (decorative) -->
+  <div class="inryoku-gaze" id="inryoku-gaze" aria-hidden="true"></div>
+
+  <!-- Mute toggle: the ONLY UI element -->
+  <button type="button" class="inryoku-mute" id="inryoku-mute"
+    aria-label="音を消す" aria-pressed="false" title="音">音</button>
+
+  <!-- Polite live region for phrase text — accessibility -->
+  <div class="inryoku-aria-live" id="inryoku-aria-live"
+       aria-live="polite" aria-atomic="true"></div>
+
+<script type="module">
+  // Gate first — if neither path opens, redirect quietly.
+  import { enforceGate } from './inryoku-gate.js';
+  if (!enforceGate({ redirectTo: '/p3_test.html' })) {
+    // The page is being replaced; stop module evaluation.
+    throw new Error('inryoku: gate denied');
+  }
+
+  // Suppress any analytics by URL — handled at caller side, but defensive:
+  try {
+    if (window.gtag) window.gtag = function () {};
+    delete window.dataLayer;
+  } catch (_) {}
+
+  const { createInryokuWorld }   = await import('./inryoku-world.js');
+  const { createPhraseEngine }   = await import('./inryoku-phrase-engine.js');
+  const { createInryokuAudio }   = await import('./inryoku-audio.js');
+
+  const reduce = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Tier heuristic — cheap.
+  function guessTier() {
+    const mem = navigator.deviceMemory || 4;
+    const cores = navigator.hardwareConcurrency || 4;
+    if (mem <= 2 || cores <= 2) return 'low';
+    if (mem <= 4 || cores <= 4) return 'medium';
+    return 'high';
+  }
+
+  const world = createInryokuWorld({
+    container: document.body,
+    reduceMotion: reduce,
+    tier: guessTier(),
+  });
+
+  const ariaLive = document.getElementById('inryoku-aria-live');
+  await createPhraseEngine({
+    world,
+    container: document.body,
+    reduceMotion: reduce,
+    ariaLive,
+    phrasesUrl: './phrases.json',
+  });
+
+  const audio = createInryokuAudio({ mutedAtStart: false });
+
+  // First user gesture starts audio.
+  function firstGesture() {
+    audio.start();
+    window.removeEventListener('pointerdown', firstGesture);
+    window.removeEventListener('keydown', firstGesture);
+    window.removeEventListener('touchstart', firstGesture);
+  }
+  window.addEventListener('pointerdown', firstGesture, { once: false });
+  window.addEventListener('keydown', firstGesture, { once: false });
+  window.addEventListener('touchstart', firstGesture, { once: false, passive: true });
+
+  // Mute toggle
+  const muteBtn = document.getElementById('inryoku-mute');
+  muteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const m = audio.toggleMute();
+    muteBtn.setAttribute('aria-pressed', m ? 'true' : 'false');
+    muteBtn.textContent = m ? '静' : '音';
+    muteBtn.setAttribute('aria-label', m ? '音を出す' : '音を消す');
+  });
+
+  // Gaze cursor — follows pointer; grows on long-press.
+  const gaze = document.getElementById('inryoku-gaze');
+  let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+  let pressTimer = null;
+  let consenting = false;
+
+  function moveGaze(x, y) {
+    mx = x; my = y;
+    gaze.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+  }
+  window.addEventListener('pointermove', (e) => moveGaze(e.clientX, e.clientY));
+  window.addEventListener('touchmove', (e) => {
+    if (e.touches && e.touches[0]) moveGaze(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+
+  // Long press = "consent to observe". Records +1% silently. No counter shown.
+  function startPress() {
+    if (consenting) return;
+    pressTimer = setTimeout(() => {
+      consenting = true;
+      gaze.classList.add('is-pressing');
+      try {
+        const o = JSON.parse(localStorage.getItem('__inryokuObservations') || '{}');
+        o.__consent = (o.__consent || 0) + 1;
+        // bump the silent percentage — tracked without UI
+        const pct = parseFloat(localStorage.getItem('__inryokuPercent') || '50');
+        const next = Math.min(100.99, pct + 1);
+        localStorage.setItem('__inryokuPercent', String(next));
+        localStorage.setItem('__inryokuObservations', JSON.stringify(o));
+      } catch (_) {}
+    }, 850);
+  }
+  function endPress() {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    if (consenting) {
+      consenting = false;
+      gaze.classList.remove('is-pressing');
+    }
+  }
+  window.addEventListener('pointerdown', startPress);
+  window.addEventListener('pointerup', endPress);
+  window.addEventListener('pointercancel', endPress);
+  window.addEventListener('pointerleave', endPress);
+
+  // ESC returns to P3 (the outward face).
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      location.assign('/p3_test.html');
+    }
+  });
+
+  // Cleanup
+  window.addEventListener('beforeunload', () => {
+    try { audio.dispose(); } catch (_) {}
+    try { world.dispose(); } catch (_) {}
+  });
+
+  // Expose for debugging only — not for production tracking.
+  window.__inryoku = { world, audio };
+</script>
+</body>
+</html>

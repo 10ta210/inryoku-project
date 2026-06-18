@@ -1,0 +1,471 @@
+{
+  "ok": true,
+  "timestamp": "2026-04-28T12:22:39.760Z",
+  "files": [
+    {
+      "path": "vendor/three.min.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 669884,
+      "gzip": 167238,
+      "brotli": 135355,
+      "max": 716800,
+      "ok": true,
+      "pct": 93,
+      "transferEstimate": 200965,
+      "lcpTbtEstimate": {
+        "transferMs": 3925,
+        "tbtMs": 236
+      },
+      "note": "Three.js — 700KB ceiling, currently ~656KB"
+    },
+    {
+      "path": "p3_code_for_claude.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 261049,
+      "gzip": 68173,
+      "brotli": 54241,
+      "max": 307200,
+      "ok": true,
+      "pct": 85,
+      "transferEstimate": 78315,
+      "lcpTbtEstimate": {
+        "transferMs": 1530,
+        "tbtMs": 92
+      },
+      "note": "Main app bundle — 300KB ceiling, currently ~261KB"
+    },
+    {
+      "path": "p3_styles.css",
+      "exists": true,
+      "kind": "css",
+      "raw": 90806,
+      "gzip": 18377,
+      "brotli": 15272,
+      "max": 102400,
+      "ok": true,
+      "pct": 89,
+      "transferEstimate": 18161,
+      "lcpTbtEstimate": {
+        "transferMs": 355,
+        "tbtMs": 21
+      },
+      "note": "Main stylesheet — 100KB ceiling, currently ~89KB"
+    },
+    {
+      "path": "particle_rings.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 10012,
+      "gzip": 3464,
+      "brotli": 2917,
+      "max": 30720,
+      "ok": true,
+      "pct": 33,
+      "transferEstimate": 3004,
+      "lcpTbtEstimate": {
+        "transferMs": 59,
+        "tbtMs": 4
+      },
+      "note": "30KB"
+    },
+    {
+      "path": "particle_speech_rings.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 18822,
+      "gzip": 4736,
+      "brotli": 4042,
+      "max": 25600,
+      "ok": true,
+      "pct": 74,
+      "transferEstimate": 5647,
+      "lcpTbtEstimate": {
+        "transferMs": 110,
+        "tbtMs": 7
+      },
+      "note": "25KB"
+    },
+    {
+      "path": "particle_glyphs.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 16988,
+      "gzip": 4450,
+      "brotli": 3785,
+      "max": 30720,
+      "ok": true,
+      "pct": 55,
+      "transferEstimate": 5096,
+      "lcpTbtEstimate": {
+        "transferMs": 100,
+        "tbtMs": 6
+      },
+      "note": "30KB"
+    },
+    {
+      "path": "enhance.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 39018,
+      "gzip": 9350,
+      "brotli": 7957,
+      "max": 51200,
+      "ok": true,
+      "pct": 76,
+      "transferEstimate": 11705,
+      "lcpTbtEstimate": {
+        "transferMs": 229,
+        "tbtMs": 14
+      },
+      "note": "50KB"
+    },
+    {
+      "path": "sw.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 8010,
+      "gzip": 2694,
+      "brotli": 2219,
+      "max": 15360,
+      "ok": true,
+      "pct": 52,
+      "transferEstimate": 2403,
+      "lcpTbtEstimate": {
+        "transferMs": 47,
+        "tbtMs": 3
+      },
+      "note": "15KB service worker"
+    },
+    {
+      "path": "register.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 9683,
+      "gzip": 3175,
+      "brotli": 2515,
+      "max": 15360,
+      "ok": true,
+      "pct": 63,
+      "transferEstimate": 2905,
+      "lcpTbtEstimate": {
+        "transferMs": 57,
+        "tbtMs": 3
+      },
+      "note": "15KB"
+    },
+    {
+      "path": "error-shield.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 18241,
+      "gzip": 6213,
+      "brotli": 5150,
+      "max": 25600,
+      "ok": true,
+      "pct": 71,
+      "transferEstimate": 5472,
+      "lcpTbtEstimate": {
+        "transferMs": 107,
+        "tbtMs": 6
+      },
+      "note": "25KB"
+    },
+    {
+      "path": "states.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 6562,
+      "gzip": 2403,
+      "brotli": 1980,
+      "max": 10240,
+      "ok": true,
+      "pct": 64,
+      "transferEstimate": 1969,
+      "lcpTbtEstimate": {
+        "transferMs": 38,
+        "tbtMs": 2
+      },
+      "note": "10KB"
+    },
+    {
+      "path": "i18n.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 9287,
+      "gzip": 3128,
+      "brotli": 2566,
+      "max": 15360,
+      "ok": true,
+      "pct": 60,
+      "transferEstimate": 2786,
+      "lcpTbtEstimate": {
+        "transferMs": 54,
+        "tbtMs": 3
+      },
+      "note": "15KB"
+    },
+    {
+      "path": "perf-observer.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 9031,
+      "gzip": 3215,
+      "brotli": 2655,
+      "max": 15360,
+      "ok": true,
+      "pct": 59,
+      "transferEstimate": 2709,
+      "lcpTbtEstimate": {
+        "transferMs": 53,
+        "tbtMs": 3
+      },
+      "note": "15KB"
+    },
+    {
+      "path": "copy-fix-runtime.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 3368,
+      "gzip": 1626,
+      "brotli": 1322,
+      "max": 8192,
+      "ok": true,
+      "pct": 41,
+      "transferEstimate": 1010,
+      "lcpTbtEstimate": {
+        "transferMs": 20,
+        "tbtMs": 1
+      },
+      "note": "8KB"
+    },
+    {
+      "path": "shopify-proxy-client.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 5215,
+      "gzip": 2005,
+      "brotli": 1658,
+      "max": 10240,
+      "ok": true,
+      "pct": 51,
+      "transferEstimate": 1565,
+      "lcpTbtEstimate": {
+        "transferMs": 31,
+        "tbtMs": 2
+      },
+      "note": "10KB"
+    },
+    {
+      "path": "ai-chat-client-shield.js",
+      "exists": true,
+      "kind": "js",
+      "raw": 13456,
+      "gzip": 4169,
+      "brotli": 3512,
+      "max": 20480,
+      "ok": true,
+      "pct": 66,
+      "transferEstimate": 4037,
+      "lcpTbtEstimate": {
+        "transferMs": 79,
+        "tbtMs": 5
+      },
+      "note": "20KB"
+    },
+    {
+      "path": "manifest.json",
+      "exists": true,
+      "kind": "json",
+      "raw": 1630,
+      "gzip": 695,
+      "brotli": 553,
+      "max": 4096,
+      "ok": true,
+      "pct": 40,
+      "transferEstimate": 489,
+      "lcpTbtEstimate": {
+        "transferMs": 10,
+        "tbtMs": 1
+      },
+      "note": "4KB"
+    },
+    {
+      "path": "sitemap.xml",
+      "exists": true,
+      "kind": "xml",
+      "raw": 10789,
+      "gzip": 933,
+      "brotli": 774,
+      "max": 51200,
+      "ok": true,
+      "pct": 21,
+      "transferEstimate": 2697,
+      "lcpTbtEstimate": {
+        "transferMs": 53,
+        "tbtMs": 3
+      },
+      "note": "50KB — grows with products"
+    }
+  ],
+  "groups": [
+    {
+      "name": "js_total_excluding_three_and_p3",
+      "max": 204800,
+      "raw": 167693,
+      "gzip": 50628,
+      "brotli": 42278,
+      "pct": 82,
+      "ok": true,
+      "members": [
+        {
+          "path": "particle_rings.js",
+          "raw": 10012
+        },
+        {
+          "path": "particle_speech_rings.js",
+          "raw": 18822
+        },
+        {
+          "path": "particle_glyphs.js",
+          "raw": 16988
+        },
+        {
+          "path": "enhance.js",
+          "raw": 39018
+        },
+        {
+          "path": "sw.js",
+          "raw": 8010
+        },
+        {
+          "path": "register.js",
+          "raw": 9683
+        },
+        {
+          "path": "error-shield.js",
+          "raw": 18241
+        },
+        {
+          "path": "states.js",
+          "raw": 6562
+        },
+        {
+          "path": "i18n.js",
+          "raw": 9287
+        },
+        {
+          "path": "perf-observer.js",
+          "raw": 9031
+        },
+        {
+          "path": "copy-fix-runtime.js",
+          "raw": 3368
+        },
+        {
+          "path": "shopify-proxy-client.js",
+          "raw": 5215
+        },
+        {
+          "path": "ai-chat-client-shield.js",
+          "raw": 13456
+        }
+      ],
+      "note": "Sum of all JS except vendor/three.min.js and p3_code_for_claude.js (200KB)"
+    },
+    {
+      "name": "css_total",
+      "max": 153600,
+      "raw": 121715,
+      "gzip": 27522,
+      "brotli": 22678,
+      "pct": 79,
+      "ok": true,
+      "members": [
+        {
+          "path": "p3_styles.css",
+          "raw": 90806
+        },
+        {
+          "path": "enhance.css",
+          "raw": 8094
+        },
+        {
+          "path": "i18n.css",
+          "raw": 2256
+        },
+        {
+          "path": "particle_rings.css",
+          "raw": 7308
+        },
+        {
+          "path": "particle_glyphs.css",
+          "raw": 9757
+        },
+        {
+          "path": "states.css",
+          "raw": 3494
+        }
+      ],
+      "note": "All CSS (150KB)"
+    },
+    {
+      "name": "public_total",
+      "max": 2097152,
+      "raw": 1843139,
+      "gzip": 1452493,
+      "brotli": 1216155,
+      "pct": 88,
+      "ok": true,
+      "members": [
+        {
+          "path": "public/enter_hoodie.png",
+          "raw": 318098
+        },
+        {
+          "path": "public/enter_hoodie.webp",
+          "raw": 24804
+        },
+        {
+          "path": "public/info_logo_hoodie.png",
+          "raw": 392702
+        },
+        {
+          "path": "public/info_logo_hoodie.webp",
+          "raw": 22902
+        },
+        {
+          "path": "public/inryoku_logo_3d.glb",
+          "raw": 876424
+        },
+        {
+          "path": "public/mockup_qr_tee.png",
+          "raw": 74845
+        },
+        {
+          "path": "public/mockup_qr_tee.webp",
+          "raw": 13944
+        },
+        {
+          "path": "public/mockup_universe_tee.png",
+          "raw": 108942
+        },
+        {
+          "path": "public/mockup_universe_tee.webp",
+          "raw": 10478
+        }
+      ],
+      "note": "All files under public/ (2MB)"
+    }
+  ],
+  "violations": [],
+  "summary": {
+    "fileCount": 18,
+    "groupCount": 3,
+    "violationCount": 0,
+    "totalRaw": 1201851,
+    "totalGzip": 306044,
+    "totalBrotli": 248473
+  }
+}

@@ -3,28 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>inryokü — 見えないものの可視化</title>
-  <meta name="description" content="inryokü は哲学を纏う服。RGB×CMY の原色論と観測の50%→101%を具現化したアパレルと宇宙インタラクション。">
-  <meta name="keywords" content="inryoku,inryokü,哲学,アート,アパレル,Tシャツ,フーディー,RGB,CMY,観測,50%,101%,グレー,虹">
+
+  <!-- ─── Primary meta ─────────────────────────────────────── -->
+  <title>inryokü — コアから始まる世界 / 哲学を纏う服</title>
+  <meta name="description" content="inryokü — 黒の中にコアがある。コアから光が生まれ、世界が広がり、その世界の一部として衣がある。我思うゆえに我らあり。哲学を纏うアパレル。フーディー / Tシャツ / クルーネック / ロングスリーブ / タンクトップ計12型。">
+  <meta name="keywords" content="inryoku,inryokü,引力,哲学,アート,アパレル,Tシャツ,フーディー,ロングスリーブ,クルーネック,タンクトップ,ストリート,RGB,CMY,コア,生成,世界,粒子,宇宙,我思うゆえに我らあり,可視化">
   <meta name="author" content="inryokü">
-  <meta name="theme-color" content="#0a0a0a">
-  <link rel="canonical" href="https://inryoku.space/">
-  <!-- 2026-05-17: ブランド favicon — コア球 + 量子0/1 -->
-  <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicons/icon-16.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicons/icon-32.png">
-  <link rel="icon" type="image/png" sizes="48x48" href="/favicons/icon-48.png">
-  <link rel="icon" type="image/png" sizes="96x96" href="/favicons/icon-96.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/favicons/icon-192.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/favicons/icon-180.png">
-  <link rel="manifest" href="/favicons/manifest.json">
+  <meta name="publisher" content="inryokü">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+  <meta name="rating" content="general">
+  <meta http-equiv="Content-Language" content="ja">
+
+  <!-- ─── Canonical / hreflang ──────────────────────────────── -->
+  <link rel="canonical" href="https://inryoku.com/">
+  <link rel="alternate" href="https://inryoku.com/" hreflang="ja">
+  <link rel="alternate" href="https://inryoku.com/?lang=en" hreflang="en">
+  <link rel="alternate" href="https://inryoku.com/?lang=ko" hreflang="ko">
+  <link rel="alternate" href="https://inryoku.com/" hreflang="x-default">
+
+  <!-- ─── Icons / PWA ───────────────────────────────────────── -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/inryoku_logo_icon.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/inryoku_logo_icon.png">
+  <link rel="shortcut icon" href="/inryoku_logo_icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/inryoku_logo_icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="inryokü">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="inryokü">
+  <meta name="msapplication-TileColor" content="#0a0a0a">
+  <meta name="msapplication-TileImage" content="/inryoku_logo_icon.png">
 
   <!-- 初回描画高速化: 重要アセットを優先ロード -->
   <link rel="preload" href="vendor/three.min.js" as="script">
-  <link rel="preload" href="p3_styles.css?v=20260424bigcard" as="style">
+  <link rel="preload" href="p3_styles.css?v=20260619fit1" as="style">
+  <link rel="preload" href="p3_ec_polish.css?v=20260619mobile2" as="style">
+  <link rel="preload" href="particle_rings.css?v=20260428" as="style">
+  <link rel="preload" href="particle_canon_meta.js?v=20260428canon1" as="script">
+  <link rel="preload" href="particle_rings.js?v=20260428" as="script">
+  <link rel="preload" href="particle_speech_rings.js?v=20260428canon1" as="script">
   <link rel="preload" href="vendor/fonts/press-start-2p.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- 2026-05-05: Orbitron + Inter（レトロフューチャー＆UI） -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Orbitron:wght@400;500;700&display=swap">
   <link rel="preload" href="logo_sphere.png" as="image">
   <link rel="preload" href="logo_shell.png" as="image">
+  <!-- 2026-04-28 perf: LCP 候補 (EC カルーセル先頭の hoodie 商品画像) を WebP で先取り。
+       PNG (300+KB) ではなく WebP (24KB) を優先。
+       推定削減率: hoodie 画像のロード待ち 200〜400ms → 50〜100ms (mobile 4G) -->
+  <link rel="preload" href="public/enter_hoodie.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="public/info_logo_hoodie.webp" as="image" type="image/webp">
 
   <!-- Google Analytics 4 — 司さんが https://analytics.google.com で ID 取得後、
        G-XXXXXXXXXX を実IDに置き換える -->
@@ -39,117 +75,490 @@
   -->
 
 
-  <!-- Open Graph -->
+  <!-- ─── Open Graph ────────────────────────────────────────── -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="inryokü — 50% → 101%">
-  <meta property="og:description" content="見えないものの可視化。グレーの中に虹がある。観測すれば、世界は変わる。">
-  <meta property="og:image" content="https://inryoku-project-production-f827.up.railway.app/inryoku_og.png">
-  <meta property="og:url" content="https://inryoku-project-production-f827.up.railway.app/">
+  <meta property="og:title" content="inryokü — コアから始まる世界 / 哲学を纏う服">
+  <meta property="og:description" content="我思うゆえに我らあり。コアが生む世界、その中で衣となる。哲学を纏う服 inryokü ── RGB×CMY を着る。">
+  <meta property="og:url" content="https://inryoku.com/">
   <meta property="og:site_name" content="inryokü">
   <meta property="og:locale" content="ja_JP">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:image" content="https://inryoku.com/inryoku_og.png">
+  <meta property="og:image:secure_url" content="https://inryoku.com/inryoku_og.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="inryokü — コアから始まる世界。">
 
-  <!-- Twitter / X Card -->
+  <!-- ─── Twitter / X Card ──────────────────────────────────── -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="inryokü — 50% → 101%">
-  <meta name="twitter:description" content="見えないものの可視化。グレーの中に虹がある。">
-  <meta name="twitter:image" content="https://inryoku-project-production-f827.up.railway.app/inryoku_og.png">
+  <meta name="twitter:site" content="@inryoku">
+  <meta name="twitter:creator" content="@inryoku">
+  <meta name="twitter:title" content="inryokü — コアから始まる世界">
+  <meta name="twitter:description" content="我思うゆえに我らあり。コアが生む世界、その中で衣となる。哲学を纏う服。">
+  <meta name="twitter:image" content="https://inryoku.com/inryoku_og.png">
+  <meta name="twitter:image:alt" content="inryokü — コアから始まる世界。">
 
-  <!-- JSON-LD 構造化データ -->
+  <!-- ─── JSON-LD: Organization / Brand / WebSite / Store / Breadcrumb ─── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://inryoku.com/#organization",
+        "name": "inryokü",
+        "alternateName": ["inryoku", "引力"],
+        "url": "https://inryoku.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://inryoku.com/inryoku_logo_icon.png",
+          "width": 512,
+          "height": 512
+        },
+        "image": "https://inryoku.com/inryoku_og.png",
+        "description": "哲学を纏う服。RGB×CMY の原色論と、コアが生む世界の哲学を具現化したアパレルブランド。",
+        "slogan": "我思うゆえに我らあり",
+        "sameAs": [
+          "https://instagram.com/inryoku",
+          "https://x.com/inryoku"
+        ]
+      },
+      {
+        "@type": "Brand",
+        "@id": "https://inryoku.com/#brand",
+        "name": "inryokü",
+        "logo": "https://inryoku.com/inryoku_logo_icon.png",
+        "slogan": "我思うゆえに我らあり"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://inryoku.com/#website",
+        "name": "inryokü",
+        "url": "https://inryoku.com/",
+        "inLanguage": "ja-JP",
+        "publisher": { "@id": "https://inryoku.com/#organization" },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://inryoku.com/?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "OnlineStore",
+        "@id": "https://inryoku.com/#store",
+        "name": "inryokü store",
+        "url": "https://inryoku.com/",
+        "image": "https://inryoku.com/inryoku_og.png",
+        "currenciesAccepted": "JPY",
+        "paymentAccepted": "Credit Card, Stripe",
+        "parentOrganization": { "@id": "https://inryoku.com/#organization" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://inryoku.com/#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://inryoku.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://inryoku.com/#shop" }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- ─── JSON-LD: ItemList — 全12商品の一覧（コレクション） ───
+       PRODUCTS 配列（p3_code_for_claude.js）から手動同期。
+       商品が増減した際は docs/seo-metadata-2026-04-28.md の手順に従い更新。 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": "https://inryoku.com/#product-list",
+    "name": "inryokü Collection — 12 styles",
+    "description": "ENTER / LOGO の二系統 × 6シルエット = 12型。哲学を纏う服。",
+    "numberOfItems": 12,
+    "itemListOrder": "https://schema.org/ItemListOrderAscending",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1,  "url": "https://inryoku.com/#enter-hoodie",            "name": "ENTER HOODIE" },
+      { "@type": "ListItem", "position": 2,  "url": "https://inryoku.com/#logo-hoodie",             "name": "inryokü LOGO HOODIE" },
+      { "@type": "ListItem", "position": 3,  "url": "https://inryoku.com/#enter-hoodie-white",      "name": "ENTER HOODIE — GREY" },
+      { "@type": "ListItem", "position": 4,  "url": "https://inryoku.com/#logo-hoodie-oversized",   "name": "inryokü LOGO OVERSIZED" },
+      { "@type": "ListItem", "position": 5,  "url": "https://inryoku.com/#enter-tee",               "name": "ENTER TEE" },
+      { "@type": "ListItem", "position": 6,  "url": "https://inryoku.com/#logo-tee",                "name": "inryokü LOGO TEE" },
+      { "@type": "ListItem", "position": 7,  "url": "https://inryoku.com/#enter-longsleeve",        "name": "ENTER LONG SLEEVE" },
+      { "@type": "ListItem", "position": 8,  "url": "https://inryoku.com/#logo-longsleeve",         "name": "inryokü LOGO LONG SLEEVE" },
+      { "@type": "ListItem", "position": 9,  "url": "https://inryoku.com/#enter-crewneck",          "name": "ENTER CREWNECK" },
+      { "@type": "ListItem", "position": 10, "url": "https://inryoku.com/#logo-crewneck",           "name": "inryokü LOGO CREWNECK" },
+      { "@type": "ListItem", "position": 11, "url": "https://inryoku.com/#enter-tank",              "name": "ENTER TANK TOP" },
+      { "@type": "ListItem", "position": 12, "url": "https://inryoku.com/#logo-tank",               "name": "inryokü LOGO TANK TOP" }
+    ]
+  }
+  </script>
+
+  <!-- ─── JSON-LD: Product × 12（全商品） ───
+       schema.org/Product に準拠。Google Merchant 風の Offer / availability / priceCurrency / brand を完備。
+       sku = product.id（PRODUCTS配列）, image は public/*.webp に揃えても OK。 -->
   <script type="application/ld+json">
   [
     {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "inryokü",
-      "url": "https://inryoku-project-production-f827.up.railway.app/",
-      "logo": "https://inryoku-project-production-f827.up.railway.app/inryoku_logo_icon.png",
-      "description": "哲学を纏う服。RGB×CMY の原色論と観測の50%→101%を具現化したアパレル。",
-      "sameAs": [
-        "https://instagram.com/inryoku",
-        "https://x.com/inryoku"
-      ]
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#enter-hoodie",
+      "name": "ENTER HOODIE",
+      "sku": "enter-hoodie",
+      "image": "https://inryoku.com/public/enter_hoodie.png",
+      "description": "EXIT is not the only option. ENTER the unknown. Heavyweight 400gsm · Oversized Fit · DTF Print (50+ washes).",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Hoodies",
+      "color": "Washed Black",
+      "material": "Cotton (heavyweight 400gsm)",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#enter-hoodie",
+        "priceCurrency": "JPY", "price": "12800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
     },
     {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "inryokü",
-      "url": "https://inryoku-project-production-f827.up.railway.app/",
-      "inLanguage": "ja-JP",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://inryoku-project-production-f827.up.railway.app/?q={search_term_string}",
-        "query-input": "required name=search_term_string"
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#logo-hoodie",
+      "name": "inryokü LOGO HOODIE",
+      "sku": "logo-hoodie",
+      "image": "https://inryoku.com/public/info_logo_hoodie.png",
+      "description": "The origin point. Grey contains every color — you just have to look. Heavyweight 400gsm · Oversized Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Hoodies",
+      "color": "Washed Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#logo-hoodie",
+        "priceCurrency": "JPY", "price": "12800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#enter-hoodie-white",
+      "name": "ENTER HOODIE — GREY",
+      "sku": "enter-hoodie-white",
+      "image": "https://inryoku.com/public/enter_hoodie.png",
+      "description": "The same door, different light. Grey is not absence — it is everything at once. Heavyweight 400gsm.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Hoodies",
+      "color": "Heather Grey",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#enter-hoodie-white",
+        "priceCurrency": "JPY", "price": "12800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#logo-hoodie-oversized",
+      "name": "inryokü LOGO OVERSIZED",
+      "sku": "logo-hoodie-oversized",
+      "image": "https://inryoku.com/public/info_logo_hoodie.png",
+      "description": "Ultra oversized. When you stop fitting in, you start standing out. Heavyweight 450gsm.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Hoodies",
+      "color": "Washed Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#logo-hoodie-oversized",
+        "priceCurrency": "JPY", "price": "14800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#enter-tee",
+      "name": "ENTER TEE",
+      "sku": "enter-tee",
+      "image": "https://inryoku.com/public/enter_hoodie.png",
+      "description": "Lightweight signal. The door is always open. 200gsm · Regular Fit · DTF Print.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > T-Shirts",
+      "color": "Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#enter-tee",
+        "priceCurrency": "JPY", "price": "8800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#logo-tee",
+      "name": "inryokü LOGO TEE",
+      "sku": "logo-tee",
+      "image": "https://inryoku.com/public/info_logo_hoodie.png",
+      "description": "The mark. Minimal outside, infinite inside. 200gsm · Regular Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > T-Shirts",
+      "color": "Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#logo-tee",
+        "priceCurrency": "JPY", "price": "8800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#enter-longsleeve",
+      "name": "ENTER LONG SLEEVE",
+      "sku": "enter-longsleeve",
+      "image": "https://inryoku.com/public/enter_hoodie.png",
+      "description": "Long reach into the unknown. Every sleeve tells a story. 220gsm · Regular Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Long Sleeves",
+      "color": "Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#enter-longsleeve",
+        "priceCurrency": "JPY", "price": "9800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#logo-longsleeve",
+      "name": "inryokü LOGO LONG SLEEVE",
+      "sku": "logo-longsleeve",
+      "image": "https://inryoku.com/public/info_logo_hoodie.png",
+      "description": "Extended wavelength. The signal carries further. 220gsm · Regular Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Long Sleeves",
+      "color": "Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#logo-longsleeve",
+        "priceCurrency": "JPY", "price": "9800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#enter-crewneck",
+      "name": "ENTER CREWNECK",
+      "sku": "enter-crewneck",
+      "image": "https://inryoku.com/public/enter_hoodie.png",
+      "description": "No hood, no hiding. Face the door head-on. 360gsm · Oversized Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Sweatshirts",
+      "color": "Washed Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#enter-crewneck",
+        "priceCurrency": "JPY", "price": "11800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#logo-crewneck",
+      "name": "inryokü LOGO CREWNECK",
+      "sku": "logo-crewneck",
+      "image": "https://inryoku.com/public/info_logo_hoodie.png",
+      "description": "Clean orbit. The symbol speaks without shouting. 360gsm · Oversized Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Sweatshirts",
+      "color": "Washed Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#logo-crewneck",
+        "priceCurrency": "JPY", "price": "11800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#enter-tank",
+      "name": "ENTER TANK TOP",
+      "sku": "enter-tank",
+      "image": "https://inryoku.com/public/enter_hoodie.png",
+      "description": "Stripped down. Pure signal, zero noise. 180gsm · Regular Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Tank Tops",
+      "color": "Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#enter-tank",
+        "priceCurrency": "JPY", "price": "6800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
+      }
+    },
+    {
+      "@context": "https://schema.org", "@type": "Product",
+      "@id": "https://inryoku.com/#logo-tank",
+      "name": "inryokü LOGO TANK TOP",
+      "sku": "logo-tank",
+      "image": "https://inryoku.com/public/info_logo_hoodie.png",
+      "description": "Bare minimum, maximum frequency. 180gsm · Regular Fit.",
+      "brand": { "@type": "Brand", "name": "inryokü" },
+      "category": "Apparel > Tank Tops",
+      "color": "Black",
+      "offers": {
+        "@type": "Offer", "url": "https://inryoku.com/#logo-tank",
+        "priceCurrency": "JPY", "price": "6800",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": { "@id": "https://inryoku.com/#organization" }
       }
     }
   ]
   </script>
   <!-- 2026-04-19: Chrome 環境で外部 CDN が Block されるケース対策 — 全部ローカル配信 -->
+  <!-- 2026-04-28 D-02: Critical CSS をインライン化 (background / #root / brand-name first paint)。
+       Press Start 2P は vendor/ から @font-face、Inter は OS フォールバックで初回描画 — 残りの装飾は p3_styles.css async でフェードイン。 -->
   <style>
-    @font-face {
-      font-family: 'Press Start 2P';
-      font-style: normal;
-      font-weight: 400;
-      src: url('vendor/fonts/press-start-2p.woff2') format('woff2');
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Inter',Arial,sans-serif;color:#fff}
+    #root{width:100%;height:100%;position:relative;z-index:1}
+    @font-face{
+      font-family:'Press Start 2P';font-style:normal;font-weight:400;font-display:swap;
+      src:url('vendor/fonts/press-start-2p.woff2') format('woff2');
     }
+    /* Critical: brand-name (LCP テキスト候補) — フォント差し替え時の CLS を最小化 */
+    .brand-name{
+      font-family:'Press Start 2P',monospace;
+      font-size:clamp(20px,3.4vw,32px);
+      font-weight:400;letter-spacing:.10em;
+      display:flex;justify-content:center;align-items:center;
+    }
+    /* Critical: ロゴラッパー初期サイズ (CLS 防止) */
+    .logo-holo-wrap{display:block;margin:0 auto;width:clamp(90px,12vw,140px);position:relative}
   </style>
 
-  <!-- Three.js 0.160.0 UMD — ローカルホスト -->
+  <!-- 2026-04-28 D-01: Three.js 0.160.0 UMD — ローカルホスト (CSP 厳格化 + キャッシュ効率) -->
   <script src="vendor/three.min.js"></script>
-  <!-- 2026-04-17: 0.160 では examples/js/ が廃止され404で 5秒近く遅延するため削除
+  <!-- 2026-05-23 段階3: Three.js ESM addon bridge (GLTFLoader 等を UMD コードへ橋渡し) -->
+  <script type="importmap">
+    {"imports":{"three":"./vendor/three/build/three.module.js"}}
+  </script>
+  <script type="module" src="vendor/three/three-addons-bridge.js"></script>
+  <!-- 2026-05-21 P3 段階1: GSAP 3.12 (Webflow 買収後 fully free 商用可) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <!-- 2026-04-17: 0.160 では examples/js/ が廃止され404で 5秒近く遅延するため削除。
        Bloom効果はシェーダー内で補償済み -->
-  <!--
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-  <script src="https://unpkg.com/three@0.160.0/examples/js/shaders/CopyShader.js"></script>
-  -->
 
-  <link rel="stylesheet" href="p3_styles.css?v=20260424bigcard">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', Arial, sans-serif; }
-    #root { width: 100%; height: 100%; position: relative; z-index: 1; }
-    /* テスト用バッジ */
-    #test-badge {
-      position: fixed; top: 10px; right: 12px; z-index: 9999;
-      font-size: 10px; color: #0f0; opacity: 0.4;
-      pointer-events: none; letter-spacing: 2px; font-family: monospace;
+  <!-- 2026-04-28: CSP script-src-attr 'none' により onload= がブロックされるため同期ロードに戻す -->
+  <link rel="stylesheet" href="p3_styles.css?v=20260619fit1">
+  <!-- 2026-05-21 P3 段階2: EC デザインポリッシュ (Iridescent Terminal aesthetic) -->
+  <link rel="stylesheet" href="p3_ec_polish.css?v=20260619mobile2">
+  <link rel="stylesheet" href="particle_rings.css?v=20260428">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three/window-shim.js",
+      "three/addons/": "/vendor/three/examples/jsm/"
     }
-  </style>
+  }
+  </script>
 </head>
 <body>
   <div id="root"></div>
-  <div id="test-badge">P3 TEST</div>
 
   <script>
-    // 2026-04-19: P3単体テスト時は初期ミュートを OFF にして BGM が聞こえるように
     window._inryokuMuted = false;
   </script>
-  <script src="p3_code_for_claude.js?v=20260424p19bigcard"></script>
+  <script src="particle_canon_meta.js?v=20260428canon1"></script>
+  <script src="particle_rings.js?v=20260428"></script>
+  <script src="particle_speech_rings.js?v=20260428canon1"></script>
+  <script src="p3_code_for_claude.js?v=20260619mobile2"></script>
+  <!-- 2026-05-23 段階3: 商品カードに GLB 自動ロード (data-glb 属性) -->
+  <script src="p3_card_glb_loader.js?v=20260523glb1" defer></script>
+  <!-- 2026-05-23 段階4: ピクトグラム パーティクル アバター
+       ?avatar=1 で debug scene 起動、それ以外は API のみ提供 -->
+  <script src="p3_pictogram_avatar.js?v=20260531off1" defer></script>
+  <!-- 2026-05-25 P3「服の重力場」: 正面カード背面の粒子場 (P3専用、?gravity=0 でOFF) -->
+  <script src="p3_gravity_field.js?v=20260525gravity3" defer></script>
+  <!-- 2026-05-25 P3 CONTACT 常時ピン: body直下へ移設して fixed を保証 (?contactpin=0 でOFF) -->
+  <script src="p3_contact_pin.js?v=20260531off1" defer></script>
+  <!-- 2026-05-25 P3 ロゴ 3D点群ホログラム (案B、?logo3d=0 でOFF) -->
+  <script src="p3_logo_pointcloud.js?v=20260530pngoff1" defer></script>
+  <!-- 2026-05-05: dev サンプル/cstyle 切替UI 削除（?sample=N / ?cstyle=N で URL 直接指定は維持） -->
   <script>
+    // 2026-05-06: ブランド名 idle アニメ — default = Stellar Lock (6)
+    (function(){
+      try {
+        var m = location.search.match(/[?&]brandanim=(\d)/);
+        document.body.setAttribute('data-brandanim', m ? m[1] : '6');
+      } catch(e){}
+    })();
     // P3 直接起動 (P1/P2をスキップ)
     renderPhase3();
-    // 2026-05-13: モバイル audio 修正
-    // 旧コードの問題: { once: true } で最初のタップ時に _p6bgm 未生成だと
-    // リスナーが消えて二度と再生されなかった。
-    // 修正: _p6bgm が用意されるまでリトライ、touchstart→touchend に変更（iOS安定化）
+    // 円環粒子言語 — ロゴが円環で息をする / ホバーで反応 / クリックで共鳴
+    if (window.ParticleSpeechRings) {
+      window._inryokuSpeech = ParticleSpeechRings.attachToLogo('.logo-holo-wrap', {
+        whisperSize: 28,
+        hoverSize: 38,
+        clickSize: 46,
+        summonSize: 58,
+        revelationSize: 56,
+        haloScale: 0.46
+      });
+    }
+    // 初回クリック/タッチで BGM 再生再開（ブラウザの自動再生ポリシー対策）
     (function(){
       function kick(){
-        if (!window._p6bgm) return; // まだ準備中 → 次のジェスチャで再試行
-        try {
+        if (window._p6bgm) {
           window._p6bgm.muted = !!window._inryokuMuted;
           var pr = window._p6bgm.play();
           if (pr && pr.catch) pr.catch(function(){});
-        } catch(e) {}
-        document.removeEventListener('click', kick, true);
-        document.removeEventListener('touchend', kick, true);
-        document.removeEventListener('keydown', kick, true);
+        }
+        document.removeEventListener('click', kick);
+        document.removeEventListener('touchstart', kick);
+        document.removeEventListener('keydown', kick);
       }
-      document.addEventListener('click', kick, true);
-      document.addEventListener('touchend', kick, true);
-      document.addEventListener('keydown', kick, true);
+      document.addEventListener('click', kick, { once: true });
+      document.addEventListener('touchstart', kick, { once: true });
+      document.addEventListener('keydown', kick, { once: true });
     })();
   </script>
+  <!-- error-shield-2026-04-28: window.onerror / unhandledrejection / WebGL contextlost を一括捕捉。
+       copy-fix-runtime より前にロードして早期エラーを捕捉。alert は触らない（干渉しない）。 -->
+  <script src="error-shield.js?v=20260428" defer></script>
+  <!-- ai-chat-client-shield-2026-04-28: /api/chat の fallback (role:"system" + fallback:true) を
+       検知して toast を出し、p3_code_for_claude.js が history に append する前に介入。
+       p3_code_for_claude.js は触らない。error-shield.js の後にロード。 -->
+  <script src="ai-chat-client-shield.js?v=20260428" defer></script>
+  <!-- copy-fix-runtime-2026-04-28: 開発者向け alert を顧客向け文言に変換するランタイムフック。
+       p3_code_for_claude.js を触らずに alert 文言だけ上書きする。 -->
+  <script src="copy-fix-runtime.js?v=20260428" defer></script>
+  <!-- enhance-layer-2026-04-28: a11y + browser compat 後付けレイヤ (既存スクリプトの後にロード) -->
+  <link rel="stylesheet" href="enhance.css?v=20260428">
+  <script src="enhance.js?v=20260428" defer></script>
+  <!-- perf-observer-2026-04-28: Web Vitals (LCP/FID/CLS/INP) を console に吐く軽量計測 -->
+  <script src="perf-observer.js?v=20260428" defer></script>
+  <!-- pwa-sw-2026-04-28: Service Worker 登録 + PWA インストール促進 (最後にロード) -->
+  <script src="register.js?v=20260428" defer></script>
+  <!-- i18n-foundation-2026-04-28: 日本語 1st。?lang=en で英語切替 (data-i18n 付与要素のみ)。
+       辞書: i18n.json / 切替UI: フッター左下 / 既存DOMは破壊しない後付け。 -->
+  <link rel="stylesheet" href="i18n.css?v=20260506back">
+  <script src="i18n.js?v=20260506back" defer></script>
+  <!-- states-2026-04-28: 空/読込/エラー UX 統一レイヤ。
+       window.inryokuStates.{showLoading,showEmpty,showError,hide} を提供。
+       既存 production code (p3_code_for_claude.js / particle_*) は触らない後付け。
+       aria-live 連携 / prefers-reduced-motion 対応 / grey ベース。 -->
+  <link rel="stylesheet" href="states.css?v=20260428">
+  <script src="states.js?v=20260428" defer></script>
+  <!-- cosmos-layer-2026-04-29: 幻想的 atmospheric overlay (詳細は cosmos-layer.css 冒頭) -->
+  <link rel="stylesheet" href="cosmos-layer.css?v=20260429">
+  <script src="cosmos-layer.js?v=20260429" defer></script>
 </body>
 </html>

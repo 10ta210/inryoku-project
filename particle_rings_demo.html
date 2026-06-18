@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>inryokü 円環粒子言語 — Demo</title>
+  <link rel="stylesheet" href="particle_rings.css?v=20260428" />
+  <style>
+    body {
+      margin: 0;
+      padding: 28px 20px 88px;
+      background: #050505;
+      color: #cfcfcf;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    h1 { font-size: 13px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: #888; margin: 0 0 12px; text-align: center; }
+    h2 { font-size: 11px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: #555; margin: 0 0 22px; text-align: center; }
+    p.meta {
+      margin: 0 auto 22px;
+      max-width: 760px;
+      font-size: 11px;
+      line-height: 1.8;
+      color: #767676;
+      text-align: center;
+    }
+    .toolbar {
+      max-width: 980px;
+      margin: 0 auto 26px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+    }
+    .toolbar button,
+    .toolbar input {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: #cfcfcf;
+      border-radius: 999px;
+    }
+    .toolbar button {
+      padding: 8px 14px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .toolbar button:hover {
+      border-color: rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.07);
+    }
+    .toolbar .range-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #888;
+    }
+    .toolbar input[type="range"] {
+      width: 148px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    .sections {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 30px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #5e5e5e;
+      margin: 0 0 14px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 18px;
+    }
+    .cell {
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 22px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.008);
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    .cell:hover { border-color: rgba(255, 255, 255, 0.18); }
+    .cell .pring { width: 100px; height: 100px; }
+    .cell .name { font-size: 9px; color: #555; letter-spacing: 0.08em; }
+    .cell .label { font-size: 11px; color: #999; letter-spacing: 0.06em; }
+    .cell .usage { font-size: 9px; color: #666; letter-spacing: 0.14em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <h1>inryokü particle ring language — v1</h1>
+  <h2 id="subtitle">canon utterances · 12 tick clock · RGBCMY only</h2>
+  <p class="meta">
+    円環は 1 発話。クリックで個別に再結晶。`replay all` で全体再生。サイズは下のスライダーで同時比較できます。
+  </p>
+
+  <div class="toolbar">
+    <button id="replayAll" type="button">Replay All</button>
+    <div class="range-wrap">
+      <span>Size</span>
+      <input id="sizeRange" type="range" min="84" max="148" value="110" step="2" />
+      <span id="sizeValue">110</span>
+    </div>
+  </div>
+
+  <div id="sections" class="sections"></div>
+
+  <script src="particle_rings.js?v=20260428"></script>
+  <script>
+    var labels = {
+      silence: '沈黙',
+      core: '核',
+      ma: '間',
+      shadow: '影',
+      emit: '発',
+      observation: '観測',
+      self_question: '自分への問い',
+      declaration: '平叙宣言',
+      leap: '跳躍',
+      resonance: '共鳴',
+      consensus: '共感応答',
+      past_speculation: '過去への仮定',
+      future_command: '未来への命令',
+      echo: '余韻',
+      quotation: '引用',
+      summon: '召喚紋',
+      revelation: '啓示 (50→101)'
+    };
+    var usage = {
+      silence: 'idle',
+      core: 'whisper',
+      ma: 'whisper',
+      shadow: 'whisper',
+      emit: 'click',
+      observation: 'hover',
+      self_question: 'hover',
+      declaration: 'click',
+      leap: 'revelation',
+      resonance: 'click',
+      consensus: 'reply',
+      past_speculation: 'reply',
+      future_command: 'reply',
+      echo: 'whisper',
+      quotation: 'reply',
+      summon: 'summon',
+      revelation: 'revelation'
+    };
+    var sections = [
+      { title: 'Whisper / Idle', kinds: ['silence', 'core', 'ma', 'shadow', 'echo'] },
+      { title: 'Hover / Observe', kinds: ['observation', 'self_question'] },
+      { title: 'Click / Direct', kinds: ['emit', 'declaration', 'resonance'] },
+      { title: 'Reply / Meaning', kinds: ['consensus', 'past_speculation', 'future_command', 'quotation'] },
+      { title: 'Threshold / Ritual', kinds: ['leap', 'summon', 'revelation'] }
+    ];
+
+    var allRings = [];
+    var sectionsRoot = document.getElementById('sections');
+    var sizeRange = document.getElementById('sizeRange');
+    var sizeValue = document.getElementById('sizeValue');
+    var subtitle = document.getElementById('subtitle');
+    subtitle.textContent = ParticleRings.KINDS.length + ' canon utterances · 12 tick clock · RGBCMY only';
+
+    function makeCell(k, size) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      var ring = ParticleRings.canon(k, { size: size });
+      var label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = labels[k] || k;
+      var name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = k;
+      var use = document.createElement('div');
+      use.className = 'usage';
+      use.textContent = usage[k] || 'canon';
+      cell.appendChild(ring);
+      cell.appendChild(label);
+      cell.appendChild(name);
+      cell.appendChild(use);
+      cell.addEventListener('click', function () { ParticleRings.crystallize(ring); });
+      allRings.push(ring);
+      return cell;
+    }
+
+    function renderSections(size) {
+      allRings = [];
+      sectionsRoot.innerHTML = '';
+      sections.forEach(function (group) {
+        var section = document.createElement('section');
+        var title = document.createElement('h3');
+        title.className = 'section-title';
+        title.textContent = group.title;
+        var grid = document.createElement('div');
+        grid.className = 'grid';
+        group.kinds.forEach(function (k) {
+          grid.appendChild(makeCell(k, size));
+        });
+        section.appendChild(title);
+        section.appendChild(grid);
+        sectionsRoot.appendChild(section);
+      });
+    }
+
+    function replayAll(stagger) {
+      stagger = stagger == null ? 55 : stagger;
+      allRings.forEach(function (ring, index) {
+        setTimeout(function () { ParticleRings.crystallize(ring); }, index * stagger);
+      });
+    }
+
+    renderSections(parseInt(sizeRange.value, 10));
+    sizeRange.addEventListener('input', function () {
+      sizeValue.textContent = this.value;
+      renderSections(parseInt(this.value, 10));
+    });
+    document.getElementById('replayAll').addEventListener('click', function () {
+      replayAll();
+    });
+
+    // 初回クリスタライズ
+    setTimeout(function () {
+      replayAll(35);
+    }, 150);
+  </script>
+</body>
+</html>

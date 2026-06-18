@@ -1,0 +1,73 @@
+{
+  "click_resonance": {
+    "classes": [
+      "pring",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--click"
+    ],
+    "size": "98px",
+    "targetOpacity": "0.84"
+  },
+  "hover_observation": {
+    "classes": [
+      "pring",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--hover"
+    ],
+    "size": "86px",
+    "targetOpacity": "0.72"
+  },
+  "hover_self_question": {
+    "classes": [
+      "pring",
+      "pring--ccw",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--hover"
+    ],
+    "size": "86px",
+    "targetOpacity": "0.72"
+  },
+  "special_revelation": {
+    "classes": [
+      "pring",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--special"
+    ],
+    "size": "108px",
+    "targetOpacity": "0.9"
+  },
+  "special_summon": {
+    "classes": [
+      "pring",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--special"
+    ],
+    "size": "108px",
+    "targetOpacity": "0.9"
+  },
+  "whisper_core": {
+    "classes": [
+      "pring",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--whisper"
+    ],
+    "size": "72px",
+    "targetOpacity": "0.46"
+  },
+  "whisper_silence": {
+    "classes": [
+      "pring",
+      "pring--crystallizing",
+      "pring-speech__ring",
+      "pring-speech__ring--whisper"
+    ],
+    "size": "72px",
+    "targetOpacity": "0.46"
+  }
+}

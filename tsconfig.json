@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"]
+  },
+  "include": [
+    "globals.d.ts",
+    "cosmos-sentry.js",
+    "cosmos-audio-harmonic.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests",
+    "p0_code_for_claude.js",
+    "p1_code_for_claude.js",
+    "p2_code_for_claude.js",
+    "p3_code_for_claude.js",
+    "p1_stage1_taichi.js",
+    "p1_stage6_eye.js",
+    "p1_stage7_cross.js",
+    "phase-bus.js",
+    "phase-transitions/**",
+    "scripts/**",
+    "behaviors/**",
+    "logo-*.js",
+    "**/*.min.js",
+    "tmp",
+    "vendor"
+  ]
+}

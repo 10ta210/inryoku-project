@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inryoku Showcase Direction</title>
+  <style>
+    :root {
+      --bg0: #020304;
+      --bg1: #07090d;
+      --line: rgba(255, 255, 255, 0.12);
+      --soft: rgba(255, 255, 255, 0.06);
+      --text: rgba(255, 255, 255, 0.92);
+      --muted: rgba(255, 255, 255, 0.54);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Helvetica Neue", "Inter", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 16%, rgba(255,255,255,0.08), transparent 20%),
+        radial-gradient(circle at 78% 18%, rgba(50,80,120,0.14), transparent 24%),
+        radial-gradient(circle at 60% 72%, rgba(255,255,255,0.05), transparent 24%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.85) 0.7px, transparent 0.8px),
+        radial-gradient(circle, rgba(255,255,255,0.4) 0.6px, transparent 0.8px);
+      background-size: 130px 130px, 70px 70px;
+      background-position: 14px 18px, 32px 12px;
+      opacity: 0.16;
+      pointer-events: none;
+    }
+
+    .ambient {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 24%),
+        radial-gradient(circle at 30% 60%, rgba(255,255,255,0.04), transparent 28%),
+        radial-gradient(circle at 72% 68%, rgba(255,255,255,0.03), transparent 25%);
+      filter: blur(18px);
+      pointer-events: none;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 5vw, 72px);
+      line-height: 1.03;
+      font-weight: 300;
+      letter-spacing: 0.01em;
+    }
+
+    .lead {
+      max-width: 780px;
+      margin-top: 18px;
+      color: var(--muted);
+      line-height: 1.9;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 26px;
+      margin-top: 42px;
+    }
+
+    .showcase {
+      position: relative;
+      min-height: 650px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+        linear-gradient(180deg, rgba(0,0,0,0.1), transparent);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 34px 80px rgba(0,0,0,0.42);
+      backdrop-filter: blur(10px);
+    }
+
+    .space {
+      position: relative;
+      height: 470px;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background:
+        radial-gradient(circle at 50% 36%, rgba(255,255,255,0.08), transparent 28%),
+        radial-gradient(circle at 50% 80%, rgba(255,255,255,0.05), transparent 30%);
+    }
+
+    .space::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 16%),
+        radial-gradient(circle at 50% 42%, rgba(255,255,255,0.06), transparent 36%);
+    }
+
+    .case {
+      position: absolute;
+      left: 50%;
+      top: 46%;
+      width: 68%;
+      height: 72%;
+      transform: translate(-50%, -50%);
+    }
+
+    .case-frame,
+    .case-haze,
+    .case-orbit,
+    .case-pedestal,
+    .case-reflection {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .case-frame {
+      inset: 0;
+      border-radius: 28px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.015));
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -20px 40px rgba(0,0,0,0.18),
+        0 20px 48px rgba(0,0,0,0.16);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .case-haze {
+      inset: 16% 12% 16%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 42%, rgba(255,255,255,0.2), rgba(255,255,255,0.04) 38%, transparent 72%);
+      filter: blur(18px);
+      opacity: 0.88;
+    }
+
+    .case-reflection {
+      inset: 6% auto auto 10%;
+      width: 34%;
+      height: 62%;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.04));
+      filter: blur(8px);
+      opacity: 0.38;
+      transform: rotate(8deg);
+    }
+
+    .case-orbit {
+      left: 50%;
+      bottom: 12%;
+      width: 38%;
+      height: 6%;
+      transform: translateX(-50%) rotateX(76deg);
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.14);
+      opacity: 0.62;
+      box-shadow: 0 0 18px rgba(255,255,255,0.05);
+    }
+
+    .case-pedestal {
+      left: 50%;
+      bottom: 10%;
+      width: 46%;
+      height: 4%;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.24), rgba(255,255,255,0.08) 50%, transparent 76%);
+      filter: blur(6px);
+      opacity: 0.8;
+    }
+
+    .garment-wrap {
+      position: absolute;
+      inset: 10% 8% 16%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .garment {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform: translateY(-2%) scale(1.08);
+      filter:
+        drop-shadow(0 24px 30px rgba(0,0,0,0.54))
+        drop-shadow(0 0 30px rgba(255,255,255,0.04));
+    }
+
+    .copy {
+      padding: 24px 24px 30px;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    .price {
+      margin-top: 8px;
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.72);
+    }
+
+    .desc {
+      margin-top: 14px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 13px;
+    }
+
+    .tag {
+      display: inline-flex;
+      margin-top: 18px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.72);
+    }
+
+    .v2 .case-frame {
+      border-radius: 999px 999px 28px 28px;
+    }
+
+    .v2 .case-orbit {
+      width: 44%;
+    }
+
+    .v2 .garment {
+      transform: translateY(-3%) scale(1.02);
+    }
+
+    .v3 .case-frame {
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    }
+
+    .v3 .case-haze {
+      inset: 14% 8% 18%;
+    }
+
+    .v3 .garment {
+      transform: translateY(-5%) scale(1.16);
+    }
+
+    .v3 .space::after {
+      content: "";
+      position: absolute;
+      inset: auto 8% 12% 8%;
+      height: 18%;
+      background: linear-gradient(180deg, transparent, rgba(255,255,255,0.03));
+      filter: blur(18px);
+    }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+      .showcase { min-height: 600px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient"></div>
+  <div class="wrap">
+    <div class="eyebrow">inryoku showroom study</div>
+    <h1>透明なショーケースで、宇宙の前に服を浮かせる</h1>
+    <div class="lead">
+      RGBCMY はカードに乗せず、背景宇宙の気配として残す。カードは箱ではなく薄い展示面。
+      服だけが前に出て、あとで本物の3Dモデルに置き換えても成立する方向のラフです。
+    </div>
+
+    <div class="grid">
+      <section class="showcase v1">
+        <div class="space">
+          <div class="case">
+            <div class="case-frame"></div>
+            <div class="case-haze"></div>
+            <div class="case-reflection"></div>
+            <div class="case-orbit"></div>
+            <div class="case-pedestal"></div>
+            <div class="garment-wrap">
+              <img class="garment" src="public/enter_hoodie.png" alt="ENTER HOODIE">
+            </div>
+          </div>
+        </div>
+        <div class="copy">
+          <div class="meta"><span>Showcase 01</span><span>front focus</span></div>
+          <h2>Front Display</h2>
+          <div class="price">ENTER HOODIE / ¥12,800</div>
+          <div class="desc">いちばん素直な形。背景宇宙を見せたまま、透明ケースの中央に服だけを展示する。あとで3D回転を入れる土台にも向く。</div>
+          <div class="tag">glass observer frame</div>
+        </div>
+      </section>
+
+      <section class="showcase v2">
+        <div class="space">
+          <div class="case">
+            <div class="case-frame"></div>
+            <div class="case-haze"></div>
+            <div class="case-reflection"></div>
+            <div class="case-orbit"></div>
+            <div class="case-pedestal"></div>
+            <div class="garment-wrap">
+              <img class="garment" src="public/info_logo_hoodie.png" alt="LOGO HOODIE">
+            </div>
+          </div>
+        </div>
+        <div class="copy">
+          <div class="meta"><span>Showcase 02</span><span>capsule case</span></div>
+          <h2>Capsule Display</h2>
+          <div class="price">LOGO HOODIE / ¥12,800</div>
+          <div class="desc">上部を少し丸めて、保管カプセルっぽくした案。服を“商品”より“保管された物体”に見せたい時に強い。</div>
+          <div class="tag">archived signal object</div>
+        </div>
+      </section>
+
+      <section class="showcase v3">
+        <div class="space">
+          <div class="case">
+            <div class="case-frame"></div>
+            <div class="case-haze"></div>
+            <div class="case-reflection"></div>
+            <div class="case-orbit"></div>
+            <div class="case-pedestal"></div>
+            <div class="garment-wrap">
+              <img class="garment" src="public/enter_hoodie.png" alt="ENTER HOODIE ALT">
+            </div>
+          </div>
+        </div>
+        <div class="copy">
+          <div class="meta"><span>Showcase 03</span><span>museum slab</span></div>
+          <h2>Museum Display</h2>
+          <div class="price">ENTER HOODIE / REAR-VIEW READY</div>
+          <div class="desc">展示プレート寄りの案。背面も見せる3D回転を入れた時に、一番“ショーケース”として説得力を出しやすい。</div>
+          <div class="tag">3d rotation friendly</div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

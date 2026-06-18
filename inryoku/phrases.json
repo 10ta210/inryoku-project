@@ -1,0 +1,58 @@
+{
+  "$schema": "inryoku-phrases-v1",
+  "note": "inRYOKU 裏ルート — 第一人称の内的体験で粒子場に浮かぶ言葉。白黒禁則。canon タグは logo-speech.js の register と整合。色は canon → COLOR_HEX マップで解決。",
+  "canonColorMap": {
+    "silence":          "Y",
+    "core":             "M",
+    "ma":               "Y",
+    "shadow":           "B",
+    "emit":             "R",
+    "observation":      "C",
+    "self_question":    "M",
+    "declaration":      "R",
+    "leap":             "G",
+    "resonance":        "C",
+    "consensus":        "G",
+    "past_speculation": "B",
+    "future_command":   "R",
+    "echo":             "C",
+    "quotation":        "Y",
+    "summon":           "M",
+    "revelation":       "G"
+  },
+  "phrases": [
+    { "id": "q01", "text": "観測の前に何があったか",       "category": "question",    "canon": "past_speculation", "weight": 1.0 },
+    { "id": "q02", "text": "見ているのは誰だ",             "category": "question",    "canon": "self_question",    "weight": 1.0 },
+    { "id": "q03", "text": "色は外にあるのか、内にあるのか","category": "question",    "canon": "observation",      "weight": 0.9 },
+    { "id": "q04", "text": "灰の中に何色見えるか",         "category": "question",    "canon": "observation",      "weight": 1.0 },
+    { "id": "q05", "text": "100% に届いた者はいるのか",    "category": "question",    "canon": "self_question",    "weight": 0.8 },
+    { "id": "q06", "text": "境界は誰が引いた",             "category": "question",    "canon": "shadow",           "weight": 0.9 },
+    { "id": "q07", "text": "あなたが消えても森は森か",     "category": "question",    "canon": "past_speculation", "weight": 0.7 },
+    { "id": "q08", "text": "なぜ言葉を覚えてしまったのか", "category": "question",    "canon": "self_question",    "weight": 0.7 },
+    { "id": "q09", "text": "目を閉じた時の色は何色",       "category": "question",    "canon": "observation",      "weight": 1.0 },
+    { "id": "q10", "text": "光と影、どちらが先に来たか",   "category": "question",    "canon": "shadow",           "weight": 0.9 },
+
+    { "id": "a01", "text": "100% は無い",                  "category": "assertion",   "canon": "declaration",      "weight": 1.2 },
+    { "id": "a02", "text": "あなたは虹である",             "category": "assertion",   "canon": "revelation",       "weight": 1.3 },
+    { "id": "a03", "text": "灰は色を抱いている",           "category": "assertion",   "canon": "revelation",       "weight": 1.1 },
+    { "id": "a04", "text": "見えないものだけが残る",       "category": "assertion",   "canon": "core",             "weight": 1.0 },
+    { "id": "a05", "text": "観測は加担である",             "category": "assertion",   "canon": "declaration",      "weight": 1.0 },
+    { "id": "a06", "text": "境界はやわらかい",             "category": "assertion",   "canon": "resonance",        "weight": 0.9 },
+    { "id": "a07", "text": "言葉は世界を切り分けた刃",     "category": "assertion",   "canon": "declaration",      "weight": 0.9 },
+    { "id": "a08", "text": "中心はどこにでもある",         "category": "assertion",   "canon": "core",             "weight": 1.0 },
+    { "id": "a09", "text": "影もまた光の一形態",           "category": "assertion",   "canon": "shadow",           "weight": 1.0 },
+    { "id": "a10", "text": "孤独は接続の別名",             "category": "assertion",   "canon": "resonance",        "weight": 0.9 },
+
+    { "id": "i01", "text": "ゆっくり呼吸を",               "category": "instruction", "canon": "ma",               "weight": 1.0 },
+    { "id": "i02", "text": "視線をゆるめて",               "category": "instruction", "canon": "ma",               "weight": 1.0 },
+    { "id": "i03", "text": "名前を一度、捨ててみる",       "category": "instruction", "canon": "leap",             "weight": 0.9 },
+    { "id": "i04", "text": "急がなくていい",               "category": "instruction", "canon": "silence",          "weight": 1.0 },
+    { "id": "i05", "text": "そのまま、見ていて",           "category": "instruction", "canon": "observation",      "weight": 1.1 },
+
+    { "id": "s01", "text": "　",                            "category": "silence",     "canon": "silence",          "weight": 1.5 },
+    { "id": "s02", "text": "・",                            "category": "silence",     "canon": "ma",               "weight": 1.2 },
+    { "id": "s03", "text": "—",                             "category": "silence",     "canon": "silence",          "weight": 1.0 },
+    { "id": "s04", "text": "……",                           "category": "silence",     "canon": "ma",               "weight": 1.2 },
+    { "id": "s05", "text": "○",                            "category": "silence",     "canon": "core",             "weight": 0.9 }
+  ]
+}

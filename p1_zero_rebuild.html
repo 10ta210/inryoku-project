@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>inryokü P1 zero rebuild</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+    body { font-family: "MS Sans Serif", monospace; color: #111; }
+    #p1-zero-root { position: fixed; inset: 0; background: #000; }
+    #p1-zero-webgl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+    #p1-zero-ui {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: min(680px, calc(100vw - 28px));
+      height: min(720px, calc(100vh - 52px));
+      transform: translate(-50%, -50%);
+      background: transparent;
+      border: 2px solid #fff;
+      box-shadow: inset -2px -2px #808080, inset 2px 2px #dfdfdf, 0 18px 80px rgba(0,0,0,.55);
+      z-index: 20;
+      image-rendering: pixelated;
+    }
+    #p1-zero-ui::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 174px;
+      bottom: 8px;
+      border: 2px inset #dfdfdf;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255,255,255,.05), rgba(0,0,0,0) 36%),
+        rgba(0,0,0,.08);
+      pointer-events: none;
+    }
+    #p1-zero-title {
+      height: 24px;
+      background: linear-gradient(90deg, #000080, #1084d0);
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      line-height: 24px;
+      padding: 0 8px;
+      letter-spacing: .01em;
+    }
+    #p1-zero-menu { height: 24px; line-height: 24px; padding: 0 8px; font-size: 11px; border-bottom: 1px solid #808080; background: #c0c0c0; }
+    #p1-zero-head { height: 94px; padding: 12px; box-sizing: border-box; border-bottom: 2px solid #808080; background: #c0c0c0; }
+    #p1-zero-logo { float: left; width: 68px; height: 68px; margin-right: 12px; background: #00ff66; color: #067b37; font-size: 46px; font-weight: 900; line-height: 68px; text-align: center; }
+    #p1-zero-brand { font-size: 14px; font-weight: 700; margin-top: 13px; }
+    #p1-zero-percent { font-size: 12px; margin-top: 3px; color: #222; }
+    #p1-zero-bar-wrap { position: absolute; left: 12px; right: 12px; top: 126px; height: 18px; background: #050505; border: 2px inset #ddd; overflow: hidden; }
+    #p1-zero-bar {
+      width: 50%;
+      height: 100%;
+      background: repeating-linear-gradient(90deg, #0014d8 0 9px, #000070 9px 12px);
+      transform-origin: left center;
+      transition: width 80ms linear;
+    }
+    #p1-zero-bar.breach {
+      background: linear-gradient(90deg, #808080, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+      background-size: 220% 100%;
+      animation: p1ZeroBarFlow 520ms linear infinite;
+      filter: brightness(1.7) saturate(1.25);
+      box-shadow: 0 0 16px rgba(255,255,255,.7);
+    }
+    #p1-zero-runner { position: absolute; left: 50%; top: 117px; width: 30px; height: 38px; transform: translate(-50%, -50%); color: #00ff66; font-size: 34px; z-index: 25; }
+    #p1-zero-status { position: absolute; left: 14px; right: 14px; top: 150px; height: 20px; font-size: 11px; color: #333; background: #c0c0c0; padding-left: 4px; box-sizing: border-box; }
+    #p1-zero-stage {
+      position: fixed;
+      right: 16px;
+      top: 14px;
+      z-index: 40;
+      color: #fff;
+      font: 11px monospace;
+      letter-spacing: .08em;
+      text-shadow: 0 0 8px #000;
+      padding: 7px 9px;
+      background: rgba(0,0,0,.38);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+    #p1-zero-pause {
+      position: fixed;
+      right: 16px;
+      top: 48px;
+      z-index: 41;
+      background: #b71924;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 4px;
+      font: 700 11px monospace;
+      padding: 4px 10px;
+    }
+    .ingest #p1-zero-ui {
+      transform-origin: var(--cx, 50%) var(--cy, 50%);
+      animation: p1ZeroIngest 2400ms cubic-bezier(.04,.86,.01,1) forwards;
+      filter: contrast(1.5) brightness(1.25) saturate(.75);
+    }
+    .ingest #p1-zero-runner { animation: p1ZeroRunnerFall 1200ms ease-in forwards; }
+    @keyframes p1ZeroBarFlow { to { background-position: -220% 0; } }
+    @keyframes p1ZeroIngest {
+      0% { opacity: 1; clip-path: inset(0); transform: translate(-50%, -50%) scale(1) rotate(0deg) skew(0); }
+      22% { opacity: .98; clip-path: polygon(3% 5%, 98% 1%, 95% 95%, 1% 99%); transform: translate(calc(-50% + var(--px, 0px) * .18), calc(-50% + var(--py, 0px) * .18)) scale(.92) rotate(-2deg) skew(-4deg); }
+      48% { opacity: .9; clip-path: ellipse(62% 22% at 50% 50%); transform: translate(calc(-50% + var(--px, 0px) * .58), calc(-50% + var(--py, 0px) * .58)) scaleX(.55) scaleY(.18) rotate(-360deg) skew(-18deg); }
+      74% { opacity: .52; clip-path: ellipse(18% 5% at 50% 50%); transform: translate(calc(-50% + var(--px, 0px) * .92), calc(-50% + var(--py, 0px) * .92)) scaleX(.12) scaleY(.025) rotate(-1080deg) skew(-35deg); filter: blur(2px) brightness(2.8); }
+      100% { opacity: 0; clip-path: ellipse(.5% .5% at 50% 50%); transform: translate(calc(-50% + var(--px, 0px)), calc(-50% + var(--py, 0px))) scale(.0005) rotate(-1440deg); filter: blur(7px) brightness(5); }
+    }
+    @keyframes p1ZeroRunnerFall { to { opacity: 0; transform: translate(-50%, -50%) scale(.05) rotate(-720deg); } }
+  </style>
+</head>
+<body>
+  <div id="p1-zero-root">
+    <canvas id="p1-zero-webgl"></canvas>
+    <div id="p1-zero-ui">
+      <div id="p1-zero-title">inryokü — Loading Reality</div>
+      <div id="p1-zero-menu">File&nbsp;&nbsp;Edit&nbsp;&nbsp;View&nbsp;&nbsp;Help</div>
+      <div id="p1-zero-head">
+        <div id="p1-zero-logo">↘</div>
+        <div id="p1-zero-brand">inryokü</div>
+        <div id="p1-zero-percent">Loading reality... 50%</div>
+      </div>
+      <div id="p1-zero-bar-wrap"><div id="p1-zero-bar"></div></div>
+      <div id="p1-zero-runner">▰</div>
+      <div id="p1-zero-status">△ REALITY.SYS MERGING...</div>
+    </div>
+    <div id="p1-zero-stage">P1 0.00s | start</div>
+    <button id="p1-zero-pause" type="button">PAUSE</button>
+  </div>
+  <script src="vendor/three.min.js"></script>
+  <script src="p1_zero_rebuild.js?v=20260521zero6"></script>
+</body>
+</html>

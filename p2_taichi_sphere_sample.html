@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryokü P2 Grey Tai-Chi Sphere Sample</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    color: rgba(255,255,255,0.72);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+  }
+  .caption {
+    position: fixed;
+    left: 22px;
+    bottom: 20px;
+    max-width: min(520px, calc(100vw - 44px));
+    z-index: 4;
+    pointer-events: none;
+  }
+  .caption h1 {
+    margin: 0 0 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.8);
+  }
+  .caption p {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.8;
+    letter-spacing: 0.13em;
+    color: rgba(255,255,255,0.42);
+  }
+  .badge {
+    position: fixed;
+    top: 16px;
+    right: 18px;
+    z-index: 4;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.38);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="badge">50% sample</div>
+<div class="caption">
+  <h1>Grey Tai-Chi Sphere + RGBCMY Halo</h1>
+  <p>50% は停止ではなく均衡。黒と白のあいだに、RGBCMY の虹が眠る。</p>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(function(){
+  if (!window.THREE) {
+    document.body.insertAdjacentHTML('beforeend', '<p style="padding:20px">Three.js not loaded</p>');
+    return;
+  }
+
+  const canvas = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance'
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  if ('toneMapping' in renderer) {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+  }
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.032);
+
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.set(0, 0.12, 9.4);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const uniforms = {
+    uTime: { value: 0 },
+    uOpacity: { value: 1 }
+  };
+
+  const sphereMat = new THREE.ShaderMaterial({
+    uniforms,
+    transparent: true,
+    depthWrite: true,
+    vertexShader: `
+      varying vec3 vN;
+      varying vec3 vP;
+      varying vec2 vUv;
+      void main() {
+        vN = normalize(normalMatrix * normal);
+        vP = position;
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      uniform float uOpacity;
+      varying vec3 vN;
+      varying vec3 vP;
+      varying vec2 vUv;
+
+      vec3 rgb2hsv(vec3 c) {
+        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+        float d = q.x - min(q.w, q.y);
+        float e = 1.0e-10;
+        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+      }
+
+      vec3 hsv2rgb(vec3 c) {
+        vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+        return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+      }
+
+      void main() {
+        vec3 n = normalize(vN);
+        vec3 p = normalize(vP);
+
+        float view = clamp(dot(n, normalize(vec3(0.0, 0.1, 1.0))), 0.0, 1.0);
+        float rim = pow(1.0 - view, 2.8);
+
+        // S字の太極境界。球面座標を使い、固定模様ではなく微流動させる。
+        float angle = atan(p.y, p.x);
+        float wave = sin((p.y * 3.65) + uTime * 0.42) * 0.34;
+        float sCurve = sin(angle + wave + p.z * 0.72);
+        float yin = smoothstep(-0.09, 0.09, sCurve);
+
+        vec3 blackSide = vec3(0.018, 0.019, 0.022);
+        vec3 whiteSide = vec3(0.78, 0.79, 0.82);
+        vec3 greyBase = vec3(0.50);
+        vec3 taichi = mix(blackSide, whiteSide, yin);
+        vec3 col = mix(greyBase, taichi, 0.62);
+
+        // 太極の点。球体では上下中央より、S字の流れに沿う斜め配置が読みやすい。
+        vec2 uv = p.xy;
+        float dotWhite = smoothstep(0.155, 0.038, length(uv - vec2(-0.18, 0.36)));
+        float dotBlack = smoothstep(0.155, 0.038, length(uv - vec2(0.18,-0.36)));
+        float dotWhiteCore = smoothstep(0.060, 0.018, length(uv - vec2(-0.18, 0.36)));
+        float dotBlackCore = smoothstep(0.060, 0.018, length(uv - vec2(0.18,-0.36)));
+        col = mix(col, vec3(0.96, 0.97, 1.0), dotWhite * (1.0 - yin) * 0.92);
+        col = mix(col, vec3(0.008, 0.009, 0.012), dotBlack * yin * 0.95);
+        col += vec3(0.08, 0.10, 0.13) * dotWhiteCore * (1.0 - yin);
+        col -= vec3(0.025) * dotBlackCore * yin;
+
+        // グレーの中の虹。表面角度で薄く干渉色が浮く。
+        float hue = fract(angle / 6.2831853 + 0.5 + p.z * 0.12 + uTime * 0.025);
+        vec3 prism = hsv2rgb(vec3(hue, 0.78, 1.0));
+        float interference = pow(rim, 1.05) * 0.58 + smoothstep(0.88, 1.0, abs(sCurve)) * 0.18;
+        col += prism * interference;
+        col += prism * pow(rim, 5.0) * 0.46;
+
+        // 球としての深度と高級感。
+        col *= 0.42 + view * 0.74;
+        col += vec3(0.02, 0.025, 0.03) * rim;
+        col = pow(col, vec3(0.92));
+
+        float alpha = (0.94 + rim * 0.06) * uOpacity;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `
+  });
+
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.92, 160, 96),
+    sphereMat
+  );
+  group.add(sphere);
+
+  // 虹の外光。線ではなく、球体から滲むエフェクトとしてだけ見せる。
+  const aura = new THREE.Mesh(
+    new THREE.SphereGeometry(1.66, 96, 64),
+    new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: { uTime: uniforms.uTime },
+      vertexShader: `
+        varying vec3 vN;
+        varying vec3 vP;
+        void main() {
+          vN = normalize(normalMatrix * normal);
+          vP = position;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        precision highp float;
+        uniform float uTime;
+        varying vec3 vN;
+        varying vec3 vP;
+        vec3 hsv2rgb(vec3 c) {
+          vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+          return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+        }
+        void main() {
+          vec3 n = normalize(vN);
+          float view = clamp(dot(n, normalize(vec3(0.0, 0.0, 1.0))), 0.0, 1.0);
+          float rim = pow(1.0 - view, 2.15);
+          float hue = fract(atan(vP.y, vP.x) / 6.2831853 + 0.5 + uTime * 0.035);
+          vec3 col = hsv2rgb(vec3(hue, 0.92, 1.0));
+          float alpha = rim * 0.24;
+          gl_FragColor = vec4(col, alpha);
+        }
+      `
+    })
+  );
+  group.add(aura);
+
+  // 背景の極小粒子。P2用なので控えめ。
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 360;
+  const starPos = new Float32Array(starCount * 3);
+  const starCol = new Float32Array(starCount * 3);
+  const palette = [
+    [1,0,0], [0,1,0], [0.0,0.25,1],
+    [0,1,1], [1,0,1], [1,1,0]
+  ];
+  for (let i = 0; i < starCount; i++) {
+    const r = 3.2 + Math.random() * 6.4;
+    const a = Math.random() * Math.PI * 2;
+    const z = (Math.random() - 0.5) * 5.5;
+    starPos[i*3] = Math.cos(a) * r;
+    starPos[i*3+1] = Math.sin(a) * r * 0.62;
+    starPos[i*3+2] = z;
+    const c = palette[i % palette.length];
+    starCol[i*3] = c[0];
+    starCol[i*3+1] = c[1];
+    starCol[i*3+2] = c[2];
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+    size: 0.018,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.42,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  }));
+  scene.add(stars);
+
+  function resize() {
+    const w = window.innerWidth || 1;
+    const h = window.innerHeight || 1;
+    renderer.setSize(w, h, true);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    const shortSide = Math.min(w, h);
+    group.scale.setScalar(shortSide < 520 ? 0.84 : 1.0);
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  resize();
+
+  const clock = new THREE.Clock();
+  function animate() {
+    const t = clock.getElapsedTime();
+    uniforms.uTime.value = t;
+
+    group.rotation.y = t * 0.115;
+    group.rotation.x = Math.sin(t * 0.21) * 0.075;
+    sphere.rotation.z = t * 0.045;
+    stars.rotation.z = t * 0.01;
+    stars.rotation.y = t * 0.018;
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- ─── Primary meta ─────────────────────────────────────── -->
+  <title>inryokü — コアから始まる世界 / 哲学を纏う服</title>
+  <meta name="description" content="inryokü — 黒の中にコアがある。コアから光が生まれ、世界が広がり、その世界の一部として衣がある。我思うゆえに我らあり。哲学を纏うアパレル。">
+  <meta name="keywords" content="inryoku,inryokü,引力,哲学,アート,アパレル,Tシャツ,フーディー,ストリート,RGB,CMY,コア,生成,世界,粒子,宇宙,我思うゆえに我らあり,可視化">
+  <meta name="author" content="inryokü">
+  <meta name="publisher" content="inryokü">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+  <meta name="rating" content="general">
+  <meta http-equiv="Content-Language" content="ja">
+
+  <!-- ─── Canonical / alternate (将来の英語版を見据えて hreflang を予約) ─── -->
+  <link rel="canonical" href="https://inryoku.com/">
+  <link rel="alternate" href="https://inryoku.com/" hreflang="ja">
+  <link rel="alternate" href="https://inryoku.com/?lang=en" hreflang="en">
+  <link rel="alternate" href="https://inryoku.com/?lang=ko" hreflang="ko">
+  <link rel="alternate" href="https://inryoku.com/" hreflang="x-default">
+
+  <!-- ─── Icons / PWA ───────────────────────────────────────── -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/inryoku_logo_icon.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/inryoku_logo_icon.png">
+  <link rel="shortcut icon" href="/inryoku_logo_icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/inryoku_logo_icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="inryokü">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="inryokü">
+  <meta name="msapplication-TileColor" content="#0a0a0a">
+  <meta name="msapplication-TileImage" content="/inryoku_logo_icon.png">
+
+  <!-- ─── Open Graph ────────────────────────────────────────── -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="inryokü — コアから始まる世界 / 哲学を纏う服">
+  <meta property="og:description" content="我思うゆえに我らあり。コアが生む世界、その中で衣となる。哲学を纏う服 inryokü ── RGB×CMY を着る。">
+  <meta property="og:url" content="https://inryoku.com/">
+  <meta property="og:site_name" content="inryokü">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:image" content="https://inryoku.com/inryoku_og.png">
+  <meta property="og:image:secure_url" content="https://inryoku.com/inryoku_og.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="inryokü — コアから始まる世界。">
+
+  <!-- ─── Twitter / X Card ──────────────────────────────────── -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@inryoku">
+  <meta name="twitter:creator" content="@inryoku">
+  <meta name="twitter:title" content="inryokü — コアから始まる世界">
+  <meta name="twitter:description" content="我思うゆえに我らあり。コアが生む世界、その中で衣となる。哲学を纏う服。">
+  <meta name="twitter:image" content="https://inryoku.com/inryoku_og.png">
+  <meta name="twitter:image:alt" content="inryokü — コアから始まる世界。">
+
+  <!-- ─── Performance: preconnect / dns-prefetch / preload ───── -->
+  <!-- 2026-04-28 D-01/D-04/D-08: cdn.jsdelivr 撤去 (Three.js ローカル化済み)。
+       Google Fonts は Inter のみ・必要 weight (300/400/500) に絞る。
+       Press Start 2P は vendor/fonts/ ローカル、Playfair Display は未使用のため Google から削除。 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <!-- D-08: Google Fonts は render-blocking させずに media=print + onload で非同期適用 -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Orbitron:wght@400;500;700&display=swap">
+  <!-- 2026-04-28: CSP script-src-attr 'none' で onload= ブロックされるため同期ロードに戻す -->
+  <!-- 2026-05-05: Orbitron 追加（レトロフューチャー / SF映画タイトル用） -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Orbitron:wght@400;500;700&display=swap">
+  <link rel="preload" href="particle_rings.css?v=20260428" as="style">
+  <link rel="preload" href="particle_canon_meta.js?v=20260428canon1" as="script">
+  <link rel="preload" href="particle_rings.js?v=20260428" as="script">
+  <link rel="preload" href="particle_speech_rings.js?v=20260428canon1" as="script">
+  <!-- D-07: Three.js 自前ホスト分も preload (P3 直前に必要) -->
+  <link rel="preload" href="vendor/three.min.js" as="script">
+  <!-- 2026-04-28 perf: LCP 候補画像 (EC カルーセル先頭) を WebP で先取り。
+       hoodie WebP は 24KB, PNG は 312KB (約 92% 削減)。
+       fetchpriority=high で 4G mobile での LCP 200ms 短縮見込み -->
+  <link rel="preload" href="public/enter_hoodie.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="public/info_logo_hoodie.webp" as="image" type="image/webp">
+  <!-- 2026-04-28 perf: ローカル font も preload (vendor/fonts/) — Press Start 2P -->
+  <link rel="preload" href="vendor/fonts/press-start-2p.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- D-02: p3_styles.css は P3 でのみ必要。先頭 P0/P1/P2 はインライン critical CSS で描画する。
+       残部は media=print + onload でフェーズ遷移より前に非同期適用される。 -->
+  <link rel="stylesheet" href="p3_styles.css?v=20260619fit1">
+  <!-- 2026-05-21 P3 段階2: EC デザインポリッシュ (Iridescent Terminal aesthetic) -->
+  <link rel="stylesheet" href="p3_ec_polish.css?v=20260619mobile2">
+  <!-- D-02: Press Start 2P を vendor/ から @font-face で先に宣言しておく。
+       Google Fonts 経由を排しつつ p3_styles.css の async 化中もブランド名フォントが効く。 -->
+  <style>
+    @font-face {
+      font-family: 'Press Start 2P';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('vendor/fonts/press-start-2p.woff2') format('woff2');
+    }
+  </style>
+
+  <!-- ─── JSON-LD: Organization + WebSite + Brand + Store + Breadcrumb ───
+       商品（Product）構造化データは p3_test.html 側で完全列挙。
+       index.html はトップ通しフローのため、サイト全体メタを掲載。 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://inryoku.com/#organization",
+        "name": "inryokü",
+        "alternateName": ["inryoku", "引力"],
+        "url": "https://inryoku.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://inryoku.com/inryoku_logo_icon.png",
+          "width": 512,
+          "height": 512
+        },
+        "image": "https://inryoku.com/inryoku_og.png",
+        "description": "哲学を纏う服。RGB×CMY の原色論と、コアが生む世界の哲学を具現化したアパレルブランド。",
+        "slogan": "我思うゆえに我らあり",
+        "sameAs": [
+          "https://instagram.com/inryoku",
+          "https://x.com/inryoku"
+        ]
+      },
+      {
+        "@type": "Brand",
+        "@id": "https://inryoku.com/#brand",
+        "name": "inryokü",
+        "logo": "https://inryoku.com/inryoku_logo_icon.png",
+        "slogan": "我思うゆえに我らあり"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://inryoku.com/#website",
+        "name": "inryokü",
+        "url": "https://inryoku.com/",
+        "inLanguage": "ja-JP",
+        "publisher": { "@id": "https://inryoku.com/#organization" },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://inryoku.com/?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "OnlineStore",
+        "@id": "https://inryoku.com/#store",
+        "name": "inryokü store",
+        "url": "https://inryoku.com/",
+        "image": "https://inryoku.com/inryoku_og.png",
+        "currenciesAccepted": "JPY",
+        "paymentAccepted": "Credit Card, Stripe",
+        "parentOrganization": { "@id": "https://inryoku.com/#organization" }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://inryoku.com/#webpage",
+        "url": "https://inryoku.com/",
+        "name": "inryokü — コアから始まる世界 / 哲学を纏う服",
+        "isPartOf": { "@id": "https://inryoku.com/#website" },
+        "about": { "@id": "https://inryoku.com/#organization" },
+        "inLanguage": "ja-JP",
+        "primaryImageOfPage": "https://inryoku.com/inryoku_og.png",
+        "description": "我思うゆえに我らあり。コアが生む世界、その中で衣となる。哲学を纏う服 inryokü。"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://inryoku.com/#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://inryoku.com/" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #root {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas:not(#mini-sq-cv) {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .phase-1 {
+      background: #808080;
+      padding: 40px 20px;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .phase-1 center {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .phase-2 {
+      background: #ebebeb;
+      position: relative;
+    }
+
+    .phase-3 {
+      background: #0a0a0a;
+      position: relative;
+    }
+
+    .phase-4 {
+      background: #111;
+      position: relative;
+    }
+
+    .phase-5 {
+      background: #000;
+      position: relative;
+    }
+
+    .phase-6 {
+      background: transparent;
+      position: relative;
+    }
+
+    .web2-header {
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .web2-title {
+      font-size: clamp(20px, 5vw, 36px);
+      color: #333;
+    }
+
+    .web2-subtitle {
+      font-size: clamp(12px, 3vw, 16px);
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .web2-description {
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .web2-button,
+    .phase-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #FFF;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .2);
+      touch-action: manipulation;
+    }
+
+    .flash-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .flash-header {
+      position: absolute;
+      top: 15px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .flash-logo {
+      font-size: clamp(18px, 4vw, 28px);
+      font-weight: bold;
+      color: #DDD;
+    }
+
+    .flash-logo-accent {
+      color: #FF1493;
+    }
+
+    .flash-panel {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 12px;
+      padding: 15px 20px;
+      z-index: 10;
+      text-align: center;
+      max-width: 90%;
+      pointer-events: none;
+      color: #CCC;
+    }
+
+    .flash-panel-header {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .flash-text {
+      font-size: 13px;
+      margin: 3px 0;
+      color: #AAA;
+    }
+
+    .convergence-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .convergence-title {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      font-size: clamp(18px, 4vw, 32px);
+      pointer-events: none;
+    }
+
+    .analog-text {
+      color: #FFF;
+      font-weight: bold;
+    }
+
+    .plus-symbol {
+      color: #808080;
+      margin: 0 10px;
+    }
+
+    .digital-text {
+      color: #808080;
+      font-weight: bold;
+    }
+
+    .convergence-subtitle {
+      position: absolute;
+      top: 70px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 10;
+      color: #666;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .passcode-screen {
+      position: absolute;
+      inset: 0;
+      background: #808080;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .passcode-box {
+      text-align: center;
+      padding: 30px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .passcode-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #000;
+      margin-bottom: 20px;
+      font-family: 'Courier New';
+    }
+
+    .passcode-label {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+      font-family: 'Courier New';
+    }
+
+    .passcode-input {
+      font-family: 'Courier New';
+      font-size: 32px;
+      padding: 15px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+      border: 3px solid #000;
+      background: #FFF;
+      color: #000;
+      letter-spacing: 10px;
+      border-radius: 0;
+    }
+
+    .passcode-btn {
+      margin-top: 15px;
+      padding: 12px 40px;
+      font-family: 'Courier New';
+      font-size: 18px;
+      font-weight: bold;
+      background: #000;
+      color: #FFF;
+      border: 3px solid #FFF;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .passcode-hint {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+      font-family: 'Courier New';
+    }
+
+    .passcode-error {
+      margin-top: 10px;
+      font-size: 14px;
+      min-height: 20px;
+      font-family: 'Courier New';
+    }
+
+    .selection-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      gap: 20px;
+    }
+
+    .selection-title {
+      color: #FFF;
+      font-size: clamp(18px, 4vw, 28px);
+      font-family: 'Courier New';
+      text-align: center;
+    }
+
+    .selection-subtitle {
+      color: #555;
+      font-size: 14px;
+      font-family: 'Courier New';
+      text-align: center;
+    }
+
+    .selection-choices {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .choice-card {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      cursor: pointer;
+      border: 2px solid #333;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color .3s, transform .3s;
+      touch-action: manipulation;
+    }
+
+    .choice-card:hover {
+      transform: scale(1.05);
+      border-color: #FFF;
+    }
+
+    .choice-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .choice-label {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      font-family: 'Courier New';
+    }
+
+    .choice-sublabel {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 11px;
+      font-family: 'Courier New';
+      color: #666;
+    }
+
+    .loading-container {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-content {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading-logo {
+      width: clamp(80px, 20vw, 150px);
+      margin-bottom: 20px;
+    }
+
+    .loading-title {
+      color: #0F0;
+      font-family: 'Courier New';
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .loading-bar-container {
+      width: clamp(200px, 60vw, 400px);
+      height: 20px;
+      background: #111;
+      border: 1px solid #0F0;
+      border-radius: 10px;
+      overflow: visible;
+      margin: 0 auto;
+    }
+
+    .loading-bar {
+      height: 100%;
+      width: 0;
+      background: #0F0;
+      border-radius: 10px;
+      transition: width .1s;
+    }
+
+    .loading-percentage {
+      color: #0F0;
+      font-family: 'Courier New';
+      font-size: 24px;
+      margin-top: 15px;
+    }
+
+    #door-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .door-left,
+    .door-right {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: #000;
+      transition: transform 1.5s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .door-left {
+      left: 0;
+    }
+
+    .door-right {
+      right: 0;
+    }
+
+    .door-left.open {
+      transform: translateX(-100%);
+    }
+
+    .door-right.open {
+      transform: translateX(100%);
+    }
+
+    .door-crack {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background: transparent;
+      transform: translateX(-50%);
+      transition: all .5s;
+    }
+
+    .door-crack.active {
+      background: #FFF;
+      box-shadow: 0 0 30px #FFF, 0 0 60px #FFF, 0 0 100px #FF0, 0 0 150px #F0F, 0 0 200px #0FF;
+      width: 4px;
+    }
+
+    .door-light {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, .9), transparent);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 1s;
+    }
+
+    .door-light.active {
+      width: 300px;
+      height: 300px;
+    }
+
+    #door-overlay.whiteout {
+      background: #FFF;
+      transition: background 1s;
+    }
+
+    .singularity-content {
+      position: relative;
+      z-index: 10;
+      padding: 20px 20px;
+      overflow-y: auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .hologram-logo {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .brand-name {
+      /* 2026-04-26 v2: 司「もう少し大きく」 */
+      font-size: clamp(26px, 5.2vw, 48px);
+      font-weight: bold;
+      letter-spacing: 0.10em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: logoGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes logoGlow {
+
+      0%,
+      100% {
+        text-shadow:
+          0 0 10px rgba(255, 255, 255, 0.3),
+          0 0 30px rgba(255, 255, 255, 0.2),
+          0 0 60px rgba(255, 255, 255, 0.1);
+        transform: scale(1.0);
+      }
+
+      50% {
+        text-shadow:
+          0 0 20px rgba(255, 255, 255, 0.5),
+          0 0 50px rgba(255, 255, 255, 0.3),
+          0 0 100px rgba(255, 255, 255, 0.15),
+          0 0 150px rgba(255, 255, 255, 0.05);
+        transform: scale(1.02);
+      }
+    }
+
+    .logo-icon {
+      display: block;
+      margin: 16px auto 0 auto;
+      width: clamp(80px, 12vw, 140px);
+      height: auto;
+      opacity: 0.95;
+      position: relative;
+      z-index: 10;
+      animation: iconGlow 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+      mix-blend-mode: screen;
+    }
+
+    /* Glassmorphism共通 */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    @keyframes iconGlow {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        transform: scale(1.0);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.2));
+        transform: scale(1.03);
+      }
+    }
+
+    .brand-char {
+      display: inline-block;
+      text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 80px currentColor;
+      animation: charPulse 2s ease-in-out infinite;
+    }
+
+    .brand-char:nth-child(1) {
+      color: #808080;
+      animation-delay: 0s;
+    }
+
+    .brand-char:nth-child(2) {
+      color: #FF0000;
+      animation-delay: .14s;
+    }
+
+    .brand-char:nth-child(3) {
+      color: #00FF00;
+      animation-delay: .28s;
+    }
+
+    .brand-char:nth-child(4) {
+      color: #0044FF;
+      animation-delay: .42s;
+    }
+
+    .brand-char:nth-child(5) {
+      color: #00FFFF;
+      animation-delay: .57s;
+    }
+
+    .brand-char:nth-child(6) {
+      color: #FF00FF;
+      animation-delay: .71s;
+    }
+
+    .brand-char:nth-child(7) {
+      color: #FFFF00;
+      animation-delay: .85s;
+    }
+
+    @keyframes charPulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        filter: brightness(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+        filter: brightness(1.8);
+      }
+    }
+
+    .brand-truth {
+      color: #555;
+      font-size: clamp(11px, 2vw, 15px);
+      letter-spacing: 4px;
+      text-align: center;
+      margin-top: 8px;
+      font-family: 'Courier New';
+    }
+
+    .prism-line {
+      width: 300px;
+      height: 2px;
+      background: linear-gradient(90deg, #808080, #F00, #0F0, #00F, #0FF, #F0F, #FF0);
+      margin: 10px auto;
+    }
+
+    .item-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .item-card {
+      width: 180px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      cursor: pointer;
+      transition: border-color .3s, transform .3s;
+      touch-action: manipulation;
+    }
+
+    .item-card:hover {
+      border-color: #555;
+      transform: translateY(-4px);
+    }
+
+    .item-thumb {
+      width: 100%;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .item-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .item-card:hover .item-thumb-img {
+      transform: scale(1.08);
+    }
+
+    .item-info {
+      padding: 12px;
+      text-align: center;
+    }
+
+    .item-name {
+      color: #EEE;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .item-price {
+      color: #999;
+      font-size: 12px;
+      margin-top: 4px;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .philosophy-window {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      width: clamp(260px, 75vw, 400px);
+      z-index: 100;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .window-titlebar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #222;
+      padding: 6px 10px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .window-title {
+      color: #AAA;
+      font-size: 12px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .window-controls button {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #444;
+      background: #333;
+      color: #AAA;
+      font-size: 10px;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    .window-content {
+      padding: 15px;
+      color: #CCC;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .sutra-text {
+      color: #FFD700;
+      margin-bottom: 10px;
+    }
+
+    .sutra-translation {
+      color: #888;
+      font-style: italic;
+    }
+
+    .binary-footer {
+      text-align: center;
+      color: #333;
+      font-size: 12px;
+      padding: 20px 0;
+      font-family: 'Courier New';
+    }
+
+    /* Bolero player */
+    #bolero-player {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, .8);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color .3s;
+    }
+
+    #bolero-player:hover {
+      border-color: #808080;
+    }
+
+    #bolero-btn {
+      background: none;
+      border: none;
+      color: #808080;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    #bolero-label {
+      color: #666;
+      font-size: 11px;
+      font-family: 'Courier New';
+    }
+
+    .coming-soon-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .coming-soon-modal.modal-visible {
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+    }
+
+    .modal-content {
+      position: relative;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 90%;
+      width: 380px;
+      text-align: center;
+      color: #FFF;
+    }
+
+    .modal-content h2 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #F0F, #0FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .modal-content p {
+      margin: 8px 0;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .modal-close-btn {
+      margin-top: 20px;
+      padding: 10px 28px;
+      background: transparent;
+      border: 2px solid #FFF;
+      color: #FFF;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 20px;
+    }
+
+    /* ─── Product Modal ──────────────────────────────────── */
+    .product-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      padding: 20px;
+    }
+
+    .product-modal.modal-visible {
+      opacity: 1;
+    }
+
+    .product-modal .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .product-detail {
+      position: relative;
+      max-width: 780px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: rgba(18, 18, 22, 0.95);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 0;
+      animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .product-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 10;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.6);
+      color: #aaa;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .product-close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .product-detail-inner {
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+    }
+
+    .product-image-wrap {
+      flex: 1;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px 0 0 20px;
+    }
+
+    .product-detail-img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .product-info-wrap {
+      flex: 1;
+      padding: 36px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .product-title {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .product-price-tag {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 24px;
+      font-weight: 300;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .product-desc {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 14px;
+      color: #aaa;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .product-specs {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 12px;
+      color: #666;
+      margin: 0;
+    }
+
+    .product-color {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    .size-selector {
+      margin-top: 4px;
+    }
+
+    .size-label {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11px;
+      color: #666;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .size-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .size-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: #999;
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .size-btn:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+    }
+
+    .size-btn.selected {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .add-to-cart-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 16px 24px;
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      margin-top: 8px;
+    }
+
+    .add-to-cart-btn:hover {
+      background: #e0e0e0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+    }
+
+    .add-to-cart-btn:active {
+      transform: translateY(0);
+    }
+
+    .cart-btn-text {
+      text-transform: uppercase;
+    }
+
+    .cart-btn-price {
+      opacity: 0.6;
+    }
+
+    .stripe-badge {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* ─── Mobile Product Modal ──────────────────────────── */
+    @media (max-width: 640px) {
+      .product-detail-inner {
+        flex-direction: column;
+      }
+
+      .product-image-wrap {
+        border-radius: 20px 20px 0 0;
+        min-height: 200px;
+        padding: 20px;
+      }
+
+      .product-info-wrap {
+        padding: 24px 20px;
+      }
+
+      .product-detail {
+        max-height: 95vh;
+        border-radius: 16px;
+      }
+    }
+
+    @media(max-width:768px) {
+      .phase-1 {
+        padding: 20px 10px;
+      }
+
+      .selection-choices {
+        gap: 16px;
+      }
+
+      .choice-card {
+        width: 155px;
+        height: 155px;
+      }
+
+      .item-card {
+        width: 160px;
+      }
+
+      .item-thumb {
+        height: 140px;
+      }
+
+      .brand-name {
+        letter-spacing: 3px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="particle_rings.css?v=20260428">
+  <!-- P3 bloom 用: UMD THREE は残しつつ、postprocessing は self-hosted ESM を importmap で解決 -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/vendor/three/window-shim.js",
+      "three/addons/": "/vendor/three/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <script>
+    // 2026-05-06: ブランド名 idle アニメ — default = Stellar Lock (6)
+    (function(){
+      try {
+        var m = location.search.match(/[?&]brandanim=(\d)/);
+        document.body.setAttribute('data-brandanim', m ? m[1] : '6');
+      } catch(e){}
+    })();
+    // モバイル判定 → P3（パーティクルユニバース + ECショップ）へ直行
+    // P0-P2はデスクトップ専用体験
+    (function() {
+      // モバイル判定: UA文字列のみ（MacBook/デスクトップは絶対にスキップしない）
+      var ua = navigator.userAgent;
+      var isMobileUA = /Android|iPhone|iPod/.test(ua);
+      // iPad は requestDesktopSite でデスクトップUAを送るので除外
+      // 画面幅・タッチ判定は使わない（MacBookのトラックパッドが誤判定するため）
+      console.log('[MOBILE-CHECK] ua=' + ua.substring(0, 60) + ' isMobile=' + isMobileUA + ' w=' + window.innerWidth);
+      if (isMobileUA) {
+        window.location.replace('p3_test.html' + window.location.search);
+      }
+    })();
+  </script>
+  <canvas id="three-canvas"
+    style="position:fixed;top:0;left:0;z-index:0;pointer-events:auto;width:100%;height:100%;display:none;"></canvas>
+  <div id="root" style="position:relative;z-index:1;"></div>
+  <!-- 2026-04-28 D-01: Three.js UMD (global THREE) for p5p6.js Phase 5 WebGL — ローカル配信化。
+       0.160 では examples/js/postprocessing 系は廃止 (p3_test.html 同様、404 + 5s 遅延を回避) -->
+  <script src="vendor/three.min.js"></script>
+  <!-- 2026-05-23 段階3: Three.js ESM addon bridge (GLTFLoader 等) -->
+  <script type="importmap">
+    {"imports":{"three":"./vendor/three/build/three.module.js"}}
+  </script>
+  <script type="module" src="vendor/three/three-addons-bridge.js"></script>
+  <!-- 2026-05-21 P3 段階1: GSAP 3.12 (Webflow 買収後 fully free 商用可)
+       cdn.jsdelivr.net は CSP script-src 許可済 (server.js line 152/238) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <!-- 2026-04-30 hotfix:
+       server.js の deny list により p1_code_for_claude.js / p2_code_for_claude.js は 403 配信となる。
+       index.html は公開可能な p3_code_for_claude.js を直接起動し、トップを確実に復旧する。 -->
+  <!-- 2026-04-28 D-03: particle_rings → particle_speech_rings の順序を維持しつつ defer 化。
+       parser-blocking を解消し DOMContentLoaded を早める。実体は両方この HTML の末尾に書かれる
+       <script>renderPhase3()</script> よりも前に評価完了する (defer は記述順を保つ)。 -->
+  <script src="particle_canon_meta.js?v=20260428canon1" defer></script>
+  <script src="particle_rings.js?v=20260428" defer></script>
+  <script src="particle_speech_rings.js?v=20260428canon1" defer></script>
+  <script src="p3_code_for_claude.js?v=20260619mobile2"></script>
+  <!-- 2026-05-23 段階3: 商品カードに GLB 自動ロード -->
+  <script src="p3_card_glb_loader.js?v=20260523glb1" defer></script>
+  <!-- 2026-05-23 段階4: ピクトグラム パーティクル アバター (?avatar=1 で debug 起動) -->
+  <script src="p3_pictogram_avatar.js?v=20260531off1" defer></script>
+  <!-- 2026-05-25 P3「服の重力場」: 正面カード背面の粒子場 (P3専用、?gravity=0 でOFF) -->
+  <script src="p3_gravity_field.js?v=20260525gravity3" defer></script>
+  <!-- 2026-05-25 P3 CONTACT 常時ピン: body直下へ移設して fixed を保証 (?contactpin=0 でOFF) -->
+  <script src="p3_contact_pin.js?v=20260531off1" defer></script>
+  <!-- 2026-05-25 P3 ロゴ 3D点群ホログラム (案B、?logo3d=0 でOFF) -->
+  <script src="p3_logo_pointcloud.js?v=20260530pngoff1" defer></script>
+  <script>
+    // ═══ Top page recovery: 直接 P3 を起動 ═══
+    window._inryokuMuted = false;
+    if (typeof renderPhase3 === 'function') {
+      renderPhase3();
+      if (window.ParticleSpeechRings) {
+        window._inryokuSpeech = ParticleSpeechRings.attachToLogo('.logo-holo-wrap', {
+          whisperSize: 34,
+          hoverSize: 44,
+          clickSize: 54,
+          summonSize: 66,
+          revelationSize: 62,
+          haloScale: 0.50
+        });
+      }
+    } else {
+      console.error('[FLOW] renderPhase3 is not available; redirecting to p3_test.html');
+      window.location.replace('p3_test.html' + window.location.search);
+    }
+
+    // 初回クリック/タッチで BGM 再生再開（ブラウザの自動再生ポリシー対策）
+    (function() {
+      function kick() {
+        if (window._p6bgm) {
+          window._p6bgm.muted = !!window._inryokuMuted;
+          var pr = window._p6bgm.play();
+          if (pr && pr.catch) pr.catch(function() {});
+        }
+        document.removeEventListener('click', kick);
+        document.removeEventListener('touchstart', kick);
+        document.removeEventListener('keydown', kick);
+      }
+      document.addEventListener('click', kick, { once: true });
+      document.addEventListener('touchstart', kick, { once: true });
+      document.addEventListener('keydown', kick, { once: true });
+    })();
+  </script>
+  <!-- error-shield-2026-04-28: window.onerror / unhandledrejection / WebGL contextlost を一括捕捉。
+       copy-fix-runtime より前にロードして早期エラーを捕捉。alert は触らない（干渉しない）。 -->
+  <script src="error-shield.js?v=20260428" defer></script>
+  <!-- ai-chat-client-shield-2026-04-28: /api/chat の fallback (role:"system" + fallback:true) を
+       検知して toast を出し、p3_code_for_claude.js が history に append する前に介入。
+       p3_code_for_claude.js は触らない。error-shield.js の後にロード。 -->
+  <script src="ai-chat-client-shield.js?v=20260428" defer></script>
+  <!-- copy-fix-runtime-2026-04-28: 開発者向け alert を顧客向け文言に変換するランタイムフック。
+       p3_code_for_claude.js を触らずに alert 文言だけ上書きする。 -->
+  <script src="copy-fix-runtime.js?v=20260428" defer></script>
+  <!-- enhance-layer-2026-04-28: a11y + browser compat 後付けレイヤ (既存スクリプトの後にロード) -->
+  <link rel="stylesheet" href="enhance.css?v=20260428">
+  <script src="enhance.js?v=20260428" defer></script>
+  <!-- pwa-sw-2026-04-28: Service Worker 登録 + PWA インストール促進 (最後にロード) -->
+  <script src="register.js?v=20260428" defer></script>
+  <!-- perf-observer-2026-04-28: Web Vitals (LCP/FID/CLS/INP) を console に吐く軽量計測 -->
+  <script src="perf-observer.js?v=20260428" defer></script>
+  <!-- i18n-foundation-2026-04-28: 日本語 1st。?lang=en で英語切替 (data-i18n 付与要素のみ)。
+       辞書: i18n.json / 切替UI: フッター左下 / 既存DOMは破壊しない後付け。 -->
+  <link rel="stylesheet" href="i18n.css?v=20260506back">
+  <script src="i18n.js?v=20260506back" defer></script>
+  <!-- states-2026-04-28: 空/読込/エラー UX 統一レイヤ。
+       window.inryokuStates.{showLoading,showEmpty,showError,hide} を提供。
+       既存 production code (p3_code_for_claude.js / particle_*) は触らない後付け。
+       aria-live 連携 / prefers-reduced-motion 対応 / grey ベース。 -->
+  <link rel="stylesheet" href="states.css?v=20260428">
+  <script src="states.js?v=20260428" defer></script>
+  <!-- cosmos-layer-2026-04-29: 幻想的 atmospheric overlay。
+       既存 #p6-canvas / production code 一切触らず、独立 SVG/CSS overlay として動作。
+       pointer-events:none, prefers-reduced-motion 対応, 曇り NG（過去 light-bloom の轍を踏まない）。
+       詳細・調整パラメータ: docs/cosmos-layer-2026-04-29.md -->
+  <link rel="stylesheet" href="cosmos-layer.css?v=20260429">
+  <script src="cosmos-layer.js?v=20260429" defer></script>
+</body>
+
+</html>

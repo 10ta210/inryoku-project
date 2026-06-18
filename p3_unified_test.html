@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — P3 統合の試験</title>
+<link rel="stylesheet" href="cosmos-effects.css" />
+<style>
+  :root { color-scheme: dark; --ink:#f0f0f6; --dim:#6b6b78; --line:#2a2a32; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: #030305; color: var(--ink);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    overflow: hidden;
+  }
+
+  /* Corner annotations */
+  .corner {
+    position: fixed; z-index: 50; pointer-events: none;
+    font-size: 10px; letter-spacing: 0.32em; color: var(--dim);
+    text-transform: uppercase; padding: 14px 18px;
+  }
+  .corner.tl { top: 60px; left: 14px; }
+  .corner.tr { top: 14px; right: 14px; text-align: right; }
+  .corner b {
+    color: var(--ink); font-weight: 300; letter-spacing: 0.42em;
+    display: block; margin-bottom: 4px; font-size: 11px;
+  }
+
+  /* CONTACT CTA */
+  #contactCta {
+    position: fixed; right: 14px; bottom: 80px; z-index: 200;
+    appearance: none; border: 1px solid hsl(240,8%,28%);
+    background: hsla(240,12%,8%,0.7); color: var(--ink);
+    padding: 10px 18px; border-radius: 999px;
+    font: 11px/1 ui-monospace, Menlo, monospace;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: background 220ms ease, box-shadow 220ms ease;
+  }
+  #contactCta:hover {
+    background: hsla(280,30%,16%,0.8);
+    box-shadow: 0 0 24px hsla(280,70%,55%,0.32);
+  }
+
+  /* Title overlay */
+  #title {
+    position: fixed; left: 50%; top: 38%;
+    transform: translate(-50%,-50%);
+    z-index: 5; text-align: center;
+    mix-blend-mode: screen; pointer-events: none;
+  }
+  #title .l1 {
+    font-size: clamp(56px, 11vw, 180px);
+    letter-spacing: 0.24em; font-weight: 100;
+    color: #f8f8fc; opacity: 0.92;
+    text-shadow: 0 0 40px rgba(167,139,250,0.25);
+  }
+  #title .l2 {
+    font-size: 10px; letter-spacing: 0.6em;
+    color: #9090a0; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="corner tl"><b>INRYOKÜ</b>P3 · 統合 (tōgō)</div>
+<div class="corner tr"><b>2026</b>効果 · 振る舞い · 音 · 観測</div>
+
+<div id="title">
+  <div class="l1">inryokü</div>
+  <div class="l2" data-i18n="p3.title.unified">P3 · 統合 · 2026</div>
+</div>
+
+<button id="contactCta" data-contact-cta aria-label="問いを届ける — 円環粒子で受け取ります / send a question, received as a particle ring">CONTACT</button>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="./p3_unified_boot.js"></script>
+</body>
+</html>

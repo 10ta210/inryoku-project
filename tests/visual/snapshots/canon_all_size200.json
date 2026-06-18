@@ -1,0 +1,8877 @@
+{
+  "consensus": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-g"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 63,
+          "cy": 27.48,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 76,
+          "cy": 50,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "3"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 63,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "4"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 63,
+          "cy": 72.52,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "5"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-y"
+        ],
+        "style": {
+          "--i": "6"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 37,
+          "cy": 72.52,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "7"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 63,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "8"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 24,
+          "cy": 50,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "9"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "10"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 37,
+          "cy": 27.48,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "11"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "core": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "declaration": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 50,
+          "y1": 24,
+          "y2": 76
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-c"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 63,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "3"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 63,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "4"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "5"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "echo": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "emit": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 76,
+          "y1": 24,
+          "y2": 50
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 76,
+          "cy": 50,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-c"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "future_command": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 50,
+          "y1": 24,
+          "y2": 76
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 76,
+          "y1": 24,
+          "y2": 50
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 76,
+          "y1": 76,
+          "y2": 50
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 76,
+          "cy": 50,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-m"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "leap": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 37,
+          "y1": 76,
+          "y2": 27.48
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "x1": 37,
+          "x2": 50,
+          "y1": 27.48,
+          "y2": 24
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 37,
+          "cy": 27.48,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-m"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "ma": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "observation": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-y"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 76,
+          "cy": 50,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 24,
+          "cy": 50,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "3"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "past_speculation": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-b"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 37,
+          "cy": 72.52,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 63,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 24,
+          "cy": 50,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "3"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 37,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "4"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring",
+      "pring--ccw"
+    ],
+    "tag": "svg"
+  },
+  "quotation": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 31,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 59.5,
+              "cy": 33.55,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.45,
+              "cy": 40.5,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69,
+              "cy": 50,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.45,
+              "cy": 59.5,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 59.5,
+              "cy": 66.45,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 69,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 40.5,
+              "cy": 66.45,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.55,
+              "cy": 59.5,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 31,
+              "cy": 50,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.55,
+              "cy": 40.5,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 40.5,
+              "cy": 33.55,
+              "r": 0.45
+            },
+            "classes": [
+              "pring__inner-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__inner"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-c"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "resonance": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 72.52,
+          "x2": 27.48,
+          "y1": 37,
+          "y2": 63
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "x1": 72.52,
+          "x2": 27.48,
+          "y1": 63,
+          "y2": 37
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 76,
+          "cy": 50,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-c"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 24,
+          "cy": 50,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-c"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "revelation": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "d": "M 50 76 Q 50 50 50 24"
+        },
+        "classes": [
+          "pring__chord",
+          "pring__chord--arc"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "path"
+      },
+      {
+        "attrs": {
+          "x1": 37,
+          "x2": 63,
+          "y1": 27.48,
+          "y2": 27.48
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-m"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-y"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 37,
+          "cy": 27.48,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 63,
+          "cy": 27.48,
+          "r": 1.55
+        },
+        "classes": [
+          "pring__tick"
+        ],
+        "style": {
+          "--i": "3"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "self_question": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-y"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring",
+      "pring--ccw"
+    ],
+    "tag": "svg"
+  },
+  "shadow": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 76,
+          "x2": 24,
+          "y1": 50,
+          "y2": 50
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      }
+    ],
+    "classes": [
+      "pring",
+      "pring--ccw"
+    ],
+    "tag": "svg"
+  },
+  "silence": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  },
+  "summon": {
+    "attrs": {
+      "height": 200,
+      "viewBox": "0 0 100 100",
+      "width": 200
+    },
+    "children": [
+      {
+        "attrs": {},
+        "children": [
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 24,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "0"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "1"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "2"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 76,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "3"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 75.61,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 74.42,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 72.52,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "4"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 69.95,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 66.68,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 63,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "5"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 58.94,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 54.47,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 50,
+              "cy": 76,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "6"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 75.61,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 74.42,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 72.52,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "7"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 69.95,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 66.68,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 63,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "8"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 58.94,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 54.47,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24,
+              "cy": 50,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "9"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 24.39,
+              "cy": 45.53,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 25.58,
+              "cy": 41.06,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 27.48,
+              "cy": 37,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "10"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 30.05,
+              "cy": 33.32,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 33.32,
+              "cy": 30.05,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 37,
+              "cy": 27.48,
+              "r": 0.5
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "style": {
+              "--i": "11"
+            },
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 41.06,
+              "cy": 25.58,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          },
+          {
+            "attrs": {
+              "cx": 45.53,
+              "cy": 24.39,
+              "r": 0.35
+            },
+            "classes": [
+              "pring__path-dot"
+            ],
+            "tag": "circle"
+          }
+        ],
+        "classes": [
+          "pring__path"
+        ],
+        "tag": "g"
+      },
+      {
+        "attrs": {
+          "x1": 50,
+          "x2": 50,
+          "y1": 24,
+          "y2": 76
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "x1": 72.52,
+          "x2": 27.48,
+          "y1": 37,
+          "y2": 63
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "x1": 72.52,
+          "x2": 27.48,
+          "y1": 63,
+          "y2": 37
+        },
+        "classes": [
+          "pring__chord"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "line"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 24,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-y"
+        ],
+        "style": {
+          "--i": "0"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 37,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-r"
+        ],
+        "style": {
+          "--i": "1"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 72.52,
+          "cy": 63,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-g"
+        ],
+        "style": {
+          "--i": "2"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 50,
+          "cy": 76,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-m"
+        ],
+        "style": {
+          "--i": "3"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 63,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-b"
+        ],
+        "style": {
+          "--i": "4"
+        },
+        "tag": "circle"
+      },
+      {
+        "attrs": {
+          "cx": 27.48,
+          "cy": 37,
+          "r": 2.15
+        },
+        "classes": [
+          "pring__tick",
+          "pring__tick--c-c"
+        ],
+        "style": {
+          "--i": "5"
+        },
+        "tag": "circle"
+      }
+    ],
+    "classes": [
+      "pring"
+    ],
+    "tag": "svg"
+  }
+}

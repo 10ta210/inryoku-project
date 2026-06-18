@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  inryokü sitemap — 50% → 101%
+  Generated: 2026-04-28
+  仕様: sitemaps.org 0.9 + image extension
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemaps/image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- ─── Top（通しフロー / モバイルは p3 に redirect） ─── -->
+  <url>
+    <loc>https://inryoku.com/</loc>
+    <lastmod>2026-04-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://inryoku.com/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://inryoku.com/" />
+    <image:image>
+      <image:loc>https://inryoku.com/inryoku_og.png</image:loc>
+      <image:title>inryokü — 50% → 101%</image:title>
+      <image:caption>見えないものの可視化。グレーの中に虹がある。</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://inryoku.com/inryoku_logo_icon.png</image:loc>
+      <image:title>inryokü logo</image:title>
+    </image:image>
+  </url>
+
+  <!-- ─── P3 single-page（モバイルランディング） ─── -->
+  <url>
+    <loc>https://inryoku.com/p3_test.html</loc>
+    <lastmod>2026-04-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://inryoku.com/public/enter_hoodie.webp</image:loc>
+      <image:title>ENTER HOODIE — inryokü</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://inryoku.com/public/info_logo_hoodie.webp</image:loc>
+      <image:title>inryokü LOGO HOODIE</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://inryoku.com/public/mockup_universe_tee.webp</image:loc>
+      <image:title>UNIVERSE TEE mockup</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://inryoku.com/public/mockup_qr_tee.webp</image:loc>
+      <image:title>QR TEE mockup</image:title>
+    </image:image>
+  </url>
+
+  <!-- ─── 法定ページ ─── -->
+  <url>
+    <loc>https://inryoku.com/legal.html</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/privacy.html</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/returns.html</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/size-guide.html</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ─── 商品（SPA / フラグメント URL — Google は理解する） ─── -->
+  <url>
+    <loc>https://inryoku.com/#enter-hoodie</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://inryoku.com/public/enter_hoodie.webp</image:loc>
+      <image:title>ENTER HOODIE</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#logo-hoodie</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://inryoku.com/public/info_logo_hoodie.webp</image:loc>
+      <image:title>inryokü LOGO HOODIE</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#enter-hoodie-white</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#logo-hoodie-oversized</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#enter-tee</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#logo-tee</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#enter-longsleeve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#logo-longsleeve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#enter-crewneck</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#logo-crewneck</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#enter-tank</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://inryoku.com/#logo-tank</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>

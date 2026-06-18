@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryoku brand font 05 refine</title>
+<style>
+:root {
+  --grey: #808080;
+  --r: #ff0000;
+  --g: #00ff00;
+  --b: #0044ff;
+  --c: #00ffff;
+  --m: #ff00ff;
+  --y: #ffff00;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255,255,255,0.035), transparent 11%),
+    radial-gradient(circle at 20% 78%, rgba(0,255,255,0.03), transparent 22%),
+    radial-gradient(circle at 82% 78%, rgba(255,0,255,0.026), transparent 24%),
+    #000;
+  pointer-events: none;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  padding: 28px clamp(14px, 3vw, 42px) 58px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+h1 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.74);
+}
+
+.note {
+  margin: 8px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.42);
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.14);
+  text-decoration: none;
+  padding: 10px 12px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero {
+  min-height: 38vh;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.card {
+  position: relative;
+  min-height: 220px;
+  padding: 18px 16px 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.075);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.026), rgba(255,255,255,0.006)),
+    #000;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 48%, transparent 58%);
+  transform: translateX(-120%);
+  animation: expose 7.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes expose {
+  0%, 58% { transform: translateX(-120%); opacity: 0; }
+  68% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 36px;
+  color: rgba(255,255,255,0.42);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  min-height: 96px;
+  white-space: nowrap;
+  line-height: 0.76;
+  font: 200 clamp(48px, 8.5vw, 116px)/0.76 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.08em;
+}
+
+.hero .brand {
+  font-size: clamp(56px, 12vw, 172px);
+}
+
+.brand span {
+  --col: #fff;
+  --soft: color-mix(in srgb, var(--col) 76%, white 6%);
+  display: inline-block;
+  position: relative;
+  color: var(--soft);
+  text-shadow:
+    0 0 5px color-mix(in srgb, var(--col) 26%, transparent),
+    0 0 18px color-mix(in srgb, var(--col) 11%, transparent);
+}
+
+.brand span:nth-child(1) { --col: var(--grey); }
+.brand span:nth-child(2) { --col: var(--r); }
+.brand span:nth-child(3) { --col: var(--g); }
+.brand span:nth-child(4) { --col: var(--b); }
+.brand span:nth-child(5) { --col: var(--c); }
+.brand span:nth-child(6) { --col: var(--m); }
+.brand span:nth-child(7) { --col: var(--y); }
+
+.desc {
+  margin-top: 30px;
+  color: rgba(255,255,255,0.34);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.75;
+}
+
+.r01 .brand {
+  letter-spacing: -0.08em;
+}
+
+.r02 .brand {
+  letter-spacing: -0.105em;
+}
+.r02 .brand span:nth-child(1) { margin-right: 0.015em; }
+.r02 .brand span:nth-child(2) { margin-right: -0.018em; }
+.r02 .brand span:nth-child(3) { margin-right: -0.026em; }
+.r02 .brand span:nth-child(4) { margin-right: -0.012em; }
+.r02 .brand span:nth-child(6) { margin-left: -0.012em; }
+
+.r03 .brand span {
+  color: color-mix(in srgb, var(--col) 64%, white 4%);
+  text-shadow:
+    0 0 4px color-mix(in srgb, var(--col) 18%, transparent),
+    0 0 14px color-mix(in srgb, var(--col) 8%, transparent);
+}
+
+.r04 .brand span:nth-child(1) {
+  color: rgba(180,180,180,0.42);
+  transform: scaleX(0.68);
+  text-shadow:
+    0 0 4px rgba(128,128,128,0.18),
+    0 0 18px rgba(128,128,128,0.10);
+}
+.r04 .brand span:nth-child(1)::after {
+  content: "";
+  position: absolute;
+  top: -0.11em;
+  left: 50%;
+  width: 0.08em;
+  height: 0.08em;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255,255,255,0.55), 0 0 18px rgba(0,255,255,0.28);
+  transform: translateX(-50%);
+}
+
+.r05 .brand span::before,
+.r05 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.58;
+}
+.r05 .brand span::before {
+  color: #ff0000;
+  transform: translateX(-0.5px);
+  mix-blend-mode: screen;
+}
+.r05 .brand span::after {
+  color: #00ffff;
+  transform: translateX(0.5px);
+  mix-blend-mode: screen;
+}
+
+.r06 .brand {
+  transform: scaleX(0.92);
+}
+.r06 .brand span {
+  color: transparent;
+  -webkit-text-stroke: 0.82px var(--col);
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--col) 28%, transparent),
+    0 0 20px color-mix(in srgb, var(--col) 11%, transparent);
+}
+
+.r07 .brand {
+  transform: scaleY(0.86);
+}
+.r07 .brand span {
+  color: color-mix(in srgb, var(--col) 70%, white 4%);
+}
+.r07 .brand span::after {
+  content: attr(data-ch);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-stroke: 0.7px color-mix(in srgb, var(--col) 36%, transparent);
+  transform: translate3d(1.4px, 1.8px, 0);
+  opacity: 0.45;
+}
+
+.r08 .brand {
+  letter-spacing: -0.1em;
+  transform: scaleX(0.84);
+}
+.r08 .brand span {
+  color: color-mix(in srgb, var(--col) 68%, white 5%);
+}
+.r08 .brand span:nth-child(1) {
+  transform: scaleX(0.62);
+  margin-right: 0.02em;
+}
+.r08 .brand span::before {
+  content: "";
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 50%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.16;
+}
+
+.r09 .brand span {
+  animation: living 5.8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.17s);
+}
+@keyframes living {
+  0%, 100% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-2px); filter: brightness(1.18); }
+}
+
+.selected .brand {
+  letter-spacing: -0.102em;
+  transform: scaleX(0.86);
+}
+.selected .brand span {
+  color: color-mix(in srgb, var(--col) 66%, white 5%);
+  text-shadow:
+    -0.45px 0 rgba(255,0,0,0.34),
+    0.45px 0 rgba(0,255,255,0.34),
+    0 0 5px color-mix(in srgb, var(--col) 18%, transparent),
+    0 0 18px color-mix(in srgb, var(--col) 9%, transparent);
+}
+.selected .brand span:nth-child(1) {
+  transform: scaleX(0.62);
+  color: rgba(180,180,180,0.40);
+}
+.selected .brand span:nth-child(1)::after {
+  content: "";
+  position: absolute;
+  top: -0.12em;
+  left: 50%;
+  width: 0.072em;
+  height: 0.072em;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 7px rgba(255,255,255,0.52), 0 0 16px rgba(0,255,255,0.22);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .top { display: block; }
+  .nav { margin-top: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div>
+      <h1>font 05 refine</h1>
+      <p class="note">5番を本番候補として磨く比較。字間、減彩、iコア、色収差、線画化。</p>
+    </div>
+    <nav class="nav">
+      <a href="brand_font_wire_lab.html">wire lab</a>
+      <a href="p3_test.html?nocache=20260509-corelogo1">P3</a>
+    </nav>
+  </header>
+
+  <section class="hero selected">
+    <div>
+      <div class="brand" aria-label="inryoku"></div>
+      <p class="note" style="text-align:center;margin-top:28px;">selected mix: adjusted spacing / desaturated RGBCMY / i core / 0.5px refraction</p>
+    </div>
+  </section>
+
+  <main class="grid" id="grid"></main>
+</div>
+
+<script>
+const labels = [
+  ["01", "base", "5番そのまま。比較基準"],
+  ["02", "spacing", "文字ごとの詰めを調整"],
+  ["03", "desaturate", "色を少し落として高級寄り"],
+  ["04", "i core", "iだけ細く、点をコア化"],
+  ["05", "refraction", "0.5px色収差"],
+  ["06", "outline", "線画版。さらに未来感"],
+  ["07", "shadow layer", "薄い奥行きだけ追加"],
+  ["08", "cut axis", "中心線で構造を作る"],
+  ["09", "living", "微細な呼吸アニメ"]
+];
+
+function brand() {
+  return ["i","n","r","y","o","k","ü"]
+    .map((ch, i) => `<span data-ch="${ch}" style="--i:${i}">${ch}</span>`)
+    .join("");
+}
+
+document.querySelector(".hero .brand").innerHTML = brand();
+document.getElementById("grid").innerHTML = labels.map(([num, title, desc], i) => `
+  <section class="card r${String(i + 1).padStart(2, "0")}">
+    <div class="meta"><span>${num} / ${title}</span><span>05 refine</span></div>
+    <div class="brand">${brand()}</div>
+    <div class="desc">${desc}</div>
+  </section>
+`).join("");
+</script>
+</body>
+</html>

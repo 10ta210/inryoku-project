@@ -60,10 +60,10 @@
         //   旧: exp(-abs(p.x)*70) / bloom exp(-*18)*0.55
         //   新: exp(-abs(p.x)*280) / bloom exp(-*55)*0.4 (4倍シャープ)
         '    float vertical = exp(-abs(p.x) * 280.0) * smoothstep(beamLen, 0.0, abs(p.y));',
-        '    float verticalBloom = exp(-abs(p.x) * 55.0) * smoothstep(beamLen * 1.12, 0.0, abs(p.y)) * 0.4;',
+        '    float verticalBloom = exp(-abs(p.x) * 55.0) * smoothstep(beamLen * 1.05, 0.0, abs(p.y)) * 0.4;',
         '    vertical += verticalBloom;',
         '    float horizontal = exp(-abs(p.y) * 280.0) * smoothstep(beamLen, 0.0, abs(p.x));',
-        '    float horizontalBloom = exp(-abs(p.y) * 55.0) * smoothstep(beamLen * 1.12, 0.0, abs(p.x)) * 0.35;',
+        '    float horizontalBloom = exp(-abs(p.y) * 55.0) * smoothstep(beamLen * 1.05, 0.0, abs(p.x)) * 0.35;',
         '    horizontal += horizontalBloom;',
         '    horizontal *= uHorizFade;',
         '    float core = exp(-dot(p,p) * 45.0);',
@@ -92,12 +92,8 @@
     };
 
     function buildPlane(camera) {
-        // 2026-05-19 段階19.7: ortho camera 対応
         let w = 5.0, h = 2.8;
-        if (camera && camera.isOrthographicCamera) {
-            w = (camera.right - camera.left) * 1.12;
-            h = (camera.top - camera.bottom) * 1.12;
-        } else if (camera && camera.isPerspectiveCamera) {
+        if (camera && camera.isPerspectiveCamera) {
             const d = 0.45;
             const aspect = camera.aspect || 1.0;
             const vFov = (camera.fov * Math.PI) / 180.0;

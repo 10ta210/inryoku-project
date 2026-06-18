@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — 相と相の移ろい (sō to sō no utsuroi)</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #08080c; color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+  #stage { position: fixed; inset: 0; overflow: hidden; }
+  .phase-stand-in { position: fixed; inset: 0; display: flex; align-items: center;
+    justify-content: center; transition: opacity 200ms linear; }
+  .phase-stand-in.hidden { opacity: 0; pointer-events: none; }
+
+  /* P0 — Mac dialog stand-in */
+  .p0 { background: linear-gradient(180deg, #d8d8e0 0%, #b8b8c2 100%); }
+  .p0 .dialog {
+    width: 360px; padding: 18px 22px 22px; border-radius: 10px;
+    background: #f4f4f6; box-shadow: 0 14px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.08);
+    color: #222; font-size: 14px;
+    transform-origin: center; transition: transform 300ms ease-in;
+  }
+  .p0 .dialog h2 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  .p0.collapsing .dialog { transform: scale(0.001); }
+
+  /* P1 — Win95 boot stand-in */
+  .p1 { background: #008080; font-family: "Lucida Console", "Courier New", monospace; }
+  .p1 .boot { width: 70%; max-width: 560px; padding: 18px;
+    background: #c0c0c0; color: #000; border: 2px solid #fff;
+    box-shadow: inset -1px -1px #000, inset 1px 1px #fff; font-size: 12px; }
+  .p1 .bar { height: 14px; margin-top: 10px; background: #000; border: 1px inset #888;
+    position: relative; }
+  .p1 .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #5af, #fff); width: 12%;
+    animation: bios 4s linear infinite; }
+  @keyframes bios { to { width: 100%; } }
+
+  /* P2 — quantum code + yin-yang stand-in */
+  .p2 { background: #000; }
+  .p2 canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* P3 — universe stand-in */
+  .p3 { background: radial-gradient(ellipse at center, #0a0815 0%, #02010a 70%, #000 100%); }
+  .p3 canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* inRYOKU stand-in */
+  .ink { background: #f6f5f0; color: #1a1a1a; }
+  .ink .core { font-family: "Hiragino Mincho ProN", serif; letter-spacing: 0.4em; font-size: 22px; }
+
+  /* HUD */
+  #hud {
+    position: fixed; left: 12px; bottom: 12px; z-index: 99999;
+    background: rgba(0,0,0,.55); color: #fff; font-size: 11px;
+    padding: 8px 12px; border-radius: 6px; pointer-events: none;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.05em;
+  }
+  #hud b { color: #9cf; }
+  #hud .ev { color: #f9a; }
+
+  /* dialog dots — used to anchor the visual P0 → P1 carry */
+  .p0 .dots { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
+  .p0 .dots span { width: 6px; height: 6px; border-radius: 50%; background: #888;
+    animation: blink 1.2s infinite; }
+  .p0 .dots span:nth-child(2){ animation-delay: .2s }
+  .p0 .dots span:nth-child(3){ animation-delay: .4s }
+  @keyframes blink { 50%{opacity:.3} }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <!-- P0 stand-in -->
+  <div class="phase-stand-in p0 hidden" data-phase="P0">
+    <div class="dialog">
+      <h2>問い (toi)</h2>
+      <p data-i18n="transitions.p0.question">あなたは、自分を知っているか。</p>
+      <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- P1 stand-in -->
+  <div class="phase-stand-in p1 hidden" data-phase="P1">
+    <div class="boot">
+      <div data-i18n="transitions.p1.boot.line1">inryokü BIOS v1.0 · 相 P1 起動</div>
+      <div data-i18n="transitions.p1.boot.line2">記憶の点検 ... 256 の運び手を受信</div>
+      <div data-i18n="transitions.p1.boot.line3">意識のドライバを読み込み中 ...</div>
+      <div class="bar"><i></i></div>
+    </div>
+  </div>
+
+  <!-- P2 stand-in -->
+  <div class="phase-stand-in p2 hidden" data-phase="P2">
+    <canvas id="p2c"></canvas>
+  </div>
+
+  <!-- P3 stand-in -->
+  <div class="phase-stand-in p3 hidden" data-phase="P3">
+    <canvas id="p3c"></canvas>
+  </div>
+
+  <!-- inRYOKU stand-in -->
+  <div class="phase-stand-in ink hidden" data-phase="inRYOKU">
+    <div class="core">i n r y o k ü</div>
+  </div>
+</div>
+
+<div id="hud">
+  相 (sō)：<b id="hud-phase">—</b> · 直前：<span class="ev" id="hud-event">—</span>
+</div>
+
+<script type="module">
+import { createPhaseBus } from './phase-bus.js';
+import { createTransition as p0p1 } from './phase-transitions/p0-to-p1.js';
+import { createTransition as p1p2 } from './phase-transitions/p1-to-p2.js';
+import { createTransition as p2p3 } from './phase-transitions/p2-to-p3.js';
+import { createTransition as p3ink } from './phase-transitions/p3-to-inryoku.js';
+
+const bus = createPhaseBus({ initialPhase: 'P0', debug: false });
+
+const hudPhase = document.getElementById('hud-phase');
+const hudEvent = document.getElementById('hud-event');
+
+bus.on('phase:enter', ({ phase }) => { hudPhase.textContent = phase; hudEvent.textContent = 'enter ' + phase; });
+bus.on('phase:leave', ({ phase }) => { hudEvent.textContent = 'leave ' + phase; });
+bus.on('phase:transition:start', ({ from, to }) => { hudEvent.textContent = from + ' → ' + to + ' …'; });
+bus.on('phase:transition:end', ({ from, to }) => { hudEvent.textContent = from + ' → ' + to + ' ✓'; });
+
+// show/hide stand-ins
+function show(phase) {
+  document.querySelectorAll('.phase-stand-in').forEach((el) => {
+    el.classList.toggle('hidden', el.dataset.phase !== phase);
+  });
+}
+show('P0');
+hudPhase.textContent = 'P0';
+
+// --- ambient P2/P3 canvas backdrops so stand-ins look alive ---
+startP2Backdrop();
+startP3Backdrop();
+
+// --- helpers to capture state from stand-ins for handoff ---
+function captureP0() {
+  const dots = document.querySelectorAll('.p0 .dots span');
+  const arr = [];
+  for (const d of dots) {
+    const r = d.getBoundingClientRect();
+    arr.push({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+  }
+  const center = arr.length
+    ? { x: arr.reduce((s, p) => s + p.x, 0) / arr.length, y: arr.reduce((s, p) => s + p.y, 0) / arr.length }
+    : { x: innerWidth / 2, y: innerHeight / 2 };
+  return { centerX: center.x, centerY: center.y };
+}
+
+function captureP1() {
+  // sample ~64 points across the BIOS bar — those are our "dots"
+  const bar = document.querySelector('.p1 .bar');
+  const r = bar ? bar.getBoundingClientRect() : { left: innerWidth/2 - 100, top: innerHeight/2, width: 200, height: 14 };
+  const particles = [];
+  for (let i = 0; i < 64; i++) {
+    particles.push({
+      x: r.left + Math.random() * r.width,
+      y: r.top + Math.random() * r.height,
+      hue: [0.92, 0.92, 0.96],
+    });
+  }
+  return { particles };
+}
+
+function captureP2() {
+  // sample mixed sets of code + manifold particles from the ambient canvas
+  const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2;
+  const code = [], manifold = [];
+  for (let i = 0; i < 64; i++) {
+    code.push({ x: cx + (Math.random() - 0.5) * W * 0.6, y: cy + (Math.random() - 0.5) * H * 0.6, hue: [0.27, 0.93, 0.48] });
+    const ang = (i / 64) * Math.PI * 2;
+    const rad = Math.min(W, H) * 0.22;
+    manifold.push({
+      x: cx + Math.cos(ang) * rad,
+      y: cy + Math.sin(ang) * rad,
+      hue: i % 2 ? [0.95, 0.97, 1.0] : [0.02, 0.02, 0.05],
+    });
+  }
+  return { codeParticles: code, manifoldParticles: manifold };
+}
+
+function captureP3() {
+  const W = innerWidth, H = innerHeight;
+  const arr = [];
+  for (let i = 0; i < 480; i++) {
+    arr.push({
+      x: W / 2 + (Math.random() - 0.5) * W * 0.95,
+      y: H / 2 + (Math.random() - 0.5) * H * 0.95,
+    });
+  }
+  return {
+    universeParticles: arr,
+    // for the test we force-unlock the 6-colour condition
+    sixColorState: { r: 1, g: 1, b: 1, c: 1, m: 1, y: 1 },
+  };
+}
+
+// --- transition cycle: P0 → P1 → P2 → P3 → inRYOKU → P0 (loop) ---
+const HOLD_MS = 3000;
+async function cycle() {
+  while (true) {
+    show('P0'); await sleep(HOLD_MS);
+    document.querySelector('.p0').classList.add('collapsing');
+    await bus.transition('P1', { transitionModule: p0p1({ debug: false }), fromState: captureP0() });
+    show('P1');
+    document.querySelector('.p0').classList.remove('collapsing');
+
+    await sleep(HOLD_MS);
+    await bus.transition('P2', { transitionModule: p1p2(), fromState: captureP1() });
+    show('P2');
+
+    await sleep(HOLD_MS);
+    await bus.transition('P3', { transitionModule: p2p3(), fromState: captureP2() });
+    show('P3');
+
+    await sleep(HOLD_MS);
+    // inRYOKU — override navigate so we don't actually leave the page
+    await bus.transition('inRYOKU', {
+      transitionModule: p3ink({ skipUnlockCheck: false }),
+      fromState: captureP3(),
+      toState: { navigate: () => {} },
+    });
+    show('inRYOKU');
+
+    await sleep(HOLD_MS);
+    // wrap back — instant cut to P0 to start the next lap
+    await bus.transition('P0');
+    show('P0');
+    await sleep(150);
+  }
+}
+
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+// --- P2 ambient backdrop (code-rain + yin-yang silhouette) ---
+function startP2Backdrop() {
+  const cv = document.getElementById('p2c');
+  const ctx = cv.getContext('2d');
+  function resize() {
+    cv.width = innerWidth * devicePixelRatio;
+    cv.height = innerHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  resize(); addEventListener('resize', resize);
+  const cols = [];
+  const W = () => innerWidth, H = () => innerHeight;
+  for (let i = 0; i < 80; i++) cols.push({ x: Math.random() * W(), y: Math.random() * H(), v: 1 + Math.random() * 2 });
+  function tick() {
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(0, 0, W(), H());
+    ctx.fillStyle = 'rgba(70,237,123,0.85)';
+    for (const c of cols) {
+      ctx.fillRect(c.x, c.y, 1.5, 6);
+      c.y += c.v;
+      if (c.y > H()) { c.y = -10; c.x = Math.random() * W(); }
+    }
+    // yin-yang silhouette
+    const cx = W() / 2, cy = H() / 2, r = Math.min(W(), H()) * 0.22;
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, Math.PI / 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI / 2, -Math.PI / 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx, cy - r / 2, r / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(cx, cy + r / 2, r / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+// --- P3 ambient backdrop (universe drift + 8 constellation anchors) ---
+function startP3Backdrop() {
+  const cv = document.getElementById('p3c');
+  const ctx = cv.getContext('2d');
+  function resize() {
+    cv.width = innerWidth * devicePixelRatio;
+    cv.height = innerHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  resize(); addEventListener('resize', resize);
+  const stars = [];
+  for (let i = 0; i < 600; i++) {
+    stars.push({
+      x: Math.random() * innerWidth,
+      y: Math.random() * innerHeight,
+      r: Math.random() * 1.2 + 0.2,
+      tw: Math.random() * Math.PI * 2,
+    });
+  }
+  function tick(t) {
+    ctx.fillStyle = 'rgba(2,1,10,0.4)';
+    ctx.fillRect(0, 0, innerWidth, innerHeight);
+    for (const s of stars) {
+      const a = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t / 600 + s.tw));
+      ctx.fillStyle = 'rgba(220,220,255,' + a + ')';
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+    // 8 constellations
+    const W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + t / 8000;
+      const r = Math.min(W, H) * 0.36;
+      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      ctx.fillStyle = 'rgba(255,240,200,0.9)';
+      ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+cycle().catch((e) => console.error('cycle error', e));
+</script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryokü P2 Code Womb Sample</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    color: rgba(255,255,255,0.76);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .caption {
+    position: fixed;
+    left: 22px;
+    bottom: 20px;
+    z-index: 5;
+    max-width: min(560px, calc(100vw - 44px));
+    pointer-events: none;
+  }
+  .caption h1 {
+    margin: 0 0 9px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+  }
+  .caption p {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.75;
+    letter-spacing: 0.11em;
+    color: rgba(255,255,255,0.42);
+  }
+  .badge {
+    position: fixed;
+    top: 16px;
+    right: 18px;
+    z-index: 5;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: rgba(255,255,255,0.34);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div class="badge">P2 / code womb</div>
+<div class="caption">
+  <h1>inRYOKU 50% / inryoku 101%</h1>
+  <p>50% は内側へ沈む。101% は外側へ生まれる。0 と 1 のコード世界が、その間で呼吸する。</p>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(function(){
+  if (!window.THREE) {
+    document.body.insertAdjacentHTML('beforeend', '<p style="padding:20px">Three.js not loaded</p>');
+    return;
+  }
+
+  const canvas = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: 'high-performance'
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  if ('toneMapping' in renderer) {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.02;
+  }
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.038);
+
+  const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 80);
+  camera.position.set(0, 0.08, 7.5);
+
+  const root = new THREE.Group();
+  scene.add(root);
+
+  const uniforms = {
+    uTime: { value: 0 },
+    uMode: { value: 0 }
+  };
+
+  const sphereVertex = `
+    varying vec3 vN;
+    varying vec3 vP;
+    varying vec2 vUv;
+    void main() {
+      vN = normalize(normalMatrix * normal);
+      vP = position;
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+
+  const innerMat = new THREE.ShaderMaterial({
+    uniforms,
+    transparent: true,
+    depthWrite: true,
+    vertexShader: sphereVertex,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      varying vec3 vN;
+      varying vec3 vP;
+      varying vec2 vUv;
+      vec3 hsv2rgb(vec3 c) {
+        vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+        return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+      }
+      void main() {
+        vec3 n = normalize(vN);
+        vec3 p = normalize(vP);
+        float view = clamp(dot(n, normalize(vec3(0.0, 0.04, 1.0))), 0.0, 1.0);
+        float rim = pow(1.0 - view, 2.45);
+        float angle = atan(p.y, p.x);
+        float wave = sin(p.y * 3.7 + uTime * 0.36) * 0.32;
+        float sCurve = sin(angle + wave + p.z * 0.72);
+        float yin = smoothstep(-0.085, 0.085, sCurve);
+        vec3 blackSide = vec3(0.016, 0.017, 0.021);
+        vec3 whiteSide = vec3(0.74, 0.75, 0.79);
+        vec3 greyBase = vec3(0.50);
+        vec3 col = mix(greyBase, mix(blackSide, whiteSide, yin), 0.64);
+        vec2 uv = p.xy;
+        float dotWhite = smoothstep(0.135, 0.036, length(uv - vec2(-0.17, 0.35)));
+        float dotBlack = smoothstep(0.135, 0.036, length(uv - vec2(0.17,-0.35)));
+        col = mix(col, vec3(0.94, 0.95, 0.98), dotWhite * (1.0 - yin) * 0.86);
+        col = mix(col, vec3(0.006, 0.007, 0.010), dotBlack * yin * 0.92);
+        float hue = fract(angle / 6.2831853 + 0.5 + p.z * 0.14 + uTime * 0.018);
+        vec3 prism = hsv2rgb(vec3(hue, 0.82, 1.0));
+        col += prism * (pow(rim, 1.2) * 0.28 + smoothstep(0.9, 1.0, abs(sCurve)) * 0.06);
+        col *= 0.36 + view * 0.76;
+        col = pow(col, vec3(0.92));
+        gl_FragColor = vec4(col, 0.92 + rim * 0.06);
+      }
+    `
+  });
+
+  const outerMat = new THREE.ShaderMaterial({
+    uniforms,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: sphereVertex,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      varying vec3 vN;
+      varying vec3 vP;
+      vec3 hsv2rgb(vec3 c) {
+        vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0/3.0, 1.0/3.0)) * 6.0 - 3.0);
+        return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+      }
+      void main() {
+        vec3 n = normalize(vN);
+        float view = clamp(dot(n, normalize(vec3(0.0, 0.0, 1.0))), 0.0, 1.0);
+        float rim = pow(1.0 - view, 1.55);
+        float core = pow(view, 3.0) * 0.22;
+        float hue = fract(atan(vP.y, vP.x) / 6.2831853 + 0.5 + vP.z * 0.12 + uTime * 0.05);
+        vec3 col = hsv2rgb(vec3(hue, 0.96, 1.0));
+        float alpha = 0.18 + rim * 0.58 + core;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `
+  });
+
+  const sphereGeo = new THREE.SphereGeometry(1.0, 128, 80);
+  const innerSphere = new THREE.Mesh(sphereGeo, innerMat);
+  innerSphere.position.set(0, 0, -1.2);
+  innerSphere.scale.setScalar(0.82);
+  root.add(innerSphere);
+
+  const outerSphere = new THREE.Mesh(sphereGeo.clone(), outerMat);
+  outerSphere.position.set(0.48, 0.04, 0.95);
+  outerSphere.scale.setScalar(1.16);
+  root.add(outerSphere);
+
+  const codeCount = 2300;
+  const codeGeo = new THREE.BufferGeometry();
+  const pos = new Float32Array(codeCount * 3);
+  const seed = new Float32Array(codeCount);
+  const kind = new Float32Array(codeCount);
+  const color = new Float32Array(codeCount * 3);
+  const palette = [
+    [1,0,0], [0,1,0], [0.02,0.16,1],
+    [0,1,1], [1,0,1], [1,1,0]
+  ];
+  for (let i = 0; i < codeCount; i++) {
+    const r = Math.pow(Math.random(), 0.55) * 6.8 + 0.5;
+    const a = Math.random() * Math.PI * 2;
+    const y = (Math.random() - 0.5) * 5.3;
+    pos[i*3] = Math.cos(a) * r;
+    pos[i*3+1] = y;
+    pos[i*3+2] = Math.sin(a) * r - 1.2;
+    seed[i] = Math.random() * 1000;
+    kind[i] = Math.random() > 0.54 ? 1 : 0;
+    const c = palette[i % palette.length];
+    const muted = Math.random() < 0.72 ? 0.18 : 0.72;
+    color[i*3] = c[0] * muted + 0.18;
+    color[i*3+1] = c[1] * muted + 0.18;
+    color[i*3+2] = c[2] * muted + 0.18;
+  }
+  codeGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  codeGeo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  codeGeo.setAttribute('aKind', new THREE.BufferAttribute(kind, 1));
+  codeGeo.setAttribute('color', new THREE.BufferAttribute(color, 3));
+
+  const codeMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: uniforms.uTime },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true,
+    vertexShader: `
+      uniform float uTime;
+      attribute float aSeed;
+      attribute float aKind;
+      varying vec3 vColor;
+      varying float vKind;
+      varying float vAlpha;
+      void main() {
+        vec3 p = position;
+        float t = uTime;
+        vec3 inner = vec3(0.0, 0.0, -1.2);
+        vec3 outer = vec3(0.48, 0.04, 0.95);
+
+        float phase = fract(aSeed * 0.137 + t * (0.025 + aKind * 0.018));
+        vec3 toInner = inner - p;
+        vec3 fromOuter = normalize(p - outer);
+        float inward = 1.0 - aKind;
+        p += normalize(toInner) * inward * phase * 1.65;
+        p += fromOuter * aKind * phase * 1.20;
+
+        float spin = t * (0.06 + aKind * 0.05) + aSeed;
+        p.xz = mat2(cos(spin), -sin(spin), sin(spin), cos(spin)) * p.xz;
+        p.y += sin(t * 0.42 + aSeed) * 0.055;
+
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        float distInner = length(p - inner);
+        float distOuter = length(p - outer);
+        float nearField = smoothstep(3.2, 0.55, min(distInner, distOuter));
+        float pulse = 0.55 + 0.45 * sin(t * 1.6 + aSeed);
+        vColor = color;
+        vKind = aKind;
+        vAlpha = (0.08 + nearField * 0.42 + pulse * 0.08) * (1.0 - phase * 0.38);
+        gl_PointSize = (aKind > 0.5 ? 4.0 : 3.1) * (1.0 + nearField * 1.8) * (300.0 / max(1.0, -mv.z));
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      varying vec3 vColor;
+      varying float vKind;
+      varying float vAlpha;
+      void main() {
+        vec2 uv = gl_PointCoord - 0.5;
+        float d = length(uv);
+        float core = smoothstep(0.48, 0.04, d);
+        float line = smoothstep(0.12, 0.02, abs(uv.y)) * smoothstep(0.50, 0.22, abs(uv.x));
+        float shape = mix(core, max(core * 0.55, line), vKind);
+        if (shape < 0.01) discard;
+        gl_FragColor = vec4(vColor, shape * vAlpha);
+      }
+    `
+  });
+  const code = new THREE.Points(codeGeo, codeMat);
+  root.add(code);
+
+  const bridgeGeo = new THREE.BufferGeometry();
+  const bridgeCount = 140;
+  const bridgePos = new Float32Array(bridgeCount * 3);
+  for (let i = 0; i < bridgeCount; i++) {
+    const p = i / (bridgeCount - 1);
+    bridgePos[i*3] = -1.05 + p * 2.30;
+    bridgePos[i*3+1] = Math.sin(p * Math.PI * 2.0) * 0.18;
+    bridgePos[i*3+2] = -1.05 + p * 2.0;
+  }
+  bridgeGeo.setAttribute('position', new THREE.BufferAttribute(bridgePos, 3));
+  const bridgeMat = new THREE.LineBasicMaterial({
+    color: 0x9aa0ff,
+    transparent: true,
+    opacity: 0.16,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const bridge = new THREE.Line(bridgeGeo, bridgeMat);
+  root.add(bridge);
+
+  function resize() {
+    const w = window.innerWidth || 1;
+    const h = window.innerHeight || 1;
+    renderer.setSize(w, h, true);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    const shortSide = Math.min(w, h);
+    root.scale.setScalar(shortSide < 520 ? 0.82 : 1);
+  }
+  window.addEventListener('resize', resize, { passive: true });
+  resize();
+
+  const clock = new THREE.Clock();
+  function animate() {
+    const t = clock.getElapsedTime();
+    uniforms.uTime.value = t;
+    root.rotation.y = Math.sin(t * 0.12) * 0.15;
+    root.rotation.x = Math.sin(t * 0.09) * 0.035;
+    innerSphere.rotation.y = t * 0.24;
+    innerSphere.rotation.z = t * 0.035;
+    outerSphere.rotation.y = -t * 0.18;
+    outerSphere.rotation.x = Math.sin(t * 0.22) * 0.08;
+    bridge.rotation.y = Math.sin(t * 0.18) * 0.10;
+    bridgeMat.opacity = 0.08 + Math.max(0, Math.sin(t * 0.8)) * 0.14;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

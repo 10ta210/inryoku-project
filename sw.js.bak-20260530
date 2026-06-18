@@ -1,0 +1,257 @@
+/* inryokü Service Worker — 2026-04-28
+ *
+ * Strategy:
+ *   - cache-first       : 静的アセット（vendor, fonts, images, css, js）
+ *   - network-first     : /api/* （5s timeout で cache fallback）
+ *   - stale-while-rev.  : HTML（即座にキャッシュ提供→裏で更新）
+ *   - exclude           : /grey/* 動的ページ、/api/admin/*、Set-Cookie 系
+ *
+ * Cache name versioning で activate 時に旧キャッシュを削除。
+ */
+
+'use strict';
+
+const VERSION = 'inryoku-v33-20260511-tee';
+const STATIC_CACHE = VERSION + '-static';
+const HTML_CACHE = VERSION + '-html';
+const API_CACHE = VERSION + '-api';
+const IMAGE_CACHE = VERSION + '-image';
+
+const ALL_CACHES = [STATIC_CACHE, HTML_CACHE, API_CACHE, IMAGE_CACHE];
+
+// install 時にプリキャッシュする最小コアセット（offline を成立させるため）
+const PRECACHE_URLS = [
+  '/',
+  '/offline.html',
+  '/manifest.json',
+  '/inryoku_logo_icon.png',
+  '/p3_styles.css',
+  '/particle_glyphs.css',
+  '/particle_rings.css',
+  '/vendor/three.min.js'
+];
+
+const API_TIMEOUT_MS = 5000;
+
+// --- helpers ----------------------------------------------------------------
+
+function isStaticAsset(url) {
+  const p = url.pathname;
+  if (p.startsWith('/vendor/')) return true;
+  if (p.startsWith('/public/')) return true;
+  if (/^\/particle_[\w]+\.(?:js|css)$/.test(p)) return true;
+  if (/\.(?:css|js|woff2?|ttf|otf|eot)$/i.test(p)) return true;
+  return false;
+}
+
+function isImage(url) {
+  return /\.(?:png|jpe?g|webp|gif|svg|ico|glb|mp3)$/i.test(url.pathname);
+}
+
+function isHTMLRequest(req, url) {
+  if (req.mode === 'navigate') return true;
+  const accept = req.headers.get('accept') || '';
+  if (accept.includes('text/html')) return true;
+  if (/\.html?$/i.test(url.pathname)) return true;
+  return false;
+}
+
+function isAPI(url) {
+  return url.pathname.startsWith('/api/');
+}
+
+function isExcluded(url) {
+  // 動的 user content / admin / referral 集計はキャッシュしない
+  if (url.pathname.startsWith('/grey/')) return true;
+  if (url.pathname.startsWith('/api/admin/')) return true;
+  if (url.pathname.startsWith('/api/subscribers')) return true;
+  if (url.pathname.startsWith('/api/checkout')) return true;
+  if (url.pathname.startsWith('/api/pod')) return true;
+  if (url.pathname.startsWith('/api/chat')) return true;
+  if (url.pathname.startsWith('/api/contact')) return true;
+  if (url.pathname.startsWith('/api/ref/')) return true;
+  if (url.pathname.startsWith('/api/grey/')) return true;
+  if (url.pathname.startsWith('/api/subscribe')) return true;
+  return false;
+}
+
+function fetchWithTimeout(request, ms) {
+  return new Promise(function (resolve, reject) {
+    const t = setTimeout(function () { reject(new Error('timeout')); }, ms);
+    fetch(request).then(function (res) {
+      clearTimeout(t);
+      resolve(res);
+    }).catch(function (err) {
+      clearTimeout(t);
+      reject(err);
+    });
+  });
+}
+
+// --- install ----------------------------------------------------------------
+
+self.addEventListener('install', function (event) {
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then(function (cache) {
+      // 個別 add で 1 個失敗してもインストールを止めない
+      return Promise.all(PRECACHE_URLS.map(function (url) {
+        return cache.add(new Request(url, { cache: 'reload' })).catch(function (err) {
+          console.warn('[sw] precache miss:', url, err && err.message);
+        });
+      }));
+    })
+  );
+  // 新 SW を即座に waiting → message で skipWaiting する設計
+});
+
+// --- activate ---------------------------------------------------------------
+
+self.addEventListener('activate', function (event) {
+  event.waitUntil(
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) {
+        if (ALL_CACHES.indexOf(k) === -1) {
+          return caches.delete(k);
+        }
+        return null;
+      }));
+    }).then(function () {
+      return self.clients.claim();
+    })
+  );
+});
+
+// --- message ----------------------------------------------------------------
+
+self.addEventListener('message', function (event) {
+  if (!event.data) return;
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data.type === 'CLEAR_CACHES') {
+    event.waitUntil(caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+    }));
+  }
+});
+
+// --- fetch routing ----------------------------------------------------------
+
+self.addEventListener('fetch', function (event) {
+  const req = event.request;
+
+  // GET 以外はパススルー（POST 等は触らない）
+  if (req.method !== 'GET') return;
+
+  let url;
+  try { url = new URL(req.url); } catch (e) { return; }
+
+  // 異なる origin（Shopify CDN、Groq、qrserver 等）はパススルー
+  if (url.origin !== self.location.origin) return;
+
+  // 除外
+  if (isExcluded(url)) return;
+
+  if (isAPI(url)) {
+    event.respondWith(networkFirst(req, API_CACHE));
+    return;
+  }
+
+  if (isHTMLRequest(req, url)) {
+    event.respondWith(staleWhileRevalidate(req, HTML_CACHE));
+    return;
+  }
+
+  if (isImage(url)) {
+    event.respondWith(cacheFirst(req, IMAGE_CACHE));
+    return;
+  }
+
+  if (isStaticAsset(url)) {
+    event.respondWith(cacheFirst(req, STATIC_CACHE));
+    return;
+  }
+
+  // それ以外は素通り（ブラウザの標準動作）
+});
+
+// --- strategies -------------------------------------------------------------
+
+function cacheFirst(request, cacheName) {
+  return caches.open(cacheName).then(function (cache) {
+    return cache.match(request).then(function (cached) {
+      if (cached) return cached;
+      return fetch(request).then(function (res) {
+        if (res && res.status === 200 && res.type !== 'opaque') {
+          cache.put(request, res.clone());
+        }
+        return res;
+      }).catch(function () {
+        // 静的アセット fallback はなし。失敗は失敗のまま。
+        return new Response('', { status: 504, statusText: 'offline' });
+      });
+    });
+  });
+}
+
+function staleWhileRevalidate(request, cacheName) {
+  return caches.open(cacheName).then(function (cache) {
+    return cache.match(request).then(function (cached) {
+      const networkPromise = fetch(request).then(function (res) {
+        if (res && res.status === 200) {
+          cache.put(request, res.clone());
+        }
+        return res;
+      }).catch(function () { return null; });
+
+      if (cached) {
+        // 即座に cached を返し、裏で更新
+        networkPromise.catch(function () {});
+        return cached;
+      }
+      return networkPromise.then(function (res) {
+        if (res) return res;
+        // ネットも cache も無い → offline.html
+        return caches.match('/offline.html').then(function (off) {
+          return off || new Response('offline', { status: 503 });
+        });
+      });
+    });
+  });
+}
+
+function networkFirst(request, cacheName) {
+  return caches.open(cacheName).then(function (cache) {
+    return fetchWithTimeout(request, API_TIMEOUT_MS).then(function (res) {
+      if (res && res.status === 200) {
+        cache.put(request, res.clone());
+      }
+      return res;
+    }).catch(function () {
+      return cache.match(request).then(function (cached) {
+        if (cached) return cached;
+        return new Response(JSON.stringify({
+          error: 'offline',
+          message: 'the connection is grey'
+        }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' }
+        });
+      });
+    });
+  });
+}
+
+// --- background sync (optional, feature-detected on client side) ------------
+
+self.addEventListener('sync', function (event) {
+  if (event.tag === 'inryoku-retry-subscribe') {
+    event.waitUntil(retrySubscribe());
+  }
+});
+
+function retrySubscribe() {
+  // Background Sync API: client が IndexedDB / cache に積んだ payload を
+  // 再送する想定の placeholder。実データ層は未実装のため no-op。
+  return Promise.resolve();
+}

@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inryoku pixel brand lab 20</title>
+<style>
+@font-face {
+  font-family: "Press Start 2P";
+  src: url("vendor/fonts/press-start-2p.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --grey: #808080;
+  --r: #ff0000;
+  --g: #00ff00;
+  --b: #0044ff;
+  --c: #00ffff;
+  --m: #ff00ff;
+  --y: #ffff00;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(0,255,255,0.035), transparent 20%),
+    radial-gradient(circle at 80% 24%, rgba(255,0,255,0.03), transparent 22%),
+    radial-gradient(circle at 52% 92%, rgba(255,255,0,0.022), transparent 26%),
+    #000;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  padding: 28px clamp(14px, 3vw, 42px) 58px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+h1 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.76);
+}
+
+.note {
+  margin: 8px 0 0;
+  color: rgba(255,255,255,0.42);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav a {
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.14);
+  text-decoration: none;
+  padding: 10px 12px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.card {
+  position: relative;
+  min-height: 206px;
+  overflow: hidden;
+  padding: 18px 16px 14px;
+  border: 1px solid rgba(255,255,255,0.075);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.026), rgba(255,255,255,0.006)),
+    #000;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.035), transparent);
+  transform: translateX(-125%);
+  animation: sweep 9s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  0%, 68% { transform: translateX(-125%); opacity: 0; }
+  77% { opacity: 1; }
+  100% { transform: translateX(125%); opacity: 0; }
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 34px;
+  color: rgba(255,255,255,0.42);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  min-height: 92px;
+  white-space: nowrap;
+  line-height: 0.9;
+  font-family: "Press Start 2P", monospace;
+  font-weight: 400;
+  font-size: clamp(25px, 4.6vw, 58px);
+  letter-spacing: 0.03em;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+}
+
+.brand span {
+  --col: #fff;
+  display: inline-block;
+  position: relative;
+  color: var(--col);
+  text-shadow:
+    0 0 5px color-mix(in srgb, var(--col) 42%, transparent),
+    0 0 14px color-mix(in srgb, var(--col) 18%, transparent);
+}
+
+.brand span:nth-child(1) { --col: var(--grey); }
+.brand span:nth-child(2) { --col: var(--r); }
+.brand span:nth-child(3) { --col: var(--g); }
+.brand span:nth-child(4) { --col: var(--b); }
+.brand span:nth-child(5) { --col: var(--c); }
+.brand span:nth-child(6) { --col: var(--m); }
+.brand span:nth-child(7) { --col: var(--y); }
+
+.desc {
+  margin-top: 28px;
+  color: rgba(255,255,255,0.34);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  line-height: 1.75;
+}
+
+.p01 .brand { letter-spacing: 0.03em; }
+
+.p02 .brand { letter-spacing: 0.105em; font-size: clamp(22px, 4vw, 50px); }
+.p02 .brand span { text-shadow: 0 0 3px color-mix(in srgb, var(--col) 30%, transparent); }
+
+.p03 .brand { letter-spacing: -0.005em; transform: scaleX(0.82); }
+.p03 .brand span { color: transparent; -webkit-text-stroke: 1px var(--col); }
+.p03 .brand span::after { content: attr(data-ch); position: absolute; inset: 0; color: color-mix(in srgb, var(--col) 14%, transparent); transform: translateY(3px); }
+
+.p04 .brand { letter-spacing: 0.045em; transform: perspective(700px) rotateX(8deg) rotateY(-7deg); }
+.p04 .brand span { text-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 rgba(0,0,0,0.75), 4px 4px 12px rgba(0,0,0,0.9), 0 0 8px color-mix(in srgb, var(--col) 32%, transparent); }
+
+.p05 .brand { letter-spacing: 0.02em; }
+.p05 .brand span { color: transparent; -webkit-text-stroke: 1px var(--col); }
+
+.p06 .brand { letter-spacing: -0.02em; transform: scaleY(1.22); transform-origin: 50% 70%; }
+.p06 .brand span { filter: contrast(1.15); }
+
+.p07 .brand { letter-spacing: 0.065em; transform: scaleX(0.72); }
+.p07 .brand span::after { content: ""; position: absolute; left: 8%; right: 8%; top: 50%; height: 1px; background: currentColor; opacity: 0.55; box-shadow: 0 0 7px currentColor; }
+
+.p08 .brand { letter-spacing: 0.02em; }
+.p08 .brand span { color: color-mix(in srgb, var(--col) 72%, white 4%); text-shadow: -0.5px 0 rgba(255,0,0,0.45), 0.5px 0 rgba(0,255,255,0.45), 0 0 10px color-mix(in srgb, var(--col) 18%, transparent); }
+
+.p09 .brand { letter-spacing: 0.06em; transform: perspective(600px) rotateX(16deg); }
+.p09 .brand span { transform: translateY(var(--step)); }
+.p09 .brand span:nth-child(1) { --step: 0; }
+.p09 .brand span:nth-child(2) { --step: -5px; }
+.p09 .brand span:nth-child(3) { --step: 2px; }
+.p09 .brand span:nth-child(4) { --step: -8px; }
+.p09 .brand span:nth-child(5) { --step: 1px; }
+.p09 .brand span:nth-child(6) { --step: -4px; }
+.p09 .brand span:nth-child(7) { --step: 0; }
+
+.p10 .brand { letter-spacing: 0.015em; }
+.p10 .brand span { clip-path: polygon(0 0, 100% 0, 100% 38%, 84% 38%, 84% 55%, 100% 55%, 100% 100%, 0 100%); }
+
+.p11 .brand { letter-spacing: 0.025em; transform: scaleX(0.9); }
+.p11 .brand span { color: color-mix(in srgb, var(--col) 68%, white 5%); }
+.p11 .brand span:nth-child(1) { transform: scaleX(0.68); color: rgba(180,180,180,0.5); }
+.p11 .brand span:nth-child(1)::after { content: ""; position: absolute; top: -0.15em; left: 50%; width: 0.1em; height: 0.1em; border-radius: 999px; background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.52); transform: translateX(-50%); }
+
+.p12 .brand { letter-spacing: 0.075em; }
+.p12 .brand span { color: color-mix(in srgb, var(--col) 62%, transparent); }
+.p12 .brand span::before { content: attr(data-ch); position: absolute; inset: 0; transform: translate(1px, 1px); color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--col) 26%, transparent); }
+
+.p13 .brand { letter-spacing: 0.03em; }
+.p13 .brand span { animation: breathe 5.8s ease-in-out infinite; animation-delay: calc(var(--i) * -0.18s); }
+@keyframes breathe { 0%,100% { transform: translateY(0); filter: brightness(1); } 50% { transform: translateY(-3px); filter: brightness(1.2); } }
+
+.p14 .brand { letter-spacing: -0.01em; transform: skewX(-5deg); }
+.p14 .brand span { text-shadow: 0 0 8px currentColor, 4px 0 0 rgba(255,255,255,0.035); }
+
+.p15 .brand { letter-spacing: 0.04em; transform: scaleX(1.08); }
+.p15 .brand span { color: transparent; -webkit-text-stroke: 0.8px var(--col); }
+.p15 .brand span::before { content: attr(data-ch); position: absolute; inset: 0; transform: translate(-1px, -1px); color: rgba(255,255,255,0.08); }
+
+.p16 .brand { letter-spacing: 0.09em; font-size: clamp(20px, 3.65vw, 46px); }
+.p16 .brand span { border-bottom: 2px solid currentColor; padding-bottom: 0.1em; }
+
+.p17 .brand { letter-spacing: 0.02em; }
+.p17 .brand span { color: transparent; background: linear-gradient(180deg, #fff 0%, var(--col) 32%, #050505 54%, var(--col) 84%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 8px color-mix(in srgb, var(--col) 20%, transparent)); }
+
+.p18 .brand { letter-spacing: 0.025em; transform: scaleX(0.86); }
+.p18 .brand span::before, .p18 .brand span::after { content: attr(data-ch); position: absolute; inset: 0; opacity: 0.5; pointer-events: none; }
+.p18 .brand span::before { color: #ff0000; transform: translateX(-0.55px); }
+.p18 .brand span::after { color: #00ffff; transform: translateX(0.55px); }
+
+.p19 .brand { letter-spacing: 0.07em; transform: rotateX(0deg); }
+.p19 .brand span { color: color-mix(in srgb, var(--col) 58%, transparent); text-shadow: 0 0 2px currentColor; }
+.p19 .brand span::after { content: attr(data-ch); position: absolute; inset: 0; color: var(--col); opacity: 0.2; transform: translateY(-2px); }
+
+.p20 .brand { letter-spacing: 0.028em; transform: scaleX(0.94); }
+.p20 .brand span { color: color-mix(in srgb, var(--col) 70%, white 5%); text-shadow: -0.45px 0 rgba(255,0,0,0.34), 0.45px 0 rgba(0,255,255,0.34), 0 0 5px color-mix(in srgb, var(--col) 20%, transparent), 0 0 17px color-mix(in srgb, var(--col) 9%, transparent); }
+.p20 .brand span:nth-child(1) { transform: scaleX(0.7); color: rgba(180,180,180,0.44); }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .top { display: block; }
+  .nav { margin-top: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div>
+      <h1>pixel brand lab / 20</h1>
+      <p class="note">ゼロから作り直したピクセルブランド名候補。RGBCMY配色固定。</p>
+    </div>
+    <nav class="nav">
+      <a href="brand_font_lab_15.html">old 15</a>
+      <a href="p3_test.html?nocache=20260509-corelogo1">P3</a>
+    </nav>
+  </header>
+  <main class="grid" id="grid"></main>
+</div>
+
+<script>
+const ideas = [
+  ["01", "Standard Pixel", "基準。今の方向に近い"],
+  ["02", "Wide Silence", "余白を増やした静かなピクセル"],
+  ["03", "Wire Pixel", "細線アウトライン"],
+  ["04", "Pixel Depth", "軽い奥行き"],
+  ["05", "Pure Wire", "5番系。最小構成"],
+  ["06", "Tall Pixel", "縦長でSF感"],
+  ["07", "Core Line", "中心線で構造を作る"],
+  ["08", "Refraction", "微細な色収差"],
+  ["09", "Orbit Step", "上下に段差"],
+  ["10", "Cut Glyph", "切り欠き文字"],
+  ["11", "i Core", "iだけコア化"],
+  ["12", "Shadow Wire", "薄い残像線"],
+  ["13", "Living Pixel", "微細呼吸"],
+  ["14", "Slant Signal", "斜めの信号感"],
+  ["15", "White Edge", "白い前面エッジ"],
+  ["16", "Underline Grid", "下線で低重心"],
+  ["17", "Chrome Pixel", "金属反射"],
+  ["18", "Subpixel", "RGB/CMYズレ"],
+  ["19", "Dim Pixel", "減彩・高級寄り"],
+  ["20", "Candidate Mix", "候補ミックス"]
+];
+
+function brand() {
+  return ["i","n","r","y","o","k","ü"]
+    .map((ch, i) => `<span data-ch="${ch}" style="--i:${i}">${ch}</span>`)
+    .join("");
+}
+
+document.getElementById("grid").innerHTML = ideas.map(([num, title, desc], i) => `
+  <section class="card p${String(i + 1).padStart(2, "0")}">
+    <div class="meta"><span>${num} / ${title}</span><span>RGBCMY</span></div>
+    <div class="brand">${brand()}</div>
+    <div class="desc">${desc}</div>
+  </section>
+`).join("");
+</script>
+</body>
+</html>

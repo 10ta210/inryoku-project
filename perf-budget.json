@@ -1,0 +1,81 @@
+{
+  "$schema": "./perf-budget.schema",
+  "description": "Performance budget for inryokü production assets. Sizes in bytes. Edit thresholds here; CI enforces via scripts/perf-budget.mjs.",
+  "version": 1,
+  "files": {
+    "vendor/three.min.js":           { "max": 716800,  "note": "Three.js — 700KB ceiling, currently ~656KB" },
+    "p3_code_for_claude.js":         { "max": 307200,  "note": "Main app bundle — 300KB ceiling, currently ~261KB" },
+    "p3_styles.css":                 { "max": 102400,  "note": "Main stylesheet — 100KB ceiling, currently ~89KB" },
+    "particle_rings.js":             { "max": 30720,   "note": "30KB" },
+    "particle_speech_rings.js":      { "max": 25600,   "note": "25KB" },
+    "particle_glyphs.js":            { "max": 30720,   "note": "30KB" },
+    "enhance.js":                    { "max": 51200,   "note": "50KB" },
+    "sw.js":                         { "max": 15360,   "note": "15KB service worker" },
+    "register.js":                   { "max": 15360,   "note": "15KB" },
+    "error-shield.js":               { "max": 25600,   "note": "25KB" },
+    "states.js":                     { "max": 10240,   "note": "10KB" },
+    "i18n.js":                       { "max": 15360,   "note": "15KB" },
+    "perf-observer.js":              { "max": 15360,   "note": "15KB" },
+    "copy-fix-runtime.js":           { "max": 8192,    "note": "8KB" },
+    "shopify-proxy-client.js":       { "max": 10240,   "note": "10KB" },
+    "ai-chat-client-shield.js":      { "max": 20480,   "note": "20KB" },
+    "manifest.json":                 { "max": 4096,    "note": "4KB" },
+    "sitemap.xml":                   { "max": 51200,   "note": "50KB — grows with products" }
+  },
+  "groups": {
+    "js_total_excluding_three_and_p3": {
+      "max": 204800,
+      "note": "Sum of all JS except vendor/three.min.js and p3_code_for_claude.js (200KB)",
+      "members": [
+        "particle_rings.js",
+        "particle_speech_rings.js",
+        "particle_glyphs.js",
+        "enhance.js",
+        "sw.js",
+        "register.js",
+        "error-shield.js",
+        "states.js",
+        "i18n.js",
+        "perf-observer.js",
+        "copy-fix-runtime.js",
+        "shopify-proxy-client.js",
+        "ai-chat-client-shield.js"
+      ]
+    },
+    "css_total": {
+      "max": 153600,
+      "note": "All CSS (150KB)",
+      "members": ["p3_styles.css", "enhance.css", "i18n.css", "particle_rings.css", "particle_glyphs.css", "states.css"]
+    },
+    "public_total": {
+      "max": 2097152,
+      "note": "All files under public/ (2MB)",
+      "glob": "public/**/*"
+    }
+  },
+  "transferEstimate": {
+    "compression": "gzip",
+    "gzipRatios": {
+      "js":   0.30,
+      "css":  0.20,
+      "json": 0.30,
+      "xml":  0.25,
+      "html": 0.30,
+      "bin":  1.0
+    },
+    "brotliRatios": {
+      "js":   0.25,
+      "css":  0.17,
+      "json": 0.25,
+      "xml":  0.22,
+      "html": 0.25,
+      "bin":  1.0
+    }
+  },
+  "lcpTbtImpact": {
+    "comment": "Rough heuristics for slow 3G mobile (~50KB/s effective).",
+    "transferKBps": 50,
+    "tbtPerKB_ms": 1.2,
+    "lcpBaseline_ms": 2500
+  }
+}

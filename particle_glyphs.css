@@ -1,0 +1,292 @@
+/* ═══════════════════════════════════════════════════════════════════
+   inryokü 粒子言語 v1 — Particle Glyph Styles
+   骨格は grey 既定 / 色は class で位相付与 / 状態と結晶化は class 切替
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pglyph {
+  --pg-grey: #808080;
+  --pg-c-r: #ff3344;
+  --pg-c-g: #44ff66;
+  --pg-c-b: #4488ff;
+  --pg-c-c: #44e0ff;
+  --pg-c-m: #ff44cc;
+  --pg-c-y: #ffe044;
+  --pg-c-b-muted: rgba(64, 96, 160, 0.55);
+
+  --pg-stroke: 1.4;
+  --pg-r: 1.6;
+
+  display: inline-block;
+  vertical-align: middle;
+  overflow: visible;
+  transform-origin: 50% 50%;
+  will-change: transform, filter;
+}
+
+/* ── 共通: 要素既定 ─────────────────────────────── */
+.pglyph__el {
+  transition: opacity 0.22s ease, filter 0.3s ease;
+}
+
+.pglyph__dot {
+  fill: var(--pg-grey);
+  stroke: none;
+  transform-origin: center;
+}
+
+.pglyph__line {
+  stroke: var(--pg-grey);
+  stroke-width: var(--pg-stroke);
+  fill: none;
+  stroke-linecap: round;
+}
+
+.pglyph__line--dashed {
+  stroke-dasharray: 1.2 1.6;
+}
+
+/* ── 色 (位相) ─────────────────────────────────── */
+.pglyph__dot.pglyph__el--c-r { fill: var(--pg-c-r); }
+.pglyph__dot.pglyph__el--c-g { fill: var(--pg-c-g); }
+.pglyph__dot.pglyph__el--c-b { fill: var(--pg-c-b); }
+.pglyph__dot.pglyph__el--c-c { fill: var(--pg-c-c); }
+.pglyph__dot.pglyph__el--c-m { fill: var(--pg-c-m); }
+.pglyph__dot.pglyph__el--c-y { fill: var(--pg-c-y); }
+
+.pglyph__line.pglyph__el--c-r { stroke: var(--pg-c-r); }
+.pglyph__line.pglyph__el--c-g { stroke: var(--pg-c-g); }
+.pglyph__line.pglyph__el--c-b { stroke: var(--pg-c-b); }
+.pglyph__line.pglyph__el--c-c { stroke: var(--pg-c-c); }
+.pglyph__line.pglyph__el--c-m { stroke: var(--pg-c-m); }
+.pglyph__line.pglyph__el--c-y { stroke: var(--pg-c-y); }
+.pglyph__line.pglyph__el--c-b-muted { stroke: var(--pg-c-b-muted); }
+
+/* ── 状態 1: seed (種・浮上前) ─────────────────── */
+.pglyph--state-seed .pglyph__dot  { opacity: 0.35; }
+.pglyph--state-seed .pglyph__line { opacity: 0; }
+
+/* ── 状態 2: formed (通常表示) ────────────────── */
+.pglyph--state-formed .pglyph__el { opacity: 1; }
+
+/* ── 状態 3: resonant (語り・余韻) ─────────────── */
+.pglyph--state-resonant .pglyph__el { opacity: 1; }
+.pglyph--state-resonant {
+  animation: pglyph-breathe 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.18))
+          drop-shadow(0 0 12px rgba(255, 255, 255, 0.10));
+}
+@keyframes pglyph-breathe {
+  0%, 100% { transform: scale(1.000); }
+  50%      { transform: scale(1.040); }
+}
+
+/* ── 結晶化: dot → line の順で出現 ─────────────── */
+/*   --i は要素が JS で付ける順番インデックス
+     dot は早く、line は dot 完了後に描画                          */
+.pglyph--crystallizing .pglyph__dot {
+  animation: pglyph-dot-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+.pglyph--crystallizing .pglyph__line {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  opacity: 0;
+  animation: pglyph-line-draw 0.45s ease-in-out both;
+  animation-delay: calc(400ms + var(--i, 0) * 100ms);
+}
+
+/* dashed 線は描画ではなくフェード（dasharray が衝突するため） */
+.pglyph--crystallizing .pglyph__line--dashed {
+  stroke-dasharray: 1.2 1.6;
+  stroke-dashoffset: 0;
+  animation: pglyph-line-fade 0.5s ease-out both;
+  animation-delay: calc(500ms + var(--i, 0) * 100ms);
+}
+
+@keyframes pglyph-dot-in {
+  0%   { opacity: 0;    transform: scale(0.4); }
+  35%  { opacity: 0.35; transform: scale(0.85); }
+  100% { opacity: 1;    transform: scale(1); }
+}
+
+@keyframes pglyph-line-draw {
+  0%   { stroke-dashoffset: 60; opacity: 0; }
+  10%  { opacity: 1; }
+  100% { stroke-dashoffset: 0;  opacity: 1; }
+}
+
+@keyframes pglyph-line-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── 召喚紋章 (混) 専用演出 ────────────────────── */
+.pglyph--summon {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.15));
+}
+
+.pglyph--summon.pglyph--state-resonant {
+  animation: pglyph-summon-breathe 4s ease-in-out infinite;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.20))
+    drop-shadow(0 0 14px rgba(255, 255, 255, 0.10))
+    drop-shadow(0 0 26px rgba(170, 200, 255, 0.08));
+}
+
+.pglyph--summon.pglyph--state-resonant .pglyph__dot {
+  animation: pglyph-summon-pulse 4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 220ms);
+}
+
+@keyframes pglyph-summon-breathe {
+  0%, 100% { transform: scale(1.00); }
+  50%      { transform: scale(1.025); }
+}
+
+@keyframes pglyph-summon-pulse {
+  0%, 100% { filter: brightness(0.9); }
+  50%      { filter: brightness(1.4); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   文字フォント層 (pglyph--char) + 文章コンテナ (pglyph-text)
+   ═══════════════════════════════════════════════════════════ */
+
+.pglyph-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  line-height: 1;
+}
+
+.pglyph-text .pglyph {
+  flex: 0 0 auto;
+}
+
+.pglyph-space {
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 1px;
+}
+
+.pglyph--char .pglyph__dot {
+  fill: var(--pg-grey);
+}
+
+/* 文章中の概念グリフは少し控えめに整える */
+.pglyph--inline-concept {
+  /* 文字との視覚バランス。概念は色付きなので少し小さめでも目立つ */
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Idle Whisper — ロゴ近傍に常駐する囁き
+   絶対配置 / grey 強制 / 控えめな opacity
+   ═══════════════════════════════════════════════════════════ */
+.pglyph-whisper {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 35;
+  --pgw-offset-x: 0px;
+  --pgw-offset-y: 14px;
+}
+
+/* ロゴの真下 */
+.pglyph-whisper--below {
+  top: 100%;
+  left: 50%;
+  transform: translate(calc(-50% + var(--pgw-offset-x)), var(--pgw-offset-y));
+}
+
+/* ロゴの右下（絶対配置・はみ出し可） */
+.pglyph-whisper--bottomRight {
+  top: 100%;
+  right: 0;
+  transform: translate(calc(50% + var(--pgw-offset-x)), var(--pgw-offset-y));
+}
+
+/* 色は使わない（grey only 強制）— 既存の色 class を上書き */
+.pglyph-whisper .pglyph__dot  { fill: var(--pg-grey)   !important; }
+.pglyph-whisper .pglyph__line { stroke: var(--pg-grey) !important; }
+
+/* 囁きグリフ自体: フェードイン（結晶化アニメと共存） */
+.pglyph-whisper__glyph {
+  opacity: 0;
+  animation: pglyph-whisper-in 700ms ease-out 0ms forwards;
+}
+
+@keyframes pglyph-whisper-in {
+  from { opacity: 0; }
+  to   { opacity: 0.78; }   /* 主役にしない控えめな存在感 */
+}
+
+.pglyph-whisper__fade {
+  animation: pglyph-whisper-out 1000ms ease-in forwards !important;
+}
+
+@keyframes pglyph-whisper-out {
+  from { opacity: 0.78; }
+  to   { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Statement レジスター (ホバー等の即時発話)
+   位置は whisper と同じ / 色を許可 / 少し濃く
+   ═══════════════════════════════════════════════════════════ */
+.pglyph-statement {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 36;
+  --pgw-offset-x: 0px;
+  --pgw-offset-y: 14px;
+}
+.pglyph-statement--below {
+  top: 100%;
+  left: 50%;
+  transform: translate(calc(-50% + var(--pgw-offset-x)), var(--pgw-offset-y));
+}
+.pglyph-statement--bottomRight {
+  top: 100%;
+  right: 0;
+  transform: translate(calc(50% + var(--pgw-offset-x)), var(--pgw-offset-y));
+}
+
+.pglyph-statement__glyph {
+  opacity: 0;
+  animation: pglyph-statement-in 500ms ease-out forwards;
+}
+@keyframes pglyph-statement-in {
+  from { opacity: 0; }
+  to   { opacity: 0.92; }
+}
+.pglyph-statement__fade {
+  animation: pglyph-statement-out 800ms ease-in forwards !important;
+}
+@keyframes pglyph-statement-out {
+  from { opacity: 0.92; }
+  to   { opacity: 0; }
+}
+
+/* ── アクセシビリティ: モーション削減 ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  .pglyph--state-resonant,
+  .pglyph--summon.pglyph--state-resonant,
+  .pglyph--summon.pglyph--state-resonant .pglyph__dot {
+    animation: none !important;
+  }
+  .pglyph--crystallizing .pglyph__dot,
+  .pglyph--crystallizing .pglyph__line,
+  .pglyph--crystallizing .pglyph__line--dashed {
+    animation-duration: 0.2s !important;
+    animation-delay: 0ms !important;
+  }
+}

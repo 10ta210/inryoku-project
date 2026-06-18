@@ -1,0 +1,59 @@
+/* ============================================================
+   cosmos-effects.css — styles companion for cosmos-effects.js
+   Custom cursor + scene-glyph body class hooks mirrored from
+   the P3 preview prototype. Scoped so it does not leak into
+   production cosmos-layer overlay (those classes use 'cosmos-*'
+   prefix exclusively).
+   ============================================================ */
+
+.cfx-host {
+  --cfx-ink: #f0f0f6;
+  --cfx-dim: #6b6b78;
+  --cfx-line: #2a2a32;
+  --cfx-accent: #a78bfa;
+}
+
+/* canvas owned by effects test page */
+.cfx-canvas {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: #030305;
+}
+
+/* custom cursor (hidden default, replaced by ring) */
+.cfx-cursor-host { cursor: none; }
+#cfxCursor {
+  position: fixed;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(240, 240, 246, 0.7);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+  transition: width .2s, height .2s, border-color .2s;
+}
+#cfxCursor.hot {
+  width: 30px;
+  height: 30px;
+  border-color: var(--cfx-accent, #a78bfa);
+}
+
+/* title fade-out when in glyph scene (lets particle text take over) */
+body.cfx-scene-glyph #cfxTitle {
+  opacity: 0;
+  transition: opacity .8s;
+}
+
+/* speaking scene halo flag for HUD canon line */
+body.cfx-scene-speaking #cfxCanon,
+body.cfx-scene-glyph    #cfxCanon {
+  opacity: 1;
+}
+
+/* prefers-reduced-motion: kill afterimage-like CSS trails just in case */
+@media (prefers-reduced-motion: reduce) {
+  #cfxCursor { transition: none; }
+}

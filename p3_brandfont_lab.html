@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>inryokü · brand font lab · 20 pixel-SF variants</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter+Tight:wght@200;400;500&display=swap" rel="stylesheet">
+<style>
+@font-face{
+  font-family:'Press Start 2P';
+  src:url('vendor/fonts/press-start-2p.woff2') format('woff2');
+  font-display:swap;
+}
+
+/* ─── 司の絶対パレット ─── */
+:root{
+  --c1:#808080; --c2:#FF0000; --c3:#00FF00; --c4:#0044FF;
+  --c5:#00FFFF; --c6:#FF00FF; --c7:#FFFF00;
+  --pixel:'Press Start 2P', ui-monospace, monospace;
+  --mono:'IBM Plex Mono', monospace;
+  --sans:'Inter Tight', system-ui, sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  background:#000;color:#eaeaea;
+  font-family:var(--sans);font-weight:200;
+  min-height:100vh;
+}
+
+/* cosmic backdrop */
+.cosmos{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255,200,180,0.10) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 38% 68%, rgba(180,200,255,0.13) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 72% 30%, rgba(255,180,200,0.11) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 86% 78%, rgba(200,255,200,0.10) 0 1px, transparent 1.4px),
+    radial-gradient(ellipse at 50% 50%, #04040c 0%, #02020a 60%, #000 100%);
+  background-size: 240px 240px, 200px 200px, 180px 180px, 220px 220px, 100% 100%;
+}
+
+header{
+  padding:48px 32px 24px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+header h1{
+  font:500 14px/1.2 var(--mono);
+  letter-spacing:0.34em;text-transform:uppercase;
+  color:#ddd;
+}
+header .sub{
+  margin-top:8px;font:400 10px/1.6 var(--mono);
+  color:#777;letter-spacing:0.18em;text-transform:uppercase;
+  max-width:780px;
+}
+header .meta{
+  margin-top:16px;font:400 10px/1.6 var(--mono);
+  color:#555;letter-spacing:0.06em;
+}
+header .meta b{color:#aaa;font-weight:500}
+
+.section-title{
+  padding:48px 32px 16px;font:500 11px/1 var(--mono);
+  letter-spacing:0.36em;text-transform:uppercase;color:#888;
+  display:flex;align-items:center;gap:14px;
+}
+.section-title::after{
+  content:'';flex:1;height:1px;background:rgba(255,255,255,0.06);
+}
+.section-title small{font-size:9px;color:#555;letter-spacing:0.18em}
+
+/* ═══════════════════════════════════════
+   20 grid
+   ═══════════════════════════════════════ */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1px;background:rgba(255,255,255,0.04);
+  margin:0 32px 64px;border:1px solid rgba(255,255,255,0.04);
+}
+.cell{
+  background:#000;
+  padding:36px 22px 22px;
+  position:relative;
+  display:flex;flex-direction:column;justify-content:space-between;
+  min-height:240px;overflow:hidden;
+}
+.cell .num{
+  position:absolute;top:10px;right:12px;
+  font:500 9px/1 var(--mono);letter-spacing:0.24em;
+  color:rgba(255,255,255,0.32);
+}
+.cell .stage{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  min-height:90px;
+}
+.cell .meta{
+  margin-top:18px;font:500 10px/1.5 var(--mono);
+  letter-spacing:0.18em;text-transform:uppercase;
+  color:#bbb;
+}
+.cell .meta em{
+  display:block;font:400 9px/1.5 var(--mono);font-style:normal;
+  color:#666;letter-spacing:0.06em;text-transform:none;
+  margin-top:4px;
+}
+.cell.top5{outline:1px solid rgba(0,229,255,0.40);outline-offset:-1px}
+.cell.top5 .num::before{content:'★ '; color:#0eb}
+
+/* ═══════════════════════════════════════
+   shared brand-name skeleton
+   ═══════════════════════════════════════ */
+.bn{
+  display:inline-flex;align-items:flex-end;gap:0;
+  font-family:var(--pixel);
+  line-height:0.92;user-select:none;
+  font-size:24px;letter-spacing:0.06em;
+}
+.bn span{display:inline-block;position:relative}
+.bn span:nth-child(1){color:var(--c1)}
+.bn span:nth-child(2){color:var(--c2)}
+.bn span:nth-child(3){color:var(--c3)}
+.bn span:nth-child(4){color:var(--c4)}
+.bn span:nth-child(5){color:var(--c5)}
+.bn span:nth-child(6){color:var(--c6)}
+.bn span:nth-child(7){color:var(--c7)}
+
+/* showcase 用 大サイズ */
+.bn-lg{font-size:46px;letter-spacing:0.06em}
+
+/* ═══════════════════════════════════════
+   20 PATTERNS
+   ═══════════════════════════════════════ */
+
+/* 01 ATOMIC PIXEL — 各文字 = 加速器の粒子。中心が点で外側に弱光 */
+.p01 .bn span{
+  text-shadow:
+    0 0 4px currentColor,
+    0 0 12px color-mix(in srgb, currentColor 50%, transparent),
+    0 0 28px color-mix(in srgb, currentColor 22%, transparent);
+}
+
+/* 02 VOXEL BOOT — 立方体のように 4層 extrude (短く) */
+.p02 .bn{transform:rotate(-0.3deg)}
+.p02 .bn span{
+  text-shadow:
+    1px 1px 0 rgba(0,0,0,0.55),
+    2px 2px 0 rgba(0,0,0,0.45),
+    3px 3px 0 rgba(0,0,0,0.32),
+    4px 4px 6px rgba(0,0,0,0.55),
+    0 0 6px color-mix(in srgb, currentColor 50%, transparent);
+}
+
+/* 03 HALFTONE — text-stroke のみ + 内部薄塗り */
+.p03 .bn span{
+  -webkit-text-stroke:0.4px currentColor;
+  color:transparent;
+  text-shadow:0 0 14px color-mix(in srgb, currentColor 40%, transparent);
+}
+.p03 .bn span::after{
+  content:attr(data-c);position:absolute;inset:0;
+  color:color-mix(in srgb, currentColor 12%, transparent);
+  -webkit-text-stroke:0;text-shadow:none;
+}
+
+/* 04 PHOSPHOR TRAIL — 縦に 1px の残光 */
+.p04 .bn span{
+  text-shadow:
+    0 1px 0 color-mix(in srgb, currentColor 55%, transparent),
+    0 2px 0 color-mix(in srgb, currentColor 30%, transparent),
+    0 3px 0 color-mix(in srgb, currentColor 15%, transparent),
+    0 4px 6px rgba(0,0,0,0.35),
+    0 0 10px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+/* 05 SUBATOMIC MESH — 文字背景に薄いドット格子 */
+.p05{position:relative}
+.p05 .bn{position:relative;z-index:2}
+.p05 .bn span{
+  text-shadow:0 0 6px currentColor, 0 0 18px color-mix(in srgb, currentColor 30%, transparent);
+}
+.p05 .stage{
+  background:
+    radial-gradient(circle, rgba(180,200,255,0.10) 0 0.8px, transparent 1px) 0 0/8px 8px;
+  -webkit-mask: radial-gradient(ellipse 70% 60% at center, #000 30%, transparent 80%);
+  mask:           radial-gradient(ellipse 70% 60% at center, #000 30%, transparent 80%);
+}
+
+/* 06 NEUTRON — 太字スタンプ + 重い影 */
+.p06 .bn{font-weight:bold;letter-spacing:0.04em}
+.p06 .bn span{
+  text-shadow:
+    0 0 0 currentColor,
+    0 1px 0 rgba(0,0,0,0.6),
+    0 2px 0 rgba(0,0,0,0.45),
+    0 3px 8px rgba(0,0,0,0.55),
+    0 0 16px color-mix(in srgb, currentColor 45%, transparent);
+  filter:drop-shadow(0 0 2px color-mix(in srgb, currentColor 60%, transparent));
+}
+
+/* 07 GRADIENT STAMP — 各文字 上→下 で同色グラデ (明→暗) */
+.p07 .bn span{
+  background:linear-gradient(180deg,
+    color-mix(in srgb, currentColor 100%, white 18%) 0%,
+    currentColor 50%,
+    color-mix(in srgb, currentColor 70%, black 28%) 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 8px color-mix(in srgb, currentColor 35%, transparent));
+}
+
+/* 08 SOFT-EDGE — 文字をぼかして輪郭を柔らかく */
+.p08 .bn span{
+  filter:blur(0.45px);
+  text-shadow:
+    0 0 8px color-mix(in srgb, currentColor 70%, transparent),
+    0 0 18px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+/* 09 CONSTELLATION — pixel が星のように散る (空白 letter-spacing で疑似) */
+.p09 .bn{letter-spacing:0.10em}
+.p09 .bn span{
+  text-shadow:
+    -2px -2px 0 color-mix(in srgb, currentColor 28%, transparent),
+     2px -2px 0 color-mix(in srgb, currentColor 22%, transparent),
+    -2px  2px 0 color-mix(in srgb, currentColor 22%, transparent),
+     2px  2px 0 color-mix(in srgb, currentColor 28%, transparent),
+     0 0 8px currentColor;
+}
+
+/* 10 QUANTUM FOAM — 微振動 (CSS animation 0.4-0.6px) */
+.p10 .bn span{
+  text-shadow:0 0 6px currentColor, 0 0 14px color-mix(in srgb, currentColor 32%, transparent);
+  animation:foam 1.6s steps(2,end) infinite;
+}
+.p10 .bn span:nth-child(2n){animation-duration:1.9s; animation-delay:.13s}
+.p10 .bn span:nth-child(3n){animation-duration:2.3s; animation-delay:.27s}
+@keyframes foam{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(0.4px,-0.3px)}
+}
+
+/* 11 APERTURE PIXEL ★ — 黒いコア円が文字内側に空く (event horizon) */
+.p11 .bn span{
+  text-shadow:
+    0 0 0 currentColor,
+    0 0 4px currentColor,
+    0 0 14px color-mix(in srgb, currentColor 55%, transparent);
+}
+.p11 .bn span::before{
+  content:attr(data-c);position:absolute;inset:0;
+  color:#000;
+  -webkit-text-stroke:0;
+  text-shadow:none;
+  transform:scale(0.62);
+  transform-origin:50% 50%;
+  pointer-events:none;
+}
+.p11 .bn span::after{
+  content:attr(data-c);position:absolute;inset:0;
+  color:transparent;
+  -webkit-text-stroke:0.5px color-mix(in srgb, currentColor 85%, white 0%);
+  transform:scale(0.62);
+  pointer-events:none;
+}
+
+/* 12 EMBROIDERY GEM — 文字をストロークのみ + 内側ハイライト点 */
+.p12 .bn span{
+  -webkit-text-stroke:0.6px currentColor;
+  color:transparent;
+  filter:drop-shadow(0 0 3px color-mix(in srgb, currentColor 60%, transparent));
+}
+.p12 .bn span::after{
+  content:attr(data-c);position:absolute;inset:0;
+  color:transparent;-webkit-text-stroke:0;
+  background:radial-gradient(circle at 30% 28%, rgba(255,255,255,0.85) 0 1.2px, transparent 1.4px);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  pointer-events:none;
+}
+
+/* 13 GENESIS BOOT ★ — 順番に灯る (loop) */
+.p13 .bn span{
+  text-shadow:0 0 8px currentColor, 0 0 22px color-mix(in srgb, currentColor 40%, transparent);
+  opacity:0;
+  animation:bootIn 5.6s ease-in-out infinite;
+}
+.p13 .bn span:nth-child(1){animation-delay:.0s}
+.p13 .bn span:nth-child(2){animation-delay:.18s}
+.p13 .bn span:nth-child(3){animation-delay:.36s}
+.p13 .bn span:nth-child(4){animation-delay:.54s}
+.p13 .bn span:nth-child(5){animation-delay:.72s}
+.p13 .bn span:nth-child(6){animation-delay:.90s}
+.p13 .bn span:nth-child(7){animation-delay:1.08s}
+@keyframes bootIn{
+  0%{opacity:0; filter:brightness(2.5) blur(2px)}
+  6%{opacity:1; filter:brightness(1.6) blur(0.6px)}
+  16%,82%{opacity:1; filter:brightness(1) blur(0)}
+  100%{opacity:1; filter:brightness(1)}
+}
+
+/* 14 CRYSTAL LATTICE — 各文字に 1px グリッド mask を重ねる */
+.p14 .bn span{
+  text-shadow:0 0 4px currentColor, 0 0 12px color-mix(in srgb, currentColor 38%, transparent);
+  background:
+    repeating-linear-gradient(0deg,   transparent 0 2px, rgba(0,0,0,0.30) 2px 3px),
+    repeating-linear-gradient(90deg,  transparent 0 2px, rgba(0,0,0,0.30) 2px 3px),
+    currentColor;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+}
+
+/* 15 DENSITY — 各文字 サイズで密度を変える (yellow が大きく blue が小さい) */
+.p15 .bn span{text-shadow:0 0 6px currentColor, 0 0 18px color-mix(in srgb, currentColor 40%, transparent)}
+.p15 .bn span:nth-child(1){font-size:0.86em}
+.p15 .bn span:nth-child(4){font-size:0.92em}
+.p15 .bn span:nth-child(7){font-size:1.06em}
+
+/* 16 PLASMA GRID — 内部に動くグラデ */
+.p16 .bn span{
+  background:linear-gradient(110deg,
+    color-mix(in srgb, currentColor 100%, white 35%) 0%,
+    currentColor 40%,
+    color-mix(in srgb, currentColor 60%, black 28%) 60%,
+    currentColor 100%);
+  background-size:280% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:plasma 7.8s linear infinite;
+  filter:drop-shadow(0 0 6px color-mix(in srgb, currentColor 40%, transparent));
+}
+.p16 .bn span:nth-child(2n){animation-direction:reverse; animation-duration:9.4s}
+@keyframes plasma{0%{background-position:0% 0}100%{background-position:280% 0}}
+
+/* 17 PIXEL INK ★ — 中心硬く、外側に和紙にじみ */
+.p17 .bn span{
+  text-shadow:
+    0 0 0 currentColor,
+    0 0 1px color-mix(in srgb, currentColor 95%, white 0%),
+    0 0 6px color-mix(in srgb, currentColor 65%, transparent),
+    0 0 14px color-mix(in srgb, currentColor 30%, transparent),
+    0 0 28px color-mix(in srgb, currentColor 12%, transparent);
+}
+.p17 .bn span::after{
+  content:attr(data-c);position:absolute;inset:0;
+  color:color-mix(in srgb, currentColor 30%, black 35%);
+  filter:blur(0.6px);
+  transform:translate(0.4px, 0.4px);
+  pointer-events:none;z-index:-1;
+}
+
+/* 18 LENS PIXEL — 内側だけ凸面光沢 */
+.p18 .bn span{
+  text-shadow:
+    inset 0 0 0 currentColor, /* dummy */
+    0 0 6px currentColor,
+    0 0 16px color-mix(in srgb, currentColor 30%, transparent);
+}
+.p18 .bn span::before{
+  content:attr(data-c);position:absolute;inset:0;
+  color:transparent;
+  background:radial-gradient(ellipse 60% 38% at 35% 28%,
+    rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 70%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  pointer-events:none;
+}
+
+/* 19 ECHO PIXEL — 1px オフセットの影コピー (radar) */
+.p19 .bn span{
+  text-shadow:
+    1px 0 0 color-mix(in srgb, currentColor 35%, transparent),
+    2px 0 0 color-mix(in srgb, currentColor 18%, transparent),
+    3px 0 0 color-mix(in srgb, currentColor 8%, transparent),
+    0 0 8px color-mix(in srgb, currentColor 42%, transparent);
+}
+
+/* 20 CORE SINGULARITY ★ — 中心の文字が大きく、両端が小さく (重力で内に寄る) */
+.p20 .bn{align-items:center}
+.p20 .bn span{text-shadow:0 0 6px currentColor, 0 0 16px color-mix(in srgb, currentColor 35%, transparent)}
+.p20 .bn span:nth-child(1){font-size:0.78em; opacity:0.76}
+.p20 .bn span:nth-child(2){font-size:0.86em; opacity:0.86}
+.p20 .bn span:nth-child(3){font-size:0.94em}
+.p20 .bn span:nth-child(4){font-size:1.04em}
+.p20 .bn span:nth-child(5){font-size:0.94em}
+.p20 .bn span:nth-child(6){font-size:0.86em; opacity:0.86}
+.p20 .bn span:nth-child(7){font-size:0.78em; opacity:0.76}
+
+/* ═══════════════════════════════════════
+   TOP 5 SHOWCASE
+   ═══════════════════════════════════════ */
+.top-grid{
+  display:grid;grid-template-columns:1fr;gap:1px;
+  background:rgba(255,255,255,0.05);
+  margin:0 32px 96px;border:1px solid rgba(255,255,255,0.05);
+}
+.show{
+  background:#000;
+  padding:48px 32px;
+  display:grid;grid-template-columns:minmax(280px,1.4fr) 1fr;
+  gap:32px;align-items:center;
+}
+.show .left{display:flex;align-items:center;justify-content:center;min-height:160px}
+.show .right h3{
+  font:500 11px/1 var(--mono);letter-spacing:0.32em;text-transform:uppercase;
+  color:#0eb;margin-bottom:14px;
+}
+.show .right h3 b{color:#fff;margin-right:10px;font-weight:500}
+.show .right h2{
+  font:500 22px/1.3 var(--mono);
+  letter-spacing:0.06em;color:#eee;margin-bottom:10px;
+}
+.show .right .why{
+  font:300 12px/1.7 var(--sans);
+  color:#aaa;margin-bottom:16px;
+}
+.show .specs{
+  display:grid;grid-template-columns:max-content 1fr;
+  gap:6px 16px;
+  font:400 10px/1.5 var(--mono);
+}
+.show .specs dt{color:#666;letter-spacing:0.18em;text-transform:uppercase}
+.show .specs dd{color:#ccc;letter-spacing:0.04em}
+
+@media (max-width:780px){
+  .show{grid-template-columns:1fr}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin:0 12px 48px}
+  .top-grid{margin:0 12px 64px}
+  .bn{font-size:20px}
+  .bn-lg{font-size:34px}
+}
+
+footer{padding:48px 32px 80px;font:400 11px/1.7 var(--mono);color:#888;letter-spacing:0.04em;max-width:780px}
+footer b{color:#ddd;font-weight:500}
+footer code{background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:2px;color:#ccc}
+</style>
+</head>
+<body>
+<div class="cosmos"></div>
+
+<header>
+  <h1>inryokü · brand font lab · 20 pixel‑SF variants</h1>
+  <p class="sub">真っ黒な世界 / コアから生まれる / RGBCMY 厳守 / pixel base 共通 / SF・宇宙・コア生成</p>
+  <p class="meta">
+    <b>base</b> Press Start 2P (vendor/ ローカル) ·
+    <b>palette</b> i#808080 / n#FF0000 / r#00FF00 / y#0044FF / o#00FFFF / k#FF00FF / ü#FFFF00
+  </p>
+</header>
+
+<!-- ═══════════ 20 GRID ═══════════ -->
+<div class="section-title">20 candidates <small>★ = top 5</small></div>
+
+<div class="grid">
+
+  <div class="cell p01"><span class="num">01</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">ATOMIC PIXEL<em>各文字 = 加速器の粒子。中心点 + 弱光ハロー</em></div>
+  </div>
+
+  <div class="cell p02"><span class="num">02</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">VOXEL BOOT<em>4層 extrude — 立方体の押し出し感</em></div>
+  </div>
+
+  <div class="cell p03"><span class="num">03</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">HALFTONE OUTLINE<em>細stroke + 内部 12% 塗り</em></div>
+  </div>
+
+  <div class="cell p04"><span class="num">04</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">PHOSPHOR TRAIL<em>下方向に 3px 残光</em></div>
+  </div>
+
+  <div class="cell p05"><span class="num">05</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">SUBATOMIC MESH<em>背景に 8px 格子ドット</em></div>
+  </div>
+
+  <div class="cell p06"><span class="num">06</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">NEUTRON STAMP<em>重い影 + ハロー — 質量を持った文字</em></div>
+  </div>
+
+  <div class="cell p07"><span class="num">07</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">GRADIENT STAMP<em>上→下で明→暗 — 立体感を内側で表現</em></div>
+  </div>
+
+  <div class="cell p08"><span class="num">08</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">SOFT-EDGE PIXEL<em>0.45px ぼかし — 量子的な不確定性</em></div>
+  </div>
+
+  <div class="cell p09"><span class="num">09</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">CONSTELLATION<em>四隅に薄コピー — 星座点</em></div>
+  </div>
+
+  <div class="cell p10"><span class="num">10</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">QUANTUM FOAM<em>0.4px subpixel 微振動</em></div>
+  </div>
+
+  <div class="cell p11 top5"><span class="num">11</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">APERTURE PIXEL<em>各文字に黒コア (event horizon) — 中央が抜ける</em></div>
+  </div>
+
+  <div class="cell p12"><span class="num">12</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">EMBROIDERY GEM<em>輪郭 stroke + 1点ハイライト = 宝石</em></div>
+  </div>
+
+  <div class="cell p13 top5"><span class="num">13</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">GENESIS BOOT<em>左から順番に灯る (loop) — コアからの生成順</em></div>
+  </div>
+
+  <div class="cell p14"><span class="num">14</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">CRYSTAL LATTICE<em>文字内部に 2px 格子 — 結晶構造</em></div>
+  </div>
+
+  <div class="cell p15"><span class="num">15</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">DENSITY VARY<em>i/y 小, ü 大 — 色エネルギーで size 変化</em></div>
+  </div>
+
+  <div class="cell p16"><span class="num">16</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">PLASMA GRID<em>文字内部に動くグラデ — 流動するエネルギー</em></div>
+  </div>
+
+  <div class="cell p17 top5"><span class="num">17</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">PIXEL INK<em>硬い芯 + 和紙にじみ — pixel + 静謐</em></div>
+  </div>
+
+  <div class="cell p18"><span class="num">18</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">LENS PIXEL<em>左上に 凸面光沢 — pixel が宝石レンズに</em></div>
+  </div>
+
+  <div class="cell p19"><span class="num">19</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">ECHO PIXEL<em>右に 3px のレーダー残響</em></div>
+  </div>
+
+  <div class="cell p20 top5"><span class="num">20</span>
+    <div class="stage"><div class="bn"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="meta">CORE SINGULARITY<em>中央 (y) 最大 → 両端 (i,ü) 縮小 — 重力収束</em></div>
+  </div>
+
+</div>
+
+<!-- ═══════════ TOP 5 ═══════════ -->
+<div class="section-title">★ top 5 — 本番候補 <small>specs</small></div>
+
+<div class="top-grid">
+
+  <!-- 11 -->
+  <section class="show p11">
+    <div class="left"><div class="bn bn-lg"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="right">
+      <h3><b>★1</b>11 · APERTURE PIXEL</h3>
+      <h2>各文字に小さな黒い <em>core</em> が空く。文字は event horizon。</h2>
+      <p class="why">
+        コア生成の哲学が一番強く入る案。「中心は黒、外に光」の構造そのもの。pixel の硬さは保ちつつ、各文字に物理的な穴があるように見える。読みやすさ◎ (輪郭が rim light として強く残る)。
+      </p>
+      <dl class="specs">
+        <dt>font-size</dt><dd>desktop 38–46px / mobile 26–32px</dd>
+        <dt>letter-spacing</dt><dd>0.06em (狭め — coreリング同士が呼応)</dd>
+        <dt>weight</dt><dd>regular (Press Start 2P 単一)</dd>
+        <dt>chromatic</dt><dd>不要 (内側コアで十分な深度)</dd>
+        <dt>glow</dt><dd>0/4/14px 三層、α 1.0 / 0.7 / 0.35</dd>
+        <dt>aperture</dt><dd>::before scale(0.62) #000 + ::after scale(0.62) stroke 0.5px</dd>
+        <dt>登場アニメ</dt><dd>aperture-open: scale 1.6 → 1.0 + コア径 0 → 0.62 (1.4s ease-out, 各文字 +90ms stagger)</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="show p13">
+    <div class="left"><div class="bn bn-lg"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="right">
+      <h3><b>★2</b>13 · GENESIS BOOT</h3>
+      <h2>左から順に灯る。コアから時系列で世界が生まれる。</h2>
+      <p class="why">
+        起動順 (黒 → コア → ロゴ → 粒子 → 服 → UI) の中で、ブランドネームが最後に「生成」される段階を視覚化。loop なしで「一度生まれたら消えない」のも哲学整合。
+      </p>
+      <dl class="specs">
+        <dt>font-size</dt><dd>desktop 40–48px / mobile 28–34px</dd>
+        <dt>letter-spacing</dt><dd>0.08em</dd>
+        <dt>weight</dt><dd>regular</dd>
+        <dt>chromatic</dt><dd>0.5px split を idle で重ねる</dd>
+        <dt>glow</dt><dd>初期 brightness 2.5 + blur 2px → 1.0 + 0px</dd>
+        <dt>登場アニメ</dt><dd>boot-in: 2.4s, 各文字 +180ms stagger, 100% で固定 (loop しない)</dd>
+        <dt>idle</dt><dd>charFloat 8.2s (既存) のみ — boot 完了後は静か</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 17 -->
+  <section class="show p17">
+    <div class="left"><div class="bn bn-lg"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="right">
+      <h3><b>★3</b>17 · PIXEL INK</h3>
+      <h2>硬い pixel の芯 + 和紙のにじみ。SF と侘び寂びの交点。</h2>
+      <p class="why">
+        Margiela / Jil Sander 級の静かさ。pixel フォント特有の安っぽさを「にじみ」が完全に消す。日本ブランドとしての品格、唯一無二。
+      </p>
+      <dl class="specs">
+        <dt>font-size</dt><dd>desktop 42–52px / mobile 28–36px</dd>
+        <dt>letter-spacing</dt><dd>0.10em (にじみが重ならないよう広め)</dd>
+        <dt>weight</dt><dd>regular</dd>
+        <dt>chromatic</dt><dd>不要 (にじみが滲み代わり)</dd>
+        <dt>glow</dt><dd>1/6/14/28px 四層、α 0.95 / 0.65 / 0.30 / 0.12</dd>
+        <dt>ink shadow</dt><dd>::after blur(0.6px) + translate(0.4px, 0.4px) で和紙の裏抜け</dd>
+        <dt>登場アニメ</dt><dd>ink-bleed: にじみ径 0 → full (1.8s ease-out 一発)</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 20 -->
+  <section class="show p20">
+    <div class="left"><div class="bn bn-lg"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="right">
+      <h3><b>★4</b>20 · CORE SINGULARITY</h3>
+      <h2>中央 <em>y</em> が最大、両端が縮小。重力で内側に寄る。</h2>
+      <p class="why">
+        ブランドネームそのものが「コア構造」になる。中央が最大 = 重力の中心 = コア。文字を見るだけで世界観が伝わる。
+      </p>
+      <dl class="specs">
+        <dt>font-size</dt><dd>base 44px (中央) / 0.78–1.04 倍で他 6文字</dd>
+        <dt>letter-spacing</dt><dd>0.05em (収束感)</dd>
+        <dt>weight</dt><dd>regular</dd>
+        <dt>chromatic</dt><dd>0.5px (i/ü は更に α 0.18 まで弱く)</dd>
+        <dt>glow</dt><dd>中央 18px / 両端 8px — エネルギー差を表現</dd>
+        <dt>登場アニメ</dt><dd>gravitate-in: 全文字 同サイズで登場 → 1.4s かけて size/opacity gradient へ収束</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 1 (bonus pick) -->
+  <section class="show p01">
+    <div class="left"><div class="bn bn-lg"><span data-c="i">i</span><span data-c="n">n</span><span data-c="r">r</span><span data-c="y">y</span><span data-c="o">o</span><span data-c="k">k</span><span data-c="ü">ü</span></div></div>
+    <div class="right">
+      <h3><b>★5</b>01 · ATOMIC PIXEL</h3>
+      <h2>各 pixel = 加速器の粒子。中心は固く、外にハローが落ちる。</h2>
+      <p class="why">
+        最も "標準的だが完璧" な案。装飾を最小に、RGBCMY の発色 + 4/12/28px のハロー三層だけで成立。本番で迷ったらこれが最も安全で美しい。
+      </p>
+      <dl class="specs">
+        <dt>font-size</dt><dd>desktop 40–48px / mobile 26–34px</dd>
+        <dt>letter-spacing</dt><dd>0.06em (現状 P3 と同じ)</dd>
+        <dt>weight</dt><dd>regular</dd>
+        <dt>chromatic</dt><dd>0.5px (現状互換)</dd>
+        <dt>glow</dt><dd>4/12/28px の三層、α 1.0 / 0.5 / 0.22</dd>
+        <dt>登場アニメ</dt><dd>既存 brand-particle reveal を保持 (LIGHT_START=1400ms)</dd>
+        <dt>idle</dt><dd>charFloat + charGlow (既存)</dd>
+      </dl>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p><b>使い方:</b> 上の20マスから気に入った番号、または下の ★ TOP5 から番号を返信してください。<br>
+  例: 「11 と 17 を組み合わせて」「13 一本で」「★3 のままで OK」など。</p>
+  <p style="margin-top:14px;color:#666">
+  本番統合時は <code>p3_brandfont_variants.css</code> の方式 (data-brandfont 属性) で production-safe に組み込み。<br>
+  P0/P1/P2 は触らず、p3_styles.css の <code>.brand-char</code> 既存ルールも保持して上書き層として実装します。</p>
+</footer>
+
+</body>
+</html>

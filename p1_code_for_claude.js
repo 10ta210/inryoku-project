@@ -60,25 +60,30 @@ function renderPhase1() {
     // 2026-05-17 段階0: 拡張シーン登録API
     // 将来の段階1+ がここに handler を登録する
     (function setupP1ExtensionAPI() {
-        if (window.inryokuP1) return; // 多重初期化防止
-        window.inryokuP1 = {
-            _handler: null,
-            // 2026-05-17 段階1.2: 拡張ハンドラ有効フラグ。Stage1 がロード時に true にする。
-            stage1Enabled: false,
-            registerStage1Handler: function(fn) {
+        // 旧 v20260531: window.inryokuP1 が先に存在すると return していた。
+        // p1_v2_sphere.js が先読みで空APIを作るため、50%フック用メソッドが欠落していた。
+        var api = window.inryokuP1 || {};
+        if (!('_handler' in api)) api._handler = null;
+        // 2026-05-17 段階1.2: 拡張ハンドラ有効フラグ。Stage1/v2 起動後に true。
+        if (typeof api.stage1Enabled !== 'boolean') api.stage1Enabled = false;
+        if (typeof api.registerStage1Handler !== 'function') {
+            api.registerStage1Handler = function(fn) {
                 if (typeof fn !== 'function') {
                     console.warn('[P1 ext] handler must be a function');
                     return;
                 }
                 window.inryokuP1._handler = fn;
-            },
-            _invokeStage1: function(detail) {
+            };
+        }
+        if (typeof api._invokeStage1 !== 'function') {
+            api._invokeStage1 = function(detail) {
                 if (window.inryokuP1._handler) {
                     try { window.inryokuP1._handler(detail); }
                     catch(e) { console.warn('[P1 ext] handler error', e); }
                 }
-            }
-        };
+            };
+        }
+        window.inryokuP1 = api;
     })();
     const root = document.getElementById('root');
     root.className = 'phase-1';
@@ -104,13 +109,7 @@ function renderPhase1() {
   "></div>
 
   <style>
-    /* Load Chicago-like font from CDN */
-    @font-face {
-      font-family: 'ChicagoFLF';
-      src: url('https://cdn.jsdelivr.net/gh/smolck/chicago-flf-font@master/ChicagoFLF.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-    }
+    /* Use system fallback. External ChicagoFLF is disabled on local P1 verification to avoid CSP noise. */
     /* 1-bit dither: 50% grey (Mac System 1 style) */
     .dither50 {
       background-color: transparent !important;
@@ -878,6 +877,89 @@ function renderPhase1() {
             composer.addPass(new THREE.RenderPass(scene, camera));
             bloom = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.4, 0.35, 0.08);
             composer.addPass(bloom);
+
+            // ══════════════════════════════════════════════════════
+            //  GravitationalLensPass — Schwarzschild thin-lens (Codex Opus SOTA)
+            //  司哲学: 「視点が変われば虹が見える」→ 重力レンズで光が分散
+            //  順序: RenderPass → Bloom → [Lens] → CA → OutputPass
+            //  bloom 後に置くことで Einstein ring が halo として光る
+            //  uMass=0 で完全無効、prefers-reduced-motion で強制 0
+            // ══════════════════════════════════════════════════════
+            window.lensPass = null;
+            if (THREE.ShaderPass) {
+                window.lensPass = new THREE.ShaderPass({
+                    uniforms: {
+                        tDiffuse:    { value: null },
+                        uResolution: { value: new THREE.Vector2(W, H) },
+                        uCenter:     { value: new THREE.Vector2(0.5, 0.5) },
+                        uMass:       { value: 0.0 },
+                        uEinstein:   { value: 0.22 },
+                        uHorizon:    { value: 0.04 },
+                        uDispersion: { value: 0.012 },
+                        uTime:       { value: 0.0 },
+                        uAspect:     { value: W / H }
+                    },
+                    vertexShader: [
+                        'varying vec2 vUv;',
+                        'void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }'
+                    ].join('\n'),
+                    fragmentShader: [
+                        'precision highp float;',
+                        'uniform sampler2D tDiffuse;',
+                        'uniform vec2 uResolution;',
+                        'uniform vec2 uCenter;',
+                        'uniform float uMass;',
+                        'uniform float uEinstein;',
+                        'uniform float uHorizon;',
+                        'uniform float uDispersion;',
+                        'uniform float uTime;',
+                        'uniform float uAspect;',
+                        'varying vec2 vUv;',
+                        'vec2 lensWarp(vec2 uv, float ior){',
+                        '  vec2 p = (uv - uCenter) * vec2(uAspect, 1.0);',
+                        '  float r = length(p);',
+                        '  float ripple = 1.0 + 0.008 * sin(r*40.0 - uTime*2.0);',
+                        '  float safeR = max(r, uHorizon);',
+                        '  float alpha = uMass * uEinstein * uEinstein / safeR * ior * ripple;',
+                        '  vec2 dir = (r > 1e-5) ? (p / r) : vec2(0.0);',
+                        '  vec2 warped = p - dir * alpha;',
+                        '  return uCenter + warped / vec2(uAspect, 1.0);',
+                        '}',
+                        'void main(){',
+                        '  vec2 p = (vUv - uCenter) * vec2(uAspect, 1.0);',
+                        '  float r = length(p);',
+                        '  if (uMass < 0.001) {',
+                        '    gl_FragColor = texture2D(tDiffuse, vUv);',
+                        '    return;',
+                        '  }',
+                        '  if (r < uHorizon) {',
+                        '    float edge = smoothstep(uHorizon*0.7, uHorizon, r);',
+                        '    gl_FragColor = vec4(vec3(0.0, 0.0, 0.02) * edge, 1.0);',
+                        '    return;',
+                        '  }',
+                        '  float iorR = 1.0 - uDispersion;',
+                        '  float iorG = 1.0;',
+                        '  float iorB = 1.0 + uDispersion;',
+                        '  vec2 uvR = lensWarp(vUv, iorR);',
+                        '  vec2 uvG = lensWarp(vUv, iorG);',
+                        '  vec2 uvB = lensWarp(vUv, iorB);',
+                        '  float cR = texture2D(tDiffuse, uvR).r;',
+                        '  float cG = texture2D(tDiffuse, uvG).g;',
+                        '  float cB = texture2D(tDiffuse, uvB).b;',
+                        '  float ring = exp(-pow((r - uEinstein) / (uEinstein*0.08), 2.0));',
+                        '  vec3 col = vec3(cR, cG, cB) + ring * uMass * 0.9 * vec3(1.0, 0.95, 0.85);',
+                        '  gl_FragColor = vec4(col, 1.0);',
+                        '}'
+                    ].join('\n')
+                });
+                composer.addPass(window.lensPass);
+            }
+            // prefers-reduced-motion: 重力レンズを永久無効化
+            if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                if (window.lensPass) window.lensPass.uniforms.uMass.value = 0.0;
+                window._p1LensDisabled = true;
+            }
+
             // Chromatic Aberration pass (RGB channel split — EVENT_SING衝突時に発火)
             if (THREE.ShaderPass) {
                 caPass = new THREE.ShaderPass({
@@ -910,7 +992,7 @@ function renderPhase1() {
         //  UI OVERLAY (HTML/CSS)
         // ══════════════════════════════════════════════════════
         const ldCSS = document.createElement('style');
-        ldCSS.textContent = '@keyframes p1In{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes p1Breathe{0%,100%{opacity:.85;filter:drop-shadow(0 0 12px rgba(255,255,255,.12))}50%{opacity:1;filter:drop-shadow(0 0 24px rgba(255,255,255,.25))}}@keyframes p1BarGlow{0%,100%{box-shadow:0 0 6px rgba(255,255,255,.06)}50%{box-shadow:0 0 14px rgba(255,255,255,.14)}}@keyframes p1Slide{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes p1Sq{0%,100%{border-color:rgba(255,255,255,.1);box-shadow:0 0 12px rgba(255,255,255,.03)}50%{border-color:rgba(255,255,255,.22);box-shadow:0 0 24px rgba(255,255,255,.07)}}.p1-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.03;pointer-events:none}/* runBob removed — sprite frames handle vertical motion */@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}@keyframes enterGlow{0%,100%{filter:drop-shadow(0 0 6px #00ff00) drop-shadow(0 0 12px rgba(0,255,0,0.4))}50%{filter:drop-shadow(0 0 10px #00ff00) drop-shadow(0 0 22px rgba(0,255,0,0.65)) drop-shadow(0 0 36px rgba(0,255,0,0.25))}}@keyframes exitPulse{0%,100%{filter:drop-shadow(0 0 6px #00ff44) drop-shadow(0 0 14px rgba(0,255,68,0.5));transform:scale(1)}50%{filter:drop-shadow(0 0 14px #00ff44) drop-shadow(0 0 28px rgba(0,255,68,0.7)) drop-shadow(0 0 44px rgba(0,255,68,0.3));transform:scale(1.04)}}@keyframes runnerExit{0%{transform:translateX(-10px) scale(1);opacity:1}50%{transform:translateX(4px) scale(0.6);opacity:0.7}100%{transform:translateX(10px) scale(0);opacity:0}}';
+        ldCSS.textContent = '@keyframes p1In{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes p1Breathe{0%,100%{opacity:.85;filter:drop-shadow(0 0 12px rgba(255,255,255,.12))}50%{opacity:1;filter:drop-shadow(0 0 24px rgba(255,255,255,.25))}}@keyframes p1BarGlow{0%,100%{box-shadow:0 0 6px rgba(255,255,255,.06)}50%{box-shadow:0 0 14px rgba(255,255,255,.14)}}@keyframes p1Slide{0%{background-position:0% 50%}100%{background-position:200% 50%}}@keyframes p1Sq{0%,100%{border-color:rgba(255,255,255,.1);box-shadow:0 0 12px rgba(255,255,255,.03)}50%{border-color:rgba(255,255,255,.22);box-shadow:0 0 24px rgba(255,255,255,.07)}}.p1-orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.03;pointer-events:none}@keyframes rfBob{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-3%) scaleY(0.96)}}@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}@keyframes enterGlow{0%,100%{filter:drop-shadow(0 0 6px #00ff00) drop-shadow(0 0 12px rgba(0,255,0,0.4))}50%{filter:drop-shadow(0 0 10px #00ff00) drop-shadow(0 0 22px rgba(0,255,0,0.65)) drop-shadow(0 0 36px rgba(0,255,0,0.25))}}@keyframes exitPulse{0%,100%{filter:drop-shadow(0 0 6px #00ff44) drop-shadow(0 0 14px rgba(0,255,68,0.5));transform:scale(1)}50%{filter:drop-shadow(0 0 14px #00ff44) drop-shadow(0 0 28px rgba(0,255,68,0.7)) drop-shadow(0 0 44px rgba(0,255,68,0.3));transform:scale(1.04)}}@keyframes runnerExit{0%{transform:translateX(-10px) scale(1);opacity:1}50%{transform:translateX(4px) scale(0.6);opacity:0.7}100%{transform:translateX(10px) scale(0);opacity:0}}';
         document.head.appendChild(ldCSS);
 
         // UI container: square at center, other elements above
@@ -948,7 +1030,7 @@ function renderPhase1() {
 
 <!-- CRTスキャンライン効果 -->
 <div style="position:absolute;inset:0;pointer-events:none;z-index:100;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);"></div>
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.01) 2px,rgba(0,0,0,0.01) 4px);"></div>
 
 <!-- タスクバー（下部） -->
 <div style="position:absolute;bottom:0;left:0;right:0;height:28px;
@@ -1058,9 +1140,27 @@ function renderPhase1() {
   <div style="background:#c0c0c0;">
   <div style="padding:8px 12px 6px 12px;display:flex;align-items:center;gap:14px;">
     <div id="ld-logo" style="width:72px;height:72px;max-width:72px;max-height:72px;animation:exitPulse 2s ease-in-out infinite;flex-shrink:0;">
-      <!-- ISO 7010 E002 非常口ピクトグラム — Wikimedia Commons Public Domain SVG -->
+      <!-- 2026-05-31 司「ドアの中の人を消す(人はバー上を走ってるから)」:
+           走る人入りの E002 から、空のドア枠だけに差し替え。
+           = 「i は既にドアから出てローディングバーを走っている」状態の可視化。 -->
+      <!-- 2026-05-31 司「ドアだけ・左右反転」: 緑地に白ドア + 右下開口の矢印型ドア。
+           g transform="translate(560,0) scale(-1,1)" で水平反転 (開口が逆側へ)。 -->
       <svg viewBox="0 0 560 560" style="width:72px;height:72px;display:block;">
-        <path fill="#00AF6B" d="M 490.00847,426.30353 476.01016,389.202 c -6.29359,-15.40393 -20.29754,-25.90277 -37.80672,-25.90277 h -6.29359 V 43.395188 H 128.10708 V 220.49813 h 39.90082 l 45.50014,-56.705 c 9.10455,-10.49319 23.09721,-17.50371 38.49535,-17.50371 h 97.30516 c 15.39814,0 28.69653,8.39343 35.69568,21.70324 l 28.70782,54.59395 c 1.39983,2.09977 2.0941,4.9051 2.0941,8.40471 0,9.79327 -8.39898,18.19234 -18.20344,18.19234 -7.69907,0 -13.29275,-3.49397 -16.80361,-9.79327 l -25.89123,-49.70013 h -42.00056 l 32.1961,80.50236 9.80446,102.89424 h 83.28993 c 13.30968,0 23.80841,8.40471 28.70782,19.60911 l 9.0989,23.79736 H 333.19921 c -10.48744,0 -19.59763,-7.6935 -20.2919,-18.19798 l -9.80446,-90.30128 -76.99069,159.59924 c -4.20513,9.10464 -14.00395,15.40394 -25.20259,15.40394 h -37.1068 l 94.5055,-195.30657 -29.3908,-73.4975 -28.0079,34.30185 c -6.99351,9.10463 -18.90901,15.39829 -31.50184,15.39829 h -41.295 v 231.00261 l 65.79768,65.09843 H 0 V 0 h 560 v 559.99436 h -63.00367 l -65.09212,-65.09843 v -68.5924 z M 228.20627,64.39286 c 21.70302,0 39.89517,18.203626 39.89517,39.90122 0,21.70324 -18.19215,39.2013 -39.89517,39.2013 -21.70302,0 -39.20655,-17.49806 -39.20655,-39.2013 0,-21.697594 17.50353,-39.90122 39.20655,-39.90122 M 245.70979,509.59994 296.10934,560 h -60.90957 l -65.79768,-65.10407 h 39.19526 c 14.00959,0 27.30798,5.60502 37.11244,14.70401"/>
+        <!-- 緑の背景 -->
+        <rect x="0" y="0" width="560" height="560" fill="#10b15f"/>
+        <g transform="translate(560,0) scale(-1,1)">
+          <!-- 白いドア本体 (上は四角、右下が斜めに開いて矢印化) -->
+          <path fill="#ffffff" d="
+            M 130 50
+            L 430 50
+            L 430 360
+            L 470 360
+            L 470 470
+            L 360 470
+            L 360 430
+            L 130 430
+            Z" />
+        </g>
       </svg>
     </div>
     <div>
@@ -1108,48 +1208,27 @@ function renderPhase1() {
       pointer-events:none;
       filter:drop-shadow(0 0 4px rgba(0,204,68,0.6));
     ">
-      <svg width="26" height="34" viewBox="0 0 26 34" style="overflow:visible;">
-        <defs>
-          <style>
-            .rf{display:none}
-            .rf.rf-active{display:block}
-          </style>
-        </defs>
-        <!-- Frame 1: 右脚接地・左脚蹴り出し（重心低い） -->
-        <g class="rf rf-active" id="rf1">
-          <circle cx="14" cy="3.5" r="2.8" fill="#00dd55"/>
-          <path d="M13,6.5 L11.5,15" stroke="#00dd55" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-          <path d="M12.5,9 L17,6.5" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M12.5,9.5 L8,12" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M11.5,15 L16,21 L18,27" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-          <path d="M11.5,15 L7,20 L4,21" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        </g>
-        <!-- Frame 2: 両脚交差・体が浮く（重心高い） -->
-        <g class="rf" id="rf2">
-          <circle cx="14" cy="2" r="2.8" fill="#00dd55"/>
-          <path d="M13.5,5 L12,14" stroke="#00dd55" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-          <path d="M13,8 L9,6" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M13,8.5 L17,10.5" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M12,14 L14,20 L13,25" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-          <path d="M12,14 L10,19 L9,25" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        </g>
-        <!-- Frame 3: 左脚接地・右脚蹴り出し（重心低い、Frame1の鏡） -->
-        <g class="rf" id="rf3">
-          <circle cx="14" cy="3.5" r="2.8" fill="#00dd55"/>
-          <path d="M13,6.5 L11.5,15" stroke="#00dd55" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-          <path d="M12.5,9 L8,6.5" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M12.5,9.5 L17,12" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M11.5,15 L7,21 L5,27" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-          <path d="M11.5,15 L16,20 L19,21" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        </g>
-        <!-- Frame 4: 両脚交差・体が浮く 反対（重心高い、Frame2の鏡） -->
-        <g class="rf" id="rf4">
-          <circle cx="14" cy="2" r="2.8" fill="#00dd55"/>
-          <path d="M13.5,5 L12,14" stroke="#00dd55" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-          <path d="M13,8 L17,6" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M13,8.5 L9,10.5" stroke="#00dd55" stroke-width="1.8" stroke-linecap="round" fill="none"/>
-          <path d="M12,14 L10,20 L9,25" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-          <path d="M12,14 L14,19 L15,25" stroke="#00dd55" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <!-- 2026-05-24 司さん指示: 既存 4 フレームスプライト走り man を
+           ISO 7010 E002 (公式 EXIT サイン 右向き) のシルエットに差替。
+           緑背景は削除、走る人本体のみ #00dd55 で着色。
+           bob/scale で「走ってる」感を CSS animation で付与。 -->
+      <!-- 2026-06-04 司「ピクトグラムが走るのもっと綺麗に」: ドア枠ごと潰れていた
+           E002 フルマークをやめ、走る人シルエットだけのクリーンな描画に。
+           頭(円) + 前傾胴 + 振り腕 + 走り脚。viewBox を人型に合わせ大きく明瞭に。 -->
+      <svg width="26" height="34" viewBox="0 0 64 80" style="overflow:visible;">
+        <g id="exit-runner-bob" style="transform-origin: 50% 100%; animation: rfBob 0.30s ease-in-out infinite;" fill="#00ff55">
+          <!-- 頭 -->
+          <circle cx="38" cy="13" r="9"/>
+          <!-- 胴 (前傾) -->
+          <path d="M 36 22 L 30 46 L 38 47 L 45 24 Z"/>
+          <!-- 前腕 (前へ振る) -->
+          <path d="M 42 27 L 58 22 L 60 29 L 44 35 Z"/>
+          <!-- 後ろ腕 (後ろへ振る) -->
+          <path d="M 34 28 L 20 33 L 18 26 L 33 22 Z"/>
+          <!-- 前脚 (踏み出し) -->
+          <path d="M 33 44 L 46 60 L 39 65 L 27 49 Z"/>
+          <!-- 後ろ脚 (蹴り上げ) -->
+          <path d="M 32 45 L 22 66 L 14 63 L 25 43 Z"/>
         </g>
       </svg>
     </div>
@@ -1428,7 +1507,7 @@ function renderPhase1() {
                 '  // 16色ディザリング (u_grey > 0.05の時のみ適用 = グレー化中のみ)',
                 '  if(u_grey > 0.05) {',
                 '    vec2 pixPos = gl_FragCoord.xy / u_pixelSize;',
-                '    float dither = bayer4x4(pixPos) * 0.15 * u_grey;',
+                '    float dither = bayer4x4(pixPos) * 0.04 * u_grey;',
                 '    col = quantize16(col + vec3(dither));',
                 '  }',
                 '  gl_FragColor = vec4(col, 1.0);',
@@ -1766,7 +1845,15 @@ function renderPhase1() {
         );
         eyePlane.position.z = 2.0;  // 最前面
         eyePlane.visible = false;
-        scene.add(eyePlane);
+        // 2026-06-04 司「太陽十字が画面全体。球の中だけにして」:
+        //   eyePlane = 画面全体(camW*4)の旧・瞳/太陽十字演出。これが画面いっぱいに
+        //   十字を描く犯人。v2_sphere が球内で uEyePhase/uCrossPhase を持つので、
+        //   v2 が走る環境では eyePlane を scene に追加しない(物理的に出さない)。
+        //   v2 無効時(?v2=0)のみ従来通り追加。
+        var __v2on = true;
+        try { __v2on = !/[\?&]v2=0/.test(location.search); } catch(e){}
+        if (!__v2on) { scene.add(eyePlane); }
+        else { try { console.log('[P1] eyePlane(全画面十字) skip — v2 球内十字を使用'); } catch(e){} }
 
         // ── Magnetic field ──
         const fieldMat = new THREE.ShaderMaterial({
@@ -2180,52 +2267,63 @@ function renderPhase1() {
                 '  if(mask<0.005)discard;',
                 '',
                 '  float normR=r/max(u_radius,0.001);',
+                '  float ang=atan(p.y,p.x);',
                 '',
-                // === 透視トンネル: 1/r で自然な奥行き ===
-                '  float zRaw = 1.0 / max(normR, 0.02);',  // 中心=無限遠、外周=手前
-                // 深度スケール: 外周にもリングが複数見えるように
+                // === 2026-06-05 司「球体から出てる感じ + クオリティUP」 ===
+                //   球が填まる中心の穴(coreHole)を作り、その縁からトンネルが
+                //   放射状に奥へ伸びる。リングは滑らかな虹補間 + ネオン発光 + 螺旋。
+                '  float zRaw = 1.0 / max(normR, 0.02);',
                 '  float z = pow(zRaw, 0.6) * (1.0 + u_depth * 1.5);',
-                '  float scrollSpeed = (0.2 + zRaw * 0.15) * u_scrollMul;',
-                '  float phase = z * u_ringDensity - u_time * scrollSpeed;',
+                '  float scrollSpeed = (0.25 + zRaw * 0.18) * u_scrollMul;',
+                // 螺旋ひねり (角度で位相をずらす = 渦巻きながら奥へ)
+                '  float phase = z * u_ringDensity - u_time * scrollSpeed + ang * 0.35;',
                 '',
-                // === RGBCMY 6色リング（明確な帯＋暗い間隔） ===
-                '  float ringFract = fract(phase);',
-                // リングの「壁面」部分（中央70%）と「溝」部分（端15%ずつ）
-                '  float band = smoothstep(0.0, 0.12, ringFract) * smoothstep(1.0, 0.88, ringFract);',
-                // 6色を帯ごとに割り当て: R, G, B, C, M, Y
-                '  float idx = mod(floor(phase), 6.0);',
+                // === 滑らかな虹リング (6色を hue で連続補間 = 帯の境界が滑らか) ===
+                '  float hue = fract(phase / 6.0 * 6.0) ;',  // phase ごとに 1 周
+                '  float hp = fract(phase) * 6.0;',
                 '  vec3 ringColor;',
-                '  if(idx < 0.5) ringColor = vec3(1.0, 0.0, 0.0);',       // Red
-                '  else if(idx < 1.5) ringColor = vec3(0.0, 1.0, 0.0);',  // Green
-                '  else if(idx < 2.5) ringColor = vec3(0.0, 0.0, 1.0);',  // Blue
-                '  else if(idx < 3.5) ringColor = vec3(0.0, 1.0, 1.0);',  // Cyan
-                '  else if(idx < 4.5) ringColor = vec3(1.0, 0.0, 1.0);',  // Magenta
-                '  else ringColor = vec3(1.0, 1.0, 0.0);',                 // Yellow
+                '  if(hp<1.0) ringColor=mix(vec3(1,0,0),vec3(1,1,0),hp);',
+                '  else if(hp<2.0) ringColor=mix(vec3(1,1,0),vec3(0,1,0),hp-1.0);',
+                '  else if(hp<3.0) ringColor=mix(vec3(0,1,0),vec3(0,1,1),hp-2.0);',
+                '  else if(hp<4.0) ringColor=mix(vec3(0,1,1),vec3(0,0,1),hp-3.0);',
+                '  else if(hp<5.0) ringColor=mix(vec3(0,0,1),vec3(1,0,1),hp-4.0);',
+                '  else ringColor=mix(vec3(1,0,1),vec3(1,0,0),hp-5.0);',
                 '',
-                // === チューブ照明: 外周(手前)は明るく、中心(奥)は暗い ===
-                '  float wallLight = normR * 0.9 + 0.1;',  // よりリニアで明るい
-                // リング自体の発光（ネオン管のように）
-                '  float glow = band * wallLight;',
+                // === ネオン管リング: 中央が強く光り、両端でフォールオフ ===
+                '  float ringFract = fract(phase);',
+                '  float band = smoothstep(0.0,0.18,ringFract)*smoothstep(1.0,0.82,ringFract);',
+                '  float neon = pow(band, 1.6);',  // 締まったネオン
+                '  float wallLight = normR*0.85+0.15;',
+                '  float glow = neon * wallLight;',
+                // リング芯の追加グロー (ブルーム的)
+                '  float coreLine = exp(-pow(ringFract-0.5,2.0)*40.0) * wallLight;',
                 '',
-                // === 暗い壁面（リング間の空間） ===
-                '  float wallBase = 0.01 + normR * 0.03;', // 壁面は非常に暗い
-                '  vec3 wall = vec3(wallBase);',
+                // === 暗い壁面 ===
+                '  float wallBase = 0.012 + normR*0.025;',
+                '  vec3 col = vec3(wallBase) + ringColor*(glow*1.15 + coreLine*0.6);',
                 '',
-                // === 合成: 暗い壁 + 光るリング ===
-                '  vec3 col = wall + ringColor * glow;',
+                // === クロマ収差 (奥行きエッジに RGB ずれ = 速度感) ===
+                '  float ca = u_scrollMul * 0.012;',
+                '  col.r += ringColor.r * exp(-pow(fract(phase+ca)-0.5,2.0)*40.0)*wallLight*0.25;',
+                '  col.b += ringColor.b * exp(-pow(fract(phase-ca)-0.5,2.0)*40.0)*wallLight*0.25;',
                 '',
-                // === u_rainbow でグレー↔RGBCMY をミックス ===
-                '  vec3 greyRing = vec3(0.5) * glow;',
-                '  vec3 greyWall = vec3(wallBase);',
-                '  vec3 greyCol = greyWall + greyRing;',
+                // === グレー↔RGBCMY ミックス ===
+                '  vec3 greyCol = vec3(wallBase) + vec3(0.5)*(glow+coreLine*0.5);',
                 '  col = mix(greyCol, col, u_rainbow);',
                 '',
-                // === トンネル奥の焦点光（白い消失点） ===
-                '  float focal = exp(-normR * normR * 12.0);',
-                '  col += vec3(0.8, 0.85, 0.9) * focal * 0.8;',
+                // === 球体が填まる中心の穴 (球から出てる感) ===
+                //   coreHole 内は暗く落として球を際立たせ、縁を虹で発光させる
+                '  float coreHole = smoothstep(0.0, 0.22, normR);',  // 中心0.22は球の場所
+                '  float rim = exp(-pow(normR-0.22,2.0)*120.0);',    // 穴の縁リング
+                '  col *= coreHole;',                                  // 中心を暗く
+                '  col += ringColor * rim * 1.2 * u_rainbow;',         // 縁を虹発光
                 '',
-                // === 外周の強い暗化（チューブ内壁の影） ===
-                '  col *= 1.0 - smoothstep(0.4, 1.0, normR) * 0.85;',
+                // === 奥の焦点光 (白い消失点、穴の外から) ===
+                '  float focal = exp(-normR*normR*9.0) * coreHole;',
+                '  col += vec3(0.85,0.9,1.0) * focal * 0.7;',
+                '',
+                // === 外周の暗化 ===
+                '  col *= 1.0 - smoothstep(0.45,1.0,normR)*0.8;',
                 '',
                 '  gl_FragColor=vec4(col*mask,mask*u_alpha);',
                 '}'
@@ -2274,8 +2372,8 @@ function renderPhase1() {
 
         // フェーズごとの自動進行速度 (prog / 秒)
         const AUTO_RATE = {};
-        AUTO_RATE[PH.ATTRACT]   = 8.5;  // 0→30%  ≈ 3.5s
-        AUTO_RATE[PH.DUALITY]   = 6.5;  // 30→50% ≈ 3.1s
+        AUTO_RATE[PH.ATTRACT]   = 6.0;  // 0→30%  ≈ 5.0s
+        AUTO_RATE[PH.DUALITY]   = 8.0;  // 30→50% ≈ 2.5s
         AUTO_RATE[PH.WARP_GROW] = 6.0;  // 50→75% ≈ 4.2s
         AUTO_RATE[PH.CONSUME]   = 5.0;  // 75→101% ≈ 5.2s
 
@@ -2293,6 +2391,37 @@ function renderPhase1() {
         , silenceTriggered = false, warpGrowStartTime = -1
         , win95VortexOriginX = 0, win95VortexOriginY = 0 // スパゲッティ開始時の中心座標（キャッシュ）
         , freezeActive = false, freezeStartMs = -1; // 101%フリーズ用
+
+        // ════════════════════════════════════════════════
+        // 2026-06-08 司「球体を動かして合体 agar.io風 — 0→50%を自分の手で」
+        //   左半分ドラッグ=CMY(物質)を中心へ寄せる / 右半分=RGB(精神)。
+        //   両グループを寄せきると 50% 到達 = 二元の合一を指で達成。
+        //   manualFusion=true の間、ATTRACT の自動 easeT を手動集約度で上書き。
+        // ════════════════════════════════════════════════
+        const manualFusion = !/[\?&]manualfuse=0/.test(location.search); // デフォルトON
+        let manualCMY = 0;   // 0..1 CMY 集約度 (1=中心合体)
+        let manualRGB = 0;   // 0..1 RGB 集約度
+        // 2026-06-08 司「飛ぶ・重い・自由度低い」: agar.io 風の自由追従に刷新。
+        //   マウス(指)の位置を毎フレーム記録し、各グループが「指へ向かって
+        //   滑らかに」寄る。掴む/離すではなく、指の場所そのものが引力源。
+        //   左半分に指→CMY が指へ、右半分に指→RGB が指へ寄る。中央付近で合体。
+        let pointerX = null, pointerY = null, pointerActive = false;
+        if (manualFusion) {
+            const track = function(e){
+                const x = (e.touches ? (e.touches[0]||{}).clientX : e.clientX);
+                const y = (e.touches ? (e.touches[0]||{}).clientY : e.clientY);
+                if (x == null) return;
+                pointerX = x; pointerY = y; pointerActive = true;
+            };
+            const release = function(){ pointerActive = false; };
+            // 押してなくても「マウス位置」で引き寄せ = 軽い・自由
+            window.addEventListener('mousemove', track, {passive:true});
+            window.addEventListener('mousedown', track);
+            window.addEventListener('mouseup', release);
+            window.addEventListener('touchstart', track, {passive:true});
+            window.addEventListener('touchmove', track, {passive:true});
+            window.addEventListener('touchend', release, {passive:true});
+        }
 
         // ── ランナースプライトフレーム切り替え（4フレーム走りサイクル） ──
         let runnerFrame = 0;
@@ -2348,6 +2477,27 @@ function renderPhase1() {
             }
         }
 
+        function fireP150PercentHook() {
+            // 旧 v20260531: DUALITY 分岐内だけで 50% hook を発火していた。
+            // 進行表示が 50% を越えてもフックが未発火になるケースを防ぐため、
+            // showProg 側からも同じ一回限りの hook を呼べるようにする。
+            try {
+                if (!window._inryokuP1_50fired) {
+                    window._inryokuP1_50fired = true;
+                    var detail = {
+                        timestamp: (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now(),
+                        scene: scene,
+                        camera: camera,
+                        renderer: renderer
+                    };
+                    window.dispatchEvent(new CustomEvent('inryoku:p1_50percent', { detail: detail }));
+                    if (window.inryokuP1 && typeof window.inryokuP1._invokeStage1 === 'function') {
+                        window.inryokuP1._invokeStage1(detail);
+                    }
+                }
+            } catch(e) { console.warn('[P1 stage0 hook]', e); }
+        }
+
         function showProg(v) {
             const pv = Math.min(101, Math.floor(v));
             const fillPct = Math.min(100, pv);
@@ -2359,6 +2509,7 @@ function renderPhase1() {
 
             const pctEl = document.getElementById('p1-lpct');
             if (pctEl) pctEl.textContent = 'Loading reality... ' + pv + '%';
+            if (pv >= 50) fireP150PercentHook();
 
             // Phase C バー同期
             const pcLb = document.getElementById('phase-c-lb');
@@ -2450,28 +2601,42 @@ function renderPhase1() {
             }
 
             // ── CONSUME背景浸食: teal → RGBCMYグラデーション ──
-            if (pv >= 75 && pv < 101) {
-                var rainbowT = (pv - 75) / 26; // 0→1
+            // 2026-06-04 司「背景が途中で勝手に変わるのやめて」:
+            //   v2 主役時は背景を一貫して teal のまま (HSL 虹化を停止)。
+            //   v2 無効時(?v2=0)のみ従来の虹背景。
+            var __v2bg = true; try { __v2bg = !/[\?&]v2=0/.test(location.search); } catch(e){}
+            if (__v2bg) {
+                renderer.setClearColor(0x008080, 1); // 一貫 teal
+            } else if (pv >= 75 && pv < 101) {
+                var rainbowT = (pv - 75) / 26;
                 var hue = Math.floor(globalTime * 30) % 360;
-                var saturation = Math.floor(rainbowT * 70); // 0→70%
+                var saturation = Math.floor(rainbowT * 70);
                 renderer.setClearColor(new THREE.Color('hsl(' + hue + ',' + saturation + '%,25%)'));
             } else if (pv < 75) {
-                renderer.setClearColor(0x008080, 1); // teal維持
+                renderer.setClearColor(0x008080, 1);
             }
         }
 
         // ── MAIN TICK ──
         function tick() {
             if (!alive) return;
-            const dt = Math.min(clk.getDelta(), 0.05);
-            globalTime += dt;
+            const rawDt = clk.getDelta();
+            const dt = Math.min(rawDt, 0.05);
+            // 旧 v20260605: prog/eventTimer も dt(最大0.05s)で進めていた。
+            // rAF が間引かれる環境では dev timer だけ進み、bar が 50秒で数%しか進まない。
+            // 進行時計だけ実時間寄りにして、描画の揺れ計算は従来どおり dt で安定させる。
+            const progDt = Math.min(rawDt, 1.0);
+            globalTime += progDt;
 
             // ── ランナーフレーム更新 ──
             updateRunnerFrame(dt);
             updateBarGlitch(dt);
 
             // ── AUTO-TICK (rAF版: setInterval廃止) ──
-            if (phase !== PH.DONE && !EVENT_PHASES.includes(phase)) {
+            // 2026-06-08 手動合体: ATTRACT(0→30%) を手動操作中は自動加算を止める。
+            //   (manualFusion 時、prog は左右ドラッグの集約度で進む)
+            var __skipAuto = (manualFusion && phase === PH.ATTRACT);
+            if (phase !== PH.DONE && !EVENT_PHASES.includes(phase) && !__skipAuto) {
                 let rate = AUTO_RATE[phase] !== undefined ? AUTO_RATE[phase] : 5.0;
                 // CONSUME フェーズ: 区間ごとに速度変更
                 if (phase === PH.CONSUME) {
@@ -2484,7 +2649,7 @@ function renderPhase1() {
                     }
                 }
                 // 2026-05-17 開発用: ?at=50 早送り倍率 (本番では undefined → 1)
-                prog = Math.min(101, prog + rate * dt * (window._p1FastForward || 1));
+                prog = Math.min(101, prog + rate * progDt * (window._p1FastForward || 1));
                 showProg(prog);
             }
 
@@ -2593,7 +2758,7 @@ function renderPhase1() {
             cmyShaderMat.uniforms.u_visible.value = cmyP[0].visible ? 1.0 : 0.0;
 
             // ── ピクセルサイズ制御（progressに応じて解像度が上がる） ──
-            const pixelSize = prog < 50 ? 8.0 :
+            const pixelSize = prog < 50 ? 1.0 :
                               prog < 75 ? 4.0 :
                               prog < 90 ? 2.0 : 1.0;
             [bgMat, tunnelMat, yyMat].forEach(mat => {
@@ -2617,6 +2782,10 @@ function renderPhase1() {
             }
 
             // 数字暴走表示
+            // 2026-06-04 司「途中で 1001%/意味不明な数値が出るのやめて」:
+            //   v2 主役時は legacy の数字暴走(101→99999→∞)を停止。
+            var __v2num = true; try { __v2num = !/[\?&]v2=0/.test(location.search); } catch(e){}
+            if (__v2num) numberRampageActive = false;
             if (numberRampageActive) {
                 const rampageElapsed = globalTime - numberRampageStartTime;
                 if (rampageElapsed < 0.5) {
@@ -2660,40 +2829,54 @@ function renderPhase1() {
                     easeT = 0.25 + localT * localT * 0.75;
                 }
 
-                // CMY: 物質の引力 — 2%から微かに呼吸、徐々に接近
+                // 2026-06-08 手動合体 (agar.io風 自由追従):
+                //   指が左半分にある間 CMY 集約度UP、右半分で RGB 集約度UP。
+                //   指を離す/動かさなくても集約は維持 (戻らない=自由)。
+                //   毎フレーム滑らかに増やす = 軽くヌルッと寄る。
+                if (manualFusion) {
+                    if (pointerActive && pointerX != null) {
+                        var half = window.innerWidth * 0.5;
+                        // 中央に近いほど速く寄る (指を中央へ持っていくと一気に合体)
+                        var nearCenter = 1 - Math.min(1, Math.abs(pointerX - half) / half);
+                        var gain = (0.012 + nearCenter * 0.05); // 1フレームの増分
+                        if (pointerX < half) manualCMY = Math.min(1, manualCMY + gain);
+                        else                 manualRGB = Math.min(1, manualRGB + gain);
+                    }
+                }
+                var easeCMY = manualFusion ? manualCMY : easeT;
+                var easeRGB = manualFusion ? manualRGB : easeT;
+                // CMY: 目標位置へ lerp で滑らかに追従 (カクつき防止=軽い動き)。
                 cmyP.forEach((p, i) => {
-                    // 呼吸: 2%から始まる微かな脈動（引力を感じている）
-                    const breathAmp = t > 0.07 ? 0.003 * Math.min(1, (t - 0.07) / 0.3) : 0;
-                    const breathX = Math.sin(globalTime * 1.2 + i * 2.1) * breathAmp;
-                    const breathY = Math.cos(globalTime * 0.9 + i * 1.7) * breathAmp;
-                    p.position.x = cmyCtr.x + cmyTriPos[i][0] * (1 - easeT) + breathX;
-                    p.position.y = cmyCtr.y + cmyTriPos[i][1] * (1 - easeT) + breathY;
-                    // 引き伸ばし（近づくほど強い）
-                    const dist = Math.sqrt(cmyTriPos[i][0]*cmyTriPos[i][0] + cmyTriPos[i][1]*cmyTriPos[i][1]) * (1 - easeT);
-                    const stretch = 1.0 + dist * 0.05;
-                    p.scale.set(1.0 / stretch, stretch, 1.0 / stretch);
+                    var tx = cmyCtr.x + cmyTriPos[i][0] * (1 - easeCMY);
+                    var ty = cmyCtr.y + cmyTriPos[i][1] * (1 - easeCMY);
+                    p.position.x += (tx - p.position.x) * 0.18;
+                    p.position.y += (ty - p.position.y) * 0.18;
+                    p.scale.setScalar(1);
                 });
-                // RGB: 精神の振動 — 2%から微かに揺らぎ、徐々に引き寄せ
+                // RGB: 同様に lerp 追従。
                 rgbP.forEach((p, i) => {
-                    // 振動: 最初は強く（精神は自由）→ 近づくと抑制
-                    const jAmt = 0.008 * (1 - easeT * 0.9);
-                    // 2%から引力方向への微かなドリフト
-                    const driftAmp = t > 0.07 ? 0.002 * Math.min(1, (t - 0.07) / 0.2) : 0;
-                    const driftX = Math.sin(globalTime * 0.5 + i) * driftAmp;
-                    const driftY = Math.cos(globalTime * 0.4 + i) * driftAmp;
-                    const jx = Math.sin(globalTime * 7.3 + i) * jAmt + driftX;
-                    const jy = Math.cos(globalTime * 5.1 + i) * jAmt + driftY;
-                    p.position.x = rgbCtr.x + rgbTriPos[i][0] * (1 - easeT) + jx;
-                    p.position.y = rgbCtr.y + rgbTriPos[i][1] * (1 - easeT) + jy;
+                    var tx = rgbCtr.x + rgbTriPos[i][0] * (1 - easeRGB);
+                    var ty = rgbCtr.y + rgbTriPos[i][1] * (1 - easeRGB);
+                    p.position.x += (tx - p.position.x) * 0.18;
+                    p.position.y += (ty - p.position.y) * 0.18;
+                    p.scale.setScalar(1);
                 });
                 // 磁場線は0-30%では非表示
                 fieldPlane.visible = false;
+                // 2026-06-08 手動: 両グループが寄りきったら prog を進める。
+                //   手動集約の平均で prog 0→30 を駆動 (自動 prog++ は止める)。
+                if (manualFusion) {
+                    var fuse = (manualCMY + manualRGB) * 0.5;       // 0..1
+                    var manualProg = fuse * 30;                      // 0→30%
+                    if (manualProg > prog) { prog = manualProg; showProg(prog); }
+                    updateWin95Status(fuse < 0.95 ? '左右の球を中央へドラッグ…' : '⚠ REALITY.EXE merging...');
+                }
                 if (prog >= 30) { phase = PH.EVENT_FUSE; eventTimer = 0; prog = 30; showProg(30); progPaused = true; triggerBarGlitch(); }
 
                 // ═══ PHASE 1: EVENT_FUSE (30% — 3s fixed) ═══
             } else if (phase === PH.EVENT_FUSE) {
                 updateWin95Status('⚠ REALITY.EXE is not responding...');
-                eventTimer += dt;
+                eventTimer += progDt;
                 const et = eventTimer;
 
                 // Step A (0-1.5s): 6球がゆっくり各重心へ — 引力が段階的に強まる
@@ -2775,10 +2958,11 @@ function renderPhase1() {
                     if (bloom) bloom.strength = Math.max(0, 2.6 * decay);
                 }
                 if (et >= 2.2 && et < 3.5) {
-                    const t2 = (et - 2.2) / 1.3;
-                    const ease = 1 - Math.pow(1 - t2, 2);
-                    bDot.position.x += ((-1.2 * unit) - bDot.position.x) * (0.02 + ease * 0.06);
-                    wDot.position.x += ((1.2 * unit) - wDot.position.x) * (0.02 + ease * 0.06);
+                    // 旧 v20260605: ここで一度 ±1.2*unit に寄せた後、
+                    // DUALITY で別ターゲットへ戻していたため「白黒が中途半端に動く」見え方になった。
+                    // 30%イベント中は位置を固定し、DUALITY の接近だけに一本化する。
+                    bDot.position.x = cmyCtr.x;
+                    wDot.position.x = rgbCtr.x;
                 }
 
                 // Step D (2.5-2.7s): 枠グロー（衝撃波の余韻）
@@ -2791,12 +2975,13 @@ function renderPhase1() {
                     sqBorder.style.boxShadow = 'none';
                 }
 
-                // Step E (4.0-4.5s): DUALITY移行前の「静」— bloom消灯、呼吸の間
-                if (et >= 4.0) {
+                // Step E (3.0-3.2s): DUALITY移行前の「静」— bloom消灯、呼吸の間
+                // 旧 v20260605: 4.5s まで固定していたため、30%付近で止まって見えていた。
+                if (et >= 3.0) {
                     if (bloom) bloom.strength = Math.max(0, bloom.strength - dt * 0.5);
                 }
 
-                if (et >= 4.5) { phase = PH.DUALITY; progPaused = false; }
+                if (et >= 3.2) { phase = PH.DUALITY; progPaused = false; }
 
                 // ═══ PHASE 2: DUALITY (30→50%) ═══
             } else if (phase === PH.DUALITY) {
@@ -2811,13 +2996,11 @@ function renderPhase1() {
                 const accel = 0.03 + t * t * 0.08; // accelerating
                 bDot.position.x += (targetX_b - bDot.position.x) * accel;
                 wDot.position.x += (targetX_w - wDot.position.x) * accel;
-                // Stretch toward each other as they get close
-                // 2026-04-23: 司「形が変わるのやめて ニュイーンと伸びる球体でいい」
-                // 横伸びのみ、Y 方向の squash 廃止 (楕円変形しない、ただ引き伸ばされる)
-                const dist = Math.abs(bDot.position.x - wDot.position.x);
-                const stretchFactor = 1.0 + Math.max(0, 1.0 - dist / (4 * unit)) * 0.6;
-                bDot.scale.set(stretchFactor, 1, 1);
-                wDot.scale.set(stretchFactor, 1, 1);
+                // 2026-06-04 司「両方が伸びるのやめて、球体のまま」:
+                //   旧 stretchFactor (横伸び 0.6) を廃止。等方スケール=真円の球を保つ。
+                //   旧: bDot.scale.set(1+...*0.6, 1, 1) (横だけ伸びて楕円化していた)
+                bDot.scale.set(1, 1, 1);
+                wDot.scale.set(1, 1, 1);
                 // bDot/wDotは純黒・純白のまま維持（50%衝突まで混ざらない）
                 bDotMat.uniforms.u_greyMix.value = 0.0;
                 wDotMat.uniforms.u_greyMix.value = 0.0;
@@ -2859,23 +3042,13 @@ function renderPhase1() {
                     }
                     // ↓ 旧 return; 撤去 — legacy phases を走らせる
                 }
-                eventTimer += dt;
+                eventTimer += progDt;
                 const et = eventTimer;
 
                 // 物理パラメータ解放 (一回だけ)
                 if (!singDimSwitched) {
                     singDimSwitched = true;
                     renderer.setPixelRatio(window.devicePixelRatio);
-                    // 2026-05-19 段階19.10 (Codex Opus): pixelRatio 切替に composer/bloom を追従
-                    //   これを忘れると unlock 後に小さな RT を全画面へ blit → 右上に miniature
-                    try {
-                        if (composer && composer.setSize) {
-                            composer.setSize(window.innerWidth, window.innerHeight);
-                        }
-                        if (bloom && bloom.setSize) {
-                            bloom.setSize(window.innerWidth, window.innerHeight);
-                        }
-                    } catch (e) { console.warn('[P1 19.10] composer resize', e); }
                     bgMat.uniforms.u_pixelSize.value = 1.0;
                     if (yyMat.uniforms.u_pixelSize) yyMat.uniforms.u_pixelSize.value = 1.0;
                     // 2026-04-23: DUALITY の引き伸ばしはそのまま引き継ぐ (scale リセットしない)
@@ -2904,11 +3077,9 @@ function renderPhase1() {
                     }
                     bDot.position.x = window.__p1_singStartB * (1 - ease);
                     wDot.position.x = window.__p1_singStartW * (1 - ease);
-                    // 接近するほど横へ伸びる (ニュイーン感、Y は変えない)
-                    var sep = Math.abs(bDot.position.x - wDot.position.x);
-                    var stretch = 1.0 + Math.max(0, 1.0 - sep / (0.4 * unit)) * 0.9;
-                    bDot.scale.set(stretch, 1, 1);
-                    wDot.scale.set(stretch, 1, 1);
+                    // 2026-06-04 司「融合前に伸びるのやめて」: 横伸び廃止、球のまま接近。
+                    bDot.scale.set(1, 1, 1);
+                    wDot.scale.set(1, 1, 1);
                     if (bloom) bloom.strength = 0.3 + ease * 0.3;
                     yyPlane.visible = false; greySphere.visible = false; haloPlane.visible = false;
                     updateWin95Status('⚠ REALITY.SYS MERGING...');
@@ -3043,7 +3214,7 @@ function renderPhase1() {
                 // ═══ PHASE 5: EVENT_BREACH (75% — 4s fixed) — トンネル成長（デモPhase4） ═══
             } else if (phase === PH.EVENT_BREACH) {
                 updateWin95Status('Breaching reality boundary...');
-                eventTimer += dt;
+                eventTimer += progDt;
                 const et = eventTimer;
                 const p = Math.min(et / 4.0, 1.0); // 4秒かけて
                 const ease = 1 - Math.pow(1 - p, 2);
@@ -3132,7 +3303,7 @@ function renderPhase1() {
                 // ═══ PHASE 7: EVENT_COLLAPSE — トンネルが溢れ出す ═══
             } else if (phase === PH.EVENT_COLLAPSE) {
                 // 数字暴走は廃止 — 101%のまま固定表示
-                eventTimer += dt;
+                eventTimer += progDt;
                 const et = eventTimer;
                 updateWin95Status('Shutting down current dimension...');
                 greySphere.visible = false; // 球は既に消えているはずだが念のため
@@ -3493,75 +3664,12 @@ function renderPhase1() {
             //   updateScissorFromDOM の再適用も行わない。球の白光が画面全体を覆う。
             if (window.p1FullScreenUnlocked === true) {
                 try {
-                    // 2026-05-19 段階19.11 (Codex Opus 再診断):
-                    //   真因は viewport vs drawingBuffer のスケール不整合だった。
-                    //   setSize より「先に」scissor/viewport を full reset、
-                    //   その後 setSize → composer/bloom → 最後にもう一度 viewport を
-                    //   論理 px (innerW,innerH) で再設定。three.js r160 の setViewport は
-                    //   内部で pixelRatio を掛けるので必ず論理 px を渡す。
                     scissor.enabled = false;
                     renderer.setScissorTest(false);
-
-                    if (!window._p1CamFixedForFull) {
-                        window._p1CamFixedForFull = true;
-                        const iw = window.innerWidth, ih = window.innerHeight;
-                        const aspectFull = iw / ih;
-                        const camHFull = camH;
-                        camera.left   = -camHFull * aspectFull;
-                        camera.right  =  camHFull * aspectFull;
-                        camera.top    =  camHFull;
-                        camera.bottom = -camHFull;
-                        camera.zoom   = 1; // 念のため zoom リセット (H 仮説防御)
-                        camera.updateProjectionMatrix();
-                        try {
-                            // pixelRatio は singDimSwitched で devicePixelRatio に
-                            // 切り替わっている。setSize に論理 px を渡せば
-                            // drawingBuffer は pixelRatio 倍で正しく確保される。
-                            renderer.setSize(iw, ih, false);
-                            // setSize 直後に viewport を full に再設定 (論理 px)。
-                            // setSize は内部 _viewport を上書きするケースがある。
-                            renderer.setViewport(0, 0, iw, ih);
-                            if (composer && composer.setSize) composer.setSize(iw, ih);
-                            if (bloom && bloom.setSize) bloom.setSize(iw, ih);
-                            if (caPass && caPass.setSize) caPass.setSize(iw, ih);
-                            // EffectComposer の各 pass の uniforms.resolution 更新漏れ防御
-                            if (composer && composer.passes) {
-                                composer.passes.forEach(p => {
-                                    if (p.uniforms && p.uniforms.resolution)
-                                        p.uniforms.resolution.value && p.uniforms.resolution.value.set(iw, ih);
-                                });
-                            }
-                            console.log('[P1 19.11 unlock OK]', { iw, ih, pr: renderer.getPixelRatio(), buf: [renderer.domElement.width, renderer.domElement.height] });
-                            // 2026-05-20 段階19.12 (Codex Opus 予測 P-A): 旧 stage 残存 mesh 強制 cleanup
-                            //   right-upper miniature の真因候補: scene 内に旧 mesh が visible のまま残り
-                            //   ortho zoom=1 で右上に小さく描画されている。name + userData.stage で殲滅。
-                            try {
-                                const STALE_NAMES = [
-                                    'p1-old-tunnel-plane','p1-old-halo-plane','p1-old-warp-tunnel',
-                                    'p1-old-grey-sphere','yyPlane','haloPlane','tunnelPlane',
-                                    'warpTunnelPlane','bgPlane','greySphere','newtonRingPlane',
-                                    'accretionDisk'
-                                ];
-                                scene.traverse(function(o){
-                                    if (!o.isMesh && !o.isPoints && !o.isSprite) return;
-                                    const stale = STALE_NAMES.indexOf(o.name) >= 0
-                                        || (o.userData && (o.userData.stage === 1 || o.userData.stage === 2 ||
-                                                           o.userData.stage === 3 || o.userData.stage === 4));
-                                    // Stage 1 球 (p1Stage1TaichiSphere) は eye/cross にも使うので消さない
-                                    if (o.name === 'p1Stage1TaichiSphere') return;
-                                    if (stale) { o.visible = false; }
-                                });
-                                // ingest clone DOM の漏れも保険で除去
-                                document.querySelectorAll('#p1-ui-shell-clone,[data-p1-clone]').forEach(function(el){
-                                    try { el.remove(); } catch (e) {}
-                                });
-                                console.log('[P1 19.12] stale stage cleanup done');
-                            } catch (e) { console.warn('[P1 19.12 cleanup]', e); }
-                        } catch (e) { console.warn('[P1 19.11 unlock]', e); }
-                    } else {
-                        // 毎フレーム viewport を保険で再設定 (B 仮説防御)
-                        renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-                    }
+                    renderer.setViewport(0, 0, W, H);
+                    camera.left = -camW; camera.right = camW;
+                    camera.top = camH; camera.bottom = -camH;
+                    camera.updateProjectionMatrix();
                 } catch (e) {}
             } else if (fullViewportPhase) {
                 // 段階12: フル画面トンネル
@@ -3579,6 +3687,26 @@ function renderPhase1() {
                     renderer.setScissorTest(false);
                     renderer.setViewport(0, 0, W, H);
                 }
+            }
+            // 2026-05-20 段階20.1: 重力レンズ uniform 駆動 (Codex Opus SOTA)
+            if (window.lensPass && !window._p1LensDisabled) {
+                try {
+                    const lu = window.lensPass.uniforms;
+                    lu.uTime.value = performance.now() * 0.001;
+                    // 球体の NDC をレンズ中心に同期 (stage1 sphere)
+                    const s1 = window.inryokuP1Stage1;
+                    const sphereMesh = s1 && s1.state && s1.state.mesh;
+                    if (sphereMesh) {
+                        const v = sphereMesh.position.clone().project(camera);
+                        lu.uCenter.value.set(v.x * 0.5 + 0.5, v.y * 0.5 + 0.5);
+                    }
+                    // aspect 同期 (resize 対応)
+                    const Wn = window.innerWidth, Hn = window.innerHeight;
+                    lu.uAspect.value = Wn / Hn;
+                    if (lu.uResolution.value.x !== Wn || lu.uResolution.value.y !== Hn) {
+                        lu.uResolution.value.set(Wn, Hn);
+                    }
+                } catch (e) {}
             }
             if (composer) composer.render(); else renderer.render(scene, camera);
             requestAnimationFrame(renderLoop);

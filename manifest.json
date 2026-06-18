@@ -1,12 +1,18 @@
 {
-  "name": "inryokü — 見えないものの可視化",
+  "name": "inryokü — 50% → 101% / 見えないものの可視化",
   "short_name": "inryokü",
-  "description": "哲学を纏う服。50%→101%",
+  "description": "哲学を纏う服。RGB×CMY の原色論と観測の50%→101%を具現化したアパレル。グレーの中に虹を見る人のためのストア。",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "orientation": "portrait-primary",
+  "lang": "ja",
+  "dir": "ltr",
+  "categories": ["shopping", "lifestyle", "art-and-design"],
   "icons": [
     {
       "src": "/inryoku_logo_icon.png",
@@ -19,8 +25,37 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/inryoku_logo_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/inryoku_logo_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["shopping", "lifestyle"],
-  "lang": "ja"
+  "screenshots": [
+    {
+      "src": "/inryoku_og.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "inryokü — 50% → 101%"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shop",
+      "short_name": "Shop",
+      "description": "12 styles — ENTER / LOGO collection",
+      "url": "/p3_test.html",
+      "icons": [{ "src": "/inryoku_logo_icon.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
 }

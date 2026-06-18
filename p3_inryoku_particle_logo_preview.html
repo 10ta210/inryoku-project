@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>inryoku particle logo preview</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #020508;
+    }
+
+    #particle-logo {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 56%, rgba(210, 235, 235, .10), transparent 24%),
+        radial-gradient(circle at 78% 26%, rgba(60, 90, 120, .12), transparent 34%),
+        linear-gradient(135deg, #030609 0%, #020407 58%, #010204 100%);
+    }
+
+    #particle-logo canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="particle-logo" aria-hidden="true"></div>
+
+  <script src="vendor/three.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const host = document.getElementById('particle-logo');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.setClearColor(0x000000, 0);
+    host.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -4, 4);
+    camera.position.z = 1;
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const glyphs = [];
+
+    function rand() { return Math.random(); }
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function gaussian() {
+      let u = 0, v = 0;
+      while (u === 0) u = rand();
+      while (v === 0) v = rand();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function pushGlyph(x, y, dx, dy, size, color, familyBias) {
+      glyphs.push({
+        x: x + gaussian() * 0.006,
+        y: y + gaussian() * 0.006,
+        z: -0.45 + rand() * 0.9,
+        sx: -0.95 + rand() * 1.90,
+        sy: -0.62 + rand() * 1.24,
+        dx: dx,
+        dy: dy,
+        size: size * (0.78 + rand() * 0.58),
+        tone: clamp(0.48 + rand() * 0.58, 0, 1),
+        seed: rand() * 1000,
+        variant: rand() * 0.72 + familyBias,
+        color: color,
+      });
+    }
+
+    function addLine(x1, y1, x2, y2, count, width, color, familyBias) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.max(0.001, Math.sqrt(dx * dx + dy * dy));
+      const nx = -dy / len;
+      const ny = dx / len;
+      for (let i = 0; i < count; i++) {
+        const t = count <= 1 ? 0 : i / (count - 1);
+        const jitter = gaussian() * width;
+        pushGlyph(
+          x1 + dx * t + nx * jitter,
+          y1 + dy * t + ny * jitter,
+          dx / len,
+          dy / len,
+          0.0065 + rand() * 0.0075,
+          color,
+          familyBias
+        );
+      }
+    }
+
+    function addArc(cx, cy, rx, ry, a1, a2, count, width, color, familyBias) {
+      for (let i = 0; i < count; i++) {
+        const t = count <= 1 ? 0 : i / (count - 1);
+        const a = a1 + (a2 - a1) * t;
+        const jitter = gaussian() * width;
+        const x = cx + Math.cos(a) * (rx + jitter);
+        const y = cy + Math.sin(a) * (ry + jitter);
+        const dx = -Math.sin(a);
+        const dy = Math.cos(a);
+        pushGlyph(x, y, dx, dy, 0.0062 + rand() * 0.0072, color, familyBias);
+      }
+    }
+
+    // RGB/CMY order from the brand. The glyphs themselves are all "1".
+    const C = {
+      i: [0.86, 0.90, 0.94],
+      n: [1.00, 0.24, 0.20],
+      r: [0.24, 1.00, 0.38],
+      y: [0.22, 0.42, 1.00],
+      o: [0.22, 1.00, 1.00],
+      k: [1.00, 0.24, 0.96],
+      u: [1.00, 0.94, 0.22],
+    };
+
+    const scale = isMobile ? 0.86 : 1.0;
+    const baseY = isMobile ? -0.04 : -0.02;
+    function X(v) { return v * scale; }
+    function Y(v) { return v * scale + baseY; }
+    const dense = isMobile ? 0.68 : 1.0;
+    function N(n) { return Math.max(4, Math.round(n * dense)); }
+
+    // i
+    addLine(X(-0.82), Y(-0.19), X(-0.82), Y(0.24), N(130), 0.012, C.i, 0.02);
+    addArc(X(-0.82), Y(0.36), 0.018 * scale, 0.018 * scale, 0, Math.PI * 2, N(42), 0.004, C.i, 0.10);
+
+    // n
+    addLine(X(-0.67), Y(-0.20), X(-0.67), Y(0.22), N(108), 0.012, C.n, 0.12);
+    addArc(X(-0.55), Y(0.08), 0.135 * scale, 0.165 * scale, Math.PI * 0.98, Math.PI * 0.02, N(132), 0.015, C.n, 0.17);
+    addLine(X(-0.42), Y(0.08), X(-0.42), Y(-0.20), N(82), 0.012, C.n, 0.18);
+
+    // r
+    addLine(X(-0.25), Y(-0.20), X(-0.25), Y(0.23), N(112), 0.012, C.r, 0.24);
+    addArc(X(-0.13), Y(0.11), 0.130 * scale, 0.115 * scale, Math.PI * 0.95, Math.PI * 0.14, N(82), 0.015, C.r, 0.25);
+
+    // y
+    addLine(X(0.02), Y(0.22), X(0.13), Y(-0.06), N(76), 0.012, C.y, 0.34);
+    addLine(X(0.25), Y(0.22), X(0.13), Y(-0.06), N(76), 0.012, C.y, 0.35);
+    addLine(X(0.13), Y(-0.06), X(0.00), Y(-0.38), N(96), 0.013, C.y, 0.36);
+
+    // o
+    addArc(X(0.42), Y(0.00), 0.142 * scale, 0.210 * scale, 0, Math.PI * 2, N(210), 0.014, C.o, 0.44);
+
+    // k
+    addLine(X(0.63), Y(-0.22), X(0.63), Y(0.31), N(134), 0.012, C.k, 0.54);
+    addLine(X(0.76), Y(0.18), X(0.63), Y(-0.01), N(70), 0.012, C.k, 0.56);
+    addLine(X(0.64), Y(-0.01), X(0.79), Y(-0.23), N(78), 0.012, C.k, 0.58);
+
+    // ü
+    addLine(X(0.94), Y(0.20), X(0.94), Y(-0.08), N(72), 0.012, C.u, 0.66);
+    addArc(X(1.06), Y(-0.08), 0.125 * scale, 0.130 * scale, Math.PI, Math.PI * 2, N(108), 0.014, C.u, 0.68);
+    addLine(X(1.18), Y(-0.08), X(1.18), Y(0.20), N(72), 0.012, C.u, 0.70);
+    addArc(X(1.00), Y(0.34), 0.014 * scale, 0.014 * scale, 0, Math.PI * 2, N(28), 0.003, C.u, 0.72);
+    addArc(X(1.13), Y(0.34), 0.014 * scale, 0.014 * scale, 0, Math.PI * 2, N(28), 0.003, C.u, 0.73);
+
+    const COUNT = glyphs.length;
+    const bases = new Float32Array(COUNT * 3);
+    const scatters = new Float32Array(COUNT * 2);
+    const dirs = new Float32Array(COUNT * 2);
+    const seeds = new Float32Array(COUNT);
+    const sizes = new Float32Array(COUNT);
+    const tones = new Float32Array(COUNT);
+    const variants = new Float32Array(COUNT);
+    const colors = new Float32Array(COUNT * 3);
+
+    glyphs.forEach(function (g, i) {
+      bases[i * 3 + 0] = g.x;
+      bases[i * 3 + 1] = g.y;
+      bases[i * 3 + 2] = g.z;
+      scatters[i * 2 + 0] = g.sx;
+      scatters[i * 2 + 1] = g.sy;
+      dirs[i * 2 + 0] = g.dx;
+      dirs[i * 2 + 1] = g.dy;
+      seeds[i] = g.seed;
+      sizes[i] = g.size;
+      tones[i] = g.tone;
+      variants[i] = g.variant;
+      colors[i * 3 + 0] = g.color[0];
+      colors[i * 3 + 1] = g.color[1];
+      colors[i * 3 + 2] = g.color[2];
+    });
+
+    const geometry = new THREE.InstancedBufferGeometry();
+    geometry.instanceCount = COUNT;
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
+      -0.5, -0.5, 0,  0.5, -0.5, 0,  0.5, 0.5, 0,
+      -0.5, -0.5, 0,  0.5, 0.5, 0,  -0.5, 0.5, 0
+    ]), 3));
+    geometry.setAttribute('aUv', new THREE.BufferAttribute(new Float32Array([
+      0, 0,  1, 0,  1, 1,
+      0, 0,  1, 1,  0, 1
+    ]), 2));
+    geometry.setAttribute('aBase', new THREE.InstancedBufferAttribute(bases, 3));
+    geometry.setAttribute('aScatter', new THREE.InstancedBufferAttribute(scatters, 2));
+    geometry.setAttribute('aDir', new THREE.InstancedBufferAttribute(dirs, 2));
+    geometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 1));
+    geometry.setAttribute('aSize', new THREE.InstancedBufferAttribute(sizes, 1));
+    geometry.setAttribute('aTone', new THREE.InstancedBufferAttribute(tones, 1));
+    geometry.setAttribute('aVariant', new THREE.InstancedBufferAttribute(variants, 1));
+    geometry.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 3));
+
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.NormalBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uAspect: { value: 1 },
+        uReveal: { value: 0 },
+        uZoom: { value: 1 },
+        uPan: { value: new THREE.Vector2(0, 0) },
+      },
+      vertexShader: [
+        'attribute vec2 aUv;',
+        'attribute vec3 aBase;',
+        'attribute vec2 aScatter;',
+        'attribute vec2 aDir;',
+        'attribute float aSeed;',
+        'attribute float aSize;',
+        'attribute float aTone;',
+        'attribute float aVariant;',
+        'attribute vec3 aColor;',
+        'uniform float uTime;',
+        'uniform float uAspect;',
+        'uniform float uReveal;',
+        'uniform float uZoom;',
+        'uniform vec2 uPan;',
+        'varying vec2 vUv;',
+        'varying float vTone;',
+        'varying float vFade;',
+        'varying float vVariant;',
+        'varying vec3 vColor;',
+        'float hash(float n) { return fract(sin(n) * 43758.5453123); }',
+        'void main() {',
+        '  float order = clamp((aBase.x + 0.95) * 0.47 + hash(aSeed) * 0.22, 0.0, 1.0);',
+        '  float reveal = smoothstep(order - 0.08, order + 0.20, uReveal);',
+        '  vec2 target = aBase.xy;',
+        '  vec2 scatter = aScatter;',
+        '  vec2 p2 = mix(scatter, target, reveal);',
+        '  p2 += aDir * sin(uTime * (0.35 + hash(aSeed + 2.0) * 0.6) + aSeed) * 0.010;',
+        '  p2 += vec2(sin(uTime * 0.22 + aSeed), cos(uTime * 0.19 + aSeed)) * 0.004;',
+        '  p2.x /= max(1.0, uAspect * 0.72);',
+        '  float angle = (hash(aSeed + 21.0) - 0.5) * 1.7 + atan(aDir.y, aDir.x) * 0.25;',
+        '  float s = sin(angle);',
+        '  float c = cos(angle);',
+        '  vec2 q = (aUv - 0.5) * vec2(0.62 + hash(aSeed + 4.0) * 0.48, 1.28 + hash(aSeed + 5.0) * 0.70);',
+        '  q = vec2(q.x * c - q.y * s, q.x * s + q.y * c);',
+        '  p2 += q * aSize * (0.35 + reveal * 0.90);',
+        '  p2 = (p2 - uPan) * uZoom;',
+        '  vUv = aUv;',
+        '  vTone = aTone;',
+        '  vFade = reveal;',
+        '  vVariant = aVariant;',
+        '  vColor = aColor;',
+        '  gl_Position = vec4(p2, 0.0, 1.0);',
+        '}',
+      ].join('\n'),
+      fragmentShader: [
+        'precision highp float;',
+        'varying vec2 vUv;',
+        'varying float vTone;',
+        'varying float vFade;',
+        'varying float vVariant;',
+        'varying vec3 vColor;',
+        'float rect(vec2 uv, vec2 mn, vec2 mx, float soft) {',
+        '  vec2 a = smoothstep(mn, mn + soft, uv);',
+        '  vec2 b = 1.0 - smoothstep(mx - soft, mx, uv);',
+        '  return a.x * a.y * b.x * b.y;',
+        '}',
+        'float digitOne(vec2 uv, float v) {',
+        '  float family = floor(fract(v * 17.13) * 12.0);',
+        '  float lean = (v - 0.5) * mix(0.08, 0.40, step(5.5, family));',
+        '  uv.x += (uv.y - 0.5) * lean;',
+        '  float w = mix(0.030, 0.135, fract(v * 6.13));',
+        '  float soft = mix(0.006, 0.032, fract(v * 8.37));',
+        '  float top = mix(0.86, 0.98, fract(v * 4.91));',
+        '  float bot = mix(0.02, 0.15, fract(v * 5.43));',
+        '  float x = mix(0.43, 0.58, fract(v * 2.81));',
+        '  float stem = rect(uv, vec2(x - w, bot), vec2(x + w, top), soft);',
+        '  float hook = rect(uv, vec2(x - w * 3.0, top - 0.16), vec2(x + w * 1.2, top), soft);',
+        '  float cap = rect(uv, vec2(x - w * 2.2, top - 0.08), vec2(x + w * 2.3, top + 0.02), soft);',
+        '  float foot = rect(uv, vec2(x - w * 3.0, bot - 0.01), vec2(x + w * 3.2, bot + 0.10), soft);',
+        '  float dot = 1.0 - smoothstep(0.055, 0.078, length((uv - vec2(x, top - 0.06)) * vec2(1.0, 1.35)));',
+        '  float thin = rect(uv, vec2(x - w * 0.42, bot), vec2(x + w * 0.42, top), soft);',
+        '  float slab = rect(uv, vec2(x - w * 1.25, bot), vec2(x + w * 1.25, top), soft);',
+        '  float hair = rect(uv, vec2(x - w * 0.22, bot), vec2(x + w * 0.22, top), soft * 0.65);',
+        '  float outGlyph = 0.0;',
+        '  outGlyph = mix(outGlyph, stem + hook * 0.75 + foot * 0.55, 1.0 - step(0.5, family));',
+        '  outGlyph = mix(outGlyph, thin + cap * 0.35, step(0.5, family) * (1.0 - step(1.5, family)));',
+        '  outGlyph = mix(outGlyph, slab + foot * 0.35, step(1.5, family) * (1.0 - step(2.5, family)));',
+        '  outGlyph = mix(outGlyph, stem + hook + foot, step(2.5, family) * (1.0 - step(3.5, family)));',
+        '  outGlyph = mix(outGlyph, thin + dot * 0.65, step(3.5, family) * (1.0 - step(4.5, family)));',
+        '  outGlyph = mix(outGlyph, hair + cap + foot * 0.7, step(4.5, family));',
+        '  return clamp(outGlyph, 0.0, 1.0);',
+        '}',
+        'void main() {',
+        '  float glyph = digitOne(vUv, vVariant);',
+        '  float glow = digitOne((vUv - 0.5) * 0.86 + 0.5, vVariant) * 0.22;',
+        '  float ink = clamp(glyph + glow, 0.0, 1.0);',
+        '  if (ink < 0.012 || vFade < 0.004) discard;',
+        '  vec3 coldWhite = mix(vec3(0.55, 0.62, 0.64), vec3(1.0), vTone);',
+        '  vec3 col = mix(coldWhite, vColor, 0.82);',
+        '  col += vColor * 0.14;',
+        '  float alpha = clamp(vFade * ink * (0.36 + vTone * 0.70), 0.0, 0.88);',
+        '  gl_FragColor = vec4(col, alpha);',
+        '}',
+      ].join('\n'),
+    });
+
+    const logo = new THREE.Mesh(geometry, material);
+    scene.add(logo);
+
+    const view = { zoom: 1, targetZoom: 1, panX: 0, panY: 0, targetPanX: 0, targetPanY: 0 };
+    function clampZoom(v) { return Math.max(0.75, Math.min(8.0, v)); }
+    host.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      const rect = host.getBoundingClientRect();
+      const ndcX = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
+      const ndcY = -(((e.clientY - rect.top) / Math.max(1, rect.height)) * 2 - 1);
+      const oldZoom = view.targetZoom;
+      const nextZoom = clampZoom(oldZoom * Math.exp(-e.deltaY * 0.0016));
+      const wx = ndcX / oldZoom + view.targetPanX;
+      const wy = ndcY / oldZoom + view.targetPanY;
+      view.targetZoom = nextZoom;
+      view.targetPanX = wx - ndcX / nextZoom;
+      view.targetPanY = wy - ndcY / nextZoom;
+    }, { passive: false });
+    host.addEventListener('dblclick', function () {
+      view.targetZoom = 1;
+      view.targetPanX = 0;
+      view.targetPanY = 0;
+    });
+
+    function resize() {
+      const w = host.clientWidth || window.innerWidth;
+      const h = host.clientHeight || window.innerHeight;
+      renderer.setSize(w, h, false);
+      material.uniforms.uAspect.value = w / h;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const start = performance.now();
+    let alive = true;
+    function render() {
+      if (!alive) return;
+      const t = (performance.now() - start) / 1000;
+      view.zoom += (view.targetZoom - view.zoom) * 0.14;
+      view.panX += (view.targetPanX - view.panX) * 0.14;
+      view.panY += (view.targetPanY - view.panY) * 0.14;
+      const reveal = Math.min(1, Math.max(0, t - 1.2) / 8.5);
+      material.uniforms.uTime.value = t;
+      material.uniforms.uReveal.value = reveal * reveal * (3 - 2 * reveal);
+      material.uniforms.uZoom.value = view.zoom;
+      material.uniforms.uPan.value.set(view.panX, view.panY);
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+
+    window.addEventListener('pagehide', function () {
+      alive = false;
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+    });
+  })();
+  </script>
+</body>
+</html>

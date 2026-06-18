@@ -1,0 +1,127 @@
+/* inryoku.css — 裏ルート styles. Black, chromeless, one corner toggle. */
+
+:root {
+  --inryoku-bg: #000;
+  --inryoku-cursor-size: 14px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--inryoku-bg);
+  color: #d9d9d9;
+  font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+  font-feature-settings: 'palt';
+  overflow: hidden;
+  /* gaze cursor */
+  cursor: none;
+}
+
+body.inryoku-grabbing {
+  cursor: none;
+}
+
+/* Custom gaze ring follows the pointer */
+.inryoku-gaze {
+  position: fixed;
+  top: 0; left: 0;
+  width: var(--inryoku-cursor-size);
+  height: var(--inryoku-cursor-size);
+  margin-left: calc(var(--inryoku-cursor-size) * -0.5);
+  margin-top:  calc(var(--inryoku-cursor-size) * -0.5);
+  border: 1px solid rgba(255,255,255,0.42);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9000;
+  mix-blend-mode: screen;
+  transform: translate3d(50vw, 50vh, 0);
+  transition: width 220ms ease, height 220ms ease, border-color 220ms ease;
+}
+
+.inryoku-gaze.is-pressing {
+  width: calc(var(--inryoku-cursor-size) * 2.2);
+  height: calc(var(--inryoku-cursor-size) * 2.2);
+  border-color: rgba(255, 229, 59, 0.85); /* Y — silence/intent */
+}
+
+/* Phrase layer */
+.inryoku-phrase-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.inryoku-phrase {
+  position: absolute;
+  top: 0; left: 0;
+  will-change: transform, opacity;
+  font-size: clamp(18px, 2.4vw, 32px);
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  text-shadow: 0 0 18px currentColor;
+  filter: blur(0.2px);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  user-select: none;
+}
+
+.inryoku-phrase--cat-question    { font-style: italic; }
+.inryoku-phrase--cat-assertion   { font-weight: 500; letter-spacing: 0.14em; }
+.inryoku-phrase--cat-instruction { font-size: clamp(16px, 2vw, 26px); }
+.inryoku-phrase--cat-silence     { font-size: clamp(24px, 3.4vw, 44px); opacity: 0.6; }
+
+/* Mute toggle — the ONLY UI element */
+.inryoku-mute {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 9100;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  color: rgba(255,255,255,0.5);
+  font: 11px/1 system-ui, sans-serif;
+  cursor: none;
+  display: grid;
+  place-items: center;
+  transition: border-color 240ms ease, color 240ms ease, background 240ms ease;
+}
+.inryoku-mute:hover,
+.inryoku-mute:focus-visible {
+  border-color: rgba(255,229,59,0.7);
+  color: rgba(255,229,59,0.95);
+  outline: none;
+}
+.inryoku-mute[aria-pressed="true"] {
+  color: rgba(180,180,180,0.35);
+  border-color: rgba(180,180,180,0.25);
+}
+
+/* SR-only aria-live region */
+.inryoku-aria-live {
+  position: fixed;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0; padding: 0; margin: -1px;
+}
+
+/* No nav, no footer, no language switcher, no contact. By design. */
+
+@media (prefers-reduced-motion: reduce) {
+  .inryoku-gaze { display: none; }
+  html, body { cursor: default; }
+  .inryoku-phrase {
+    transition: opacity 600ms linear;
+    filter: none;
+  }
+}

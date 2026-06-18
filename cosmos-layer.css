@@ -1,0 +1,133 @@
+/* ============================================================
+   cosmos-layer.css — inryokü atmospheric overlay
+   作成: 2026-04-29
+   役割: 既存 #p6-canvas / 既存 UI に「触らず・曇らせず・邪魔しない」
+         で幻想的な atmospheric layer を「足す」。
+
+   設計方針（過去 light-bloom.js 失敗の轍を踏まない）:
+     - canvas 自体に filter: blur をかけない（canvas が曇る原因）
+     - 全 overlay は pointer-events: none
+     - aurora は body::before（z:-1, blur 80px は overlay 自身に閉じる）
+     - shooting star / mouse trail / parallax stars は単一 SVG（#cosmos-overlay）
+     - 呼吸は body filter ではなく aurora の opacity で表現（既存 filter 無干渉）
+     - prefers-reduced-motion 完全対応
+
+   z-index 階層:
+     -1: body::before (aurora swirl, behind everything)
+      0: #p6-canvas (既存)
+      0: #cosmos-overlay (DOM 順で canvas の後 → 視覚的に canvas の上)
+      1: #root (既存 UI)
+
+   既存クラス衝突回避:
+     全クラス／ID に `cosmos-` または `inryoku-cosmos-` プレフィックス。
+     ============================================================ */
+
+/* ----- 1. Aurora swirl 背景レイヤ ------------------------------ */
+/* 巨大な conic-gradient を body::before に置き、blur で「霞の気配」だけ残す。
+   opacity 0.05、mix-blend-mode: screen、暗黒背景には極微の色が浮かぶだけ。
+   60-90 秒周期で rotate。canvas の下層に居るので canvas を曇らせない。 */
+body::before {
+  content: "";
+  position: fixed;
+  /* 画面より大きく確保して回転で端が見えないようにする */
+  top: -50vh;
+  left: -50vw;
+  width: 200vw;
+  height: 200vh;
+  z-index: -1;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    rgba(80, 200, 220, 0) 0%,
+    rgba(80, 200, 220, 0.18) 12%,
+    rgba(120, 100, 200, 0) 25%,
+    rgba(220, 80, 180, 0.14) 42%,
+    rgba(60, 60, 60, 0) 58%,
+    rgba(180, 200, 80, 0.12) 72%,
+    rgba(80, 180, 220, 0) 88%,
+    rgba(80, 200, 220, 0.18) 100%
+  );
+  opacity: 0.06;
+  mix-blend-mode: screen;
+  /* 80px blur は overlay 自身を「霞」にする。canvas には影響しない（別レイヤ） */
+  filter: blur(80px);
+  /* 呼吸 + 回転を 1 つの animation で */
+  animation: cosmosAurora 78s linear infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes cosmosAurora {
+  0%   { transform: rotate(0deg);   opacity: 0.05; }
+  50%  { transform: rotate(180deg); opacity: 0.08; }
+  100% { transform: rotate(360deg); opacity: 0.05; }
+}
+
+/* ----- 2-4. Shooting star / mouse trail / parallax stars 用 SVG  */
+#cosmos-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;          /* canvas (z:0) と同階層、DOM 順で後 → 視覚的に上 */
+  pointer-events: none;
+  overflow: visible;
+  /* SVG 自身には filter をかけない（曇り防止） */
+}
+
+/* parallax stars: 薄い dot, 周辺ほど密 */
+.cosmos-star {
+  fill: rgba(220, 230, 240, 0.55);
+  /* 個別 element の drop-shadow は極微（点光源の散乱を最小限に）*/
+  filter: drop-shadow(0 0 1.5px rgba(200, 220, 255, 0.35));
+}
+
+/* shooting star: stroke-dashoffset で軌跡が走る */
+.cosmos-shooting {
+  fill: none;
+  stroke: rgba(230, 240, 255, 0.85);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(180, 220, 255, 0.5));
+  /* JS が dasharray / dashoffset を制御 */
+}
+
+/* mouse trail: 10 個の circle、JS が cx/cy/opacity を更新 */
+.cosmos-trail-dot {
+  fill: rgba(230, 240, 255, 0.8);
+  filter: drop-shadow(0 0 1.2px rgba(180, 220, 255, 0.4));
+  /* opacity は JS で制御 */
+}
+
+/* ----- 5. 呼吸（aurora opacity で代替）-------------------------
+   body filter は使わない（既存 #p6-canvas filter チェーンと干渉するため）。
+   呼吸は aurora keyframes に統合済み（opacity 0.05 ↔ 0.08）。
+   ----- 6. 景深: parallax 星座は JS で transform 制御 ----------- */
+
+/* ----- prefers-reduced-motion: 全アニメ停止、静止画扱い ------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+    opacity: 0.04;
+  }
+  .cosmos-shooting {
+    /* 流れ星は出さない */
+    display: none;
+  }
+  .cosmos-trail-dot {
+    /* trail は固定で薄く */
+    opacity: 0.15;
+  }
+}
+
+/* ----- 既存 body.inryoku-speaking 時の整合 -------------------
+   会話中は cosmos も少し沈める（grey 美学：会話に集中させる）。
+   既存 canvas の filter (brightness 0.74) と整合。 */
+body.inryoku-speaking::before {
+  opacity: 0.03;
+  transition: opacity 420ms ease;
+}
+body.inryoku-speaking #cosmos-overlay {
+  opacity: 0.6;
+  transition: opacity 420ms ease;
+}

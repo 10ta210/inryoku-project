@@ -1,0 +1,20 @@
+{
+  "chordVars": {
+    "--pr-chord-opacity": "0.62",
+    "--pr-chord-width": "0.64"
+  },
+  "colorTokens": {
+    "--pr-c-b": "#4488ff",
+    "--pr-c-c": "#44e0ff",
+    "--pr-c-g": "#44ff66",
+    "--pr-c-m": "#ff44cc",
+    "--pr-c-r": "#ff3344",
+    "--pr-c-y": "#ffe044"
+  },
+  "registerOpacity": {
+    "click": 0.84,
+    "hover": 0.72,
+    "special": 0.9,
+    "whisper": 0.46
+  }
+}

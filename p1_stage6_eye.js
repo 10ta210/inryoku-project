@@ -81,9 +81,11 @@
         'uniform float uEyeOpen;',
         'uniform float uEyeAlpha;',
         'uniform vec2  uGaze;',
+        'uniform float uAspect;',
         '',
         'void main() {',
         '  vec2 p = vUv * 2.0 - 1.0;',
+        '  p.x *= uAspect;',
         '  float r = length(p);',
         '',
         '  // 白い光の世界 (背景は白く滲み)',
@@ -197,12 +199,8 @@
     }
 
     function buildPlane(camera) {
-        // 2026-05-19 段階19.7: ortho camera 対応 - frustum 全体を覆う
         let w = 5.0, h = 2.8;
-        if (camera && camera.isOrthographicCamera) {
-            w = (camera.right - camera.left) * 1.12;
-            h = (camera.top - camera.bottom) * 1.12;
-        } else if (camera && camera.isPerspectiveCamera) {
+        if (camera && camera.isPerspectiveCamera) {
             const d = 0.5;
             const aspect = camera.aspect || 1.0;
             const vFov = (camera.fov * Math.PI) / 180.0;
@@ -285,6 +283,7 @@
                 uEyeOpen:  { value: 0 },
                 uEyeAlpha: { value: 0 },
                 uGaze:     { value: new THREE.Vector2(0, 0) },
+                uAspect:   { value: (camera && camera.aspect) ? camera.aspect : 1.0 },
             },
             transparent: true,
             depthWrite: false,

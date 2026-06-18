@@ -1,0 +1,32 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "node server.js",
+      "startServerReadyPattern": "listening",
+      "startServerReadyTimeout": 20000,
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/p1_index_for_claude.html",
+        "http://localhost:3000/p2_index_for_claude.html",
+        "http://localhost:3000/p3_index_for_claude.html"
+      ],
+      "numberOfRuns": 2,
+      "settings": {
+        "preset": "desktop",
+        "throttlingMethod": "simulate",
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance":     ["warn", { "minScore": 0.85 }],
+        "categories:accessibility":   ["error", { "minScore": 0.90 }],
+        "categories:best-practices":  ["warn", { "minScore": 0.90 }],
+        "categories:seo":             ["warn", { "minScore": 0.90 }],
+        "uses-text-compression":      "off",
+        "uses-responsive-images":     "off"
+      }
+    },
+    "upload": { "target": "temporary-public-storage" }
+  }
+}
