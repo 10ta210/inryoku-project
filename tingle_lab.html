@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>inryokü — Tingle Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: hsl(0, 0%, 8%);
+    --panel: hsla(0, 0%, 12%, 0.8);
+    --line: hsla(0, 0%, 100%, 0.14);
+    --text: hsl(0, 0%, 90%);
+    --dim: hsla(0, 0%, 90%, 0.55);
+    --accent: hsl(180, 70%, 55%);
+    --r: hsl(0, 80%, 55%); --y: hsl(55, 85%, 55%); --g: hsl(120, 60%, 50%);
+    --c: hsl(180, 70%, 50%); --b: hsl(225, 80%, 60%); --m: hsl(300, 70%, 58%);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: 'VT323', ui-monospace, monospace; }
+  body { min-height: 100vh; overflow-x: hidden; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 120px; }
+  h1 { font-size: 34px; letter-spacing: 0.12em; font-weight: 400; margin: 0; }
+  .sub { color: var(--dim); font-size: 18px; margin: 4px 0 28px; }
+  h2 { font-size: 22px; font-weight: 400; letter-spacing: 0.1em; margin: 32px 0 10px; color: var(--accent); }
+  p.note { color: var(--dim); font-size: 17px; margin: 0 0 12px; line-height: 1.35; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    appearance: none; font: inherit; font-size: 19px; letter-spacing: 0.04em;
+    color: var(--text); background: var(--panel); border: 1px solid var(--line);
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    transition: border-color 140ms ease, background 140ms ease;
+  }
+  button:hover { border-color: var(--accent); background: hsla(0, 0%, 18%, 0.9); }
+  button[aria-pressed="true"] { border-color: var(--y); color: var(--y); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .grid { display: grid; grid-template-columns: 1fr 260px; gap: 24px; align-items: start; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+  /* 頭の上から見た図: 粒子雲の位置 (DOM のみ、Canvas は使わない) */
+  .head-map { position: relative; width: 260px; height: 260px; margin: 0 auto; }
+  .head-map .ring { position: absolute; inset: 0; border: 1px dashed var(--line); border-radius: 50%; }
+  .head-map .ring.inner { inset: 30%; }
+  .head-map .head {
+    position: absolute; left: 50%; top: 50%; width: 46px; height: 54px; transform: translate(-50%, -50%);
+    border: 1px solid var(--dim); border-radius: 50% 50% 46% 46%;
+  }
+  .head-map .head::before, .head-map .head::after {
+    content: ''; position: absolute; top: 18px; width: 6px; height: 14px; border: 1px solid var(--dim); border-radius: 3px;
+  }
+  .head-map .head::before { left: -7px; }
+  .head-map .head::after { right: -7px; }
+  .head-map .nose { position: absolute; left: 50%; top: calc(50% - 34px); width: 0; height: 0; transform: translateX(-50%);
+    border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 7px solid var(--dim); }
+  .dot {
+    position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%;
+    background: hsl(0, 0%, 70%); opacity: 0.85; will-change: transform;
+  }
+  .dot.ptr { background: var(--y); }
+  .map-legend { text-align: center; color: var(--dim); font-size: 16px; margin-top: 6px; }
+
+  .field {
+    margin-top: 10px; height: 200px; border: 1px solid var(--line); border-radius: 8px;
+    display: grid; place-items: center; color: var(--dim); font-size: 18px; touch-action: none; user-select: none;
+    background: radial-gradient(circle at 50% 50%, hsla(0, 0%, 100%, 0.04), transparent 70%);
+  }
+  .field[data-on="true"] { border-color: var(--y); }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .card { height: 90px; border: 1px solid var(--line); border-radius: 8px; display: grid; place-items: center; color: var(--dim); font-size: 18px; }
+  .card:hover { border-color: var(--accent); color: var(--text); }
+  label.vol { display: flex; align-items: center; gap: 10px; font-size: 18px; color: var(--dim); margin-top: 8px; }
+  label.vol input { width: 200px; }
+
+  #gate {
+    position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: hsla(0, 0%, 6%, 0.96);
+    text-align: center; padding: 16px;
+  }
+  #gate[hidden] { display: none; }
+  #gate p { color: var(--dim); font-size: 20px; margin: 0 0 18px; line-height: 1.4; }
+  #gate button { font-size: 24px; padding: 12px 22px; }
+  .status { position: fixed; right: 12px; bottom: 10px; color: var(--dim); font-size: 16px; }
+</style>
+</head>
+<body>
+<div id="gate">
+  <div>
+    <p>🎧 ヘッドホン / イヤホンで聴いてください<br />音が頭の周りを回るのは、左右の耳に別々に届くときだけです</p>
+    <button id="start" type="button">観測をはじめる</button>
+  </div>
+</div>
+
+<main>
+  <h1>inryokü TINGLE LAB</h1>
+  <p class="sub">声・息・口の音を使わずに「脳イキ」の条件だけで組んだ、手続き生成のバイノーラル音</p>
+
+  <div class="grid">
+    <div>
+      <h2>譜面</h2>
+      <p class="note">書き出し WAV と同じ譜面をそのまま鳴らします (tools/render-tingle.mjs と共通)</p>
+      <div class="row" id="scores"></div>
+
+      <h2>単発</h2>
+      <div class="row">
+        <button type="button" data-act="tapL">左耳で叩く</button>
+        <button type="button" data-act="tapR">右耳で叩く</button>
+        <button type="button" data-act="brushBack">撫でる 左→後ろ→右</button>
+        <button type="button" data-act="brushTop">撫でる 頭上を越えて</button>
+        <button type="button" data-act="frisson">101% (接近→間→開花)</button>
+      </div>
+
+      <h2>HP 想定</h2>
+      <p class="note">常時: 灰色の芯 + まばらな粒 + たまに撫でる/叩く。カーソル: 動かした方向の耳元で粒が鳴る (止まれば無音)。</p>
+      <div class="row">
+        <button type="button" id="ambient" aria-pressed="false">常時モード</button>
+        <button type="button" id="stop">全部止める</button>
+      </div>
+      <div class="field" id="field" data-on="false">ここでカーソル / 指を動かす</div>
+      <div class="cards" aria-label="商品カードの hover 試験">
+        <div class="card" data-side="-1">TEE</div>
+        <div class="card" data-side="0">HOODIE</div>
+        <div class="card" data-side="1">CAP</div>
+      </div>
+      <label class="vol">音量 <input id="vol" type="range" min="0" max="1" step="0.01" value="0.8" /></label>
+    </div>
+
+    <div>
+      <h2>頭上から見た図</h2>
+      <div class="head-map" id="map">
+        <div class="ring"></div>
+        <div class="ring inner"></div>
+        <div class="nose"></div>
+        <div class="head"></div>
+      </div>
+      <p class="map-legend">内側の輪 = 約 30cm / 外側 = 1.5m<br />灰 = 粒子雲 / 黄 = カーソル</p>
+    </div>
+  </div>
+</main>
+<div class="status" id="status">idle</div>
+
+<script type="module">
+import { createTingle, SCORES } from './inryoku-tingle.js';
+
+const $ = (id) => document.getElementById(id);
+let ctx = null;
+let eng = null;
+let ambientOn = false;
+
+function boot() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  ctx = ctx || new Ctx({ latencyHint: 'interactive' });
+  ctx.resume();
+  if (eng) eng.dispose();
+  eng = createTingle(ctx, { gain: Number($('vol').value), seed: (Date.now() % 100000) + 1 });
+  eng.clock();
+  ambientOn = false;
+  $('ambient').setAttribute('aria-pressed', 'false');
+  $('status').textContent = 'running';
+}
+
+$('start').addEventListener('click', () => {
+  boot();
+  $('gate').hidden = true;
+});
+
+// 譜面ボタン
+for (const [id, s] of Object.entries(SCORES)) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = s.title;
+  b.addEventListener('click', () => {
+    boot();
+    s.build(eng, ctx.currentTime + 0.1);
+    $('status').textContent = `${id} (${s.dur}s)`;
+  });
+  $('scores').appendChild(b);
+}
+
+// 単発
+document.querySelectorAll('[data-act]').forEach((b) =>
+  b.addEventListener('click', () => {
+    const at = ctx.currentTime + 0.05;
+    switch (b.dataset.act) {
+      case 'tapL': eng.tap({ at, az: -95 }); break;
+      case 'tapR': eng.tap({ at, az: 95 }); break;
+      case 'brushBack': eng.brush({ at, dur: 2.2, from: -95, to: -265 }); break;
+      case 'brushTop': eng.brush({ at, dur: 2.6, from: -90, to: 90, el: 0, arc: 75, dist: 0.2 }); break;
+      case 'frisson': eng.frisson({ at, build: 8 }); break;
+    }
+  })
+);
+
+$('ambient').addEventListener('click', () => {
+  ambientOn = !ambientOn;
+  if (ambientOn) eng.ambient({ at: ctx.currentTime + 0.05 });
+  else eng.ambientOff({ at: ctx.currentTime + 0.05 });
+  $('ambient').setAttribute('aria-pressed', String(ambientOn));
+});
+$('stop').addEventListener('click', () => {
+  boot();
+  $('status').textContent = 'stopped';
+});
+$('vol').addEventListener('input', (e) => eng && eng.setGain(Number(e.target.value)));
+
+// カーソル追従: 画面中央 = 正面、左右 = 左右の耳、上下 = 上下
+const field = $('field');
+field.addEventListener('pointermove', (e) => {
+  if (!eng) return;
+  const r = field.getBoundingClientRect();
+  const x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  const y = -(((e.clientY - r.top) / r.height) * 2 - 1);
+  eng.pointer(x, y);
+  field.dataset.on = 'true';
+});
+field.addEventListener('pointerleave', () => { field.dataset.on = 'false'; });
+
+// 商品カード hover → その側の耳元で 1 回
+document.querySelectorAll('.card').forEach((c) =>
+  c.addEventListener('pointerenter', () => {
+    if (!eng) return;
+    const side = Number(c.dataset.side);
+    eng.hover({ side: side === 0 ? (Math.random() < 0.5 ? -1 : 1) : side });
+  })
+);
+
+// 頭上図: 粒子雲 emitter の位置を DOM で描く
+const map = $('map');
+const dots = [];
+function ensureDots(n) {
+  while (dots.length < n) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    map.appendChild(d);
+    dots.push(d);
+  }
+}
+const ptrDot = document.createElement('div');
+ptrDot.className = 'dot ptr';
+ptrDot.style.opacity = '0';
+map.appendChild(ptrDot);
+// 距離 → 半径 px (対数: 0.1m で 26px, 0.3m で 39px (内輪), 1.5m で 130px (外輪))
+const radiusPx = (dist) => Math.max(20, 39 + (Math.log(dist / 0.3) / Math.log(5)) * 91);
+function placeDot(el, p) {
+  const rad = radiusPx(p.dist);
+  const a = (p.az * Math.PI) / 180;
+  el.style.transform = `translate(${Math.sin(a) * rad}px, ${-Math.cos(a) * rad}px)`;
+}
+function frame() {
+  if (eng) {
+    const snap = eng.snapshot();
+    ensureDots(snap.cloud.length);
+    snap.cloud.forEach((p, i) => placeDot(dots[i], p));
+    if (snap.pointer) {
+      ptrDot.style.opacity = field.dataset.on === 'true' ? '1' : '0.3';
+      placeDot(ptrDot, snap.pointer);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
