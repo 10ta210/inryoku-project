@@ -41,7 +41,7 @@ test('buildSitemap output is valid-looking XML with required structure', () => {
 test('buildSitemap includes all required static pages', () => {
     const xml = buildSitemap([], '2026-04-26');
     for (const path of ['/', '/p3_test.html', '/legal.html', '/privacy.html', '/returns.html', '/size-guide.html']) {
-        assert.ok(xml.includes(`<loc>https://inryoku.com${path}</loc>`), `missing static page: ${path}`);
+        assert.ok(xml.includes(`<loc>https://inryoku.space${path}</loc>`), `missing static page: ${path}`);
     }
 });
 
@@ -58,10 +58,10 @@ test('buildSitemap emits product URLs and images for each product', () => {
         { slug: 'logo-tank',  title: 'inryokü LOGO TANK TOP', image: 'public/info_logo_hoodie.png' },
     ];
     const xml = buildSitemap(products, '2026-04-26');
-    assert.ok(xml.includes('<loc>https://inryoku.com/?product=enter-tee</loc>'));
-    assert.ok(xml.includes('<loc>https://inryoku.com/?product=logo-tank</loc>'));
-    assert.ok(xml.includes('<image:loc>https://inryoku.com/public/enter_hoodie.png</image:loc>'));
-    assert.ok(xml.includes('<image:loc>https://inryoku.com/public/info_logo_hoodie.png</image:loc>'));
+    assert.ok(xml.includes('<loc>https://inryoku.space/?product=enter-tee</loc>'));
+    assert.ok(xml.includes('<loc>https://inryoku.space/?product=logo-tank</loc>'));
+    assert.ok(xml.includes('<image:loc>https://inryoku.space/public/enter_hoodie.png</image:loc>'));
+    assert.ok(xml.includes('<image:loc>https://inryoku.space/public/info_logo_hoodie.png</image:loc>'));
 });
 
 test('lastmod is ISO yyyy-mm-dd format', () => {
@@ -75,7 +75,7 @@ test('run() in dry mode produces sitemap with all real products', () => {
     const { products, xml } = run({ write: false });
     assert.equal(products.length, 12);
     for (const p of products) {
-        assert.ok(xml.includes(`<loc>https://inryoku.com/?product=${p.slug}</loc>`),
+        assert.ok(xml.includes(`<loc>https://inryoku.space/?product=${p.slug}</loc>`),
             `sitemap missing product loc for ${p.slug}`);
     }
 });

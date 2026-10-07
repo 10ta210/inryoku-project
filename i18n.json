@@ -877,9 +877,9 @@
     "ko": "불량품의 경우 반품·교환 대상이 됩니다. 자세한 내용은 반품 정책을 확인해 주세요."
   },
   "legal.value.cancel_window": {
-    "ja": "注文確定から30分以内にご連絡いただければ、生産前であればキャンセル対応可能な場合があります（contact@inryoku.com）。",
-    "en": "If you contact us within 30 minutes of order confirmation, cancellation may be possible before production starts (contact@inryoku.com).",
-    "ko": "주문 확정 후 30분 이내에 연락 주시면, 생산 전이라면 취소 대응이 가능한 경우가 있습니다 (contact@inryoku.com)."
+    "ja": "注文確定から30分以内にご連絡いただければ、生産前であればキャンセル対応可能な場合があります（contact@inryoku.space）。",
+    "en": "If you contact us within 30 minutes of order confirmation, cancellation may be possible before production starts (contact@inryoku.space).",
+    "ko": "주문 확정 후 30분 이내에 연락 주시면, 생산 전이라면 취소 대응이 가능한 경우가 있습니다 (contact@inryoku.space)."
   },
   "legal.value.extra_fees_default": {
     "ja": "国内: なし（送料込み価格を表示）",
@@ -1022,9 +1022,9 @@
     "ko": "문의"
   },
   "privacy.body.contact": {
-    "ja": "プライバシーに関するご質問: contact@inryoku.com",
-    "en": "Privacy questions: contact@inryoku.com",
-    "ko": "개인정보 관련 문의: contact@inryoku.com"
+    "ja": "プライバシーに関するご質問: contact@inryoku.space",
+    "en": "Privacy questions: contact@inryoku.space",
+    "ko": "개인정보 관련 문의: contact@inryoku.space"
   },
   "privacy.updated": {
     "ja": "最終更新: 2026年4月28日",
@@ -1082,9 +1082,9 @@
     "ko": "불량품·오배송의 경우"
   },
   "returns.body.defect": {
-    "ja": "印刷不良・破損・誤配送の場合は、当社負担（送料含む）で交換いたします。商品到着後7日以内に contact@inryoku.com までご連絡ください。状況確認のため、商品の写真をお送りいただく場合がございます。",
-    "en": "For print defects, damage, or wrong items, we exchange at our expense (including shipping). Contact contact@inryoku.com within 7 days of arrival. We may ask for photos to verify.",
-    "ko": "인쇄 불량·파손·오배송의 경우 당사 부담 (배송비 포함)으로 교환합니다. 상품 도착 후 7일 이내에 contact@inryoku.com으로 연락해 주세요. 상태 확인을 위해 상품 사진을 요청할 수 있습니다."
+    "ja": "印刷不良・破損・誤配送の場合は、当社負担（送料含む）で交換いたします。商品到着後7日以内に contact@inryoku.space までご連絡ください。状況確認のため、商品の写真をお送りいただく場合がございます。",
+    "en": "For print defects, damage, or wrong items, we exchange at our expense (including shipping). Contact contact@inryoku.space within 7 days of arrival. We may ask for photos to verify.",
+    "ko": "인쇄 불량·파손·오배송의 경우 당사 부담 (배송비 포함)으로 교환합니다. 상품 도착 후 7일 이내에 contact@inryoku.space으로 연락해 주세요. 상태 확인을 위해 상품 사진을 요청할 수 있습니다."
   },
   "returns.section.made_to_order": {
     "ja": "受注生産品について",
@@ -1122,9 +1122,9 @@
     "ko": "반품 절차"
   },
   "returns.body.steps": {
-    "ja": "1. contact@inryoku.com に注文番号と返品理由をご連絡 / 2. 当社より返送先住所をご案内 / 3. 商品到着後、確認・返金処理を実施",
-    "en": "1. Email contact@inryoku.com with your order number and reason. 2. We reply with the return address. 3. After we receive and inspect the item, we issue the refund.",
-    "ko": "1. contact@inryoku.com으로 주문번호와 반품 사유를 연락 / 2. 당사가 반송지 주소를 안내 / 3. 상품 도착 후 확인·환불 처리 실시"
+    "ja": "1. contact@inryoku.space に注文番号と返品理由をご連絡 / 2. 当社より返送先住所をご案内 / 3. 商品到着後、確認・返金処理を実施",
+    "en": "1. Email contact@inryoku.space with your order number and reason. 2. We reply with the return address. 3. After we receive and inspect the item, we issue the refund.",
+    "ko": "1. contact@inryoku.space으로 주문번호와 반품 사유를 연락 / 2. 당사가 반송지 주소를 안내 / 3. 상품 도착 후 확인·환불 처리 실시"
   },
   "returns.updated": {
     "ja": "最終更新: 2026年4月28日",

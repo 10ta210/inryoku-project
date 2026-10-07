@@ -3,7 +3,7 @@
 # Suggested cron: */5 * * * * /path/to/inryoku_hp/scripts/uptime-ping.sh
 set -u
 
-HOST="${INRYOKU_HOST:-https://inryoku.com}"
+HOST="${INRYOKU_HOST:-https://inryoku.space}"
 LOG="${INRYOKU_UPTIME_LOG:-$HOME/inryoku-uptime.log}"
 TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 

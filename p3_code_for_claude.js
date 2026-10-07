@@ -1891,7 +1891,7 @@ function fadeBGMIn() {
                 <a href="/legal.html" class="footer-link" target="_blank" rel="noopener">特定商取引法</a>
                 <a href="/privacy.html" class="footer-link" target="_blank" rel="noopener">プライバシー</a>
                 <a href="/returns.html" class="footer-link" target="_blank" rel="noopener">返品</a>
-                <a href="https://x.com/intent/tweet?text=inryok%C3%BC%20%E2%80%94%2050%25%20%E2%86%92%20101%25&url=https%3A%2F%2Finryoku.com" target="_blank" class="footer-link">X</a>
+                <a href="https://x.com/intent/tweet?text=inryok%C3%BC%20%E2%80%94%2050%25%20%E2%86%92%20101%25&url=https%3A%2F%2Finryoku.space" target="_blank" class="footer-link">X</a>
                 <a href="https://instagram.com/inryoku" target="_blank" class="footer-link">Instagram</a>
             </div>
             <div class="footer-stripe">Secure Checkout</div>

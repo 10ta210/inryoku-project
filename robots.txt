@@ -1,6 +1,6 @@
 # inryokü — robots.txt
 # 50% → 101% / 見えないものの可視化
-# https://inryoku.com/
+# https://inryoku.space/
 
 User-agent: *
 Allow: /
@@ -58,4 +58,4 @@ User-agent: MJ12bot
 Disallow: /
 
 # Sitemap
-Sitemap: https://inryoku.com/sitemap.xml
+Sitemap: https://inryoku.space/sitemap.xml

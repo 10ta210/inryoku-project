@@ -14,7 +14,7 @@ async function generateQRDesign() {
   ctx.clearRect(0, 0, W, H);
 
   // Generate actual QR code data
-  const qrData = await QRCode.create('https://inryoku.com', { errorCorrectionLevel: 'H' });
+  const qrData = await QRCode.create('https://inryoku.space', { errorCorrectionLevel: 'H' });
   const modules = qrData.modules;
   const size = modules.size;
 

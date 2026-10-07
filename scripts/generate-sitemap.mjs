@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const SITE = 'https://inryoku.com';
+const SITE = 'https://inryoku.space';
 
 const STATIC_PAGES = [
     { loc: '/',                priority: '1.0', changefreq: 'daily'   },

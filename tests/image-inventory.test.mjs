@@ -80,7 +80,7 @@ test('image-inventory: sitemap.xml image refs resolve to local files', () => {
   while ((m = imgRe.exec(xml)) !== null) refs.push(m[1]);
   assert.ok(refs.length > 0, 'sitemap.xml should contain at least one <image:loc>');
   for (const url of refs) {
-    // https://inryoku.com/foo.png -> ROOT/foo.png
+    // https://inryoku.space/foo.png -> ROOT/foo.png
     const path = url.replace(/^https?:\/\/[^/]+\//, '');
     const local = resolve(ROOT, path);
     assert.ok(existsSync(local), `sitemap.xml references missing file: ${url}`);

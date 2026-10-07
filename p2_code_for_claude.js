@@ -12,7 +12,7 @@
 
 function renderPhase2() {
 
-    const INRYOKU_50_URL = 'https://inryoku.com/';
+    const INRYOKU_50_URL = 'https://inryoku.space/';
     const W = window.innerWidth, H = window.innerHeight;
 
     // ── Renderer ──

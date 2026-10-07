@@ -229,7 +229,7 @@ function getTrustedOrigin(req) {
         /^[a-z0-9.-]+(?::[0-9]{2,5})?$/.test(host)) {
         return `${proto}://${host}`;
     }
-    return 'https://inryoku.com';
+    return 'https://inryoku.space';
 }
 
 function buildStrictCSP(nonce) {
@@ -1088,7 +1088,7 @@ const server = http.createServer((req, res) => {
         }
         /* security-2026-04-28-phase1: COEP / CORP は HTML / 静的アセット向けのみ
            API JSON レスポンスに credentialless / same-site を載せると外部から fetch されにくくなり、
-           将来サブドメイン分離（assets.inryoku.com 等）時にも整合する。 */
+           将来サブドメイン分離（assets.inryoku.space 等）時にも整合する。 */
         const isAPIResp = req.url && req.url.startsWith('/api/');
         if (!isAPIResp) {
             if (!merged['Cross-Origin-Embedder-Policy']) merged['Cross-Origin-Embedder-Policy'] = 'credentialless';
@@ -1993,7 +1993,7 @@ p{font-size:13px;margin-bottom:12px;letter-spacing:0.02em}
 <p>0% 完了 <span class="blink">_</span></p>
 <div class="err">
 <p>詳細情報・復旧手順は下記を参照してください:</p>
-<p><b>inryoku.com/50-percent</b></p>
+<p><b>inryoku.space/50-percent</b></p>
 <p>サポートに連絡する場合は以下を伝えてください:</p>
 <p>停止コード: <b>OBSERVER_NOT_DETECTED</b>（観測者未検出）</p>
 <p>障害箇所: <b>reality.dll — 50% 一貫性喪失</b></p>

@@ -86,11 +86,11 @@ while IFS= read -r ref; do
     https://*) ref="${ref#https://}"; ref="${ref#*/}" ;;
     http://*)  ref="${ref#http://}";  ref="${ref#*/}" ;;
   esac
-  # 先頭の / を最大2つまで除去 (grep が "//inryoku.com/..." を拾うことがある)
+  # 先頭の / を最大2つまで除去 (grep が "//inryoku.space/..." を拾うことがある)
   ref="${ref#/}"; ref="${ref#/}"
-  # grep が host から拾った場合 (e.g. "inryoku.com/foo.png") も剥がす
+  # grep が host から拾った場合 (e.g. "inryoku.space/foo.png") も剥がす
   case "$ref" in
-    inryoku.com/*) ref="${ref#inryoku.com/}" ;;
+    inryoku.space/*) ref="${ref#inryoku.space/}" ;;
   esac
   # 候補パス: ROOT/<ref> or ROOT/<ref> after stripping leading public/
   if [ -f "$ROOT/$ref" ]; then

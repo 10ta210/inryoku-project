@@ -4,7 +4,7 @@
 #
 # Usage:
 #   bash scripts/healthcheck.sh                       # http://localhost:3000
-#   bash scripts/healthcheck.sh https://inryoku.com
+#   bash scripts/healthcheck.sh https://inryoku.space
 #   BASE=https://staging.example.com bash scripts/healthcheck.sh
 
 set -u

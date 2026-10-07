@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # check-sitemap.sh — verify each <loc> in sitemap.xml is reachable.
 # Usage: bash scripts/check-sitemap.sh [base-url-override]
-#   base-url-override: replace https://inryoku.com with this (e.g. http://localhost:3000)
+#   base-url-override: replace https://inryoku.space with this (e.g. http://localhost:3000)
 set -u
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,7 +26,7 @@ while IFS= read -r url; do
     total=$((total + 1))
     target="$url"
     if [ -n "$BASE_OVERRIDE" ]; then
-        target="${url/https:\/\/inryoku.com/$BASE_OVERRIDE}"
+        target="${url/https:\/\/inryoku.space/$BASE_OVERRIDE}"
     fi
     # Decode &amp; for curl.
     target="${target//&amp;/&}"
