@@ -123,6 +123,10 @@
         <div class="card" data-side="1">CAP</div>
       </div>
       <label class="vol">音量 <input id="vol" type="range" min="0" max="1" step="0.01" value="0.8" /></label>
+      <div class="row" style="margin-top:8px">
+        <button type="button" id="out" aria-pressed="false">出力: 🎧 ヘッドホン</button>
+      </div>
+      <p class="note">🔊 スピーカー: 左右の振り + 芯を倍音で鳴らす + 静かな部分を持ち上げる (押すと作り直して止まります)</p>
     </div>
 
     <div>
@@ -146,13 +150,14 @@ const $ = (id) => document.getElementById(id);
 let ctx = null;
 let eng = null;
 let ambientOn = false;
+let output = 'headphones';
 
 function boot() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   ctx = ctx || new Ctx({ latencyHint: 'interactive' });
   ctx.resume();
   if (eng) eng.dispose();
-  eng = createTingle(ctx, { gain: Number($('vol').value), seed: (Date.now() % 100000) + 1 });
+  eng = createTingle(ctx, { gain: Number($('vol').value), seed: (Date.now() % 100000) + 1, output });
   eng.clock();
   ambientOn = false;
   $('ambient').setAttribute('aria-pressed', 'false');
@@ -202,6 +207,12 @@ $('stop').addEventListener('click', () => {
   $('status').textContent = 'stopped';
 });
 $('vol').addEventListener('input', (e) => eng && eng.setGain(Number(e.target.value)));
+$('out').addEventListener('click', () => {
+  output = output === 'headphones' ? 'speakers' : 'headphones';
+  $('out').textContent = output === 'headphones' ? '出力: 🎧 ヘッドホン' : '出力: 🔊 スピーカー';
+  $('out').setAttribute('aria-pressed', String(output === 'speakers'));
+  boot();
+});
 
 // カーソル追従: 画面中央 = 正面、左右 = 左右の耳、上下 = 上下
 const field = $('field');
