@@ -17,6 +17,15 @@
 //
 // 座標: azimuth は度・連続値 (wrap しない)。0 = 正面, 90 = 右耳, -90 = 左耳,
 //       ±180 = 後ろ。elevation は度 (+ が上)。dist はメートル。
+//
+// output: 'headphones' (既定) = HRTF で頭の周りに定位。耳元のゾワゾワはこちらだけ。
+//         'speakers' = スピーカー向け。両耳に同じ音が届く環境では HRTF が効かないので、
+//           ・定位は左右の振り + 後ろはこもらせる
+//           ・110Hz の芯は倍音で鳴らす (ミッシング・ファンダメンタル: スマホでも芯の高さが聞こえる)
+//           ・静かな部分を持ち上げる (glue compressor + makeup)
+//
+// events: true にすると、鳴らす予定の粒・タップ・撫で・frisson をイベントとして溜める。
+//   映像側は drain() で受け取り、stateAt(t) / emitterPos(i, t) と合わせて音と同じ時刻に描く。
 
 const DEG = Math.PI / 180;
 
@@ -123,8 +132,23 @@ function makeImpulse(ctx, seconds, rnd) {
  * @param {AudioNode} [opts.destination]
  */
 export function createTingle(ctx, opts = {}) {
-    const cfg = { gain: 0.8, seed: 101, emitters: 8, destination: ctx.destination, ...opts };
+    const cfg = {
+        gain: 0.8,
+        seed: 101,
+        emitters: 8,
+        output: 'headphones',
+        events: false,
+        destination: ctx.destination,
+        ...opts,
+    };
     const live = typeof OfflineAudioContext === 'undefined' || !(ctx instanceof OfflineAudioContext);
+    const SPK = cfg.output === 'speakers';
+    const BED_LP = SPK ? 2500 : 700;
+    // 映像用イベント (cfg.events のときだけ溜める)
+    const feed = [];
+    const emit = (ev) => {
+        if (cfg.events) feed.push(ev);
+    };
     const rnd = mulberry32(cfg.seed);
     const r = (a, b) => a + (b - a) * rnd();
     const rlog = (a, b) => a * Math.pow(b / a, rnd());
@@ -134,7 +158,8 @@ export function createTingle(ctx, opts = {}) {
     const master = ctx.createGain();
     master.gain.value = cfg.gain;
     const limiter = ctx.createDynamicsCompressor();
-    limiter.threshold.value = -6;
+    // スピーカー版は makeup で持ち上げる分、天井を低くして 0 dBFS を超えないようにする
+    limiter.threshold.value = SPK ? -12 : -6;
     limiter.knee.value = 4;
     limiter.ratio.value = 12;
     limiter.attack.value = 0.003;
@@ -147,10 +172,42 @@ export function createTingle(ctx, opts = {}) {
     wet.gain.value = 0.7;
     send.connect(verb);
     verb.connect(wet);
-    wet.connect(limiter);
-    dry.connect(limiter);
+    const bus = ctx.createGain();
+    dry.connect(bus);
+    wet.connect(bus);
+    if (SPK) {
+        // スピーカー: 静かな部分を持ち上げる (小さいスピーカーでは小音量が消えるため)
+        const glue = ctx.createDynamicsCompressor();
+        glue.threshold.value = -30;
+        glue.knee.value = 12;
+        glue.ratio.value = 2.5;
+        glue.attack.value = 0.01;
+        glue.release.value = 0.3;
+        const makeup = ctx.createGain();
+        makeup.gain.value = 1.6; // +4dB
+        bus.connect(glue);
+        glue.connect(makeup);
+        makeup.connect(limiter);
+    } else {
+        bus.connect(limiter);
+    }
+    // 最後の保険: 速い粒の頭がリミッターをすり抜けても 0 dBFS で割れないよう、0.7 から上だけ丸める
+    const clip = ctx.createWaveShaper();
+    {
+        const n = 2048;
+        const curve = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+            const x = (i / (n - 1)) * 2 - 1;
+            const ax = Math.abs(x);
+            curve[i] = Math.sign(x) * (ax < 0.7 ? ax : 0.7 + 0.29 * Math.tanh((ax - 0.7) / 0.29));
+        }
+        clip.curve = curve;
+        clip.oversample = '2x';
+    }
     limiter.connect(master);
-    master.connect(cfg.destination);
+    master.connect(clip);
+    clip.connect(cfg.destination);
+    const fadeTl = timeline(1); // 譜面末フェード (0..1)。映像も同じ値で暗転する
 
     const noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     {
@@ -164,8 +221,45 @@ export function createTingle(ctx, opts = {}) {
     const setP = (param, t, v, ramp) =>
         ramp ? param.linearRampToValueAtTime(v, t) : param.setValueAtTime(v, t);
 
+    // ── スピーカー用ボイス: 左右の振り + 後ろはこもる + 距離は音量と残響 ──
+    function makeStereoVoice(wetBase) {
+        const input = ctx.createGain();
+        const tone = ctx.createBiquadFilter();
+        tone.type = 'lowpass';
+        tone.frequency.value = 18000;
+        const pan = ctx.createStereoPanner();
+        const level = ctx.createGain();
+        const sendGain = ctx.createGain();
+        input.connect(tone);
+        tone.connect(pan);
+        pan.connect(level);
+        level.connect(dry);
+        input.connect(sendGain);
+        sendGain.connect(send);
+        const nodes = [input, tone, pan, level, sendGain];
+        const voice = {
+            input,
+            pos: { az: 0, el: 0, dist: 1 },
+            place(t, az, el, dist, ramp) {
+                const a = az * DEG;
+                const e = el * DEG;
+                const n = nearness(dist);
+                setP(pan.pan, t, clamp(Math.sin(a) * Math.cos(e) * (0.75 + 0.25 * n), -1, 1), ramp);
+                setP(tone.frequency, t, 7000 + 11000 * (0.5 + 0.5 * Math.cos(a)), ramp);
+                setP(level.gain, t, clamp(0.3 / Math.max(dist, 0.05), 0.3, 1.5), ramp);
+                setP(sendGain.gain, t, wetBase + 0.45 * (1 - n), ramp);
+                voice.pos = { az, el, dist };
+            },
+            dispose() {
+                for (const n of nodes) n.disconnect();
+            },
+        };
+        return voice;
+    }
+
     // ── 空間ボイス: HRTF + 近接 ILD 補強 + 近接効果 + 距離に応じた残響 ──
     function makeVoice(wetBase = 0.04) {
+        if (SPK) return makeStereoVoice(wetBase);
         const input = ctx.createGain();
         const shelf = ctx.createBiquadFilter();
         shelf.type = 'lowshelf';
@@ -238,20 +332,21 @@ export function createTingle(ctx, opts = {}) {
     // グレーの粒 = 帯域ノイズの微小クリック。sparkle の確率で RGBCMY の色の粒になる。
     function grain(t, target, amp, sparkle, maxLen = 1) {
         if (rnd() < sparkle && maxLen > 0.1) {
-            const f = RGBCMY[pick(KEYS)] * (rnd() < 0.5 ? 4 : 8);
+            const key = pick(KEYS);
+            const f = RGBCMY[key] * (rnd() < 0.5 ? 4 : 8);
             const o = ctx.createOscillator();
             o.frequency.value = f * r(0.997, 1.003);
             const g = ctx.createGain();
             const d = r(0.03, 0.09);
             g.gain.setValueAtTime(0, t);
-            g.gain.linearRampToValueAtTime(amp * 0.35, t + 0.002);
+            g.gain.linearRampToValueAtTime(amp * (SPK ? 0.5 : 0.35), t + 0.002);
             g.gain.exponentialRampToValueAtTime(1e-4, t + d);
             o.connect(g);
             g.connect(target);
             o.start(t);
             o.stop(t + d + 0.01);
             o.onended = () => g.disconnect();
-            return;
+            return key;
         }
         const s = ctx.createBufferSource();
         s.buffer = noise;
@@ -263,13 +358,14 @@ export function createTingle(ctx, opts = {}) {
         const d = rlog(0.0015, 0.007);
         const pop = rnd() < 0.08 ? r(2, 3.2) : 1; // たまに強い粒 = 予測の中の不意打ち
         g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(2.2 * amp * pop * Math.exp(r(-0.7, 0.3)), t + 0.0004);
+        g.gain.linearRampToValueAtTime((SPK ? 3 : 2.2) * amp * pop * Math.exp(r(-0.7, 0.3)), t + 0.0004);
         g.gain.exponentialRampToValueAtTime(1e-4, t + d);
         s.connect(f);
         f.connect(g);
         g.connect(target);
         s.start(t, rnd() * 1.9, d + 0.005);
         s.onended = () => g.disconnect();
+        return pop > 1 ? 'pop' : null;
     }
 
     // ── 粒子雲: 頭の周りを回る emitter 群。半径と回転速度は timeline ──
@@ -278,6 +374,7 @@ export function createTingle(ctx, opts = {}) {
         spin: timeline(0.05), // 回転/秒
         angle: 0,
         t: null,
+        hist: [], // [{t, angle}] — 映像が任意時刻の回転角を引くため
         emitters: [],
     };
     for (let i = 0; i < cfg.emitters; i++) {
@@ -292,25 +389,49 @@ export function createTingle(ctx, opts = {}) {
             rMul: r(0.75, 1.3),
         });
     }
+    function emitterAt(e, t, angle) {
+        return {
+            az: e.phase + angle * e.speed * e.dir,
+            el: e.elBase + e.elAmp * Math.sin(t * e.elRate * 2 * Math.PI + e.phase),
+            dist: valueAt(cloud.radius, t) * e.rMul,
+        };
+    }
     function placeCloud(t, ramp) {
-        const rad = valueAt(cloud.radius, t);
         for (const e of cloud.emitters) {
-            const az = e.phase + cloud.angle * e.speed * e.dir;
-            const el = e.elBase + e.elAmp * Math.sin(t * e.elRate * 2 * Math.PI + e.phase);
-            e.v.place(t, az, el, rad * e.rMul, ramp);
+            const p = emitterAt(e, t, cloud.angle);
+            e.v.place(t, p.az, p.el, p.dist, ramp);
         }
+    }
+    function angleAt(t) {
+        const h = cloud.hist;
+        if (!h.length) return 0;
+        let lo = 0;
+        let hi = h.length - 1;
+        if (t >= h[hi].t) return h[hi].angle + 360 * valueAt(cloud.spin, t) * (t - h[hi].t);
+        if (t <= h[0].t) return h[0].angle;
+        while (hi - lo > 1) {
+            const mid = (lo + hi) >> 1;
+            if (h[mid].t <= t) lo = mid;
+            else hi = mid;
+        }
+        const u = (t - h[lo].t) / (h[hi].t - h[lo].t);
+        return h[lo].angle + (h[hi].angle - h[lo].angle) * u;
     }
     function planCloud(from, until) {
         const dt = 1 / CLOUD_HZ;
         if (cloud.t === null) {
             cloud.t = from;
             placeCloud(from, false);
+            cloud.hist.push({ t: from, angle: cloud.angle });
         }
         while (cloud.t + dt <= until) {
             cloud.t += dt;
             cloud.angle += 360 * valueAt(cloud.spin, cloud.t) * dt;
             placeCloud(cloud.t, true);
+            cloud.hist.push({ t: cloud.t, angle: cloud.angle });
         }
+        // ライブでは直近だけ残す (オフライン書き出しは全部残して映像に使う)
+        if (live && cloud.hist.length > CLOUD_HZ * 4) cloud.hist.splice(0, cloud.hist.length - CLOUD_HZ * 4);
     }
 
     // ── 粒の流れ (Poisson)。target 省略時は粒子雲のどれか ──
@@ -329,8 +450,17 @@ export function createTingle(ctx, opts = {}) {
                 const dens = valueAt(s.density, t);
                 s.next += dens > 0.01 ? -Math.log(1 - rnd()) / dens : 0.05;
                 if (dens <= 0.01 || t < floor) continue;
-                const target = s.target ? s.target.input : pick(cloud.emitters).v.input;
-                grain(t, target, valueAt(s.amp, t), valueAt(s.sparkle, t), s.t1 - t);
+                const amp = valueAt(s.amp, t);
+                if (s.target) {
+                    grain(t, s.target.input, amp, valueAt(s.sparkle, t), s.t1 - t);
+                    continue;
+                }
+                const idx = Math.floor(rnd() * cloud.emitters.length);
+                const kind = grain(t, cloud.emitters[idx].v.input, amp, valueAt(s.sparkle, t), s.t1 - t);
+                if (cfg.events) {
+                    const p = emitterAt(cloud.emitters[idx], t, angleAt(t));
+                    emit({ type: 'grain', t, az: p.az, el: p.el, dist: p.dist, color: kind === 'pop' ? null : kind, pop: kind === 'pop', amp });
+                }
             }
             if (s.next >= s.t1) streams.splice(i, 1);
         }
@@ -390,6 +520,7 @@ export function createTingle(ctx, opts = {}) {
     // 撫でる: 帯域ノイズのストローク + 毛先の細かい粒が、耳から耳へ移動する。
     // 低域 (息の帯域) は削ってあるので、息ではなく「刷毛 / 紙」に聞こえる。
     function brush({ at, dur = 2, from = -95, to = -265, el = 5, arc = 10, dist = 0.18, amp = 1 }) {
+        emit({ type: 'brush', t: at, dur, from, to, el, arc, dist, amp });
         const v = makeVoice(0.03);
         const steps = Math.ceil(dur * 40);
         const ease = (u) => u * u * (3 - 2 * u);
@@ -429,9 +560,11 @@ export function createTingle(ctx, opts = {}) {
 
     // 叩く: 指先で硬いものを叩く音。自由棒の固有振動比 1 : 2.756 : 5.404 で RGBCMY の高さ。
     function tap({ at, az = 95, el = 0, dist = 0.14, color, amp = 1 }) {
+        const key = color || pick(KEYS);
+        emit({ type: 'tap', t: at, az, el, dist, color: key, amp });
         const v = makeVoice(0.03);
         v.place(preroll(at), az, el, dist, false);
-        const f0 = RGBCMY[color || pick(KEYS)] * 2 * r(0.99, 1.01);
+        const f0 = RGBCMY[key] * 2 * r(0.99, 1.01);
         const modes = [
             [1, 1, 0.09],
             [2.756, 0.45, 0.04],
@@ -464,8 +597,9 @@ export function createTingle(ctx, opts = {}) {
         s.start(at, rnd() * 1.9, 0.01);
         // 指の腹の thump (耳元の物理感)
         const th = ctx.createOscillator();
-        th.frequency.setValueAtTime(160, at);
-        th.frequency.exponentialRampToValueAtTime(85, at + 0.03);
+        // スピーカーは低域が出ないので 1 オクターブ上で「コツッ」の重みを出す
+        th.frequency.setValueAtTime(SPK ? 320 : 160, at);
+        th.frequency.exponentialRampToValueAtTime(SPK ? 170 : 85, at + 0.03);
         const tg = ctx.createGain();
         tg.gain.setValueAtTime(0, at);
         tg.gain.linearRampToValueAtTime(0.12 * amp, at + 0.002);
@@ -496,7 +630,7 @@ export function createTingle(ctx, opts = {}) {
     }
 
     // ── ベッド: 110Hz の灰色の芯。110 と 110.1 のうなり = 10 秒の呼吸 ──
-    const bed = { gain: null, lp: null, partials: [], oscs: [], level: 0, started: false };
+    const bed = { gain: null, lp: null, partials: [], oscs: [], level: 0, started: false, tl: timeline(0) };
     function ensureBed(at) {
         if (bed.started) return;
         bed.started = true;
@@ -504,7 +638,7 @@ export function createTingle(ctx, opts = {}) {
         bed.gain.gain.value = 0;
         bed.lp = ctx.createBiquadFilter();
         bed.lp.type = 'lowpass';
-        bed.lp.frequency.value = 700;
+        bed.lp.frequency.value = BED_LP;
         bed.lp.Q.value = 0.3;
         const bedSend = ctx.createGain();
         bedSend.gain.value = 0.25;
@@ -527,6 +661,32 @@ export function createTingle(ctx, opts = {}) {
         add(ROOT, 'sine', 1);
         add(ROOT + 0.1, 'sine', 0.55);
         add(ROOT * 1.5, 'sine', 0.16);
+        if (SPK) {
+            // ミッシング・ファンダメンタル: 3〜5 倍音だけでも脳は 110Hz の高さを聞く。
+            // スマホ (〜650Hz 以下が出ない) 向けに、5 度と 8 度だけの上の倍音 (E5/A5/E6/A6) で光輪を足す。
+            // 10 秒の呼吸 (ヘッドホン版の 0.1Hz うなり) は LFO で付ける。
+            const voicing = ctx.createGain();
+            voicing.gain.value = 0.7;
+            const lfo = ctx.createOscillator();
+            lfo.frequency.value = 0.1;
+            const depth = ctx.createGain();
+            depth.gain.value = 0.3;
+            lfo.connect(depth);
+            depth.connect(voicing.gain);
+            lfo.start(at);
+            bed.oscs.push(lfo);
+            voicing.connect(bed.gain);
+            for (const [k, g] of [[3, 0.45], [4, 0.42], [5, 0.3], [6, 0.3], [8, 0.26], [12, 0.12], [16, 0.06]]) {
+                const o = ctx.createOscillator();
+                o.frequency.value = ROOT * k;
+                const og = ctx.createGain();
+                og.gain.value = g;
+                o.connect(og);
+                og.connect(voicing);
+                o.start(at);
+                bed.oscs.push(o);
+            }
+        }
         // 倍音 2x〜7x は frisson の溜めで順に灯る
         for (let k = 2; k <= 7; k++) bed.partials.push({ k, g: add(ROOT * k, 'sine', 0) });
     }
@@ -534,12 +694,14 @@ export function createTingle(ctx, opts = {}) {
         ensureBed(at);
         bed.gain.gain.setValueAtTime(bed.level, at);
         bed.gain.gain.linearRampToValueAtTime(level, at + fade);
+        bed.tl.to(at, fade, level);
         bed.level = level;
     }
     function bedOff({ at, fade = 3 }) {
         if (!bed.started) return;
         bed.gain.gain.setValueAtTime(bed.level, at);
         bed.gain.gain.linearRampToValueAtTime(0, at + fade);
+        bed.tl.to(at, fade, 0);
         bed.level = 0;
     }
 
@@ -550,6 +712,7 @@ export function createTingle(ctx, opts = {}) {
         director.quietUntil = Math.max(director.quietUntil, tBloom + 4);
         ensureBed(at);
         const base = bed.level || 0.025;
+        emit({ type: 'frisson', t: at, build, silence, tPeak, tBloom, wheel: WHEEL });
 
         // 1) 溜め: 粒子雲が遠く (1.6m) から耳元 (13cm) へ迫り、回転が加速、粒が増える
         cloudTo({ at, dur: 0.01, radius: 1.6 });
@@ -567,11 +730,14 @@ export function createTingle(ctx, opts = {}) {
             p.g.gain.setValueAtTime(0, t);
             p.g.gain.linearRampToValueAtTime([0.35, 0.25, 0.18, 0.12, 0.09, 0.07][i], t + 1.2);
         });
-        bed.lp.frequency.setValueAtTime(700, at);
+        bed.lp.frequency.setValueAtTime(BED_LP, at);
         bed.lp.frequency.exponentialRampToValueAtTime(5000, tPeak);
         bed.gain.gain.setValueAtTime(bed.level, at);
         bed.gain.gain.linearRampToValueAtTime(base, at + 0.5);
         bed.gain.gain.linearRampToValueAtTime(base * 1.8, tPeak);
+        bed.tl.to(at, 0.5, base);
+        bed.tl.to(at + 0.5, build - 0.5, base * 1.8);
+        bed.tl.to(tPeak, 0.012, 0);
         // 上昇するノイズの渦 (共鳴の強い細い帯域 = 息には聞こえない)
         {
             const v = makeVoice(0.02);
@@ -603,7 +769,7 @@ export function createTingle(ctx, opts = {}) {
 
         // 2) 間: 全部が一瞬で消える。残響も切る (余韻が残ると「間」にならない)
         bed.gain.gain.linearRampToValueAtTime(0, tPeak + 0.012);
-        bed.lp.frequency.setValueAtTime(700, tPeak + 0.05);
+        bed.lp.frequency.setValueAtTime(BED_LP, tPeak + 0.05);
         for (const p of bed.partials) p.g.gain.setValueAtTime(0, tPeak + 0.03);
         wet.gain.setValueAtTime(0.7, tPeak);
         wet.gain.linearRampToValueAtTime(0, tPeak + 0.02);
@@ -619,7 +785,11 @@ export function createTingle(ctx, opts = {}) {
             v.place(preroll(tBloom), az, r(-5, 25), 2.4, false);
             v.place(tBloom + 9, az + 30, 10, 1.3, true);
             const f = RGBCMY[key];
-            for (const [mul, type, a] of [[1, 'sine', 1], [2, 'sine', 0.22], [3, 'triangle', 0.05]]) {
+            // スピーカーは基音 (C4〜D5) が痩せるので 2 倍音を厚くする
+            const partials = SPK
+                ? [[1, 'sine', 1], [2, 'sine', 0.45], [3, 'triangle', 0.15]]
+                : [[1, 'sine', 1], [2, 'sine', 0.22], [3, 'triangle', 0.05]];
+            for (const [mul, type, a] of partials) {
                 const o = ctx.createOscillator();
                 o.type = type;
                 o.frequency.value = f * mul * r(0.998, 1.002);
@@ -636,12 +806,13 @@ export function createTingle(ctx, opts = {}) {
             later(tBloom + 11, () => v.dispose());
         });
         // 5 度 (E2) の体の鳴り — root を抜いて 5th を露出 (cosmos-audio-harmonic の cross flash と同じ思想)
-        {
+        // スピーカーでは E2 自体が出ないので、その倍音 (E3 / B3 / E4) で同じ高さを感じさせる
+        for (const [mul, a] of SPK ? [[1, 1], [2, 0.6], [3, 0.4], [4, 0.25]] : [[1, 1]]) {
             const o = ctx.createOscillator();
-            o.frequency.value = ROOT * 0.75;
+            o.frequency.value = ROOT * 0.75 * mul;
             const g = ctx.createGain();
             g.gain.setValueAtTime(0, tBloom);
-            g.gain.linearRampToValueAtTime(0.1 * amp, tBloom + 0.03);
+            g.gain.linearRampToValueAtTime(0.1 * a * amp, tBloom + 0.03);
             g.gain.exponentialRampToValueAtTime(1e-4, tBloom + 3.5);
             o.connect(g);
             g.connect(dry);
@@ -662,6 +833,7 @@ export function createTingle(ctx, opts = {}) {
         // 灰色の芯が戻る (中に虹を抱えたまま)
         bed.gain.gain.setValueAtTime(0, tBloom + 2.5);
         bed.gain.gain.linearRampToValueAtTime(base, tBloom + 7.5);
+        bed.tl.to(tBloom + 2.5, 5, base);
         bed.level = base;
         return tBloom;
     }
@@ -703,7 +875,11 @@ export function createTingle(ctx, opts = {}) {
         ptr.v.place(now + 0.04, az, el, 0.22, true);
         const expected = Math.min(90, speed * 40) * dt;
         const n = Math.min(8, Math.floor(expected) + (rnd() < expected % 1 ? 1 : 0));
-        for (let i = 0; i < n; i++) grain(now + 0.02 + rnd() * dt, ptr.v.input, 0.45, 0.06);
+        for (let i = 0; i < n; i++) {
+            const t = now + 0.02 + rnd() * dt;
+            const kind = grain(t, ptr.v.input, 0.45, 0.06);
+            emit({ type: 'grain', t, az, el, dist: 0.22, color: kind === 'pop' ? null : kind, pop: kind === 'pop', amp: 0.45 });
+        }
         ptr.x = x;
         ptr.y = y;
         ptr.t = now;
@@ -720,10 +896,32 @@ export function createTingle(ctx, opts = {}) {
         bedOff({ at: at + dur, fade: 0.05 });
         master.gain.setValueAtTime(0, at + dur + 0.1);
         master.gain.linearRampToValueAtTime(cfg.gain, at + dur + 0.2);
+        fadeTl.to(at, dur, 0);
+        fadeTl.to(at + dur + 0.1, 0.1, 1);
+        emit({ type: 'fade', t: at, dur });
     }
     function setGain(g) {
         cfg.gain = g;
         master.gain.setTargetAtTime(g, ctx.currentTime, 0.05);
+    }
+
+    // ── 映像用 ──
+    // 時刻 t の状態 (音と同じ timeline から読む)。fade は 0..1 (譜面末のフェード)
+    function stateAt(t) {
+        return {
+            radius: valueAt(cloud.radius, t),
+            spin: valueAt(cloud.spin, t),
+            angle: angleAt(t),
+            bed: bed.tl.at(t),
+            fade: fadeTl.at(t),
+        };
+    }
+    function emitterPos(i, t) {
+        return emitterAt(cloud.emitters[i], t, angleAt(t));
+    }
+    // 溜まったイベントを渡して空にする
+    function drain() {
+        return feed.splice(0, feed.length);
     }
 
     // 表示用: 粒子雲 emitter の現在位置
@@ -765,6 +963,11 @@ export function createTingle(ctx, opts = {}) {
         fadeOut,
         setGain,
         snapshot,
+        stateAt,
+        emitterPos,
+        drain,
+        output: cfg.output,
+        emitters: cfg.emitters,
         dispose,
     };
 }
