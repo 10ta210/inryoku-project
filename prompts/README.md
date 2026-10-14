@@ -12,6 +12,7 @@
 | `01_gelato_product_create.md` | Gelatoで商品作る時 |
 | `02_shopify_variant_sync.md` | Gelato→Shopify同期後、コードに埋込 |
 | `03_ui_improvement.md` | UI改善する時 (codex議論で決定した方針) |
+| `04_trademark_logo_codex.md` | 商標出願用の平面ロゴを Codex に作ってもらう時 |
 
 ## 追加ルール
 - 新しいタスクが出てきたら `04_*.md`, `05_*.md` と番号振って追加
