@@ -17,6 +17,10 @@ html, body {
   overflow: hidden;
   /* gaze cursor */
   cursor: none;
+  /* 長押し = 観測の同意 (視線の引力)。iOS の長押しメニューや文字選択を出さない */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 body.inryoku-grabbing {

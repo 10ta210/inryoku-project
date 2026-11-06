@@ -95,6 +95,7 @@ if (gateMod.hasSixColorMerge()) {
 | `inryoku/phrases.json` | 30 phrase + canon→color マップ |
 | `inryoku/inryoku-gate.js` | `canEnterInryoku`/`enforceGate`/`recordColorObservation` |
 | `inryoku/inryoku-world.js` | Three.js r160、FOV 75、camera at origin、shell 粒子 50k(/24k/9k) |
+| `inryoku/inryoku-gravity.js` | 視線の引力の数学（ばね・円錐選択・軸回転・円盤への引き寄せ）。THREE 非依存、動画書き出しと共有 |
 | `inryoku/inryoku-phrase-engine.js` | weighted pick、3D 投影、3s fade-in / 5s hold / 2.5s fade-out |
 | `inryoku/inryoku-audio.js` | drone：2 saw ±5cent A1 + sub A0 + LFO LPF |
 | `inryoku/inryoku.css` | 黒地、視線リング、ミュートトグル、phrase 字組 |
@@ -117,6 +118,18 @@ if (gateMod.hasSixColorMerge()) {
 ## 9. 観測 (+1% UI なし)
 長押し 850ms = 「観測の同意」。視線リングが Y に膨らみ、`localStorage.__inryokuPercent` を +1（上限 100.99）。
 **カウンターは表示しない**。これは inryokü 側の +1% 演出を裏返した設計：inryokü では数字が見えて達成感を駆動する。inRYOKU では数字を見せないことで「観測は他者に見せるものではない」と暗示する。
+
+## 9.1 視線の引力（2026-11-06）
+inRYOKU（50% line）の動詞は **引力**。inryokü（101% line）の動詞「膨張」の鏡像。数字の代わりに、世界が同意に応える。
+
+- 同意が成立した瞬間、視線リングの先（距離 30）に引力の中心ができる。視線の円錐（18°〜40°）の粒子が螺旋を描いて集まり、**中心を黒く残した円盤**（半径 3.5〜9）になって公転する（内側ほど速い）。
+- 離すと爆発させず、ほどけて漂い戻る。爆発・膨張は 101% 側の動詞なので使わない。
+- 動きは臨界減衰ばね（集まる ω=1.6 / ほどける ω=0.9）。線形補間なし。途中で離しても押し直しても連続。
+- 白黒禁則：集まった粒子ほど 1 粒の光を弱める（α ×(1−0.5·pull)、size ×(1−0.15·pull)）。重なっても白へ飽和せず、全色が混ざってグレー寄りになる（「灰は色を抱いている」）。
+- ほどけ切ったら公転で回った分を home に焼き込む。見つめた場所は少しねじれたまま残る（「観測は加担である」）。位置は連続のまま。
+- 見回す（ドラッグ）と見つめる（静止）を分ける：押したまま 10px 以上動いたら同意を取り消す。
+- reduce-motion では粒子を動かさない（同意の記録と視線リングの変化だけ）。
+- 動画書き出し：`createInryokuWorld({ manual: true, random })` → `scriptGravity(events)` → `renderAt(t)` で、サイトと同じ式を時刻の純粋関数として描ける（HyperFrames の `hf-seek` から呼ぶ）。
 
 ## 10. 哲学的正当化（vision.md からの一対一）
 

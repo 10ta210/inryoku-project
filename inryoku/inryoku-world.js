@@ -2,10 +2,16 @@
 // First-person particle field — inRYOKU 裏ルート.
 // Camera lives INSIDE a 100-unit sphere; mouse drag rotates the gaze.
 // Perlin-ish slow drift on the field. Low-end safe via tier hints.
+// 視線の引力 (inryoku-gravity.js): attract(x, y) / release() — long-press で粒子が集まり、離すとほどける。
+// manual: true で rAF ループを止め、renderAt(t) で任意の時刻を描く (動画書き出し用・決定論的)。
 //
 // ESM, no build. Three.js r160 (imported by caller / importmap).
 
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import {
+  GRAVITY_DEFAULTS, GravityEnvelope, envelopeIntegrals,
+  createField, selectAttracted, applyGravity, bakeRotation,
+} from './inryoku-gravity.js';
 
 const SPHERE_RADIUS = 100;
 const DEFAULT_COUNT = 50000;
@@ -57,10 +63,13 @@ export function createInryokuWorld(opts = {}) {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const tier = opts.tier || 'high';
   const count = pickCount(tier, reduce);
+  // 動画書き出し用: シード付き乱数と手動描画 (サイトでは使わない)
+  const rand = opts.random || Math.random;
+  const manual = !!opts.manual;
 
   // Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true,
-    powerPreference: 'high-performance' });
+    powerPreference: 'high-performance', preserveDrawingBuffer: manual });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x000000, 1);
@@ -79,13 +88,14 @@ export function createInryokuWorld(opts = {}) {
   const home       = new Float32Array(count * 3);  // drift anchor
   const colors     = new Float32Array(count * 3);
   const sizes      = new Float32Array(count);
+  const pulls      = new Float32Array(count);      // 視線の引力の強さ (0..1)
 
   for (let i = 0; i < count; i++) {
     // Sample inside a spherical shell [0.25R, 1.0R]
-    const u = Math.random(), v = Math.random();
+    const u = rand(), v = rand();
     const theta = 2 * Math.PI * u;
     const phi   = Math.acos(2 * v - 1);
-    const r = SPHERE_RADIUS * (0.25 + 0.75 * Math.cbrt(Math.random()));
+    const r = SPHERE_RADIUS * (0.25 + 0.75 * Math.cbrt(rand()));
     const x = r * Math.sin(phi) * Math.cos(theta);
     const y = r * Math.sin(phi) * Math.sin(theta);
     const z = r * Math.cos(phi);
@@ -95,18 +105,19 @@ export function createInryokuWorld(opts = {}) {
 
     const pal = PALETTE[i % PALETTE.length];
     // Slight brightness variance — but no white/black drift
-    const k = 0.6 + Math.random() * 0.4;
+    const k = 0.6 + rand() * 0.4;
     colors[i*3]   = pal[0] * k;
     colors[i*3+1] = pal[1] * k;
     colors[i*3+2] = pal[2] * k;
 
-    sizes[i] = 0.4 + Math.random() * 1.6;
+    sizes[i] = 0.4 + rand() * 1.6;
   }
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
   geo.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('pull',     new THREE.BufferAttribute(pulls, 1));
 
   const mat = new THREE.ShaderMaterial({
     uniforms: {
@@ -115,25 +126,33 @@ export function createInryokuWorld(opts = {}) {
     },
     vertexShader: `
       attribute float size;
+      attribute float pull;   // 視線の引力 0..1
       varying vec3 vColor;
+      varying float vPull;
       uniform float uTime;
       uniform float uPxRatio;
       void main() {
         vColor = color;
+        vPull = pull;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         float d = max(0.001, -mv.z);
-        gl_PointSize = size * uPxRatio * (160.0 / d);
+        // 旧: gl_PointSize = size * uPxRatio * (160.0 / d);
+        // 集まった粒子は少し小さく (密度が上がっても白く飽和しないように)
+        gl_PointSize = size * (1.0 - 0.15 * pull) * uPxRatio * (160.0 / d);
         gl_Position = projectionMatrix * mv;
       }
     `,
     fragmentShader: `
       varying vec3 vColor;
+      varying float vPull;
       void main() {
         vec2 c = gl_PointCoord - 0.5;
         float r2 = dot(c, c);
         if (r2 > 0.25) discard;
         float a = smoothstep(0.25, 0.0, r2);
-        gl_FragColor = vec4(vColor, a * 0.75);
+        // 旧: gl_FragColor = vec4(vColor, a * 0.75);
+        // 白黒禁則: 集まるほど 1 粒の光を弱め、重なっても白へ飽和させない
+        gl_FragColor = vec4(vColor, a * 0.75 * (1.0 - 0.5 * vPull));
       }
     `,
     transparent: true,
@@ -192,7 +211,84 @@ export function createInryokuWorld(opts = {}) {
   let running = true;
   let last = performance.now();
   const posAttr = geo.getAttribute('position');
+  const pullAttr = geo.getAttribute('pull');
   const driftScale = reduce ? 0 : 1;
+
+  // 漂いの式 (原本と同じ): home 位置 + 3D value-noise。全粒子の漂いと視線の引力で共有する。
+  const DRIFT_SCALE = 0.012;
+  const DRIFT_AMP = 1.6;
+  function driftInto(hx, hy, hz, t, out, o = 0) {
+    const s = DRIFT_SCALE;
+    out[o]     = hx + (vnoise(hx * s,        hy * s + t * 0.05, hz * s) - 0.5) * DRIFT_AMP;
+    out[o + 1] = hy + (vnoise(hx * s + 12.3, hy * s,            hz * s + t * 0.05) - 0.5) * DRIFT_AMP;
+    out[o + 2] = hz + (vnoise(hx * s,        hy * s - 7.7,      hz * s + t * 0.05) - 0.5) * DRIFT_AMP;
+    return out;
+  }
+
+  // Gaze pose — drag で決まる yaw/pitch に、静止中も続く自律ドリフトを足す
+  function poseCamera(t) {
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = yaw + Math.sin(t * 0.07) * autoDriftAmp;
+    camera.rotation.x = pitch + Math.cos(t * 0.05) * autoDriftAmp * 0.5;
+  }
+
+  // ── 視線の引力 ─────────────────────────────────────────────
+  // 長押し (観測の同意) で、見つめた先に粒子が螺旋を描いて集まる。離すとほどけて戻る。
+  const GRAVITY = { ...GRAVITY_DEFAULTS, ...(opts.gravity || {}) };
+  const env = new GravityEnvelope(GRAVITY, { keepHistory: manual });
+  // sel: 引かれる粒子 / field: 引力の場 / E: 強さ / I: 公転の量 / M: 巻き込みの量
+  const g = { sel: null, field: null, E: 0, I: 0, M: 0, I0: 0, M0: 0, prevE: 0 };
+
+  function beginField(sx, sy) {
+    // 画面上の点 (視線リングの位置) → カメラから見た方向
+    const dir = new THREE.Vector3(
+      (sx / window.innerWidth) * 2 - 1,
+      -(sy / window.innerHeight) * 2 + 1,
+      0.5,
+    ).unproject(camera).sub(camera.position).normalize();
+    g.field = createField(dir.x, dir.y, dir.z, GRAVITY);
+    g.sel = selectAttracted(home, count, g.field, GRAVITY);
+    g.I0 = g.I;
+    g.M0 = g.M;
+    g.prevE = 0;
+  }
+
+  // ほどけ切ったら回った分を home に焼き込み、場を閉じる (見つめた跡が少しねじれて残る)
+  function endField() {
+    bakeRotation(g, home, pulls);
+    pullAttr.needsUpdate = true;
+    g.sel = null;
+    g.field = null;
+  }
+
+  // 長押しが成立した瞬間に呼ぶ。sx, sy = 視線リングの画面座標
+  function attract(sx, sy) {
+    if (reduce || manual) return; // reduce-motion では粒子を動かさない
+    const t = performance.now() * 0.001;
+    // ほどけ切る前に押し直したら、同じ場所へもう一度集める (粒子が飛ばないように)
+    if (g.sel && env.target === 0 && env.at(t).x < GRAVITY.settle) endField();
+    if (!g.sel) beginField(sx, sy);
+    env.set(1, t);
+  }
+
+  // 指を離した瞬間に呼ぶ。爆発させず、ゆっくりほどける
+  function release() {
+    if (!g.sel || manual) return;
+    env.set(0, performance.now() * 0.001);
+  }
+
+  function stepGravity(t, dt) {
+    if (!g.sel) return;
+    const E = Math.min(1, Math.max(0, env.at(t).x));
+    g.I += 0.5 * (g.prevE + E) * dt;
+    if (E > g.prevE) g.M += E - g.prevE;
+    g.prevE = E;
+    g.E = E;
+    applyGravity(g, home, posAttr.array, pulls, t, driftInto);
+    posAttr.needsUpdate = true;
+    pullAttr.needsUpdate = true;
+    if (env.target === 0 && E < GRAVITY.settle) endField();
+  }
 
   function frame(now) {
     if (!running) return;
@@ -206,30 +302,21 @@ export function createInryokuWorld(opts = {}) {
     pitch += (targetPitch - pitch) * 0.06;
 
     // Auto-drift adds a tiny ongoing parallax even when still.
-    const dy = Math.sin(t * 0.07) * autoDriftAmp;
-    const dp = Math.cos(t * 0.05) * autoDriftAmp * 0.5;
-
-    camera.rotation.order = 'YXZ';
-    camera.rotation.y = yaw + dy;
-    camera.rotation.x = pitch + dp;
+    // 旧: camera.rotation.y = yaw + sin(t*0.07)*amp; camera.rotation.x = pitch + cos(t*0.05)*amp*0.5;
+    poseCamera(t);
 
     if (driftScale > 0) {
       // Slow Perlin-ish drift on a subset of particles each frame (cheap LOD)
       const stride = (tier === 'low') ? 6 : (tier === 'medium' ? 3 : 2);
       const offset = (Math.floor(now * 0.06)) % stride;
       const arr = posAttr.array;
-      const scale = 0.012;
-      const amp = 1.6;
+      // 旧: ループ内で vnoise を直接 3 回呼んで arr に書いていた (式は driftInto と同一)
       for (let i = offset; i < count; i += stride) {
-        const hx = home[i*3], hy = home[i*3+1], hz = home[i*3+2];
-        const nx = vnoise(hx * scale,        hy * scale + t * 0.05, hz * scale) - 0.5;
-        const ny = vnoise(hx * scale + 12.3, hy * scale,             hz * scale + t * 0.05) - 0.5;
-        const nz = vnoise(hx * scale,        hy * scale - 7.7,       hz * scale + t * 0.05) - 0.5;
-        arr[i*3]   = hx + nx * amp;
-        arr[i*3+1] = hy + ny * amp;
-        arr[i*3+2] = hz + nz * amp;
+        driftInto(home[i*3], home[i*3+1], home[i*3+2], t, arr, i * 3);
       }
       posAttr.needsUpdate = true;
+      // 引かれている粒子は毎フレーム全部を更新して上書きする (間引くと揺れて見える)
+      stepGravity(t, dt);
     } else {
       // Reduce-motion: sparse twinkle via size variance only.
       // We still need *some* update so the field doesn't feel dead.
@@ -246,7 +333,40 @@ export function createInryokuWorld(opts = {}) {
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  if (!manual) requestAnimationFrame(frame);
+
+  // ── 動画書き出し (manual) ──────────────────────────────────
+  // events: [{ t, target }] — 押した (1) / 離した (0) 時刻。at: 視線リングの画面座標 (既定は中央)
+  function scriptGravity(events, at = {}) {
+    if (!manual || !events.length) return;
+    poseCamera(events[0].t);
+    camera.updateMatrixWorld();
+    beginField(at.x != null ? at.x : window.innerWidth / 2,
+               at.y != null ? at.y : window.innerHeight / 2);
+    g.I0 = 0;
+    g.M0 = 0;
+    for (const e of events) env.set(e.target, e.t);
+  }
+
+  // 時刻 t の 1 枚を描く。t だけで絵が決まる (フレームが順不同で呼ばれてもよい)
+  function renderAt(t) {
+    mat.uniforms.uTime.value = t;
+    poseCamera(t);
+    const arr = posAttr.array;
+    for (let i = 0; i < count; i++) {
+      driftInto(home[i*3], home[i*3+1], home[i*3+2], t, arr, i * 3);
+    }
+    if (g.sel) {
+      const { I, M } = envelopeIntegrals(env, t);
+      g.E = Math.min(1, Math.max(0, env.at(t).x));
+      g.I = I;
+      g.M = M;
+      applyGravity(g, home, arr, pulls, t, driftInto);
+      pullAttr.needsUpdate = true;
+    }
+    posAttr.needsUpdate = true;
+    renderer.render(scene, camera);
+  }
 
   function dispose() {
     running = false;
@@ -299,6 +419,8 @@ export function createInryokuWorld(opts = {}) {
   return {
     renderer, scene, camera, points,
     projectToScreen, pickAnchorInFront,
+    attract, release,            // 視線の引力 (サイト)
+    scriptGravity, renderAt,     // 動画書き出し (manual: true のときだけ有効)
     dispose,
     get reduceMotion() { return reduce; },
     get count() { return count; },

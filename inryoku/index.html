@@ -114,11 +114,21 @@
   }, { passive: true });
 
   // Long press = "consent to observe". Records +1% silently. No counter shown.
-  function startPress() {
+  // 同意が成立すると「視線の引力」: 見つめた先へ粒子が螺旋を描いて集まり、離すとほどける。
+  // 見回す (ドラッグ) と見つめる (静止) を分けるため、押したまま動いたら同意を取り消す。
+  const STILL_PX = 10;
+  let pressX = 0, pressY = 0;
+  function startPress(e) {
     if (consenting) return;
+    if (e.button != null && e.button !== 0) return;
+    if (pressTimer) clearTimeout(pressTimer);
+    pressX = e.clientX; pressY = e.clientY;
+    moveGaze(e.clientX, e.clientY); // タッチでも押した場所にリングを置く
     pressTimer = setTimeout(() => {
+      pressTimer = null;
       consenting = true;
       gaze.classList.add('is-pressing');
+      world.attract(mx, my);
       try {
         const o = JSON.parse(localStorage.getItem('__inryokuObservations') || '{}');
         o.__consent = (o.__consent || 0) + 1;
@@ -130,14 +140,22 @@
       } catch (_) {}
     }, 850);
   }
+  function cancelIfMoved(e) {
+    if (pressTimer && Math.hypot(e.clientX - pressX, e.clientY - pressY) > STILL_PX) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+  }
   function endPress() {
     if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
     if (consenting) {
       consenting = false;
       gaze.classList.remove('is-pressing');
+      world.release();
     }
   }
   window.addEventListener('pointerdown', startPress);
+  window.addEventListener('pointermove', cancelIfMoved);
   window.addEventListener('pointerup', endPress);
   window.addEventListener('pointercancel', endPress);
   window.addEventListener('pointerleave', endPress);
