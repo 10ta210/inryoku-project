@@ -124,7 +124,7 @@ function spawn(parent, g, rand, P, step) {
     const ox = ax - cx;
     const oy = ay - cy;
     const ol = Math.hypot(ox, oy) || 1;
-    const bias = 0.5 * (0.3 - ol / P.radius);
+    const bias = 0.9 * (0.65 - ol / P.radius);
     const th = rand() * Math.PI * 2;
     let dx = Math.cos(th) + (ox / ol) * bias;
     let dy = Math.sin(th) + (oy / ol) * bias;
@@ -132,10 +132,11 @@ function spawn(parent, g, rand, P, step) {
     dx /= dl;
     dy /= dl;
     const dist = parent.len * (0.35 + 0.35 * rand());
-    const x = ax + dx * dist;
-    const y = ay + dy * dist;
     const ang = parent.ang + (rand() - 0.5) * 0.7;
     const len = parent.len * (0.72 + 0.18 * rand());
+    // 選んだ点に子の線の「中央」を置く (上端を置くと世代ごとに全体が下へずれていく)
+    const x = ax + dx * dist - (Math.cos(ang) * len) / 2;
+    const y = ay + dy * dist - (Math.sin(ang) * len) / 2;
     const bend = parent.bend * 0.5 + (rand() - 0.5) * 0.6;
     const main = samplePath(x, y, ang, len, bend, step);
     const end = main[main.length - 1];
