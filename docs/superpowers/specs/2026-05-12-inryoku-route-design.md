@@ -147,4 +147,4 @@ inRYOKU（50% line）の動詞は **引力**。inryokü（101% line）の動詞�
 - [ ] reduce-motion の phrase 位置を「視線方向に固定」（現状は完全ランダム配置）— 改善余地
 - [ ] phrases.json を 30 → 50 に拡張（季節 phrase / 時間帯 phrase）
 - [ ] sessionStorage.__inryokuGateMsg を P3 側で読み取り、短時間表示する UI
-- [ ] CSP：`/inryoku/` で unpkg.com の script-src 許可（または vendor/three にローカル化）
+- [x] CSP：`/inryoku/` の Three.js を vendor/three (r160) にローカル化（2026-11-11。server.js の script-src に unpkg.com が無く読み込めなかった）

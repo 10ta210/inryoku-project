@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<title>inRYOKU — 全ては 1 (preview)</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<script type="module">
+  // 物語「全ては 1」のラフ確認用ページ。本番の /inryoku/ にはまだ組み込んでいない。
+  // i の点 → 線 → 少し違う線 → 1 → 色々な 1 → 引くとまた i の点 (15 秒で 1 周、無限ループ)
+  import * as THREE from '../vendor/three/build/three.module.js';
+  import { createOneView } from './inryoku-one.js';
+
+  const reduce = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const view = createOneView({ THREE, container: document.body, reduceMotion: reduce });
+  window.addEventListener('resize', () => view.resize(window.innerWidth, window.innerHeight));
+  window.__inryokuOne = view; // デバッグ用
+</script>
+</body>
+</html>

@@ -7,7 +7,9 @@
 //
 // ESM, no build. Three.js r160 (imported by caller / importmap).
 
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+// 旧: import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+// server.js の CSP (script-src) に unpkg.com が無く読み込めなかったため、リポジトリ内の同じ r160 を使う
+import * as THREE from '../vendor/three/build/three.module.js';
 import {
   GRAVITY_DEFAULTS, GravityEnvelope, envelopeIntegrals,
   createField, selectAttracted, applyGravity, bakeRotation,
