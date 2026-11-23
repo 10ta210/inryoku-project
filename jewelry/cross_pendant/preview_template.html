@@ -74,6 +74,9 @@ h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 4vw
 .sw i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
 .sw .polish { background: radial-gradient(circle at 35% 30%, #fff 0%, #cfd0d4 30%, #7c7e84 70%, #d8d9dc 100%); }
 .sw .black { background: radial-gradient(circle at 35% 30%, #77777c 0%, #2a2a2e 45%, #0d0d0f 100%); }
+.sw .gold { background: radial-gradient(circle at 35% 30%, #fff6d8 0%, #f0c868 35%, #8a6a2a 75%, #e8c472 100%); }
+.sw .rose { background: radial-gradient(circle at 35% 30%, #fff0e8 0%, #f2bfa6 35%, #8c6252 75%, #eab9a2 100%); }
+.sw .rhodium { background: radial-gradient(circle at 35% 30%, #fff 0%, #dfe8f4 30%, #6f7884 70%, #dce5f0 100%); }
 .sw .oxid { background: radial-gradient(circle at 50% 50%, #0d0d0f 0 30%, #b9bac0 34%, #8a8b90 100%); }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
 
@@ -92,12 +95,13 @@ ol.flow li span { font-size: 13px; color: var(--muted); }
 <div class="wrap">
   <header>
     <div class="eyebrow">inryokü · cross pendant · SV925 lost-wax</div>
-    <h1>十字ペンダント 3案</h1>
-    <p class="lede">P1 の「開眼 → 十字」をシルバーの塊にしました。3案とも同じデータから鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
+    <h1>十字ペンダント</h1>
+    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました (案 D)。最初の 3 案 (A〜C) も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="デザイン案">
-    <button class="tab" role="tab" id="tab-A_white_black" data-key="A_white_black" aria-selected="true"><b>A</b>白と黒の十字</button>
+    <button class="tab" role="tab" id="tab-D_sun_cross" data-key="D_sun_cross" aria-selected="true"><b>D</b>太陽十字</button>
+    <button class="tab" role="tab" id="tab-A_white_black" data-key="A_white_black" aria-selected="false"><b>A</b>白と黒の十字</button>
     <button class="tab" role="tab" id="tab-B_eye_open" data-key="B_eye_open" aria-selected="false"><b>B</b>開眼</button>
     <button class="tab" role="tab" id="tab-C_101" data-key="C_101" aria-selected="false"><b>C</b>101%</button>
   </div>
@@ -116,6 +120,7 @@ ol.flow li span { font-size: 13px; color: var(--muted); }
         <button class="ctl" id="vCoin" aria-pressed="false">10円玉と比べる</button>
         <button class="ctl" id="vSpin" aria-pressed="true">自動回転</button>
       </div>
+      <div class="controls" id="finishCtl" role="group" aria-label="仕上げ" hidden></div>
     </div>
 
     <article class="sheet" id="sheet" aria-live="polite">
@@ -128,7 +133,7 @@ ol.flow li span { font-size: 13px; color: var(--muted); }
         <dt>外寸 (幅×高さ×厚み)</dt><dd id="sSize">—</dd>
         <dt>重さ (SV925)</dt><dd id="sWeight">—</dd>
         <dt>体積</dt><dd id="sVol">—</dd>
-        <dt>チェーン穴</dt><dd>内径 2.6mm · 横から通す</dd>
+        <dt>チェーン穴</dt><dd id="sBail">内径 2.6mm · 横から通す</dd>
         <dt>データ</dt><dd id="sFile">—</dd>
       </dl>
       <div class="swatches" id="sFinish"></div>
@@ -168,6 +173,20 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const INFO = {
+  D_sun_cross: {
+    key: '案 D', name: '太陽十字', file: 'D_sun_cross.stl',
+    concept: 'P1 で瞳が開いた瞬間の光をそのまま金属にしました。中心の鏡面球が太陽の核、まわりのレンズ状の円盤がコロナ、四方へ同じ長さで伸びる細い光線が十字です。光線の断面はひし形で、正面の稜線に一本の光の筋が走ります。シェーダーの「針のように細い線」を、稜線の反射で再現しています。',
+    bail: '内径 2.5mm · コロナの裏に隠しバチカン',
+    finishes: {
+      'P1 の色': { core: 'polish', corona: 'gold', vert: 'rhodium', horiz: 'rose', bail: 'polish' },
+      'オールシルバー': { core: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+    },
+    swatches: {
+      'P1 の色': [['polish', '核 (球): 鏡面シルバー'], ['gold', 'コロナ: 金メッキ (シェーダーの黄金色)'], ['rhodium', '縦の光線: ロジウム (青みの白)'], ['rose', '横の光線: ピンクゴールドメッキ (暖色)']],
+      'オールシルバー': [['polish', '全体: 鏡面'], ['polish', 'コロナ: 放射状のヘアライン仕上げにすると光が外へ走る']],
+    },
+    note: 'チェーン穴はコロナの裏にあって、正面からは光線 4 本がすべて同じ長さで見えます。「P1 の色」は部分メッキを 3 色重ねるので、オールシルバーより加工費が大きく上がります。',
+  },
   A_white_black: {
     key: '案 A', name: '白と黒の十字', file: 'A_white_black.stl',
     concept: '縦軸は白 (RGB = 光・精神)、横軸は黒 (CMY = 物質)。P1 Stage 11 の十字をそのまま金属にしました。縦軸が横軸の手前に重なる二層構造で、横から見ると段差が影をつくります。縦を長くとって、光が上下へ伸びていく形に。',
@@ -213,9 +232,13 @@ controls.autoRotate = !reduce; controls.autoRotateSpeed = 1.6;
 
 const MAT = {
   polish: new THREE.MeshPhysicalMaterial({ color: 0xe6e6e8, metalness: 1, roughness: 0.1, clearcoat: 0.3 }),
+  rhodium: new THREE.MeshPhysicalMaterial({ color: 0xe4ecf6, metalness: 1, roughness: 0.07, clearcoat: 0.4 }),
+  gold: new THREE.MeshPhysicalMaterial({ color: 0xf0c868, metalness: 1, roughness: 0.16 }),
+  rose: new THREE.MeshPhysicalMaterial({ color: 0xf2bfa6, metalness: 1, roughness: 0.14 }),
   black: new THREE.MeshPhysicalMaterial({ color: 0x232327, metalness: 1, roughness: 0.28 }),
 };
 const PART_MAT = { white: MAT.polish, black: MAT.black, silver: MAT.polish };
+let currentFinish = null;
 
 function decode(b64, Type) {
   const bin = atob(b64); const u8 = new Uint8Array(bin.length);
@@ -232,7 +255,9 @@ for (const [name, parts] of Object.entries(window.CROSS_MESH)) {
     geo.setIndex(new THREE.BufferAttribute(decode(d.i, Uint32Array), 1));
     // 平面と丸みの境目で法線が混ざらないよう、30° 以上の角は分ける
     const shaded = toCreasedNormals(geo, Math.PI / 6);
-    g.add(new THREE.Mesh(shaded, PART_MAT[pname] || MAT.polish));
+    const mesh = new THREE.Mesh(shaded, PART_MAT[pname] || MAT.polish);
+    mesh.userData.part = pname;
+    g.add(mesh);
   }
   // 中心を原点へ
   const box = new THREE.Box3().setFromObject(g);
@@ -250,7 +275,22 @@ const coin = new THREE.Mesh(
 coin.rotation.x = Math.PI / 2; coin.visible = false; scene.add(coin);
 const coinLabel = document.getElementById('coinLabel');
 
-let current = 'A_white_black';
+let current = 'D_sun_cross';
+const finishCtl = document.getElementById('finishCtl');
+
+function swatchHTML(list) {
+  return list.map(([c, t]) => `<div class="sw"><i class="${c}"></i><span>${t}</span></div>`).join('');
+}
+
+function applyFinish(name, label) {
+  const info = INFO[name];
+  if (!info.finishes) return;
+  currentFinish = label;
+  const map = info.finishes[label];
+  groups[name].children.forEach(m => { m.material = MAT[map[m.userData.part]] || MAT.polish; });
+  document.getElementById('sFinish').innerHTML = swatchHTML(info.swatches[label]);
+  finishCtl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === label)));
+}
 let showCoin = false;
 
 function frame(view) {
@@ -288,11 +328,20 @@ function select(name) {
   document.getElementById('sWeight').textContent = '約 ' + rep.weight_sv925_g.toFixed(1) + ' g';
   document.getElementById('sVol').textContent = (rep.volume_cm3 * 1000).toFixed(0) + ' mm³';
   document.getElementById('sFile').textContent = info.file;
-  document.getElementById('sFinish').innerHTML = info.finish
-    .map(([c, t]) => `<div class="sw"><i class="${c}"></i><span>${t}</span></div>`).join('');
+  document.getElementById('sBail').textContent = info.bail || '内径 2.6mm · 横から通す';
+  if (info.finishes) {
+    const labels = Object.keys(info.finishes);
+    finishCtl.innerHTML = labels.map(l => `<button class="ctl" data-f="${l}" aria-pressed="false">${l}</button>`).join('');
+    finishCtl.querySelectorAll('button').forEach(b => b.onclick = () => applyFinish(name, b.dataset.f));
+    finishCtl.hidden = false;
+    applyFinish(name, labels[0]);
+  } else {
+    finishCtl.hidden = true; finishCtl.innerHTML = '';
+    document.getElementById('sFinish').innerHTML = swatchHTML(info.finish);
+  }
   document.getElementById('sNote').textContent = info.note;
   place(); frame('front');
-  try { localStorage.setItem('cross-tab', name); } catch (e) {}
+  try { localStorage.setItem('cross-tab-v2', name); } catch (e) {}
 }
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => select(t.dataset.key)));
@@ -312,8 +361,8 @@ function resize() {
 }
 new ResizeObserver(resize).observe(stage); resize();
 
-let start = 'A_white_black';
-try { const s = localStorage.getItem('cross-tab'); if (s && groups[s]) start = s; } catch (e) {}
+let start = 'D_sun_cross';
+try { const s = localStorage.getItem('cross-tab-v2'); if (s && groups[s]) start = s; } catch (e) {}
 select(start);
 document.getElementById('loading').remove();
 

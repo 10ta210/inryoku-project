@@ -91,7 +91,47 @@ def design_c():
     return {"silver": body + bail}
 
 
+# ---------- 案 D: 太陽十字 (P1 開眼の sun flash + Stage 7 cross をそのまま金属に) ----------
+# 元シェーダー (p1_stage6_eye.js SUN_FRAG):
+#   core   = exp(-r²·18)        → 中心の鏡面球
+#   corona = exp(-r²·2.2)       → 中心が厚く縁へ薄くなるレンズ円盤
+#   vertical / horizontal = 針のように細い光線、同じ長さ、外へ減衰
+#                               → 稜線 (ナイフエッジ) をもつ菱形断面の光線、先へ細る
+def sun_ray(length, axis):
+    """菱形断面の光線。正面に稜線 → 一本の細い光の線が走る"""
+    root = [(-0.95, 0, 0), (0.95, 0, 0), (0, 0, 1.6), (0, 0, -0.6)]
+    tip = [(-0.42, length, 0), (0.42, length, 0), (0, length, 0.48), (0, length, -0.4)]
+    m = Manifold.batch_hull([Manifold.hull_points(root + tip), sphere(0.45, (0, length, 0.03))])
+    # +Y 向きに作って回転
+    rot = {"up": 0, "left": 90, "down": 180, "right": -90}[axis]
+    return m.rotate((0, 0, rot))
+
+
+def design_d():
+    L = 16.0                                           # 中心から光線の先端まで (4 本とも同じ)
+    core = sphere(2.4, (0, 0, 1.1))                   # 太陽の核
+    rim = Manifold.cylinder(0.9, 5.2, 5.2, center=True)          # 縁の厚み 0.9mm
+    lens = Manifold.sphere(5.2).scale((1, 1, 0.27))              # 中心の厚み約 2.8mm
+    corona = rim + lens
+    vert = sun_ray(L, "up") + sun_ray(L, "down")
+    horiz = sun_ray(L, "left") + sun_ray(L, "right")
+    # 隠しバチカン: コロナの裏、中心より上。正面からは見えない
+    bail = (Manifold.cylinder(3.2, 1.9, 1.9, center=True)
+            - Manifold.cylinder(6.0, 1.25, 1.25, center=True)
+            ).rotate((0, 90, 0)).translate((0, 2.8, -2.4))
+    solid = core + corona + vert + horiz + bail
+    # プレビュー色分け用 (重なりは手前のパーツ優先)
+    core_p = core
+    vert_p = vert - core_p
+    horiz_p = horiz - core_p - vert
+    corona_p = corona - core - vert - horiz
+    bail_p = bail - corona
+    return {"core": core_p, "vert": vert_p, "horiz": horiz_p,
+            "corona": corona_p, "bail": bail_p, "_solid": solid}
+
+
 DESIGNS = {
+    "D_sun_cross": design_d,
     "A_white_black": design_a,
     "B_eye_open": design_b,
     "C_101": design_c,

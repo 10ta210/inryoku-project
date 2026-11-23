@@ -1,4 +1,16 @@
 {
+  "D_sun_cross": {
+    "size_mm": [
+      32.9,
+      32.9,
+      7.8
+    ],
+    "volume_cm3": 0.254,
+    "weight_sv925_g": 2.63,
+    "watertight": true,
+    "holes_genus": 1,
+    "triangles": 8804
+  },
   "A_white_black": {
     "size_mm": [
       22.0,
