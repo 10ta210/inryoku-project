@@ -1,0 +1,331 @@
+<title>inryokü 十字ペンダント</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 宝飾の検品台。左に大きな 3D ステージ、右に仕様票。スマホでは縦積み。
+   単一ダーク (黒いベルベット台の上で銀を見る) を意図的に採用 */
+:root {
+  --ground: #121315;        /* 台 (わずかに青みのある墨) */
+  --panel: #1b1c1f;
+  --line: #2e3035;
+  --ink: #e9e7e3;           /* 銀に寄せた白 */
+  --muted: #9a9894;
+  --grey50: #808080;        /* inryokü の 50% グレー */
+  --accent: #c9c3ff;        /* 銀に映る虹の淡い紫 (選択状態のみ) */
+  --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--ground); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 15px; line-height: 1.75; }
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+  display: grid; gap: 28px;
+}
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 4vw, 40px); line-height: 1.25; margin: 0; text-wrap: balance; letter-spacing: .02em; }
+.lede { color: var(--muted); margin: 0; max-width: 62ch; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab {
+  font: inherit; color: var(--ink); background: transparent; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px;
+  display: inline-flex; gap: 10px; align-items: baseline;
+}
+.tab b { font-family: var(--f-mono); font-weight: 500; color: var(--muted); }
+.tab[aria-selected="true"] { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent); }
+.tab[aria-selected="true"] b { color: var(--accent); }
+.tab:focus-visible, .ctl:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.stage {
+  position: relative; border-radius: 14px; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 35%, #26272b 0%, var(--ground) 70%);
+  border: 1px solid var(--line);
+  aspect-ratio: 4 / 5; max-width: 100%; touch-action: none;
+}
+.stage canvas { display: block; width: 100%; height: 100%; }
+.stage .hint { position: absolute; left: 14px; bottom: 12px; font-size: 12px; color: var(--muted); pointer-events: none; }
+.stage .coin-label { position: absolute; font-family: var(--f-mono); font-size: 11px; color: var(--muted); pointer-events: none; transform: translate(-50%, 0); white-space: nowrap; }
+.stage .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ctl {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--panel); cursor: pointer;
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px;
+}
+.ctl[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+.sheet { display: grid; gap: 20px; min-width: 0; }
+.sheet h2 { font-family: var(--f-display); font-weight: 700; font-size: 28px; margin: 0; line-height: 1.3; }
+.sheet .concept { margin: 0; }
+.specs { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 0; padding: 16px 0; border-block: 1px solid var(--line); }
+.specs dt { color: var(--muted); font-size: 13px; }
+.specs dd { margin: 0; font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 14px; }
+.swatches { display: grid; gap: 10px; }
+.sw { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: center; font-size: 14px; }
+.sw i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); }
+.sw .polish { background: radial-gradient(circle at 35% 30%, #fff 0%, #cfd0d4 30%, #7c7e84 70%, #d8d9dc 100%); }
+.sw .black { background: radial-gradient(circle at 35% 30%, #77777c 0%, #2a2a2e 45%, #0d0d0f 100%); }
+.sw .oxid { background: radial-gradient(circle at 50% 50%, #0d0d0f 0 30%, #b9bac0 34%, #8a8b90 100%); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+
+section.next { display: grid; gap: 14px; padding-top: 8px; border-top: 1px solid var(--line); }
+section.next h3 { font-family: var(--f-display); font-size: 22px; margin: 0; }
+ol.flow { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+ol.flow li { counter-increment: s; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+ol.flow li::before { content: counter(s); font-family: var(--f-mono); font-size: 12px; color: var(--accent); }
+ol.flow li strong { font-weight: 700; }
+ol.flow li span { font-size: 13px; color: var(--muted); }
+.reqs { display: flex; flex-wrap: wrap; gap: 8px; }
+.reqs span { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">inryokü · cross pendant · SV925 lost-wax</div>
+    <h1>十字ペンダント 3案</h1>
+    <p class="lede">P1 の「開眼 → 十字」をシルバーの塊にしました。3案とも同じデータから鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="デザイン案">
+    <button class="tab" role="tab" id="tab-A_white_black" data-key="A_white_black" aria-selected="true"><b>A</b>白と黒の十字</button>
+    <button class="tab" role="tab" id="tab-B_eye_open" data-key="B_eye_open" aria-selected="false"><b>B</b>開眼</button>
+    <button class="tab" role="tab" id="tab-C_101" data-key="C_101" aria-selected="false"><b>C</b>101%</button>
+  </div>
+
+  <div class="main">
+    <div>
+      <div class="stage" id="stage">
+        <div class="loading" id="loading">3D を読み込み中…</div>
+        <div class="coin-label" id="coinLabel" hidden>10円玉 Ø23.5mm</div>
+        <div class="hint">ドラッグで回転 · ピンチ/ホイールで拡大</div>
+      </div>
+      <div class="controls">
+        <button class="ctl" id="vFront">正面</button>
+        <button class="ctl" id="vBack">背面</button>
+        <button class="ctl" id="vSide">横から</button>
+        <button class="ctl" id="vCoin" aria-pressed="false">10円玉と比べる</button>
+        <button class="ctl" id="vSpin" aria-pressed="true">自動回転</button>
+      </div>
+    </div>
+
+    <article class="sheet" id="sheet" aria-live="polite">
+      <div>
+        <div class="eyebrow" id="sKey">案 A</div>
+        <h2 id="sName">白と黒の十字</h2>
+      </div>
+      <p class="concept" id="sConcept"></p>
+      <dl class="specs">
+        <dt>外寸 (幅×高さ×厚み)</dt><dd id="sSize">—</dd>
+        <dt>重さ (SV925)</dt><dd id="sWeight">—</dd>
+        <dt>体積</dt><dd id="sVol">—</dd>
+        <dt>チェーン穴</dt><dd>内径 2.6mm · 横から通す</dd>
+        <dt>データ</dt><dd id="sFile">—</dd>
+      </dl>
+      <div class="swatches" id="sFinish"></div>
+      <p class="note" id="sNote"></p>
+    </article>
+  </div>
+
+  <section class="next">
+    <h3>外注までの流れ</h3>
+    <ol class="flow">
+      <li><strong>案を選ぶ</strong><span>大きさ・太さ・仕上げをここで微調整。背面の刻印 (inryokü) も追加できます。</span></li>
+      <li><strong>STL を入稿</strong><span>3D プリント＋銀鋳造の業者か、ジュエリー CAD 職人に依頼。</span></li>
+      <li><strong>試作 1 個</strong><span>重さ・つけ心地・光り方を実物で確認してから量産。</span></li>
+      <li><strong>仕上げ</strong><span>鏡面磨き、いぶし、黒ロジウムなど。案 A の色分けはここで行います。</span></li>
+      <li><strong>チェーン</strong><span>幅 2mm 以下、長さ 45〜50cm が目安。</span></li>
+    </ol>
+    <div class="reqs" aria-label="入稿データの条件">
+      <span>SV925 ロストワックス</span><span>最小肉厚 0.9mm 以上</span><span>STL 水密チェック済</span><span>単位 mm</span>
+    </div>
+  </section>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script>
+window.CROSS_MESH = /*__MESH__*/null;
+window.CROSS_REPORT = /*__REPORT__*/null;
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const INFO = {
+  A_white_black: {
+    key: '案 A', name: '白と黒の十字', file: 'A_white_black.stl',
+    concept: '縦軸は白 (RGB = 光・精神)、横軸は黒 (CMY = 物質)。P1 Stage 11 の十字をそのまま金属にしました。縦軸が横軸の手前に重なる二層構造で、横から見ると段差が影をつくります。縦を長くとって、光が上下へ伸びていく形に。',
+    finish: [['polish', '縦軸 + バチカン: 鏡面'], ['black', '横軸: 黒ロジウム (またはいぶし)']],
+    note: '色分けは鋳造後の部分メッキです。マスキングの手間が加わるので、3案のうちいちばん加工費がかかります。',
+  },
+  B_eye_open: {
+    key: '案 B', name: '開眼', file: 'B_eye_open.stl',
+    concept: '中心の小さな球は、P0 から変わり続けてきた「同一球体」。そこから四方へ光線が伸び、先へいくほど細くなります。点がビームになる瞬間を止めた形です。球の正面には浅いくぼみがあり、いぶしを溜めると黒い瞳になります。',
+    finish: [['polish', '全体: 鏡面'], ['oxid', '瞳のくぼみ: いぶし']],
+    note: 'いちばん軽く繊細です。光線の先端は 1.0mm 前後あるので鋳造はできますが、強くぶつけると曲がるおそれがあります。',
+  },
+  C_101: {
+    key: '案 C', name: '101%', file: 'C_101.stl',
+    concept: '四本の腕が同じ長さの、厚みのある十字。中心に直径 1.8mm の穴が抜けていて、のぞくと向こう側が見えます。「視点の転換」を穴ひとつで表しました。装飾を足さず、重さと面の光で見せる案です。',
+    finish: [['polish', '全体: 鏡面 (角まで丸く磨く)']],
+    note: '銀の量がいちばん多く、鋳造費も上がります。首元でしっかり存在感が出る重さです。',
+  },
+};
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.03).texture;
+
+// 宝飾撮影っぽい細長いキーライト
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(30, 60, 80); scene.add(key);
+const rim = new THREE.DirectionalLight(0xdcd8ff, 0.8); rim.position.set(-60, 10, -40); scene.add(rim);
+
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 2000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.enablePan = false;
+controls.minDistance = 30; controls.maxDistance = 220;
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+controls.autoRotate = !reduce; controls.autoRotateSpeed = 1.6;
+
+const MAT = {
+  polish: new THREE.MeshPhysicalMaterial({ color: 0xe6e6e8, metalness: 1, roughness: 0.1, clearcoat: 0.3 }),
+  black: new THREE.MeshPhysicalMaterial({ color: 0x232327, metalness: 1, roughness: 0.28 }),
+};
+const PART_MAT = { white: MAT.polish, black: MAT.black, silver: MAT.polish };
+
+function decode(b64, Type) {
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Type(u8.buffer);
+}
+
+const groups = {};
+for (const [name, parts] of Object.entries(window.CROSS_MESH)) {
+  const g = new THREE.Group();
+  for (const [pname, d] of Object.entries(parts)) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(decode(d.p, Float32Array), 3));
+    geo.setIndex(new THREE.BufferAttribute(decode(d.i, Uint32Array), 1));
+    // 平面と丸みの境目で法線が混ざらないよう、30° 以上の角は分ける
+    const shaded = toCreasedNormals(geo, Math.PI / 6);
+    g.add(new THREE.Mesh(shaded, PART_MAT[pname] || MAT.polish));
+  }
+  // 中心を原点へ
+  const box = new THREE.Box3().setFromObject(g);
+  const c = box.getCenter(new THREE.Vector3());
+  g.children.forEach(m => m.position.sub(c));
+  g.userData.size = box.getSize(new THREE.Vector3());
+  g.visible = false; scene.add(g); groups[name] = g;
+}
+
+// 10円玉 (Ø23.5mm, 厚さ 1.5mm)
+const coin = new THREE.Mesh(
+  new THREE.CylinderGeometry(11.75, 11.75, 1.5, 96),
+  new THREE.MeshPhysicalMaterial({ color: 0x9a6a4c, metalness: 0.9, roughness: 0.5 })
+);
+coin.rotation.x = Math.PI / 2; coin.visible = false; scene.add(coin);
+const coinLabel = document.getElementById('coinLabel');
+
+let current = 'A_white_black';
+let showCoin = false;
+
+function frame(view) {
+  const s = groups[current].userData.size;
+  const h = Math.max(s.y, showCoin ? 24 : 0) * 1.35;
+  const w = (showCoin ? s.x + 34 : s.x) * 1.35;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const distH = (h / 2) / Math.tan(fov / 2);
+  const distW = (w / 2) / Math.tan(fov / 2) / camera.aspect;
+  const d = Math.max(distH, distW);
+  const cx = showCoin ? -(s.x / 2 + 16) / 2 : 0;
+  controls.target.set(cx, 0, 0);
+  const dir = view === 'back' ? new THREE.Vector3(0, 0.05, -1)
+            : view === 'side' ? new THREE.Vector3(1, 0.05, 0.12)
+            : new THREE.Vector3(0.12, 0.08, 1);
+  camera.position.copy(controls.target).add(dir.normalize().multiplyScalar(d));
+  controls.update();
+}
+
+function place() {
+  const s = groups[current].userData.size;
+  coin.position.set(-(s.x / 2 + 16), 0, 0);
+  coin.visible = showCoin; coinLabel.hidden = !showCoin;
+}
+
+function select(name) {
+  current = name;
+  for (const [k, g] of Object.entries(groups)) g.visible = k === name;
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.key === name)));
+  const info = INFO[name], rep = window.CROSS_REPORT[name];
+  document.getElementById('sKey').textContent = info.key;
+  document.getElementById('sName').textContent = info.name;
+  document.getElementById('sConcept').textContent = info.concept;
+  document.getElementById('sSize').textContent = rep.size_mm.map(v => v.toFixed(1)).join(' × ') + ' mm';
+  document.getElementById('sWeight').textContent = '約 ' + rep.weight_sv925_g.toFixed(1) + ' g';
+  document.getElementById('sVol').textContent = (rep.volume_cm3 * 1000).toFixed(0) + ' mm³';
+  document.getElementById('sFile').textContent = info.file;
+  document.getElementById('sFinish').innerHTML = info.finish
+    .map(([c, t]) => `<div class="sw"><i class="${c}"></i><span>${t}</span></div>`).join('');
+  document.getElementById('sNote').textContent = info.note;
+  place(); frame('front');
+  try { localStorage.setItem('cross-tab', name); } catch (e) {}
+}
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => select(t.dataset.key)));
+document.getElementById('vFront').onclick = () => frame('front');
+document.getElementById('vBack').onclick = () => frame('back');
+document.getElementById('vSide').onclick = () => frame('side');
+const spinBtn = document.getElementById('vSpin');
+spinBtn.setAttribute('aria-pressed', String(controls.autoRotate));
+spinBtn.onclick = () => { controls.autoRotate = !controls.autoRotate; spinBtn.setAttribute('aria-pressed', String(controls.autoRotate)); };
+const coinBtn = document.getElementById('vCoin');
+coinBtn.onclick = () => { showCoin = !showCoin; coinBtn.setAttribute('aria-pressed', String(showCoin)); place(); frame('front'); };
+
+function resize() {
+  const r = stage.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage); resize();
+
+let start = 'A_white_black';
+try { const s = localStorage.getItem('cross-tab'); if (s && groups[s]) start = s; } catch (e) {}
+select(start);
+document.getElementById('loading').remove();
+
+const v = new THREE.Vector3();
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+  if (showCoin) {
+    v.set(coin.position.x, -13.5, 0).project(camera);
+    const r = stage.getBoundingClientRect();
+    coinLabel.style.left = ((v.x + 1) / 2 * r.width) + 'px';
+    coinLabel.style.top = ((1 - v.y) / 2 * r.height) + 'px';
+  }
+});
+</script>

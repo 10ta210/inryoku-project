@@ -1,0 +1,38 @@
+{
+  "A_white_black": {
+    "size_mm": [
+      22.0,
+      38.3,
+      4.6
+    ],
+    "volume_cm3": 0.432,
+    "weight_sv925_g": 4.48,
+    "watertight": true,
+    "holes_genus": 1,
+    "triangles": 5640
+  },
+  "B_eye_open": {
+    "size_mm": [
+      23.2,
+      34.8,
+      5.8
+    ],
+    "volume_cm3": 0.23,
+    "weight_sv925_g": 2.38,
+    "watertight": true,
+    "holes_genus": 1,
+    "triangles": 6942
+  },
+  "C_101": {
+    "size_mm": [
+      26.0,
+      30.6,
+      4.8
+    ],
+    "volume_cm3": 0.761,
+    "weight_sv925_g": 7.89,
+    "watertight": true,
+    "holes_genus": 2,
+    "triangles": 5926
+  }
+}
