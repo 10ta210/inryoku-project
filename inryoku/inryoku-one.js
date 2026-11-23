@@ -24,12 +24,19 @@ export const ONE_DEFAULTS = Object.freeze({
   stemTop: 0.84,                      // i の線の上端
   stemBottom: -1.0,                   // i の線の下端
   width: 0.035,                       // 線の太さ
-  generations: 7,                     // 線が線を生む世代数
-  seed: 50,
+  generations: 9,                     // 線が線を生む世代数
+  seed: 27,                           // 円がまんべんなく丸く埋まる種 (60 通りから選んだ)
   viewHeight: 3.2,                    // 開始時に画面の高さに映る範囲
   viewCenter: Object.freeze([0, 0.05]),
   zoomEase: 0.85,                     // ズーム速度の緩急 (0 = 一定)。両端 (i の点が見える時) がゆっくり
+  // 色: 'white' = 白 (司さん指示 2026-11-23、白黒禁則の例外) / 'wheel' = RGBCMY の色相環
+  color: 'white',
+  // 1 が星に見える: 1 が画面上で starNear px より小さくなると星が灯り始め、starFar px でほぼ星だけになる
+  starNear: 48,
+  starFar: 14,
 });
+
+const WHITE = [1, 1, 1];
 
 // RGBCMY を色相環の順に並べる (R → Y → G → C → B → M)。遠くから見ると点が色相環になる。
 // 純色 (CLAUDE.md のカラーパレット)。同じ色・隣り合う色はいくら重ねても白にならない
@@ -116,8 +123,22 @@ function pointOnPath(pts, s) {
   return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u];
 }
 
-// 親の線から「少しだけ形の違う」子を 1 本生む。円 (半径 R) からはみ出す場合は引き直す。
-function spawn(parent, g, rand, P, step) {
+// 他の 1 と重なっていないか。1 本の 1 を「長さを直径とする円」とみなし、円どうしが重なれば近すぎる。
+// 1 が一つずつ離れて並ぶので、遠くから見ると星空になる (重なると白い塊になってしまう)。
+const SEPARATION = 1.0;
+const SPREAD = 0.25; // 細い 1 なので、長さの 0.25 倍を半径とする円で重なりを見る
+function crowded(placed, x, y, r) {
+  for (const q of placed) {
+    const d = (r + q.r) * SEPARATION;
+    const ex = x - q.x;
+    const ey = y - q.y;
+    if (ex * ex + ey * ey < d * d) return true;
+  }
+  return false;
+}
+
+// 親の線から「少しだけ形の違う」子を 1 本生む。円 (半径 R) からはみ出す・他の 1 と重なる場合は引き直す。
+function spawn(parent, g, rand, P, step, placed) {
   const [cx, cy] = P.center;
   const limit = P.radius * 0.97;
   for (let tries = 0; tries < 8; tries++) {
@@ -133,16 +154,21 @@ function spawn(parent, g, rand, P, step) {
     const dl = Math.hypot(dx, dy) || 1;
     dx /= dl;
     dy /= dl;
-    const dist = parent.len * (0.35 + 0.35 * rand());
+    // 旧: dist = len × (0.35〜0.70)、len = 親 × (0.72〜0.90) — 重なり放題で白い塊になった
+    const dist = parent.len * (0.55 + 0.45 * rand());
     const ang = parent.ang + (rand() - 0.5) * 0.7;
-    const len = parent.len * (0.72 + 0.18 * rand());
+    const len = parent.len * (0.6 + 0.16 * rand());
     // 選んだ点に子の線の「中央」を置く (上端を置くと世代ごとに全体が下へずれていく)
-    const x = ax + dx * dist - (Math.cos(ang) * len) / 2;
-    const y = ay + dy * dist - (Math.sin(ang) * len) / 2;
+    const mx = ax + dx * dist;
+    const my = ay + dy * dist;
+    if (crowded(placed, mx, my, len * SPREAD)) continue;
+    const x = mx - (Math.cos(ang) * len) / 2;
+    const y = my - (Math.sin(ang) * len) / 2;
     const bend = parent.bend * 0.5 + (rand() - 0.5) * 0.6;
     const main = samplePath(x, y, ang, len, bend, step);
     const end = main[main.length - 1];
     if (Math.hypot(x - cx, y - cy) > limit || Math.hypot(end[0] - cx, end[1] - cy) > limit) continue;
+    placed.push({ x: mx, y: my, r: len * SPREAD });
     const birth = parent.birth + parent.dur * 0.7 + 0.2 + 0.4 * rand();
     if (birth > P.period - 2) return null; // 1 周の終わりまでに描き終える (ループの継ぎ目のため)
     // 2 世代目から「1」の旗 (左上の払い)、3 世代目から台座が付き始める
@@ -191,29 +217,36 @@ export function buildLevel(P = ONE_DEFAULTS) {
   };
   root.main = samplePath(root.x, root.y, root.ang, root.len, root.bend, step);
   const glyphs = [root];
+  const placed = [{ x: 0, y: (P.stemTop + P.stemBottom) / 2, r: root.len * SPREAD }];
   let frontier = [root];
   for (let g = 1; g <= P.generations; g++) {
     const next = [];
     for (const parent of frontier) {
-      const n = g === 1 ? 3 : rand() < 0.6 ? 3 : 2;
+      const n = 3; // 旧: 2〜3 本。重ならない置き方にしたので毎回 3 本生む
       for (let c = 0; c < n; c++) {
-        const child = spawn(parent, g, rand, P, step);
+        const child = spawn(parent, g, rand, P, step, placed);
         if (child) { glyphs.push(child); next.push(child); }
       }
     }
     frontier = next;
   }
 
+  const rand3 = mulberry32(P.seed + 2);
   const pos = [];
   const col = [];
   const birth = [];
   const size = [];
-  const phase = [];
+  const phase = [];  // 瞬きの位相 (1 本の 1 ごとに共通)
+  const twf = [];    // 瞬きの回数 / 1 周 (整数なので継ぎ目でずれない)
+  const star = [];   // 1 = その 1 の中心に灯る星
+  const glen = [];   // その 1 の長さ (画面で何 px かを測って、星に変わる距離を決める)
   const [cx, cy] = P.center;
   for (const gl of glyphs) {
     const mid = gl.main[gl.main.length >> 1];
     const a = Math.atan2(mid[1] - cy, mid[0] - cx) / (2 * Math.PI);
-    const pal = WHEEL[Math.floor((a + 1 + 1 / 12) * 6) % 6];
+    const pal = P.color === 'wheel' ? WHEEL[Math.floor((a + 1 + 1 / 12) * 6) % 6] : WHITE;
+    const f = 3 + Math.floor(rand3() * 6);
+    const ph = rand3() * Math.PI * 2;
     // 書き順に沿って、筆が進んだ瞬間に粒子が灯る (筆の速さは sine の ease-in-out)
     const pts = [];
     let total = 0;
@@ -231,8 +264,21 @@ export function buildLevel(P = ONE_DEFAULTS) {
       col.push(pal[0] * k, pal[1] * k, pal[2] * k);
       birth.push(gl.birth + gl.dur * tau);
       size.push(P.width * (0.85 + 0.3 * rand2()));
-      phase.push(rand2() * Math.PI * 2);
+      // 旧: phase.push(rand2() * Math.PI * 2); (粒子ごとの呼吸) → 1 本の 1 ごとに瞬く
+      phase.push(ph);
+      twf.push(f);
+      star.push(0);
+      glen.push(gl.len);
     }
+    // その 1 の中心に星を 1 つ。描き終わった瞬間から灯る
+    pos.push(mid[0], mid[1], 0);
+    col.push(pal[0], pal[1], pal[2]);
+    birth.push(gl.birth + gl.dur);
+    size.push(P.width);
+    phase.push(ph);
+    twf.push(f);
+    star.push(1);
+    glen.push(gl.len);
   }
   return {
     count: birth.length,
@@ -243,6 +289,9 @@ export function buildLevel(P = ONE_DEFAULTS) {
     birth: Float32Array.from(birth),
     size: Float32Array.from(size),
     phase: Float32Array.from(phase),
+    twf: Float32Array.from(twf),
+    star: Float32Array.from(star),
+    glen: Float32Array.from(glen),
   };
 }
 
@@ -250,6 +299,9 @@ const VERT = `
   attribute float birth;
   attribute float wsize;
   attribute float phase;
+  attribute float twf;
+  attribute float star;
+  attribute float glen;
   uniform float uTime;
   uniform float uScale;
   uniform vec2 uOffset;
@@ -257,22 +309,39 @@ const VERT = `
   uniform float uHeight;
   uniform float uAspect;
   uniform float uViewportH;
-  uniform float uBreath;
+  uniform float uLoop;      // 2π × (1 周の中の位置)
+  uniform float uStarNear;
+  uniform float uStarFar;
   varying vec3 vColor;
   varying float vAlpha;
+  varying float vStar;
   void main() {
     vec2 w = uOffset + position.xy * uScale;
     vec2 ndc = (w - uCenter) / (uHeight * 0.5);
     ndc.x /= uAspect;
     gl_Position = vec4(ndc, 0.0, 1.0);
-    // 本当の大きさ (px)。1.5px 未満は 1.5px で描き、面積の比で光を弱める (遠くで白く飽和させない)
-    float dTrue = wsize * uScale * (uViewportH / uHeight);
-    float dDraw = max(dTrue, 1.5);
-    gl_PointSize = dDraw;
+    float px = uViewportH / uHeight;
     float g = clamp((uTime - birth) / 0.25, 0.0, 1.0);
     g = 1.0 - (1.0 - g) * (1.0 - g);
-    float breath = 0.85 + 0.15 * sin(uBreath + phase);
-    vAlpha = g * breath * (dTrue * dTrue) / (dDraw * dDraw);
+    // 瞬き: 1 周にちょうど twf 回 (整数) なので、ループの継ぎ目でずれない
+    float tw = 0.5 + 0.5 * sin(uLoop * twf + phase);
+    // その 1 が画面で何 px か。小さいほど「星」に見えていく
+    float gpx = glen * uScale * px;
+    float far = 1.0 - smoothstep(uStarFar, uStarNear, gpx);
+    vStar = star;
+    if (star > 0.5) {
+      gl_PointSize = (5.0 + 9.0 * tw) * clamp(gpx / 20.0, 0.35, 1.0);
+      // 点より小さくなった星は消す (どのレベルでも同じ規則なので、継ぎ目で光が増減しない)
+      float tiny = clamp(gpx / 2.0, 0.0, 1.0);
+      vAlpha = g * far * (0.35 + 0.65 * tw) * tiny * tiny;
+    } else {
+      // 本当の大きさ (px)。1.5px 未満は 1.5px で描き、面積の比で光を弱める
+      float dTrue = wsize * uScale * px;
+      float dDraw = max(dTrue, 1.5);
+      gl_PointSize = dDraw;
+      // 星に変わるにつれて線は薄れていく
+      vAlpha = g * (0.85 + 0.15 * tw) * (1.0 - 0.75 * far) * (dTrue * dTrue) / (dDraw * dDraw);
+    }
     vColor = color;
   }
 `;
@@ -280,15 +349,29 @@ const VERT = `
 const FRAG = `
   varying vec3 vColor;
   varying float vAlpha;
+  varying float vStar;
   void main() {
+    if (vAlpha < 0.002) discard;
     vec2 c = gl_PointCoord - 0.5;
     float r2 = dot(c, c);
-    if (r2 > 0.25 || vAlpha < 0.002) discard;
-    float core = exp(-r2 * 30.0);
-    float glow = exp(-r2 * 10.0) * 0.4;
-    float halo = exp(-r2 * 4.0) * 0.12;
-    float edge = smoothstep(0.25, 0.16, r2);
-    gl_FragColor = vec4(vColor, (core + glow + halo) * edge * vAlpha * 0.5);
+    float a;
+    if (vStar > 0.5) {
+      // 星: 明るい芯 + 柔らかい光 + 十字の光芒
+      float core = exp(-r2 * 90.0);
+      float glow = exp(-r2 * 22.0) * 0.35;
+      float spike = exp(-abs(c.x) * 40.0) * exp(-c.y * c.y * 10.0)
+                  + exp(-abs(c.y) * 40.0) * exp(-c.x * c.x * 10.0);
+      a = (core + glow + spike * 0.45) * smoothstep(0.5, 0.35, max(abs(c.x), abs(c.y)));
+    } else {
+      if (r2 > 0.25) discard;
+      float core = exp(-r2 * 30.0);
+      float glow = exp(-r2 * 10.0) * 0.4;
+      float halo = exp(-r2 * 4.0) * 0.12;
+      float edge = smoothstep(0.25, 0.16, r2);
+      // 旧: × 0.5 (色相環版で白飛びを防ぐため)。白版は白が狙いなので少し戻す
+      a = (core + glow + halo) * edge * 0.6;
+    }
+    gl_FragColor = vec4(vColor, a * vAlpha);
   }
 `;
 
@@ -315,6 +398,9 @@ export function createOneView(opts) {
   geo.setAttribute('birth', new THREE.BufferAttribute(level.birth, 1));
   geo.setAttribute('wsize', new THREE.BufferAttribute(level.size, 1));
   geo.setAttribute('phase', new THREE.BufferAttribute(level.phase, 1));
+  geo.setAttribute('twf', new THREE.BufferAttribute(level.twf, 1));
+  geo.setAttribute('star', new THREE.BufferAttribute(level.star, 1));
+  geo.setAttribute('glen', new THREE.BufferAttribute(level.glen, 1));
 
   const scene = new THREE.Scene();
   const camera = new THREE.Camera(); // 位置と拡大はシェーダーで計算する
@@ -330,7 +416,9 @@ export function createOneView(opts) {
         uHeight: { value: P.viewHeight },
         uAspect: { value: W / H },
         uViewportH: { value: H * renderer.getPixelRatio() },
-        uBreath: { value: 0 },
+        uLoop: { value: 0 },
+        uStarNear: { value: P.starNear },
+        uStarFar: { value: P.starFar },
       },
       vertexShader: VERT,
       fragmentShader: FRAG,
@@ -354,7 +442,7 @@ export function createOneView(opts) {
       u.uTime.value = k === 0 ? v.phase * P.period : 1e6; // 点の中のレベルは描き終わった姿
       u.uCenter.value.set(v.cx, v.cy);
       u.uHeight.value = v.height;
-      u.uBreath.value = 2 * Math.PI * v.phase * 3; // 1 周に 3 回呼吸 (周期が合うので継ぎ目なし)
+      u.uLoop.value = 2 * Math.PI * v.phase; // 瞬きの回数は粒子側 (twf) に整数で持つ
     }
     renderer.render(scene, camera);
   }

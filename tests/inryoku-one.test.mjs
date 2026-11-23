@@ -86,11 +86,49 @@ describe('buildLevel — i の線から 1 が増えていく', () => {
     assert.ok(L.flags / L.glyphs > 0.6, `「1」の旗がある割合 ${L.flags / L.glyphs}`);
   });
 
-  test('色は RGBCMY のみ (白黒禁則: 白・灰の粒子を作らない)', () => {
+  test('既定の色は白 (司さん指示 2026-11-23)', () => {
     for (let i = 0; i < L.count; i++) {
-      const c = [L.color[i * 3], L.color[i * 3 + 1], L.color[i * 3 + 2]];
+      const [r, g, b] = [L.color[i * 3], L.color[i * 3 + 1], L.color[i * 3 + 2]];
+      assert.ok(r > 0 && r === g && g === b, `粒子 ${i} が白でない ${[r, g, b]}`);
+    }
+  });
+
+  test('色相環版 (color: wheel) は RGBCMY のみ', () => {
+    const W = buildLevel({ ...P, color: 'wheel' });
+    for (let i = 0; i < W.count; i++) {
+      const c = [W.color[i * 3], W.color[i * 3 + 1], W.color[i * 3 + 2]];
       const spread = Math.max(...c) - Math.min(...c);
       assert.ok(spread > 0.4 * Math.max(...c), `粒子 ${i} が無彩色に近い ${c}`);
+    }
+  });
+});
+
+describe('1 が星に見える', () => {
+  const L = buildLevel();
+
+  test('星は 1 本の 1 につき 1 つ、その 1 を描き終えてから灯る', () => {
+    let stars = 0;
+    let lastStroke = -1;
+    for (let i = 0; i < L.count; i++) {
+      if (L.star[i] === 1) {
+        stars++;
+        assert.ok(lastStroke >= 0, '星の前にその 1 の線がある');
+        assert.ok(L.birth[i] >= L.birth[lastStroke] - 1e-6, `星 ${i} が線より先に灯っている`);
+        assert.equal(L.glen[i], L.glen[lastStroke], '星と線は同じ 1 に属する');
+      } else {
+        lastStroke = i;
+      }
+    }
+    assert.equal(stars, L.glyphs);
+  });
+
+  test('瞬きは 1 周に整数回 (ループの継ぎ目でずれない)、同じ 1 の中では揃う', () => {
+    for (let i = 0; i < L.count; i++) {
+      assert.ok(Number.isInteger(L.twf[i]) && L.twf[i] >= 3 && L.twf[i] <= 8, `瞬きの回数 ${L.twf[i]}`);
+      if (i > 0 && L.star[i - 1] === 0 && L.glen[i] === L.glen[i - 1]) {
+        assert.equal(L.twf[i], L.twf[i - 1]);
+        assert.equal(L.phase[i], L.phase[i - 1]);
+      }
     }
   });
 });
