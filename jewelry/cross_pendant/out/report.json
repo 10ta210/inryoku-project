@@ -1,4 +1,16 @@
 {
+  "D3_sun_crucifix": {
+    "size_mm": [
+      25.0,
+      42.5,
+      7.8
+    ],
+    "volume_cm3": 0.485,
+    "weight_sv925_g": 5.03,
+    "watertight": true,
+    "holes_genus": 1,
+    "triangles": 25970
+  },
   "D2_sun_fractal": {
     "size_mm": [
       38.0,

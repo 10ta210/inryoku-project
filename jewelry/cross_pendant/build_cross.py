@@ -216,7 +216,84 @@ def design_d2():
             "corona": corona_p, "bail": bail_p, "_solid": solid}
 
 
+# ---------- 案 D3: 太陽十字架 (P1 最後の十字 = 縦軸優位、下へ伸びる光) ----------
+# 司さん指示 (2026-11-24): 「下だけ長くして十字架らしく / もっと光のジグザグ / P1 の最後の十字」
+#   p1_stage7_cross.js: 1.2-1.7s で横軸 (CMY) がフェードし縦軸 (RGB) が残る → 画面外へ伸びる
+#   → 縦: 上 13mm / 下 26mm (十字架の比率)。横: 11mm で少し細く (消えていく途中の光)
+#   → 光線の両側にのこぎり歯。長短交互で、先端へ向かって斜めに散る (光のジグザグ)
+def serrated_ray(axis, length, root_w, tip_w=0.45, front=1.9, back=0.9,
+                 start=6.0, pitch=2.3, long_t=2.3, short_t=1.2):
+    """稜線つきの芯 + 両側に長短交互ののこぎり歯 (+Y 向きで作って回転)"""
+    spine = Manifold.hull_points([
+        (-root_w, 0, 0), (root_w, 0, 0), (0, 0, front), (0, 0, -back),
+        (-tip_w, length, 0), (tip_w, length, 0), (0, length, front * 0.45), (0, length, -back * 0.5),
+    ])
+    parts = [spine]
+    n = int((length - start - 2.5) / pitch) + 1
+    for i in range(n):
+        ya = start + i * pitch
+        f = 1.0 - ya / length                         # 先へいくほど歯も小さく
+        t = (long_t if i % 2 == 0 else short_t) * (0.45 + 0.55 * f)
+        w = root_w + (tip_w - root_w) * (ya / length)  # その位置の芯の半幅
+        yb = ya + pitch * 0.85
+        zf, zb = front * (1 - 0.55 * ya / length) * 0.55, back * 0.6
+        for sgn in (1, -1):
+            xe = sgn * (w - 0.4)
+            xt = sgn * (w + t)
+            yt = yb + t * 0.55                          # 斜め前へ散る
+            parts.append(Manifold.hull_points([
+                (xe, ya, zf), (xe, ya, -zb), (xe, yb, zf), (xe, yb, -zb),
+                (xt, yt, 0.35), (xt, yt, -0.35),
+            ]))
+    m = Manifold.batch_boolean(parts, OpType.Add)
+    rot = {"up": 0, "left": 90, "down": 180, "right": -90}[axis]
+    return m.rotate((0, 0, rot))
+
+
+def sun_corona_fine(r_disc=6.2, n=24):
+    """24 方向の長短交互の光 (腕の方向は空ける)"""
+    disc = Manifold.cylinder(1.0, r_disc, r_disc, 96, center=True).translate((0, 0, -0.1))
+    spikes = []
+    step = 360.0 / n
+    for k in range(n):
+        if k % (n // 4) in (0,):
+            continue
+        near_arm = k % (n // 4) in (1, n // 4 - 1)
+        R = (8.4 if k % 2 else 9.8) - (0.8 if near_arm else 0.0)
+        a = np.radians(k * step)
+        d = np.array([np.cos(a), np.sin(a)])
+        nn = np.array([-d[1], d[0]])
+        b = d * (r_disc - 0.6)
+        spikes.append(Manifold.hull_points([
+            (*(b + nn * 0.95), 0), (*(b - nn * 0.95), 0), (*b, 0.9), (*b, -0.6),
+            (*(d * R + nn * 0.3), 0), (*(d * R - nn * 0.3), 0), (*(d * R), 0.4), (*(d * R), -0.4),
+        ]))
+    return Manifold.batch_boolean([disc] + spikes, OpType.Add)
+
+
+def design_d3():
+    core = fractal_core(12.0)
+    up = serrated_ray("up", 14.5, 3.0)
+    down = serrated_ray("down", 28.0, 3.0, tip_w=0.5)
+    left = serrated_ray("left", 12.5, 2.4, front=1.6, long_t=1.9, short_t=1.0)
+    right = serrated_ray("right", 12.5, 2.4, front=1.6, long_t=1.9, short_t=1.0)
+    vert = up + down
+    horiz = left + right
+    corona = sun_corona_fine()
+    bail = (Manifold.cylinder(3.2, 1.9, 1.9, center=True)
+            - Manifold.cylinder(6.0, 1.25, 1.25, center=True)
+            ).rotate((0, 90, 0)).translate((0, 3.0, -2.3))
+    solid = core + vert + horiz + corona + bail
+    vert_p = vert - core
+    horiz_p = horiz - core - vert
+    corona_p = corona - core - vert - horiz
+    bail_p = bail - core - corona
+    return {"core": core, "vert": vert_p, "horiz": horiz_p,
+            "corona": corona_p, "bail": bail_p, "_solid": solid}
+
+
 DESIGNS = {
+    "D3_sun_crucifix": design_d3,
     "D2_sun_fractal": design_d2,
     "D_sun_cross": design_d,
     "A_white_black": design_a,
