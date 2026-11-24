@@ -1,4 +1,16 @@
 {
+  "D2_sun_fractal": {
+    "size_mm": [
+      38.0,
+      38.0,
+      7.8
+    ],
+    "volume_cm3": 0.587,
+    "weight_sv925_g": 6.08,
+    "watertight": true,
+    "holes_genus": 1,
+    "triangles": 25414
+  },
   "D_sun_cross": {
     "size_mm": [
       32.9,

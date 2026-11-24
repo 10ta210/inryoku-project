@@ -14,7 +14,7 @@ import os
 
 import numpy as np
 import trimesh
-from manifold3d import Manifold, set_circular_segments
+from manifold3d import Manifold, OpType, set_circular_segments
 
 set_circular_segments(64)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
@@ -130,7 +130,94 @@ def design_d():
             "corona": corona_p, "bail": bail_p, "_solid": solid}
 
 
+# ---------- 案 D2: 太陽十字 v2 (太い十字 / ジグザグの光 / フラクタルの核) ----------
+# 司さん指示 (2026-11-24): 「もっと太くして十字、太陽の光みたいにジグザグ、真ん中をもっとフラクタル」
+#   核   = ヴィチェック・フラクタル (十字の中に十字) を 3 段の段差で彫る
+#   光線 = 矢じりを 3 つ重ねたジグザグの十字 (太く、稜線つき)
+#   コロナ = 腕の間から長短交互に出る 12 本の短い光 (太陽の縁のジグザグ)
+def vicsek(level, size, cx=0.0, cy=0.0):
+    """ヴィチェック・フラクタルの正方形リスト [(cx, cy, 一辺)]"""
+    if level == 0:
+        return [(cx, cy, size)]
+    s3 = size / 3.0
+    out = []
+    for dx, dy in ((0, 0), (s3, 0), (-s3, 0), (0, s3), (0, -s3)):
+        out += vicsek(level - 1, s3, cx + dx, cy + dy)
+    return out
+
+
+def plus(cx, cy, size, z0, z1, r):
+    """レベル 1 の十字を継ぎ目なしの 2 本の棒で作る (小さな隙間・トンネルを作らない)"""
+    a = size / 3.0
+    zc, zh = (z0 + z1) / 2, z1 - z0
+    return (rounded_box(a, size, zh, r, (cx, cy, zc))
+            + rounded_box(size, a, zh, r, (cx, cy, zc)))
+
+
+def fractal_core(S=13.5):
+    # 1 段目: レベル 1 の十字 (一辺 4.5mm の正方形 5 つ分)
+    t1 = [plus(0, 0, S, -0.8, 1.6, 0.4)]
+    # 2 段目: レベル 2 — 5 つの正方形それぞれの中に、また十字 (一辺 1.5mm)
+    t2 = [plus(x, y, s, 1.0, 2.3, 0.25) for x, y, s in vicsek(1, S)]
+    # 3 段目: 中心の十字をもう一段持ち上げる (自己相似の芯)
+    t3 = [plus(0, 0, S / 3, 2.0, 2.9, 0.25)]
+    # 頂点: 中心の 1.5mm 角にピラミッド (光の一点)
+    h = S / 18
+    apex = Manifold.hull_points([(-h, -h, 2.6), (h, -h, 2.6), (h, h, 2.6), (-h, h, 2.6), (0, 0, 3.6)])
+    return Manifold.batch_boolean(t1 + t2 + t3 + [apex], OpType.Add)
+
+
+def zigzag_ray(axis, teeth=((5.5, 11.5, 3.3), (9.5, 15.5, 2.7), (13.5, 19.0, 2.1))):
+    """矢じりを重ねたジグザグの光線 (+Y 向きで作って回転)"""
+    parts = []
+    for i, (y0, y1, w) in enumerate(teeth):
+        last = i == len(teeth) - 1
+        tw = 0.5 if last else 0.9                      # 先端の半幅 (最小肉厚 1.0mm)
+        base = [(-w, y0, 0), (w, y0, 0), (0, y0, 1.9), (0, y0, -0.9)]
+        tip = [(-tw, y1, 0), (tw, y1, 0), (0, y1, 1.0), (0, y1, -0.55)]
+        parts.append(Manifold.hull_points(base + tip))
+    m = Manifold.batch_boolean(parts, OpType.Add)
+    rot = {"up": 0, "left": 90, "down": 180, "right": -90}[axis]
+    return m.rotate((0, 0, rot))
+
+
+def sun_corona():
+    disc = Manifold.cylinder(1.0, 6.2, 6.2, 96, center=True).translate((0, 0, -0.1))
+    spikes = []
+    for k in range(16):
+        ang = k * 22.5
+        if k % 4 == 0:
+            continue                                  # 十字の腕の方向は空ける
+        R = 9.2 if k % 2 == 1 else 8.0                # 長短交互 = 縁のジグザグ
+        a = np.radians(ang)
+        d = np.array([np.cos(a), np.sin(a)])
+        n = np.array([-d[1], d[0]])
+        b = d * 5.6
+        pts = [(*(b + n * 1.25), 0), (*(b - n * 1.25), 0), (*b, 1.0), (*b, -0.6),
+               (*(d * R + n * 0.42), 0), (*(d * R - n * 0.42), 0), (*(d * R), 0.45), (*(d * R), -0.45)]
+        spikes.append(Manifold.hull_points(pts))
+    return Manifold.batch_boolean([disc] + spikes, OpType.Add)
+
+
+def design_d2():
+    core = fractal_core()
+    vert = zigzag_ray("up") + zigzag_ray("down")
+    horiz = zigzag_ray("left") + zigzag_ray("right")
+    corona = sun_corona()
+    bail = (Manifold.cylinder(3.2, 1.9, 1.9, center=True)
+            - Manifold.cylinder(6.0, 1.25, 1.25, center=True)
+            ).rotate((0, 90, 0)).translate((0, 3.0, -2.3))
+    solid = core + vert + horiz + corona + bail
+    vert_p = vert - core
+    horiz_p = horiz - core - vert
+    corona_p = corona - core - vert - horiz
+    bail_p = bail - core - corona
+    return {"core": core, "vert": vert_p, "horiz": horiz_p,
+            "corona": corona_p, "bail": bail_p, "_solid": solid}
+
+
 DESIGNS = {
+    "D2_sun_fractal": design_d2,
     "D_sun_cross": design_d,
     "A_white_black": design_a,
     "B_eye_open": design_b,

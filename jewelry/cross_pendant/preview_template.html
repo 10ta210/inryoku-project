@@ -96,11 +96,12 @@ ol.flow li span { font-size: 13px; color: var(--muted); }
   <header>
     <div class="eyebrow">inryokü · cross pendant · SV925 lost-wax</div>
     <h1>十字ペンダント</h1>
-    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました (案 D)。最初の 3 案 (A〜C) も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
+    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました。最新は案 D2 (太い十字・ジグザグの光・フラクタルの核)。前回の D と最初の 3 案 (A〜C) も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="デザイン案">
-    <button class="tab" role="tab" id="tab-D_sun_cross" data-key="D_sun_cross" aria-selected="true"><b>D</b>太陽十字</button>
+    <button class="tab" role="tab" id="tab-D2_sun_fractal" data-key="D2_sun_fractal" aria-selected="true"><b>D2</b>太陽十字 v2</button>
+    <button class="tab" role="tab" id="tab-D_sun_cross" data-key="D_sun_cross" aria-selected="false"><b>D</b>太陽十字 (前回)</button>
     <button class="tab" role="tab" id="tab-A_white_black" data-key="A_white_black" aria-selected="false"><b>A</b>白と黒の十字</button>
     <button class="tab" role="tab" id="tab-B_eye_open" data-key="B_eye_open" aria-selected="false"><b>B</b>開眼</button>
     <button class="tab" role="tab" id="tab-C_101" data-key="C_101" aria-selected="false"><b>C</b>101%</button>
@@ -173,6 +174,22 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const INFO = {
+  D2_sun_fractal: {
+    key: '案 D2', name: '太陽十字 v2', file: 'D2_sun_fractal.stl',
+    concept: '十字を太くし、各腕を矢じり 3 つの重なりにして、太陽の光のようなジグザグの輪郭にしました。腕のあいだからも長短交互に 12 本の短い光が出ていて、縁全体がギザギザに光ります。中心は「十字の中に十字がある」ヴィチェック・フラクタル。大きな十字の 5 マスそれぞれに小さな十字があり、中心の小さな十字はもう一段高く、頂点にピラミッドの光の一点があります。P0 のピクセルの十字とも響き合う段差です。',
+    bail: '内径 2.5mm · 中心の裏に隠しバチカン',
+    finishes: {
+      'P1 の色': { core: 'polish', corona: 'gold', vert: 'rhodium', horiz: 'rose', bail: 'polish' },
+      'オールシルバー': { core: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+      'フラクタルにいぶし': { core: 'oxid', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+    },
+    swatches: {
+      'P1 の色': [['polish', 'フラクタルの核: 鏡面シルバー'], ['gold', '縁の短い光: 金メッキ'], ['rhodium', '縦の光線: ロジウム (青みの白)'], ['rose', '横の光線: ピンクゴールドメッキ (暖色)']],
+      'オールシルバー': [['polish', '全体: 鏡面。段差のエッジと矢じりの稜線が光る']],
+      'フラクタルにいぶし': [['oxid', '核: いぶしで段の奥を黒く沈め、表面だけ磨く → 十字の入れ子がくっきり'], ['polish', '光線と縁: 鏡面']],
+    },
+    note: '1.5mm 角の段差がいちばん細かい部分です。鋳造できる大きさですが、角は磨きで少し丸くなります。前回の D よりかなり太く重くなりました。',
+  },
   D_sun_cross: {
     key: '案 D', name: '太陽十字', file: 'D_sun_cross.stl',
     concept: 'P1 で瞳が開いた瞬間の光をそのまま金属にしました。中心の鏡面球が太陽の核、まわりのレンズ状の円盤がコロナ、四方へ同じ長さで伸びる細い光線が十字です。光線の断面はひし形で、正面の稜線に一本の光の筋が走ります。シェーダーの「針のように細い線」を、稜線の反射で再現しています。',
@@ -235,6 +252,7 @@ const MAT = {
   rhodium: new THREE.MeshPhysicalMaterial({ color: 0xe4ecf6, metalness: 1, roughness: 0.07, clearcoat: 0.4 }),
   gold: new THREE.MeshPhysicalMaterial({ color: 0xf0c868, metalness: 1, roughness: 0.16 }),
   rose: new THREE.MeshPhysicalMaterial({ color: 0xf2bfa6, metalness: 1, roughness: 0.14 }),
+  oxid: new THREE.MeshPhysicalMaterial({ color: 0x8e8f95, metalness: 1, roughness: 0.42 }),
   black: new THREE.MeshPhysicalMaterial({ color: 0x232327, metalness: 1, roughness: 0.28 }),
 };
 const PART_MAT = { white: MAT.polish, black: MAT.black, silver: MAT.polish };
@@ -275,7 +293,7 @@ const coin = new THREE.Mesh(
 coin.rotation.x = Math.PI / 2; coin.visible = false; scene.add(coin);
 const coinLabel = document.getElementById('coinLabel');
 
-let current = 'D_sun_cross';
+let current = 'D2_sun_fractal';
 const finishCtl = document.getElementById('finishCtl');
 
 function swatchHTML(list) {
@@ -341,7 +359,7 @@ function select(name) {
   }
   document.getElementById('sNote').textContent = info.note;
   place(); frame('front');
-  try { localStorage.setItem('cross-tab-v2', name); } catch (e) {}
+  try { localStorage.setItem('cross-tab-v3', name); } catch (e) {}
 }
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => select(t.dataset.key)));
@@ -361,8 +379,8 @@ function resize() {
 }
 new ResizeObserver(resize).observe(stage); resize();
 
-let start = 'D_sun_cross';
-try { const s = localStorage.getItem('cross-tab-v2'); if (s && groups[s]) start = s; } catch (e) {}
+let start = 'D2_sun_fractal';
+try { const s = localStorage.getItem('cross-tab-v3'); if (s && groups[s]) start = s; } catch (e) {}
 select(start);
 document.getElementById('loading').remove();
 
