@@ -14,7 +14,7 @@ import os
 
 import numpy as np
 import trimesh
-from manifold3d import Manifold, OpType, set_circular_segments
+from manifold3d import CrossSection, Manifold, OpType, set_circular_segments
 
 set_circular_segments(64)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
@@ -393,7 +393,73 @@ def design_d4():
             "corona": corona_p, "bail": bail_p, "_solid": solid}
 
 
+# ---------- 案 D5: 太陽十字 ⊕ (ホルスの目 + 太陽の輪 + サンビーム) ----------
+# 司さん指示 (2026-11-28): 「もっと太陽十字にして」
+#   太陽十字 = 十字に輪が重なる ⊕。D4 の目のメダイユはそのまま、
+#   十字に太陽の輪を通し、目と輪のあいだは抜いて細い光の筋 (サンビーム) を渡す。
+#   輪の外側から長短交互のギザギザの光。
+#   D5  = 十字架 (下が長い) / D5e = 4 本同じ長さ (古典的な ⊕)
+def sun_ring(r_mid=12.5, half_w=1.2, front=1.5, back=0.8):
+    """菱形断面の輪 (正面の稜線に光が一周走る)"""
+    cs = CrossSection.hull_points([(r_mid - half_w, 0), (r_mid + half_w, 0),
+                                   (r_mid, front), (r_mid, -back)])
+    return Manifold.revolve(cs, 160)
+
+
+def sun_beams(r0=7.4, r1=11.7, n=16, half=0.5, front=0.95, back=0.5):
+    """目から輪へ渡す細い光の筋 (十字の方向は除く)"""
+    beams = []
+    for k in range(n):
+        if k % (n // 4) == 0:
+            continue
+        a = np.radians(k * 360.0 / n)
+        d = np.array([np.cos(a), np.sin(a)])
+        nn = np.array([-d[1], d[0]])
+        pts = []
+        for r in (r0, r1):
+            c = d * r
+            pts += [(*(c + nn * half), 0), (*(c - nn * half), 0), (*c, front), (*c, -back)]
+        beams.append(Manifold.hull_points(pts))
+    return Manifold.batch_boolean(beams, OpType.Add)
+
+
+def design_d5(equal=False):
+    plate, eye = horus_medallion(8.0)
+    t0 = 14.2                                           # のこぎり歯は輪の外から
+    if equal:
+        lens = {"up": 18.0, "down": 18.0, "left": 18.0, "right": 18.0}
+    else:
+        lens = {"up": 17.5, "down": 31.0, "left": 16.5, "right": 16.5}
+    up = serrated_ray("up", lens["up"], 3.0, start=t0)
+    down = serrated_ray("down", lens["down"], 3.0, tip_w=0.5, start=t0)
+    side_kw = {} if equal else {"front": 1.6, "long_t": 1.9, "short_t": 1.0}
+    side_w = 3.0 if equal else 2.4
+    left = serrated_ray("left", lens["left"], side_w, start=t0, **side_kw)
+    right = serrated_ray("right", lens["right"], side_w, start=t0, **side_kw)
+    hole = Manifold.cylinder(20, 7.3, 7.3, 128, center=True)
+    vert = (up + down) - hole
+    horiz = (left + right) - hole
+    ring = sun_ring()
+    beams = sun_beams()
+    corona = corona_ring(r_in=13.2, r_short=15.8, r_long=17.6)
+    bail = (Manifold.cylinder(3.2, 1.9, 1.9, center=True)
+            - Manifold.cylinder(6.0, 1.25, 1.25, center=True)
+            ).rotate((0, 90, 0)).translate((0, 3.5, -2.4))
+    solid = Manifold.batch_boolean([plate, eye, vert, horiz, ring, beams, corona, bail], OpType.Add)
+    plate_p = plate - eye
+    vert_p = vert - plate - eye
+    horiz_p = horiz - plate - eye - vert
+    ring_p = ring - vert - horiz
+    beams_p = beams - plate - ring
+    corona_p = corona - ring - vert - horiz
+    bail_p = bail - plate
+    return {"eye": eye, "plate": plate_p, "vert": vert_p, "horiz": horiz_p, "ring": ring_p,
+            "beams": beams_p, "corona": corona_p, "bail": bail_p, "_solid": solid}
+
+
 DESIGNS = {
+    "D5_sun_cross_ring": design_d5,
+    "D5e_sun_cross_equal": lambda: design_d5(equal=True),
     "D4_horus_crucifix": design_d4,
     "D3_sun_crucifix": design_d3,
     "D2_sun_fractal": design_d2,

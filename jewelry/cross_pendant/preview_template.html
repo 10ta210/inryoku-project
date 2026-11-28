@@ -96,11 +96,13 @@ ol.flow li span { font-size: 13px; color: var(--muted); }
   <header>
     <div class="eyebrow">inryokü · cross pendant · SV925 lost-wax</div>
     <h1>十字ペンダント</h1>
-    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました。最新は案 D4 (中心がホルスの目の太陽十字架)。D3・D2・D と最初の 3 案 (A〜C) も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
+    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました。最新は案 D5 (ホルスの目に太陽の輪を通した太陽十字) と、その 4 本同じ長さ版 D5e。D4 以前の案も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="デザイン案">
-    <button class="tab" role="tab" id="tab-D4_horus_crucifix" data-key="D4_horus_crucifix" aria-selected="true"><b>D4</b>ホルスの目</button>
+    <button class="tab" role="tab" id="tab-D5_sun_cross_ring" data-key="D5_sun_cross_ring" aria-selected="true"><b>D5</b>太陽十字 · 十字架</button>
+    <button class="tab" role="tab" id="tab-D5e_sun_cross_equal" data-key="D5e_sun_cross_equal" aria-selected="false"><b>D5e</b>太陽十字 · ⊕</button>
+    <button class="tab" role="tab" id="tab-D4_horus_crucifix" data-key="D4_horus_crucifix" aria-selected="false"><b>D4</b>ホルスの目</button>
     <button class="tab" role="tab" id="tab-D3_sun_crucifix" data-key="D3_sun_crucifix" aria-selected="false"><b>D3</b>太陽十字架</button>
     <button class="tab" role="tab" id="tab-D2_sun_fractal" data-key="D2_sun_fractal" aria-selected="false"><b>D2</b>太陽十字 v2</button>
     <button class="tab" role="tab" id="tab-D_sun_cross" data-key="D_sun_cross" aria-selected="false"><b>D</b>太陽十字 (前回)</button>
@@ -175,7 +177,33 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 
+const D5_FINISHES = {
+  '太陽 (金の輪)': { eye: 'gold', plate: 'oxid', ring: 'gold', beams: 'gold', corona: 'gold', vert: 'polish', horiz: 'polish', bail: 'polish' },
+  '金の目': { eye: 'gold', plate: 'oxid', ring: 'polish', beams: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+  'P1 の最後 (縦が光る)': { eye: 'polish', plate: 'oxid', ring: 'oxid', beams: 'oxid', corona: 'oxid', vert: 'rhodium', horiz: 'oxid', bail: 'polish' },
+  'オールシルバー': { eye: 'polish', plate: 'polish', ring: 'polish', beams: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+};
+const D5_SWATCHES = {
+  '太陽 (金の輪)': [['gold', '目・太陽の輪・光の筋・外の光: 金メッキ'], ['oxid', 'メダイユの地: いぶし'], ['polish', '十字: 鏡面シルバー (金の太陽を銀の十字が貫く)']],
+  '金の目': [['gold', '目: 金メッキ'], ['oxid', 'メダイユの地: いぶし'], ['polish', 'ほかは鏡面シルバー']],
+  'P1 の最後 (縦が光る)': [['rhodium', '縦の光線: ロジウムで白く'], ['oxid', '輪・光の筋・横の光線: いぶしで沈める'], ['polish', '目: 鏡面']],
+  'オールシルバー': [['polish', '全体: 鏡面。輪の稜線に光が一周走る']],
+};
 const INFO = {
+  D5_sun_cross_ring: {
+    key: '案 D5', name: '太陽十字 · 十字架', file: 'D5_sun_cross_ring.stl',
+    concept: '太陽十字は、十字に輪が重なった ⊕ の形です。D4 のホルスの目はそのままに、十字に太陽の輪を通しました。目と輪のあいだは透かしにして、12 本の細い光の筋を放射状に渡しています。輪の外側からは、長短交互のギザギザの光。十字は下が長い十字架の比率のままです。透かしの向こうに肌や服が見えるので、身につけると軽く見えます。',
+    bail: '内径 2.5mm · メダイユの裏に隠しバチカン',
+    finishes: D5_FINISHES, swatches: D5_SWATCHES,
+    note: '目のまわりの透かしは 16 か所。細い光の筋は幅 1.0mm で、鋳造できる太さですが、強く曲げると折れるおそれがあります。',
+  },
+  D5e_sun_cross_equal: {
+    key: '案 D5e', name: '太陽十字 · ⊕', file: 'D5e_sun_cross_equal.stl',
+    concept: 'D5 の十字を 4 本とも同じ長さにした、いちばん古典的な太陽十字 (⊕) です。目を中心に上下左右が対称になり、メダルのようにまとまります。P1 の開眼の瞬間 (縦も横も同じ長さで光る太陽) に近い形です。',
+    bail: '内径 2.5mm · メダイユの裏に隠しバチカン',
+    finishes: D5_FINISHES, swatches: D5_SWATCHES,
+    note: '36mm 角に収まります。D5 より背が低く、胸元で丸い太陽として見えます。',
+  },
   D4_horus_crucifix: {
     key: '案 D4', name: 'ホルスの目', file: 'D4_horus_crucifix.stl',
     concept: 'D3 の太陽十字架の中心を、ホルスの目 (ウジャト) のメダイユにしました。眉、まぶた、化粧線、涙の縦線、渦を巻く尾まで、古代エジプトの形どおりに線で浮き彫りにしています。虹彩はふくらんだ半球で、真ん中に瞳のくぼみがあります。P1 の「開眼 → 十字」がひとつの形になり、目から十字の光が放たれます。',
@@ -329,7 +357,7 @@ const coin = new THREE.Mesh(
 coin.rotation.x = Math.PI / 2; coin.visible = false; scene.add(coin);
 const coinLabel = document.getElementById('coinLabel');
 
-let current = 'D4_horus_crucifix';
+let current = 'D5_sun_cross_ring';
 const finishCtl = document.getElementById('finishCtl');
 
 function swatchHTML(list) {
@@ -395,7 +423,7 @@ function select(name) {
   }
   document.getElementById('sNote').textContent = info.note;
   place(); frame('front');
-  try { localStorage.setItem('cross-tab-v5', name); } catch (e) {}
+  try { localStorage.setItem('cross-tab-v6', name); } catch (e) {}
 }
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => select(t.dataset.key)));
@@ -415,8 +443,8 @@ function resize() {
 }
 new ResizeObserver(resize).observe(stage); resize();
 
-let start = 'D4_horus_crucifix';
-try { const s = localStorage.getItem('cross-tab-v5'); if (s && groups[s]) start = s; } catch (e) {}
+let start = 'D5_sun_cross_ring';
+try { const s = localStorage.getItem('cross-tab-v6'); if (s && groups[s]) start = s; } catch (e) {}
 select(start);
 document.getElementById('loading').remove();
 
