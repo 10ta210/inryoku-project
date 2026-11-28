@@ -1,0 +1,857 @@
+<title>太陽十字デザイナー</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 宝飾の作業台。左に 3D ステージ (スクロールしても残る)、右に調整パネル。スマホでは縦積み。
+   単一ダーク (黒いベルベットの台の上で銀を見る) を意図して採用 */
+:root {
+  --ground: #121315;
+  --panel: #1a1b1e;
+  --panel-2: #222327;
+  --line: #2e3035;
+  --ink: #e9e7e3;
+  --muted: #9a9894;
+  --accent: #c9c3ff;
+  --gold: #e7c470;
+  --warn: #f0b36a;
+  --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { background: var(--ground); color: var(--ink); }
+body { font-family: var(--f-body); font-size: 14px; line-height: 1.6; }
+.wrap {
+  max-width: 1280px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 22px 56px;
+  display: grid; gap: 20px;
+}
+header { display: grid; gap: 4px; }
+.eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 3.4vw, 34px); line-height: 1.25; margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.lede { color: var(--muted); margin: 0; max-width: 70ch; }
+
+.main { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.left { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: grid; gap: 10px; min-width: 0; }
+@media (max-width: 900px) { .left { position: static; } }
+.stage {
+  position: relative; border-radius: 14px; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 35%, #26272b 0%, var(--ground) 70%);
+  border: 1px solid var(--line); aspect-ratio: 4 / 5; max-width: 100%; touch-action: none;
+}
+@media (max-width: 900px) { .stage { aspect-ratio: 1 / 1; } }
+.stage canvas { display: block; width: 100%; height: 100%; }
+.stage .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+.stage .hint { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--muted); pointer-events: none; }
+.views { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 0; }
+.stat .k { font-size: 11px; color: var(--muted); }
+.stat .v { font-family: var(--f-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.warns { display: grid; gap: 6px; }
+.warn { font-size: 13px; color: var(--warn); border: 1px solid color-mix(in oklab, var(--warn) 45%, transparent); border-radius: 8px; padding: 6px 10px; }
+.ok { font-size: 13px; color: var(--muted); }
+
+.panel { display: grid; gap: 12px; min-width: 0; }
+details.group { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+details.group > summary {
+  list-style: none; cursor: pointer; padding: 12px 14px; display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--f-display); font-weight: 700; font-size: 17px;
+}
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary::after { content: "＋"; font-family: var(--f-mono); color: var(--muted); font-size: 13px; }
+details.group[open] > summary::after { content: "−"; }
+details.group > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 12px; }
+.gbody { padding: 0 14px 14px; display: grid; gap: 12px; }
+
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; }
+.row label { font-size: 13px; }
+.row output { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+.row.off { opacity: .4; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip, .btn {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--panel-2); cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+}
+.btn { border-radius: 8px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, transparent); }
+.btn.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); font-weight: 700; }
+.chip:focus-visible, .btn:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+.parts label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+select { font: inherit; font-size: 13px; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; width: 100%; }
+
+.save { display: grid; gap: 10px; }
+.save .line { display: flex; gap: 8px; flex-wrap: wrap; }
+.save input[type=text] { flex: 1 1 160px; min-width: 0; font: inherit; color: var(--ink); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+.msg { font-size: 12px; color: var(--muted); min-height: 1.2em; }
+ul.saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+ul.saved li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+ul.saved .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ul.saved .dt { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.empty { font-size: 13px; color: var(--muted); }
+.help { font-size: 12px; color: var(--muted); margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">inryokü · P1 sun cross · SV925</div>
+    <h1>太陽十字デザイナー</h1>
+    <p class="lede">P1 の「開眼 → 十字」から生まれたペンダントを、スライダーで作り変えるツールです。保存したデザインは、Claude に頼めば鋳造用の STL に仕上がります。</p>
+  </header>
+
+  <div class="main">
+    <div class="left">
+      <div class="stage" id="stage">
+        <div class="loading" id="loading">3D を読み込み中…</div>
+        <div class="hint">ドラッグで回転 · ピンチ/ホイールで拡大</div>
+      </div>
+      <div class="views">
+        <button class="btn" id="vFront">正面</button>
+        <button class="btn" id="vBack">背面</button>
+        <button class="btn" id="vSide">横から</button>
+        <button class="btn" id="vSpin" aria-pressed="false">自動回転</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">外寸 (幅×高さ)</div><div class="v" id="stSize">—</div></div>
+        <div class="stat"><div class="k">厚み</div><div class="v" id="stThick">—</div></div>
+        <div class="stat"><div class="k">重さ SV925 (目安)</div><div class="v" id="stWeight">—</div></div>
+      </div>
+      <div class="warns" id="warns" aria-live="polite"></div>
+    </div>
+
+    <div class="panel" id="panel">
+      <details class="group" open>
+        <summary>十字の形</summary>
+        <div class="gbody">
+          <div class="seg" id="presetSeg" role="group" aria-label="形のプリセット">
+            <button class="chip" data-preset="crucifix">十字架</button>
+            <button class="chip" data-preset="equal">⊕ 同じ長さ</button>
+            <button class="chip" data-preset="p1last">P1 の最後</button>
+          </div>
+          <div class="row"><label for="armUp">上の腕</label><output for="armUp"></output><input type="range" id="armUp" min="10" max="30" step="0.5"></div>
+          <div class="row"><label for="armDown">下の腕</label><output for="armDown"></output><input type="range" id="armDown" min="10" max="45" step="0.5"></div>
+          <div class="row"><label for="armSide">横の腕</label><output for="armSide"></output><input type="range" id="armSide" min="8" max="30" step="0.5"></div>
+          <div class="row"><label for="armW">腕の太さ (根元の半幅)</label><output for="armW"></output><input type="range" id="armW" min="1.5" max="4.5" step="0.1"></div>
+          <div class="row"><label for="sideRatio">横の腕の太さ (縦に対して)</label><output for="sideRatio"></output><input type="range" id="sideRatio" min="0.5" max="1" step="0.05"></div>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>光のジグザグ</summary>
+        <div class="gbody">
+          <label class="toggle"><input type="checkbox" id="teethOn"> 腕にのこぎり歯をつける</label>
+          <div class="row" data-dep="teethOn"><label for="pitch">歯の間隔</label><output for="pitch"></output><input type="range" id="pitch" min="1.6" max="4" step="0.1"></div>
+          <div class="row" data-dep="teethOn"><label for="longT">長い歯</label><output for="longT"></output><input type="range" id="longT" min="0.8" max="4" step="0.1"></div>
+          <div class="row" data-dep="teethOn"><label for="shortT">短い歯</label><output for="shortT"></output><input type="range" id="shortT" min="0.4" max="3" step="0.1"></div>
+          <div class="row" data-dep="teethOn"><label for="spread">先へ散る角度</label><output for="spread"></output><input type="range" id="spread" min="0" max="1.2" step="0.05"></div>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>中心</summary>
+        <div class="gbody">
+          <div class="seg" id="centerSeg" role="group" aria-label="中心のモチーフ">
+            <button class="chip" data-center="eye">ホルスの目</button>
+            <button class="chip" data-center="fractal">十字の入れ子</button>
+            <button class="chip" data-center="sun">太陽の核</button>
+          </div>
+          <div class="row"><label for="R">メダイユの半径</label><output for="R"></output><input type="range" id="R" min="5" max="11" step="0.1"></div>
+          <div class="seg" id="eyeSeg" role="group" aria-label="目の向き">
+            <button class="chip" data-eye="right">右目 (太陽の目)</button>
+            <button class="chip" data-eye="left">左目 (月の目)</button>
+          </div>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>太陽の輪と光</summary>
+        <div class="gbody">
+          <label class="toggle"><input type="checkbox" id="ringOn"> 太陽の輪 (⊕)</label>
+          <div class="row" data-dep="ringOn"><label for="ringR">輪の半径</label><output for="ringR"></output><input type="range" id="ringR" min="8" max="20" step="0.1"></div>
+          <div class="row" data-dep="ringOn"><label for="ringW">輪の太さ (半幅)</label><output for="ringW"></output><input type="range" id="ringW" min="0.6" max="2" step="0.05"></div>
+          <label class="toggle" data-dep="ringOn"><input type="checkbox" id="beamsOn"> 目と輪のあいだに光の筋 (透かし)</label>
+          <div class="row" data-dep="beamsOn"><label for="beamsQ">光の筋の数 (4 分の 1 あたり)</label><output for="beamsQ"></output><input type="range" id="beamsQ" min="1" max="5" step="1"></div>
+          <label class="toggle"><input type="checkbox" id="coronaOn"> 外側のギザギザの光</label>
+          <div class="row" data-dep="coronaOn"><label for="coronaQ">光の数 (4 分の 1 あたり)</label><output for="coronaQ"></output><input type="range" id="coronaQ" min="1" max="9" step="1"></div>
+          <div class="row" data-dep="coronaOn"><label for="coronaLong">長い光</label><output for="coronaLong"></output><input type="range" id="coronaLong" min="1" max="9" step="0.1"></div>
+          <div class="row" data-dep="coronaOn"><label for="coronaShort">短い光</label><output for="coronaShort"></output><input type="range" id="coronaShort" min="0.8" max="7" step="0.1"></div>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>仕上げ</summary>
+        <div class="gbody">
+          <div class="seg" id="finishSeg" role="group" aria-label="仕上げのプリセット"></div>
+          <div class="parts" id="parts"></div>
+          <p class="help">色分けは鋳造後のメッキやいぶしで行います。色を増やすほど加工費が上がります。</p>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>大きさ</summary>
+        <div class="gbody">
+          <div class="row"><label for="scale">全体の大きさ</label><output for="scale"></output><input type="range" id="scale" min="60" max="120" step="1"></div>
+          <p class="help">チェーン穴 (内径 2.5mm、幅 2mm までのチェーン) は大きさを変えても同じです。</p>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary>保存と書き出し</summary>
+        <div class="gbody save">
+          <div class="line">
+            <input type="text" id="designName" maxlength="40" placeholder="デザインの名前 (例: 金の太陽 v1)" aria-label="デザインの名前">
+            <button class="btn primary" id="saveBtn">保存</button>
+          </div>
+          <div class="msg" id="saveMsg"></div>
+          <ul class="saved" id="savedList"></ul>
+          <p class="help">保存したら、チャットで「(名前) を鋳造用にして」と頼んでください。Claude が保存したデザインを読んで、鋳造に出せる 1 つにつながった STL を作ります。</p>
+          <div class="line" id="dlLine">
+            <button class="btn" id="dlStl">STL (確認用・zip)</button>
+            <button class="btn" id="dlPng">画像 (PNG)</button>
+            <button class="btn" id="dlJson">設定 (JSON)</button>
+          </div>
+          <div class="msg" id="dlMsg"></div>
+          <p class="help">確認用 STL は部品が重なったままのデータです。形の確認や 3D プリントの試作には使えますが、銀の鋳造には Claude が仕上げた STL を使ってください。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { ConvexHull } from 'three/addons/math/ConvexHull.js';
+import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ================= パラメータ ================= */
+// 既定値 = 案 D5 (ホルスの目 + 太陽の輪 + 十字架)。単位 mm (大きさ 100% のとき)
+const DEFAULTS = {
+  armUp: 17.5, armDown: 31, armSide: 16.5, armW: 3.0, sideRatio: 0.8,
+  teethOn: true, pitch: 2.3, longT: 2.3, shortT: 1.2, spread: 0.55,
+  center: 'eye', R: 8, eye: 'right',
+  ringOn: true, ringR: 12.5, ringW: 1.2, beamsOn: true, beamsQ: 3,
+  coronaOn: true, coronaQ: 5, coronaLong: 4.4, coronaShort: 2.6,
+  scale: 100, finish: 'sun',
+  mats: null,
+};
+const PRESETS = {
+  crucifix: { armUp: 17.5, armDown: 31, armSide: 16.5, sideRatio: 0.8 },
+  equal: { armUp: 18, armDown: 18, armSide: 18, sideRatio: 1 },
+  p1last: { armUp: 15, armDown: 38, armSide: 13, sideRatio: 0.7 },
+};
+const PARTS = [
+  ['center', '中心のモチーフ'], ['plate', 'メダイユの地'], ['ring', '太陽の輪'], ['beams', '光の筋'],
+  ['corona', '外の光'], ['vert', '縦の光線'], ['horiz', '横の光線'], ['bail', 'チェーン穴'],
+];
+const MATERIAL_NAMES = { polish: '鏡面シルバー', rhodium: 'ロジウム (青みの白)', gold: '金メッキ', rose: 'ピンクゴールド', oxid: 'いぶし (黒)', black: '黒ロジウム' };
+const FINISHES = {
+  sun:    { label: '太陽 (金の輪)', m: { center: 'gold', plate: 'oxid', ring: 'gold', beams: 'gold', corona: 'gold', vert: 'polish', horiz: 'polish', bail: 'polish' } },
+  goldeye:{ label: '金の目', m: { center: 'gold', plate: 'oxid', ring: 'polish', beams: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' } },
+  p1last: { label: 'P1 の最後', m: { center: 'polish', plate: 'oxid', ring: 'oxid', beams: 'oxid', corona: 'oxid', vert: 'rhodium', horiz: 'oxid', bail: 'polish' } },
+  p1color:{ label: 'P1 の色', m: { center: 'polish', plate: 'oxid', ring: 'gold', beams: 'gold', corona: 'gold', vert: 'rhodium', horiz: 'rose', bail: 'polish' } },
+  silver: { label: 'オールシルバー', m: { center: 'polish', plate: 'polish', ring: 'polish', beams: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' } },
+  noir:   { label: '黒と銀', m: { center: 'polish', plate: 'black', ring: 'black', beams: 'black', corona: 'black', vert: 'polish', horiz: 'polish', bail: 'polish' } },
+};
+
+let P = structuredClone(DEFAULTS);
+try { const s = JSON.parse(localStorage.getItem('sun-cross-designer') || 'null'); if (s && typeof s === 'object') P = { ...P, ...s }; } catch (e) {}
+if (!P.mats) P.mats = { ...FINISHES[P.finish]?.m || FINISHES.sun.m };
+
+/* ================= 形の部品 (Python 版 build_cross.py の design_params と同じ式) ================= */
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+const ROT = { up: 0, left: 90, down: 180, right: -90 };
+function rotZ(p, deg) {
+  const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  return V(p.x * c - p.y * s, p.x * s + p.y * c, p.z);
+}
+
+function hullPrim(pts, part) {
+  const hull = new ConvexHull().setFromPoints(pts);
+  const geo = new ConvexGeometry(pts);
+  const bb = new THREE.Box3().setFromPoints(pts);
+  return { part, geo, bb, inside: (x, y, z) => hull.containsPoint(_p.set(x, y, z)) };
+}
+const _p = new THREE.Vector3();
+
+function lathePrim(profile, part, insideFn, segs = 160) {
+  const geo = new THREE.LatheGeometry(profile.map(([r, z]) => new THREE.Vector2(r, z)), segs);
+  geo.rotateX(Math.PI / 2);                     // 回転軸 Y → Z (厚み方向)
+  const rMax = Math.max(...profile.map(q => q[0])), zs = profile.map(q => q[1]);
+  const bb = new THREE.Box3(V(-rMax, -rMax, Math.min(...zs)), V(rMax, rMax, Math.max(...zs)));
+  return { part, geo, bb, inside: insideFn };
+}
+
+// 腕: 稜線つきの芯 + 両側に長短交互ののこぎり歯
+function rayPrims(axis, L, o, part) {
+  const { rootW, tipW = 0.45, front = 1.9, back = 0.9, start, y0 } = o;
+  const lerp = (a, b, t) => a + (b - a) * t, t0 = y0 / L;
+  const w0 = lerp(rootW, tipW, t0), f0 = lerp(front, front * 0.45, t0), b0 = lerp(back, back * 0.5, t0);
+  const r = p => rotZ(p, ROT[axis]);
+  const out = [hullPrim([V(-w0, y0, 0), V(w0, y0, 0), V(0, y0, f0), V(0, y0, -b0),
+    V(-tipW, L, 0), V(tipW, L, 0), V(0, L, front * 0.45), V(0, L, -back * 0.5)].map(r), part)];
+  if (!o.teethOn || L - start < 1.5) return out;
+  const n = Math.trunc((L - start - 2.5) / o.pitch) + 1;
+  for (let i = 0; i < n; i++) {
+    const ya = start + i * o.pitch, yb = ya + o.pitch * 0.85;
+    if (yb > L) break;
+    const f = 1 - ya / L;
+    const t = (i % 2 === 0 ? o.longT : o.shortT) * (0.45 + 0.55 * f);
+    const w = rootW + (tipW - rootW) * (ya / L);
+    const zf = front * (1 - 0.55 * ya / L) * 0.55, zb = back * 0.6;
+    for (const sg of [1, -1]) {
+      const xe = sg * (w - 0.4), xt = sg * (w + t), yt = yb + t * o.spread;
+      out.push(hullPrim([V(xe, ya, zf), V(xe, ya, -zb), V(xe, yb, zf), V(xe, yb, -zb),
+        V(xt, yt, 0.35), V(xt, yt, -0.35)].map(r), part));
+    }
+  }
+  return out;
+}
+
+function platePrim(R) {
+  const prof = [[0, -0.9], [R - 0.7, -0.9], [R, -0.5], [R, 0.5], [R - 0.7, 0.9], [0, 0.9]];
+  return lathePrim(prof, 'plate', (x, y, z) => {
+    const az = Math.abs(z); if (az > 0.9) return false;
+    const rr = az <= 0.5 ? R : R - 0.7 * (az - 0.5) / 0.4;
+    return x * x + y * y <= rr * rr;
+  });
+}
+
+function ringPrim(rm, w, front = 1.5, back = 0.8) {
+  const prof = [[rm, -back], [rm + w, 0], [rm, front], [rm - w, 0], [rm, -back]];
+  return lathePrim(prof, 'ring', (x, y, z) => {
+    const d = Math.abs(Math.hypot(x, y) - rm) / w;
+    return z >= 0 ? d + z / front <= 1 : d - z / back <= 1;
+  });
+}
+
+function spokePrims(n, r0, r1, half, front, back, part, lenFn) {
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    if (k % (n / 4) === 0) continue;                 // 十字の方向は空ける
+    const a = k * 2 * Math.PI / n, d = [Math.cos(a), Math.sin(a)], nn = [-d[1], d[0]];
+    const R1 = lenFn ? lenFn(k) : r1;
+    const pts = [];
+    const ends = lenFn ? [[r0, half, front, back], [R1, 0.3, 0.4, 0.4]] : [[r0, half, front, back], [R1, half, front, back]];
+    for (const [rr, hw, fz, bz] of ends) {
+      const c = [d[0] * rr, d[1] * rr];
+      pts.push(V(c[0] + nn[0] * hw, c[1] + nn[1] * hw, 0), V(c[0] - nn[0] * hw, c[1] - nn[1] * hw, 0), V(c[0], c[1], fz), V(c[0], c[1], -bz));
+    }
+    out.push(hullPrim(pts, part));
+  }
+  return out;
+}
+
+// ホルスの目 (ウジャト) の線の座標 — 目は左を向く (右目 = 太陽の目)
+function qbez(p0, c, p1, n = 24) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1), u = 1 - t;
+    out.push([u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0], u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1]]);
+  }
+  return out;
+}
+function eyeLines() {
+  const upper = qbez([-6, 0], [0, 4.6], [6.4, 0.8]).concat([[9.4, 0.9]]);
+  const lower = qbez([-6, 0], [0, -3.6], [5.8, 0.75]);
+  const brow = qbez([-6, 3.9], [0.5, 6.9], [9, 4.3]);
+  const tear = [[-0.9, -1.5], [-1.05, -4.0], [-1.3, -6.8]];
+  const lead = qbez([1.9, -1.4], [2.7, -4.1], [5.2, -4.4], 16);
+  const c = [6.8, -4.9], a0 = 162 * Math.PI / 180, a1 = 500 * Math.PI / 180, sp = [];
+  for (let k = 0; k < 40; k++) {
+    const a = a0 + (a1 - a0) * k / 39, R = 1.68 + (0.8 - 1.68) * k / 39;   // 渦の線どうしが触れて隙間を作らない間隔
+    sp.push([c[0] + R * Math.cos(a), c[1] + R * Math.sin(a)]);
+  }
+  return [[upper, 0.56], [lower, 0.55], [brow, 0.66], [tear, 0.66], [lead.concat(sp), 0.56]];
+}
+
+// 断面が丸い浮き彫りの線 (見た目は Tube、中身の判定は半径つき折れ線)
+function strokePrims(pts2, r, zc, flat = 0.8) {
+  const pts = pts2.map(([x, y]) => V(x, y, zc));
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  const tube = new THREE.TubeGeometry(curve, Math.max(8, pts.length * 3), r, 14, false);
+  const pos = tube.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setZ(i, zc + (pos.getZ(i) - zc) * flat);
+  const caps = [pts[0], pts[pts.length - 1]].map(p => {
+    const g = new THREE.SphereGeometry(r, 16, 12); g.scale(1, 1, flat); g.translate(p.x, p.y, p.z); return g;
+  });
+  const bb = new THREE.Box3().setFromPoints(pts).expandByScalar(r);
+  const inside = (x, y, z) => {
+    const zz = zc + (z - zc) / flat;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const abx = b.x - a.x, aby = b.y - a.y, l2 = abx * abx + aby * aby || 1e-9;
+      let t = ((x - a.x) * abx + (y - a.y) * aby) / l2; t = Math.max(0, Math.min(1, t));
+      const dx = x - (a.x + abx * t), dy = y - (a.y + aby * t), dz = zz - zc;
+      if (dx * dx + dy * dy + dz * dz <= r * r) return true;
+    }
+    return false;
+  };
+  return [{ part: 'center', geo: tube, bb, inside }, ...caps.map(g => ({ part: 'center', geo: g, bb: new THREE.Box3(), inside: () => false }))];
+}
+
+function eyePrims(R, flip) {
+  const k = 0.82 * R / 8, sx = flip ? -1 : 1, kk = R / 8;
+  const out = [];
+  for (const [line, r] of eyeLines()) {
+    const pts = line.map(([x, y]) => [sx * (x - 1.4) * k, (y + 0.4) * k]);
+    out.push(...strokePrims(pts, r * k, 1.0));
+  }
+  const ic = [sx * (0.25 - 1.4) * k, (0.35 + 0.4) * k], ir = 1.7 * kk;
+  const iris = new THREE.SphereGeometry(ir, 40, 24); iris.scale(1, 1, 0.6); iris.translate(ic[0], ic[1], 0.7);
+  const pz = 0.7 + ir * 0.6 + 0.3, pr = 0.6 * kk;
+  out.push({ part: 'center', geo: iris, bb: new THREE.Box3(V(ic[0] - ir, ic[1] - ir, 0.7 - ir * 0.6), V(ic[0] + ir, ic[1] + ir, 0.7 + ir * 0.6)),
+    inside: (x, y, z) => {
+      const dx = (x - ic[0]) / ir, dy = (y - ic[1]) / ir, dz = (z - 0.7) / (ir * 0.6);
+      if (dx * dx + dy * dy + dz * dz > 1) return false;
+      return (x - ic[0]) ** 2 + (y - ic[1]) ** 2 + (z - pz) ** 2 > pr * pr;   // 瞳のくぼみ
+    } });
+  // 瞳のくぼみ (実物はいぶしが溜まって黒くなる) を、虹彩の頂上に埋めた黒い薄いレンズで表す
+  const pupil = new THREE.SphereGeometry(pr * 0.85, 20, 12); pupil.scale(1, 1, 0.2); pupil.translate(ic[0], ic[1], 0.7 + ir * 0.6 - 0.04);
+  out.push({ part: 'pupil', geo: pupil, bb: new THREE.Box3(), inside: () => false });
+  return out;
+}
+
+function boxPrim(cx, cy, w, h, z0, z1, r) {
+  const geo = new RoundedBoxGeometry(w, h, z1 - z0, 2, Math.min(r, w / 2 - 0.01, (z1 - z0) / 2 - 0.01));
+  geo.translate(cx, cy, (z0 + z1) / 2);
+  const bb = new THREE.Box3(V(cx - w / 2, cy - h / 2, z0), V(cx + w / 2, cy + h / 2, z1));
+  return { part: 'center', geo, bb, inside: (x, y, z) => bb.containsPoint(_p.set(x, y, z)) };
+}
+function plusPrims(cx, cy, S, z0, z1, r) {
+  const a = S / 3;
+  return [boxPrim(cx, cy, a, S, z0, z1, r), boxPrim(cx, cy, S, a, z0, z1, r)];
+}
+function fractalPrims(R) {
+  const S = (R - 0.8) / 0.53, s3 = S / 3;
+  const out = plusPrims(0, 0, S, 0.6, 1.8, 0.4);
+  for (const [dx, dy] of [[0, 0], [s3, 0], [-s3, 0], [0, s3], [0, -s3]]) out.push(...plusPrims(dx, dy, s3, 1.5, 2.4, 0.25));
+  out.push(...plusPrims(0, 0, s3, 2.2, 2.9, 0.25));
+  const h = S / 18;
+  out.push({ ...hullPrim([V(-h, -h, 2.7), V(h, -h, 2.7), V(h, h, 2.7), V(-h, h, 2.7), V(0, 0, 3.5)], 'center') });
+  return out;
+}
+function sunCorePrims(R) {
+  const r = 0.42 * R, z = 0.9;
+  const geo = new THREE.SphereGeometry(r, 48, 32); geo.scale(1, 1, 0.75); geo.translate(0, 0, z);
+  return [{ part: 'center', geo, bb: new THREE.Box3(V(-r, -r, z - r), V(r, r, z + r)),
+    inside: (x, y, zz) => (x * x + y * y) / (r * r) + ((zz - z) / (r * 0.75)) ** 2 <= 1 }];
+}
+
+// 寸法から全部品を組み立てる (大きさ 100% の座標。チェーン穴は別)
+function buildPrims(p) {
+  const R = p.R;
+  const ringR = Math.max(p.ringR, R + 2.2);
+  const prims = [platePrim(R)];
+  if (p.center === 'eye') prims.push(...eyePrims(R, p.eye === 'left'));
+  else if (p.center === 'fractal') prims.push(...fractalPrims(R));
+  else prims.push(...sunCorePrims(R));
+
+  const start = p.ringOn ? ringR + p.ringW + 0.5 : R + 0.4;
+  const y0 = R - 0.7;
+  const base = { teethOn: p.teethOn, pitch: p.pitch, spread: p.spread, start, y0 };
+  const vOpt = { ...base, rootW: p.armW, longT: p.longT, shortT: p.shortT };
+  const hOpt = { ...base, rootW: p.armW * p.sideRatio, front: 1.9 * (0.6 + 0.4 * p.sideRatio),
+    longT: p.longT * (0.6 + 0.4 * p.sideRatio), shortT: p.shortT * (0.6 + 0.4 * p.sideRatio) };
+  prims.push(...rayPrims('up', p.armUp, vOpt, 'vert'), ...rayPrims('down', p.armDown, { ...vOpt, tipW: 0.5 }, 'vert'));
+  prims.push(...rayPrims('left', p.armSide, hOpt, 'horiz'), ...rayPrims('right', p.armSide, hOpt, 'horiz'));
+
+  if (p.ringOn) {
+    prims.push(ringPrim(ringR, p.ringW));
+    if (p.beamsOn) prims.push(...spokePrims(4 * (p.beamsQ + 1), R - 0.6, ringR - 0.8 * p.ringW / 1.2, 0.5, 0.95, 0.5, 'beams'));
+  }
+  if (p.coronaOn) {
+    const n = 4 * (p.coronaQ + 1), q = n / 4;
+    const rin = p.ringOn ? ringR + 0.7 * p.ringW / 1.2 : R - 0.4;
+    prims.push(...spokePrims(n, rin, 0, 1.05, 0.8, 0.6, 'corona', k => {
+      const near = (k % q === 1) || (k % q === q - 1);
+      return rin + (k % 2 ? p.coronaShort : p.coronaLong) - (near && q > 2 ? 1.0 : 0);
+    }));
+  }
+  return prims;
+}
+
+// チェーン穴 (大きさを変えても同じ寸法、最終 mm の座標)
+function bailPrim(p) {
+  const s = p.scale / 100, by = 0.44 * p.R * s, bz = -0.9 * s - 1.45;
+  const prof = [[1.25, -1.6], [1.9, -1.6], [1.9, 1.6], [1.25, 1.6], [1.25, -1.6]];
+  const geo = new THREE.LatheGeometry(prof.map(([r, z]) => new THREE.Vector2(r, z)), 48);
+  geo.rotateZ(Math.PI / 2); geo.translate(0, by, bz);
+  return { part: 'bail', geo, bb: new THREE.Box3(V(-1.6, by - 1.9, bz - 1.9), V(1.6, by + 1.9, bz + 1.9)),
+    inside: (x, y, z) => { if (Math.abs(x) > 1.6) return false; const d = Math.hypot(y - by, z - bz); return d >= 1.25 && d <= 1.9; } };
+}
+
+/* ================= 3D 表示 ================= */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.03).texture;
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(30, 60, 80); scene.add(key);
+const rim = new THREE.DirectionalLight(0xdcd8ff, 0.8); rim.position.set(-60, 10, -40); scene.add(rim);
+const camera = new THREE.PerspectiveCamera(32, 1, 1, 3000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.enablePan = false; controls.minDistance = 30; controls.maxDistance = 400;
+controls.autoRotateSpeed = 1.6;
+
+const MAT = {
+  polish: new THREE.MeshPhysicalMaterial({ color: 0xe6e6e8, metalness: 1, roughness: 0.1, clearcoat: 0.3 }),
+  rhodium: new THREE.MeshPhysicalMaterial({ color: 0xe4ecf6, metalness: 1, roughness: 0.07, clearcoat: 0.4 }),
+  gold: new THREE.MeshPhysicalMaterial({ color: 0xf0c868, metalness: 1, roughness: 0.16 }),
+  rose: new THREE.MeshPhysicalMaterial({ color: 0xf2bfa6, metalness: 1, roughness: 0.14 }),
+  oxid: new THREE.MeshPhysicalMaterial({ color: 0x4a4b50, metalness: 1, roughness: 0.5 }),
+  black: new THREE.MeshPhysicalMaterial({ color: 0x232327, metalness: 1, roughness: 0.28 }),
+};
+const body = new THREE.Group(); scene.add(body);
+const bailGroup = new THREE.Group(); scene.add(bailGroup);
+let current = { prims: [], bail: null, box: new THREE.Box3() };
+
+function matFor(part) {
+  if (part === 'pupil') return MAT.oxid;
+  return MAT[P.mats[part]] || MAT.polish;
+}
+function clearGroup(g) {
+  for (const m of [...g.children]) { m.geometry.dispose(); g.remove(m); }
+}
+function rebuild() {
+  clearGroup(body); clearGroup(bailGroup);
+  const prims = buildPrims(P);
+  for (const pr of prims) {
+    const shaded = toCreasedNormals(pr.geo, Math.PI / 6);
+    pr.geo.dispose();
+    const mesh = new THREE.Mesh(shaded, matFor(pr.part)); mesh.userData.part = pr.part;
+    body.add(mesh);
+  }
+  const s = P.scale / 100;
+  body.scale.setScalar(s);
+  const bail = bailPrim(P);
+  const bm = new THREE.Mesh(toCreasedNormals(bail.geo, Math.PI / 6), matFor('bail')); bm.userData.part = 'bail';
+  bailGroup.add(bm);
+  body.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(body).union(new THREE.Box3().setFromObject(bailGroup));
+  current = { prims, bail, box };
+  updateStats();
+  scheduleWeight();
+}
+function applyMaterials() {
+  for (const g of [body, bailGroup]) g.children.forEach(m => { m.material = matFor(m.userData.part); });
+}
+
+let framed = false;
+function frame(view) {
+  const box = current.box, c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const d = Math.max((size.y * 1.25 / 2) / Math.tan(fov / 2), (size.x * 1.25 / 2) / Math.tan(fov / 2) / camera.aspect);
+  controls.target.set(c.x, c.y, 0);
+  const dir = view === 'back' ? V(0, 0.05, -1) : view === 'side' ? V(1, 0.05, 0.12) : V(0.1, 0.06, 1);
+  camera.position.copy(controls.target).add(dir.normalize().multiplyScalar(d));
+  controls.update();
+}
+
+function resize() {
+  const r = stage.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage); resize();
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+
+/* ================= 寸法・重さ・注意 ================= */
+const fmt = v => v.toFixed(1);
+function updateStats() {
+  const sz = current.box.getSize(new THREE.Vector3());
+  document.getElementById('stSize').textContent = `${fmt(sz.x)} × ${fmt(sz.y)} mm`;
+  document.getElementById('stThick').textContent = `${fmt(sz.z)} mm`;
+  const s = P.scale / 100, w = [];
+  const k = 0.82 * P.R / 8;
+  if (P.center === 'eye' && 2 * 0.55 * k * s < 0.8) w.push(`目の線が細すぎます (幅 ${(2 * 0.55 * k * s).toFixed(2)}mm)。鋳造で潰れやすいので、メダイユを大きくするか全体を大きくしてください。`);
+  if (P.center === 'fractal' && ((P.R - 0.8) / 0.53 / 9) * s < 1.0) w.push('十字の入れ子のいちばん小さいマスが 1mm を切っています。段差がぼやけます。');
+  if (P.ringOn && P.beamsOn && 1.0 * s < 0.8) w.push(`光の筋が細すぎます (幅 ${(1.0 * s).toFixed(2)}mm)。折れやすくなります。`);
+  if (P.teethOn && 0.7 * s < 0.6) w.push('のこぎり歯の先が薄すぎます。鋳造で欠けやすくなります。');
+  if (P.ringOn && P.ringR < P.R + 2.2) w.push('輪がメダイユに近すぎるので、自動で少し外へ出しています。');
+  if (sz.y > 55) w.push(`高さが ${fmt(sz.y)}mm あります。首元ではかなり大きく見えます。`);
+  const box = document.getElementById('warns');
+  box.textContent = '';
+  if (!w.length) { const d = document.createElement('div'); d.className = 'ok'; d.textContent = '鋳造できる太さの範囲に収まっています。'; box.append(d); }
+  for (const t of w) { const d = document.createElement('div'); d.className = 'warn'; d.textContent = t; box.append(d); }
+}
+
+// 重さ: 0.3mm の格子で中身を数える (重なった部品も 1 回だけ数える)
+let weightTimer = 0;
+function scheduleWeight() {
+  clearTimeout(weightTimer);
+  document.getElementById('stWeight').textContent = '計算中…';
+  weightTimer = setTimeout(computeWeight, 350);
+}
+function computeWeight() {
+  const h = 0.3, prims = current.prims;
+  const bb = new THREE.Box3(); prims.forEach(p => { if (!p.bb.isEmpty()) bb.union(p.bb); });
+  const nx = Math.ceil((bb.max.x - bb.min.x) / h) + 1, ny = Math.ceil((bb.max.y - bb.min.y) / h) + 1, nz = Math.ceil((bb.max.z - bb.min.z) / h) + 1;
+  const grid = new Uint8Array(nx * ny * nz);
+  let count = 0;
+  for (const pr of prims) {
+    if (pr.bb.isEmpty()) continue;
+    const i0 = Math.max(0, Math.floor((pr.bb.min.x - bb.min.x) / h)), i1 = Math.min(nx - 1, Math.ceil((pr.bb.max.x - bb.min.x) / h));
+    const j0 = Math.max(0, Math.floor((pr.bb.min.y - bb.min.y) / h)), j1 = Math.min(ny - 1, Math.ceil((pr.bb.max.y - bb.min.y) / h));
+    const k0 = Math.max(0, Math.floor((pr.bb.min.z - bb.min.z) / h)), k1 = Math.min(nz - 1, Math.ceil((pr.bb.max.z - bb.min.z) / h));
+    for (let i = i0; i <= i1; i++) {
+      const x = bb.min.x + (i + 0.5) * h;
+      for (let j = j0; j <= j1; j++) {
+        const y = bb.min.y + (j + 0.5) * h, row = (i * ny + j) * nz;
+        for (let k = k0; k <= k1; k++) {
+          if (grid[row + k]) continue;
+          if (pr.inside(x, y, bb.min.z + (k + 0.5) * h)) { grid[row + k] = 1; count++; }
+        }
+      }
+    }
+  }
+  const s = P.scale / 100;
+  const vol = count * h * h * h * s * s * s + Math.PI * (1.9 * 1.9 - 1.25 * 1.25) * 3.2 * 0.8;   // mm³ (チェーン穴は重なりを引いた目安)
+  document.getElementById('stWeight').textContent = `約 ${(vol / 1000 * 10.36).toFixed(1)} g`;
+}
+
+/* ================= 操作パネル ================= */
+const NUM_FIELDS = { armUp: 'mm', armDown: 'mm', armSide: 'mm', armW: 'mm', sideRatio: '×', pitch: 'mm', longT: 'mm', shortT: 'mm',
+  spread: '', R: 'mm', ringR: 'mm', ringW: 'mm', beamsQ: '本', coronaQ: '本', coronaLong: 'mm', coronaShort: 'mm', scale: '%' };
+const INT_FIELDS = new Set(['beamsQ', 'coronaQ', 'scale']);
+const BOOL_FIELDS = ['teethOn', 'ringOn', 'beamsOn', 'coronaOn'];
+
+let rebuildQueued = false;
+function queueRebuild() {
+  if (rebuildQueued) return; rebuildQueued = true;
+  requestAnimationFrame(() => { rebuildQueued = false; rebuild(); persist(); });
+}
+function persist() { try { localStorage.setItem('sun-cross-designer', JSON.stringify(P)); } catch (e) {} }
+
+function syncUI() {
+  for (const [id, unit] of Object.entries(NUM_FIELDS)) {
+    const el = document.getElementById(id); el.value = P[id];
+    const out = document.querySelector(`output[for="${id}"]`);
+    out.textContent = INT_FIELDS.has(id) ? `${P[id]} ${unit}` : `${Number(P[id]).toFixed(id === 'sideRatio' || id === 'spread' ? 2 : 1)} ${unit}`.trim();
+  }
+  for (const id of BOOL_FIELDS) document.getElementById(id).checked = !!P[id];
+  document.querySelectorAll('[data-center]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.center === P.center)));
+  document.querySelectorAll('[data-eye]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.eye === P.eye)));
+  document.getElementById('eyeSeg').hidden = P.center !== 'eye';
+  document.querySelectorAll('[data-preset]').forEach(b => {
+    const pr = PRESETS[b.dataset.preset];
+    b.setAttribute('aria-pressed', String(Object.entries(pr).every(([k, v]) => Math.abs(P[k] - v) < 1e-6)));
+  });
+  document.querySelectorAll('[data-dep]').forEach(el => {
+    const deps = el.dataset.dep.split(' ');
+    const on = deps.every(d => P[d]) && (el.dataset.dep !== 'beamsOn' || P.ringOn);
+    el.classList.toggle('off', !on);
+    el.querySelectorAll('input').forEach(i => { i.disabled = !on; });
+  });
+  document.querySelectorAll('[data-finish]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.finish === P.finish)));
+  PARTS.forEach(([k]) => { const s = document.getElementById('mat-' + k); if (s) s.value = P.mats[k]; });
+}
+
+for (const id of Object.keys(NUM_FIELDS)) {
+  document.getElementById(id).addEventListener('input', e => {
+    P[id] = INT_FIELDS.has(id) ? parseInt(e.target.value, 10) : parseFloat(e.target.value);
+    syncUI(); queueRebuild();
+  });
+}
+for (const id of BOOL_FIELDS) document.getElementById(id).addEventListener('change', e => { P[id] = e.target.checked; syncUI(); queueRebuild(); });
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+  Object.assign(P, PRESETS[b.dataset.preset]); syncUI(); rebuild(); persist(); frame('front');
+}));
+document.querySelectorAll('[data-center]').forEach(b => b.addEventListener('click', () => { P.center = b.dataset.center; syncUI(); queueRebuild(); }));
+document.querySelectorAll('[data-eye]').forEach(b => b.addEventListener('click', () => { P.eye = b.dataset.eye; syncUI(); queueRebuild(); }));
+
+const finishSeg = document.getElementById('finishSeg');
+for (const [key, f] of Object.entries(FINISHES)) {
+  const b = document.createElement('button'); b.className = 'chip'; b.dataset.finish = key; b.textContent = f.label;
+  b.addEventListener('click', () => { P.finish = key; P.mats = { ...f.m }; syncUI(); applyMaterials(); persist(); });
+  finishSeg.append(b);
+}
+const partsBox = document.getElementById('parts');
+for (const [k, label] of PARTS) {
+  const lab = document.createElement('label'); lab.textContent = label;
+  const sel = document.createElement('select'); sel.id = 'mat-' + k;
+  for (const [mk, mn] of Object.entries(MATERIAL_NAMES)) { const o = document.createElement('option'); o.value = mk; o.textContent = mn; sel.append(o); }
+  sel.addEventListener('change', () => { P.mats[k] = sel.value; P.finish = 'custom'; syncUI(); applyMaterials(); persist(); });
+  lab.append(sel); partsBox.append(lab);
+}
+
+document.getElementById('vFront').onclick = () => frame('front');
+document.getElementById('vBack').onclick = () => frame('back');
+document.getElementById('vSide').onclick = () => frame('side');
+const spinBtn = document.getElementById('vSpin');
+spinBtn.onclick = () => { controls.autoRotate = !controls.autoRotate; spinBtn.setAttribute('aria-pressed', String(controls.autoRotate)); };
+
+syncUI();
+rebuild();
+frame('front');
+document.getElementById('loading').remove();
+
+/* ================= 書き出し ================= */
+function stlBinary() {
+  const tris = [];
+  for (const g of [body, bailGroup]) {
+    g.updateMatrixWorld(true);
+    for (const m of g.children) {
+      if (m.userData.part === 'pupil') continue;
+      const geo = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry;
+      const pos = geo.attributes.position, a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i += 3) {
+        a.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld);
+        b.fromBufferAttribute(pos, i + 1).applyMatrix4(m.matrixWorld);
+        c.fromBufferAttribute(pos, i + 2).applyMatrix4(m.matrixWorld);
+        tris.push(a.clone(), b.clone(), c.clone());
+      }
+    }
+  }
+  const n = tris.length / 3, buf = new ArrayBuffer(84 + n * 50), dv = new DataView(buf);
+  const head = 'inryoku sun cross (preview, overlapping shells)';
+  for (let i = 0; i < head.length; i++) dv.setUint8(i, head.charCodeAt(i));
+  dv.setUint32(80, n, true);
+  const e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for (let t = 0; t < n; t++) {
+    const o = 84 + t * 50, A = tris[t * 3], B = tris[t * 3 + 1], C = tris[t * 3 + 2];
+    const nn = e1.subVectors(B, A).cross(e2.subVectors(C, A)).normalize();
+    [nn, A, B, C].forEach((v, vi) => { dv.setFloat32(o + vi * 12, v.x, true); dv.setFloat32(o + vi * 12 + 4, v.y, true); dv.setFloat32(o + vi * 12 + 8, v.z, true); });
+    dv.setUint16(o + 48, 0, true);
+  }
+  return new Uint8Array(buf);
+}
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xffffffff; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function zipOne(name, data) {   // 無圧縮 zip (1 ファイル)
+  const nm = new TextEncoder().encode(name), crc = crc32(data);
+  const lh = new DataView(new ArrayBuffer(30)); lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint32(14, crc, true);
+  lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true);
+  const ch = new DataView(new ArrayBuffer(46)); ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+  ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nm.length, true);
+  const cdOff = 30 + nm.length + data.length;
+  const end = new DataView(new ArrayBuffer(22)); end.setUint32(0, 0x06054b50, true); end.setUint16(8, 1, true); end.setUint16(10, 1, true);
+  end.setUint32(12, 46 + nm.length, true); end.setUint32(16, cdOff, true);
+  return new Blob([lh.buffer, nm, data, ch.buffer, nm, end.buffer]);
+}
+function safeName() {
+  const raw = (document.getElementById('designName').value || 'sun-cross').trim();
+  return raw.replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 40) || 'sun-cross';
+}
+
+const dlMsg = document.getElementById('dlMsg');
+let downloads = null;
+async function save(filename, data) {
+  if (!downloads) return;
+  dlMsg.textContent = '';
+  try { await downloads.save({ filename, data }); dlMsg.textContent = `${filename} を保存しました。`; }
+  catch (e) {
+    const code = e && e.code;
+    if (code === 'declined') dlMsg.textContent = '保存を取りやめました。';
+    else if (code === 'rate_limited') dlMsg.textContent = '保存の確認がまだ開いています。少し待ってからもう一度押してください。';
+    else if (code === 'host_unavailable') dlMsg.textContent = 'このアプリではファイルを保存できません。ブラウザかパソコンで開いてください。';
+    else dlMsg.textContent = 'この表示ではファイルを保存できません。';
+  }
+}
+document.getElementById('dlStl').onclick = () => { const n = safeName(); save(n + '_preview.zip', zipOne(n + '_preview.stl', stlBinary())); };
+document.getElementById('dlPng').onclick = () => {
+  renderer.render(scene, camera);
+  renderer.domElement.toBlob(b => { if (b) save(safeName() + '.png', b); }, 'image/png');
+};
+document.getElementById('dlJson').onclick = () => save(safeName() + '.json', JSON.stringify({ name: safeName(), params: P }, null, 2));
+document.getElementById('dlLine').hidden = true;
+
+/* ================= 保存 (共有データ) ================= */
+const saveBtn = document.getElementById('saveBtn'), saveMsg = document.getElementById('saveMsg'), list = document.getElementById('savedList');
+function renderEmpty(text) { list.textContent = ''; const li = document.createElement('li'); li.className = 'empty'; li.style.display = 'block'; li.textContent = text; list.append(li); }
+renderEmpty('保存したデザインがここに並びます。名前をつけて「保存」を押すと、最初の 1 つが入ります。');
+saveBtn.disabled = true;
+
+(async () => {
+  const [dl, db, user] = await Promise.all([
+    window.claude?.use?.('downloads') ?? null, window.claude?.use?.('db') ?? null, window.claude?.use?.('user') ?? null,
+  ].map(p => Promise.resolve(p).catch(() => null)));
+  if (dl) { downloads = dl; document.getElementById('dlLine').hidden = false; }
+  else { dlMsg.textContent = 'この表示ではファイルの書き出しは使えません。'; }
+  if (!db) { saveMsg.textContent = 'この表示では保存が使えません (サインインした claude.ai で開くと使えます)。'; return; }
+  const myId = user ? await user.id().catch(() => null) : null;
+  const canWrite = user ? await user.can('data.write').catch(() => null) : null;
+  saveBtn.disabled = canWrite === false;
+  if (canWrite === false) saveMsg.textContent = '閲覧のみの権限なので保存はできません。';
+
+  const col = db.collection('designs');
+  let loaded = false;
+  const timer = setTimeout(() => { if (!loaded) renderEmpty('保存したデザインを読み込めませんでした。ページを開き直すと再接続します。'); }, 10000);
+  col.orderBy('createdAt', 'desc').limit(40).onSnapshot(snap => {
+    loaded = true; clearTimeout(timer);
+    if (snap.empty) { renderEmpty('保存したデザインがここに並びます。名前をつけて「保存」を押すと、最初の 1 つが入ります。'); return; }
+    list.textContent = '';
+    for (const d of snap.docs) {
+      const v = d.data() || {};
+      const li = document.createElement('li');
+      const left = document.createElement('div');
+      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = String(v.name || '名前なし');
+      const dt = document.createElement('div'); dt.className = 'dt';
+      dt.textContent = v.createdAt ? new Date(v.createdAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      left.append(nm, dt);
+      const load = document.createElement('button'); load.className = 'btn'; load.textContent = '読み込む';
+      load.onclick = () => {
+        if (v.params && typeof v.params === 'object') {
+          P = { ...structuredClone(DEFAULTS), ...v.params };
+          if (!P.mats) P.mats = { ...FINISHES.sun.m };
+          document.getElementById('designName').value = String(v.name || '');
+          syncUI(); rebuild(); applyMaterials(); persist(); frame('front');
+          saveMsg.textContent = `「${String(v.name || '')}」を読み込みました。`;
+        }
+      };
+      const del = document.createElement('button'); del.className = 'btn'; del.textContent = '削除';
+      let armed = false;
+      del.onclick = async () => {
+        if (!armed) { armed = true; del.textContent = 'もう一度押すと削除'; setTimeout(() => { armed = false; del.textContent = '削除'; }, 3000); return; }
+        try { await col.doc(d.id).delete(); } catch (e) { saveMsg.textContent = '削除できませんでした。権限を確認してください。'; }
+      };
+      if (canWrite === false) del.hidden = true;
+      li.append(left, load, del);
+      list.append(li);
+    }
+  }, () => { loaded = true; clearTimeout(timer); renderEmpty('保存したデザインを読み込めませんでした。'); });
+
+  let saving = false;
+  saveBtn.onclick = async () => {
+    if (saving) return;
+    const name = document.getElementById('designName').value.trim();
+    if (!name) { saveMsg.textContent = '名前を入れてから保存してください。'; document.getElementById('designName').focus(); return; }
+    saving = true; saveBtn.disabled = true;
+    try {
+      await col.add({ name: name.slice(0, 40), params: structuredClone(P), createdAt: new Date().toISOString(), by: myId || null });
+      saveMsg.textContent = `「${name}」を保存しました。チャットで「${name} を鋳造用にして」と頼めます。`;
+    } catch (e) {
+      saveMsg.textContent = '保存できませんでした。もう一度押してください。';
+    } finally { saving = false; saveBtn.disabled = false; }
+  };
+})();
+</script>

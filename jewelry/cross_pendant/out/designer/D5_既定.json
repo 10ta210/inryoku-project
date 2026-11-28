@@ -1,0 +1,13 @@
+{
+  "name": "D5 既定",
+  "stl": "out/designer/D5_既定.stl",
+  "size_mm": [
+    33.5,
+    48.5,
+    5.9
+  ],
+  "weight_sv925_g": 8.45,
+  "watertight": true,
+  "genus": 17,
+  "params": {}
+}
