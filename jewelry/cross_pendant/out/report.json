@@ -1,4 +1,16 @@
 {
+  "D4_horus_crucifix": {
+    "size_mm": [
+      28.0,
+      46.0,
+      6.0
+    ],
+    "volume_cm3": 0.591,
+    "weight_sv925_g": 6.13,
+    "watertight": true,
+    "holes_genus": 1,
+    "triangles": 9964
+  },
   "D3_sun_crucifix": {
     "size_mm": [
       25.0,

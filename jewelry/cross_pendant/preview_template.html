@@ -96,11 +96,12 @@ ol.flow li span { font-size: 13px; color: var(--muted); }
   <header>
     <div class="eyebrow">inryokü · cross pendant · SV925 lost-wax</div>
     <h1>十字ペンダント</h1>
-    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました。最新は案 D3 (P1 の最後の十字: 下へ伸びる十字架の形と、のこぎり歯の光)。D2・D と最初の 3 案 (A〜C) も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
+    <p class="lede">P1 の開眼の瞬間に出る太陽十字を、シルバーの塊にしました。最新は案 D4 (中心がホルスの目の太陽十字架)。D3・D2・D と最初の 3 案 (A〜C) も比較用に残しています。どの案も鋳造用の STL を書き出し済みです。ドラッグで回して、背中まで見てください。</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="デザイン案">
-    <button class="tab" role="tab" id="tab-D3_sun_crucifix" data-key="D3_sun_crucifix" aria-selected="true"><b>D3</b>太陽十字架</button>
+    <button class="tab" role="tab" id="tab-D4_horus_crucifix" data-key="D4_horus_crucifix" aria-selected="true"><b>D4</b>ホルスの目</button>
+    <button class="tab" role="tab" id="tab-D3_sun_crucifix" data-key="D3_sun_crucifix" aria-selected="false"><b>D3</b>太陽十字架</button>
     <button class="tab" role="tab" id="tab-D2_sun_fractal" data-key="D2_sun_fractal" aria-selected="false"><b>D2</b>太陽十字 v2</button>
     <button class="tab" role="tab" id="tab-D_sun_cross" data-key="D_sun_cross" aria-selected="false"><b>D</b>太陽十字 (前回)</button>
     <button class="tab" role="tab" id="tab-A_white_black" data-key="A_white_black" aria-selected="false"><b>A</b>白と黒の十字</button>
@@ -175,6 +176,24 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const INFO = {
+  D4_horus_crucifix: {
+    key: '案 D4', name: 'ホルスの目', file: 'D4_horus_crucifix.stl',
+    concept: 'D3 の太陽十字架の中心を、ホルスの目 (ウジャト) のメダイユにしました。眉、まぶた、化粧線、涙の縦線、渦を巻く尾まで、古代エジプトの形どおりに線で浮き彫りにしています。虹彩はふくらんだ半球で、真ん中に瞳のくぼみがあります。P1 の「開眼 → 十字」がひとつの形になり、目から十字の光が放たれます。',
+    bail: '内径 2.5mm · メダイユの裏に隠しバチカン',
+    finishes: {
+      '目を浮かせる': { eye: 'polish', plate: 'oxid', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+      '金の目': { eye: 'gold', plate: 'oxid', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+      'P1 の最後 (縦が光る)': { eye: 'polish', plate: 'oxid', corona: 'oxid', vert: 'rhodium', horiz: 'oxid', bail: 'polish' },
+      'オールシルバー': { eye: 'polish', plate: 'polish', corona: 'polish', vert: 'polish', horiz: 'polish', bail: 'polish' },
+    },
+    swatches: {
+      '目を浮かせる': [['polish', '目の線と虹彩: 鏡面'], ['oxid', 'メダイユの地: いぶしで黒く沈める'], ['polish', '光線と縁の光: 鏡面']],
+      '金の目': [['gold', '目の線と虹彩: 金メッキ (エジプトの金)'], ['oxid', 'メダイユの地: いぶし'], ['polish', '光線: 鏡面シルバー']],
+      'P1 の最後 (縦が光る)': [['polish', '目: 鏡面'], ['rhodium', '縦の光線: ロジウムで白く光らせる'], ['oxid', 'メダイユの地・横の光線・縁の光: いぶし']],
+      'オールシルバー': [['polish', '全体: 鏡面。目は段差の影で読ませる']],
+    },
+    note: '目の線は断面が丸いワイヤーのような浮き彫りです (幅 0.85〜1.25mm、高さ約 0.5mm)。鋳造できる太さですが、磨きすぎると線が痩せるので、仕上げ職人に「目の線は軽く磨く」と伝えます。いぶしで地を黒くすると、目がいちばんはっきり見えます。',
+  },
   D3_sun_crucifix: {
     key: '案 D3', name: '太陽十字架', file: 'D3_sun_crucifix.stl',
     concept: 'P1 の最後の十字は、横軸 (CMY) が消えていき、縦軸 (RGB) の光だけが残って画面の外へ伸びていきます。その瞬間を十字架の比率にしました。下の腕は 28mm、上は 14.5mm、横は 12.5mm で少し細く。どの腕も両側にのこぎり歯が並び、長い歯と短い歯が交互に、先端へ向かって斜めに散ります。中心はフラクタルの核、そのまわりに 24 方向の細かい光。',
@@ -310,7 +329,7 @@ const coin = new THREE.Mesh(
 coin.rotation.x = Math.PI / 2; coin.visible = false; scene.add(coin);
 const coinLabel = document.getElementById('coinLabel');
 
-let current = 'D3_sun_crucifix';
+let current = 'D4_horus_crucifix';
 const finishCtl = document.getElementById('finishCtl');
 
 function swatchHTML(list) {
@@ -376,7 +395,7 @@ function select(name) {
   }
   document.getElementById('sNote').textContent = info.note;
   place(); frame('front');
-  try { localStorage.setItem('cross-tab-v4', name); } catch (e) {}
+  try { localStorage.setItem('cross-tab-v5', name); } catch (e) {}
 }
 
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => select(t.dataset.key)));
@@ -396,8 +415,8 @@ function resize() {
 }
 new ResizeObserver(resize).observe(stage); resize();
 
-let start = 'D3_sun_crucifix';
-try { const s = localStorage.getItem('cross-tab-v4'); if (s && groups[s]) start = s; } catch (e) {}
+let start = 'D4_horus_crucifix';
+try { const s = localStorage.getItem('cross-tab-v5'); if (s && groups[s]) start = s; } catch (e) {}
 select(start);
 document.getElementById('loading').remove();
 

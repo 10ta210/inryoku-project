@@ -292,7 +292,109 @@ def design_d3():
             "corona": corona_p, "bail": bail_p, "_solid": solid}
 
 
+# ---------- 案 D4: ホルスの目の太陽十字架 ----------
+# 司さん指示 (2026-11-28): 「真ん中を目にして、ホルスの」
+#   D3 の十字架 (下へ伸びる、のこぎり歯の光) の中心を、ウジャト (ホルスの目) のメダイユに。
+#   P1 Stage 6「開眼」→ Stage 7「十字」: 目から十字の光が放たれる、を一つの形に。
+def _qbez(p0, c, p1, n=24):
+    t = np.linspace(0, 1, n)[:, None]
+    p0, c, p1 = map(np.array, (p0, c, p1))
+    return list(map(tuple, (1 - t) ** 2 * p0 + 2 * (1 - t) * t * c + t ** 2 * p1))
+
+
+def eye_of_horus_2d():
+    """ウジャトの線画の座標 (単位 mm, 目は左を向く)"""
+    upper = _qbez((-6.0, 0.0), (0.0, 4.6), (6.4, 0.8)) + [(9.4, 0.9)]   # 上まぶた + 化粧線
+    lower = _qbez((-6.0, 0.0), (0.0, -3.6), (5.8, 0.75))                 # 下まぶた
+    brow = _qbez((-6.0, 3.9), (0.5, 6.9), (9.0, 4.3))                    # 眉
+    tear = [(-0.9, -1.5), (-1.05, -4.0), (-1.3, -6.8)]                   # 涙の縦線
+    c = np.array((6.8, -4.9))
+    lead = _qbez((1.9, -1.4), (2.7, -4.1), (5.2, -4.4), 16)              # 渦へ向かう線
+    a0, a1 = np.radians(162), np.radians(520)
+    sp = []
+    for k in range(40):
+        a = a0 + (a1 - a0) * k / 39
+        R = 1.68 + (0.55 - 1.68) * k / 39
+        sp.append(tuple(c + R * np.array((np.cos(a), np.sin(a)))))
+    # (線の座標, 根元の太さ, 先の太さ)
+    return [(upper, 0.6, 0.52), (lower, 0.55, 0.55), (brow, 0.75, 0.62),
+            (tear, 0.58, 0.78), (lead + sp, 0.6, 0.52)]
+
+
+def _stroke3d(points, r0, r1, z, flat=0.8, k=0.82, off=(-1.4, 0.4)):
+    """断面が丸い浮き彫りの線 (半分埋まったワイヤー)。座標は off だけずらして k 倍"""
+    pts = [((x + off[0]) * k, (y + off[1]) * k) for x, y in points]
+    n = len(pts)
+    segs = []
+    for i in range(n - 1):
+        ra = (r0 + (r1 - r0) * i / (n - 1)) * k
+        rb = (r0 + (r1 - r0) * (i + 1) / (n - 1)) * k
+        segs.append(Manifold.batch_hull([
+            Manifold.sphere(ra, 20).scale((1, 1, flat)).translate((pts[i][0], pts[i][1], z)),
+            Manifold.sphere(rb, 20).scale((1, 1, flat)).translate((pts[i + 1][0], pts[i + 1][1], z)),
+        ]))
+    return Manifold.batch_boolean(segs, OpType.Add)
+
+
+def horus_medallion(R=8.0):
+    plate = Manifold.batch_hull([
+        Manifold.cylinder(1.0, R, R, 128, center=True),
+        Manifold.cylinder(1.8, R - 0.7, R - 0.7, 128, center=True),
+    ])                                                  # 面取りした円盤 z -0.9..0.9
+    # 線のレリーフ: 円盤の上面 (z 0.9) から約 0.5mm 盛り上がる丸線 (線幅 0.85〜1.25mm)
+    lines = Manifold.batch_boolean(
+        [_stroke3d(p, r0, r1, z=1.0) for p, r0, r1 in eye_of_horus_2d()], OpType.Add)
+    ic = ((0.25 - 1.4) * 0.82, (0.35 + 0.4) * 0.82)        # 虹彩の中心 (2D と同じ変換)
+    iris = Manifold.sphere(1.7, 64).scale((1, 1, 0.6)).translate((ic[0], ic[1], 0.7))
+    pupil = sphere(0.6, (ic[0], ic[1], 0.7 + 1.7 * 0.6 + 0.3))     # 瞳のくぼみ (いぶしが溜まる)
+    eye = (lines + iris) - pupil
+    return plate, eye
+
+
+def corona_ring(r_in=7.6, r_short=10.6, r_long=12.2, n=24):
+    spikes = []
+    step = 360.0 / n
+    for k in range(n):
+        if k % (n // 4) == 0:
+            continue
+        near_arm = k % (n // 4) in (1, n // 4 - 1)
+        R = (r_short if k % 2 else r_long) - (1.0 if near_arm else 0.0)
+        a = np.radians(k * step)
+        d = np.array([np.cos(a), np.sin(a)])
+        nn = np.array([-d[1], d[0]])
+        b = d * r_in
+        spikes.append(Manifold.hull_points([
+            (*(b + nn * 1.05), 0), (*(b - nn * 1.05), 0), (*b, 0.8), (*b, -0.6),
+            (*(d * R + nn * 0.3), 0), (*(d * R - nn * 0.3), 0), (*(d * R), 0.4), (*(d * R), -0.4),
+        ]))
+    return Manifold.batch_boolean(spikes, OpType.Add)
+
+
+def design_d4():
+    plate, eye = horus_medallion(8.0)
+    up = serrated_ray("up", 16.0, 3.0, start=8.4)
+    down = serrated_ray("down", 30.0, 3.0, tip_w=0.5, start=8.4)
+    left = serrated_ray("left", 14.0, 2.4, front=1.6, long_t=1.9, short_t=1.0, start=8.4)
+    right = serrated_ray("right", 14.0, 2.4, front=1.6, long_t=1.9, short_t=1.0, start=8.4)
+    hole = Manifold.cylinder(20, 7.3, 7.3, 128, center=True)   # メダイユの内側は光線を消す
+    vert = (up + down) - hole
+    horiz = (left + right) - hole
+    corona = corona_ring()
+    bail = (Manifold.cylinder(3.2, 1.9, 1.9, center=True)
+            - Manifold.cylinder(6.0, 1.25, 1.25, center=True)
+            ).rotate((0, 90, 0)).translate((0, 3.5, -2.4))
+    solid = plate + eye + vert + horiz + corona + bail
+    plate_p = plate - eye
+    vert_p = vert - plate - eye
+    horiz_p = horiz - plate - eye - vert
+    corona_p = corona - plate - vert - horiz
+    bail_p = bail - plate
+    return {"eye": eye, "plate": plate_p, "vert": vert_p, "horiz": horiz_p,
+            "corona": corona_p, "bail": bail_p, "_solid": solid}
+
+
 DESIGNS = {
+    "D4_horus_crucifix": design_d4,
     "D3_sun_crucifix": design_d3,
     "D2_sun_fractal": design_d2,
     "D_sun_cross": design_d,
